@@ -495,7 +495,7 @@ Expression<Real> derivative(const Expression<Real>& e, Variable<Real> v)
 
 
 namespace {
-typedef Real R;
+typedef Real RealType;
 typedef EffectiveNumber Y;
 
 using FormulaSharingCache=Map<const Void*,Formula<Y>>;
@@ -525,7 +525,7 @@ Formula<Y> _convert_expression_node(
 
 template<class SPC>
 Formula<Y> _convert_expression_node(
-    const UnaryExpressionNode<R>& e,
+    const UnaryExpressionNode<RealType>& e,
     const SPC& variable_indices,
     FormulaSharingCache& sharing_cache)
 {
@@ -537,7 +537,7 @@ Formula<Y> _convert_expression_node(
 
 template<class SPC>
 Formula<Y> _convert_expression_node(
-    const BinaryExpressionNode<R>& e,
+    const BinaryExpressionNode<RealType>& e,
     const SPC& variable_indices,
     FormulaSharingCache& sharing_cache)
 {
@@ -551,7 +551,7 @@ Formula<Y> _convert_expression_node(
 
 template<class SPC>
 Formula<Y> _convert_expression_node(
-    const GradedExpressionNode<R>& e,
+    const GradedExpressionNode<RealType>& e,
     const SPC& variable_indices,
     FormulaSharingCache& sharing_cache)
 {

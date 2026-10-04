@@ -329,7 +329,7 @@ Void ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(PavingIn
     }
 
     Int cell_depth=cell.depth();
-    Int maximum_depth=fineness*cell.dimension();
+    Int maximum_depth=static_cast<Int>(fineness*cell.dimension());
 
     // Check for disjointness using linear program
     //ValidatedKleenean feasible=SimplexSolver<FloatDP>().hotstarted_feasible(lp.A,lp.b,lp.l,lp.u,lp.vt,lp.p,lp.B,lp.x,lp.y);
@@ -480,7 +480,7 @@ Void ValidatedAffineConstrainedImageSet::_robust_adjoin_outer_approximation_to(P
     }
 
     Int cell_depth=cell.depth();
-    Int maximum_depth=fineness*cell.dimension();
+    Int maximum_depth=static_cast<Int>(fineness*cell.dimension());
 
     // Check for disjointness using linear program
     ValidatedKleenean feasible=lpsolver.hotstarted_feasible(lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x,lp.y);

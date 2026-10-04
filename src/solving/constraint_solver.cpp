@@ -936,7 +936,7 @@ Bool ConstraintSolver::box_reduce(
 
     // Look for empty slices from above; note that at least one nonempty slice has been found
     for(SizeType j=n-1; j!=imax; --j) {
-        subinterval=ExactIntervalType(cast_exact(affine(l,u,j,n)),cast_exact(affine(l,u,j+1,n)));
+        subinterval=ExactIntervalType(cast_exact(affine(l,u,static_cast<Nat>(j),n)),cast_exact(affine(l,u,static_cast<Nat>(j+1),n)));
         slice[variable]=subinterval;
         ++function_evaluations;
         UpperIntervalType slice_image=apply(function,slice);

@@ -336,8 +336,7 @@ Void hotstarted_constraint_adjoin_outer_approximation_recursion(
     static const FloatDP XSIGMA { 0.125_x,dp };
     static const FloatDP TERR { ExactDouble(-1.0/((1<<e)*1024.0)),dp };
     static const FloatDP XZMIN { ExactDouble(1.0/(1<<16)),dp };
-    static const FloatDP zero { 0,dp };
-    static const ExactDouble inf(Ariadne::inf.get_d());
+    static const ExactDouble exact_infinity(Ariadne::inf.get_d());
     DoublePrecision pr;
 
     // Set up the classes used for constraint propagation and
@@ -405,7 +404,7 @@ Void hotstarted_constraint_adjoin_outer_approximation_recursion(
     update_exact_values();
     LOGGING_PRINTLN_AT(1,"t="<<t<<", y="<<y<<", x="<<x<<", z="<<z);
 
-    if(!(t<inf)) {
+    if(!(t<exact_infinity)) {
         ARIADNE_WARN("feasibility failed");
         char ch; std::cin >> ch;
         at=0;
@@ -446,7 +445,7 @@ Void hotstarted_constraint_adjoin_outer_approximation_recursion(
         ValidatedConstraint constraint=(txg>=0);
 
         LOGGING_PRINTLN_AT(1,"dom="<<nd);
-        solver.hull_reduce(nd,txg,ExactIntervalType(0,inf));
+        solver.hull_reduce(nd,txg,ExactIntervalType(0,exact_infinity));
         LOGGING_PRINTLN_AT(1,"dom="<<nd);
         if(definitely(nd.is_empty())) {
             LOGGING_PRINTLN("Proved disjointness using hull reduce");
@@ -454,13 +453,13 @@ Void hotstarted_constraint_adjoin_outer_approximation_recursion(
         }
 
         for(SizeType i=0; i!=m; ++i) {
-            solver.box_reduce(nd,txg,ExactIntervalType(0,inf),i);
+            solver.box_reduce(nd,txg,ExactIntervalType(0,exact_infinity),i);
             LOGGING_PRINTLN_AT(2,"dom="<<nd);
             if(definitely(nd.is_empty())) { LOGGING_PRINTLN("Proved disjointness using box reduce"); return; }
         }
         LOGGING_PRINTLN_AT(1,"dom="<<nd);
 
-        solver.hull_reduce(nd,txg,ExactIntervalType(0,inf));
+        solver.hull_reduce(nd,txg,ExactIntervalType(0,exact_infinity));
         LOGGING_PRINTLN_AT(1,"dom="<<nd);
         if(definitely(nd.is_empty())) {
             LOGGING_PRINTLN("Proved disjointness using hull reduce");
@@ -507,7 +506,7 @@ Void hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(PavingIn
     // This constant shows how far away from zero the points are
     static const FloatDP XSIGMA = {TwoExp(-3),pr};
     static const FloatDP  TERR = {TwoExp(-10),pr};
-    static const ExactDouble inf(Ariadne::inf.get_d());
+    static const ExactDouble exact_infinity(Ariadne::inf.get_d());
 
     const SizeType m=fg.argument_size();
     const SizeType n=fg.result_size();
@@ -568,7 +567,7 @@ Void hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(PavingIn
 
 
         LOGGING_PRINTLN_AT(1,"dom="<<nd);
-        solver.hull_reduce(nd,xg,ExactIntervalType(0,inf));
+        solver.hull_reduce(nd,xg,ExactIntervalType(0,exact_infinity));
         LOGGING_PRINTLN_AT(1,"dom="<<nd);
         if(definitely(nd.is_empty())) {
             LOGGING_PRINTLN("Proved disjointness using hull reduce");
@@ -576,7 +575,7 @@ Void hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(PavingIn
         }
 
         for(SizeType i=0; i!=m; ++i) {
-            solver.box_reduce(nd,xg,ExactIntervalType(0,inf),i);
+            solver.box_reduce(nd,xg,ExactIntervalType(0,exact_infinity),i);
             LOGGING_PRINTLN_AT(2,"dom="<<nd);
             if(definitely(nd.is_empty())) { LOGGING_PRINTLN("Proved disjointness using box reduce"); return; }
         }
@@ -642,7 +641,7 @@ procedure_constraint_adjoin_outer_approximation(PavingInterface& p, const ExactB
     for(SizeType i=0; i!=f.result_size(); ++i) { procedures.append(make_procedure(f[i])); }
     for(SizeType i=0; i!=g.result_size(); ++i) { procedures.append(make_procedure(g[i])); }
 
-    Ariadne::procedure_constraint_adjoin_outer_approximation_recursion(p,d,f,g,c,b,e*p.dimension(),0, procedures);
+    Ariadne::procedure_constraint_adjoin_outer_approximation_recursion(p,d,f,g,c,b,static_cast<Int>(e*p.dimension()),0, procedures);
     //std::cerr<<"Computing outer approximation considered a total of "<<COUNT_TESTS<<" domains/cells\n";
     //std::cerr<<"Measure of paving is "<<p.measure()<<"\n";
 
