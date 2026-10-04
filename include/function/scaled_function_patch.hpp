@@ -356,7 +356,6 @@ template<class M> class ScaledFunctionPatch
   public:
     template<class X> X operator()(const Vector<X>& a) const;
   private:
-    ScaledFunctionPatch<M>* _clone() const;
     ScaledFunctionPatch<M>* _create() const;
     virtual ScaledFunctionPatchFactory<M>* _factory() const;
     OutputStream& _write(OutputStream& os) const;
@@ -724,9 +723,6 @@ template<class M> class VectorScaledFunctionPatch
     Void _compute_jacobian() const;
     Void _set_argument_size(SizeType n);
     SizeType _compute_maximum_component_size() const;
-    virtual ScalarScaledFunctionPatch<M>* _get(SizeType i) const { return new ScaledFunctionPatch<M>(this->_domain,this->_models[i]); }
-    virtual ScalarScaledFunctionPatch<M>* _concrete_get(SizeType i) const { return new ScaledFunctionPatch<M>(this->_domain,this->_models[i]); }
-    virtual VectorScaledFunctionPatch<M>* _clone() const;
     virtual VectorScaledFunctionPatch<M>* _create() const;
     virtual ScaledFunctionPatchFactory<M>* _factory() const;
     OutputStream& _write(OutputStream& os) const;
@@ -808,10 +804,11 @@ template<class M> class VectorScaledFunctionPatch
         return partial_restriction(tf,k,d);
     }
     friend Pair<VectorScaledFunctionPatch<M>,VectorScaledFunctionPatch<M>> split(const VectorScaledFunctionPatch<M>& tf, SizeType j) {
-        Pair<Vector<M>,Vector<M>> models=split(tf.models(),j);
+        Vector<M> lower_models=split(tf.models(),j,SplitPart::LOWER);
+        Vector<M> upper_models=split(tf.models(),j,SplitPart::UPPER);
         Pair<BoxDomainType,BoxDomainType> subdomains=split(tf.domain(),j);
-        return make_pair(VectorScaledFunctionPatch<M>(subdomains.first,models.first),
-                        VectorScaledFunctionPatch<M>(subdomains.second,models.second));
+        return make_pair(VectorScaledFunctionPatch<M>(subdomains.first,lower_models),
+                        VectorScaledFunctionPatch<M>(subdomains.second,upper_models));
 
     }
 

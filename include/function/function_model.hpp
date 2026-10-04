@@ -303,11 +303,11 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealScal
   public:
     typedef ValidatedTag VP;
     friend ScalarFunctionModel<VP,ARG,PR,PRE> refinement(const ScalarFunctionModel<VP,ARG,PR,PRE>& f1, const ScalarFunctionModel<VP,ARG,PR,PRE>& f2) {
-        return ScalarFunctionModel<VP,ARG,PR,PRE>(f1._ptr->_refinement(f2)); }
+        return ScalarFunctionModel<VP,ARG,PR,PRE>(f1._ptr->_concrete_refinement(f2)); }
     friend Boolean inconsistent(const ScalarFunctionModel<VP,ARG,PR,PRE>& f1, const ScalarFunctionModel<VP,ARG,PR,PRE>& f2) {
-        return f1._ptr->_inconsistent(f2); }
+        return f1._ptr->_concrete_inconsistent(f2); }
     friend Boolean refines(const ScalarFunctionModel<VP,ARG,PR,PRE>& f1, const ScalarFunctionModel<VP,ARG,PR,PRE>& f2) {
-        return f1._ptr->_refines(f2); }
+        return f1._ptr->_concrete_refines(f2); }
   public:
     friend OutputStream& operator<<(OutputStream& os, const ScalarFunctionModel<P,ARG,PR,PRE>& f) {
         return os <<  f.operator ScalarMultivariateFunction<P>(); }

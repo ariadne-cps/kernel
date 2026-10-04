@@ -300,14 +300,6 @@ template<class M> ScaledFunctionPatch<M> ScaledFunctionPatch<M>::create_constant
     return this->create_constant(NumericType(c,this->precision()));
 }
 
-//FIXME: Should allow this in code file
-/*
-template<class M> ScaledFunctionPatch<M>* ScaledFunctionPatch<M>::_clone() const
-{
-    return new ScaledFunctionPatch<M>(*this);
-}
-*/
-
 template<class M> ScaledFunctionPatchFactory<M>* ScaledFunctionPatch<M>::_factory() const
 {
     return new ScaledFunctionPatchFactory<M>(this->_model.properties());
@@ -654,14 +646,6 @@ template<class M> VectorScaledFunctionPatch<M>::VectorScaledFunctionPatch(Initia
     : VectorScaledFunctionPatch<M>(List<ScaledFunctionPatch<M>>(lst))
 { }
 
-
-// FIXME: Should be possible to put in code file
-/*
-template<class M> VectorScaledFunctionPatch<M>* VectorScaledFunctionPatch<M>::_clone() const
-{
-    return new VectorScaledFunctionPatch<M>(*this);
-}
-*/
 
 template<class M> ScaledFunctionPatchFactory<M>* VectorScaledFunctionPatch<M>::_factory() const
 {

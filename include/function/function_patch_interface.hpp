@@ -71,7 +71,7 @@ template<class P, class... ARGS> class FunctionPatchAlgebraInterface<P,RealVecto
     using RES=RealVector; using SIG=RES(ARGS...);
   public:
     typedef SizeType ResultIndexType;
-    virtual ScalarFunctionPatchInterface<P,ARGS...>* _get(ResultIndexType) const = 0;
+    virtual ScalarFunctionPatchInterface<P,ARGS...>* _patch_get(ResultIndexType) const = 0;
     virtual Void _set(ResultIndexType, ScalarFunctionPatchInterface<P,ARGS...> const&) = 0;
     virtual Void _adjoin(const ScalarFunctionPatchInterface<P,ARGS...>& f2) = 0;
     virtual VectorFunctionPatchInterface<P,ARGS...>* _join(const VectorFunctionPatchInterface<P,ARGS...>& f2) const = 0;
@@ -124,7 +124,7 @@ template<class P, class SIG> class FunctionPatchInterface
     virtual VectorFunctionPatchInterface<P,ARG>* _unchecked_compose(const VectorFunction<P,RES>& f) const = 0;
 
     virtual FunctionPatchInterface<P,SIG>* _concrete_clone() const = 0;
-    virtual FunctionPatchInterface<P,SIG>* _create() const = 0;
+    virtual FunctionPatchInterface<P,SIG>* _patch_create() const = 0;
     virtual FunctionPatchInterface<P,SIG>* _embed(const DomainType& d1, const DomainType& d2) const = 0;
     virtual FunctionPatchInterface<P,SIG>* _restriction(const DomainType& d) const = 0;
 
