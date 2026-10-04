@@ -513,11 +513,11 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
     friend inline VectorFunction<P,ARGS...> cast_unrestricted(VectorFunctionPatch<P,ARGS...> const& f) {
         return VectorFunction<P,ARGS...>(std::dynamic_pointer_cast<VectorFunctionInterface<P,ARGS...>>(f.managed_pointer())); }
 
-    friend Vector<Number<P>> evaluate(const VectorFunctionPatch<P,ARGS...>& f, const Vector<Number<P>>& x) {
+    friend Vector<Number<P>> evaluate(const VectorFunctionPatch<P,ARGS...>& f, const Argument<Number<P>>& x) {
         return f._ptr->_call(x); }
-    friend Vector<CanonicalNumericType<P,DP>> evaluate(const VectorFunctionPatch<P,ARGS...>& f, const Vector<CanonicalNumericType<P,DP>>& x) {
+    friend Vector<CanonicalNumericType<P,DP>> evaluate(const VectorFunctionPatch<P,ARGS...>& f, const Argument<CanonicalNumericType<P,DP>>& x) {
         return f._ptr->_call(x); }
-    friend Vector<CanonicalNumericType<P,MP>> evaluate(const VectorFunctionPatch<P,ARGS...>& f, const Vector<CanonicalNumericType<P,MP>>& x) {
+    friend Vector<CanonicalNumericType<P,MP>> evaluate(const VectorFunctionPatch<P,ARGS...>& f, const Argument<CanonicalNumericType<P,MP>>& x) {
         return f._ptr->_call(x); }
 
     friend Vector<Number<P>> unchecked_evaluate(const VectorFunctionPatch<P,ARGS...>& f, const Argument<Number<P>>& x) {

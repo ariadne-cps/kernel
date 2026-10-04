@@ -1289,14 +1289,6 @@ template<class M> class ScaledFunctionPatchCreator
 };
 
 
-template<class M> ScaledFunctionPatch<M>* ScaledFunctionPatch<M>::_clone() const {
-    return new ScaledFunctionPatch<M>(*this);
-}
-
-template<class M> VectorScaledFunctionPatch<M>* VectorScaledFunctionPatch<M>::_clone() const {
-    return new VectorScaledFunctionPatch<M>(*this);
-}
-
 } // namespace Ariadne
 
 #endif // ARIADNE_FUNCTION_PATCH_HPP

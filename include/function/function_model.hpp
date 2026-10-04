@@ -525,9 +525,9 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
     friend inline VectorFunctionModel<P,ARG,PR,PRE> compose(const VectorFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
         return VectorFunctionModel<P,ARG,PR,PRE>(g._ptr->_compose(f)); }
 
-    friend inline ScalarFunctionModel<P,ARG,PR,PRE> unchecked_compose(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) requires Same<ARG,RealVector> {
+    friend inline ScalarFunctionModel<P,ARG,PR,PRE> unchecked_compose(const ScalarFunctionModel<P,RealVector,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
         return ScalarFunctionModel<P,ARG,PR,PRE>(g._ptr->_unchecked_compose(static_cast<ScalarMultivariateFunction<P>>(f))); }
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> unchecked_compose(const VectorFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) requires Same<ARG,RealVector> {
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> unchecked_compose(const VectorFunctionModel<P,RealVector,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
         return VectorFunctionModel<P,ARG,PR,PRE>(g._ptr->_unchecked_compose(static_cast<VectorMultivariateFunction<P>>(f))); }
 
     friend inline VectorFunctionModel<P,ARG,PR,PRE> operator+(const VectorFunctionModel<P,ARG,PR,PRE>& f) {
@@ -606,11 +606,11 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
         return os <<  f.operator VectorMultivariateFunction<P>(); }
 
     friend ScalarFunctionModel<P,ARG,PR,PRE> unchecked_compose(const ScalarMultivariateFunction<P>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
-        ScalarFunctionModelInterface<P,ARG,PR,PRE> const* fptr = dynamic_cast<ScalarFunctionModelInterface<P,ARG,PR,PRE> const*>(f.raw_pointer());
-        if(fptr) { return unchecked_compose(ScalarFunctionModel<P,ARG,PR,PRE>(*fptr),g); } else { return compose(f,g); } }
+        ScalarFunctionModelInterface<P,RealVector,PR,PRE> const* fptr = dynamic_cast<ScalarFunctionModelInterface<P,RealVector,PR,PRE> const*>(f.raw_pointer());
+        if(fptr) { return unchecked_compose(ScalarFunctionModel<P,RealVector,PR,PRE>(*fptr),g); } else { return compose(f,g); } }
     friend VectorFunctionModel<P,ARG,PR,PRE> unchecked_compose(const VectorMultivariateFunction<P>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
-        VectorFunctionModelInterface<P,ARG,PR,PRE> const* fptr = dynamic_cast<VectorFunctionModelInterface<P,ARG,PR,PRE> const*>(f.raw_pointer());
-        if(fptr) { return unchecked_compose(VectorFunctionModel<P,ARG,PR,PRE>(*fptr),g); } else { return compose(f,g); } }
+        VectorFunctionModelInterface<P,RealVector,PR,PRE> const* fptr = dynamic_cast<VectorFunctionModelInterface<P,RealVector,PR,PRE> const*>(f.raw_pointer());
+        if(fptr) { return unchecked_compose(VectorFunctionModel<P,RealVector,PR,PRE>(*fptr),g); } else { return compose(f,g); } }
 
     friend VectorFunctionModel<P,ARG,PR,PRE> join(const ScalarFunctionModel<P,ARG,PR,PRE>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {
         return join(VectorFunctionModel<P,ARG,PR,PRE>(1u,f1),f2); }
