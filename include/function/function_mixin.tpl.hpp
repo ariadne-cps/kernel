@@ -82,6 +82,34 @@ FunctionMixin<F,ApproximateTag,SIG>::_call(const Argument<Formula<ApproximateNum
     return this->_base_call(x); }
 
 template<class F,class SIG> auto
+FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<ApproximateNumber>& x) const -> Result<ApproximateNumber> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<FloatDPApproximation>& x) const -> Result<FloatDPApproximation> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<FloatMPApproximation>& x) const -> Result<FloatMPApproximation> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<Differential<FloatDPApproximation>>& x) const -> Result<Differential<FloatDPApproximation>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<Differential<FloatMPApproximation>>& x) const -> Result<Differential<FloatMPApproximation>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<TaylorModel<ApproximateTag,FloatDP>>& x) const -> Result<TaylorModel<ApproximateTag,FloatDP>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<TaylorModel<ApproximateTag,FloatMP>>& x) const -> Result<TaylorModel<ApproximateTag,FloatMP>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<ElementaryAlgebra<ApproximateNumber>>& x) const -> Result<ElementaryAlgebra<ApproximateNumber>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<Formula<ApproximateNumber>>& x) const -> Result<Formula<ApproximateNumber>> {
+    return this->_base_call(x); }
+
+template<class F,class SIG> auto
 FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<ValidatedNumber>& x) const -> Result<ValidatedNumber> {
     return this->_base_call(x); }
 template<class F,class SIG> auto
@@ -123,6 +151,77 @@ FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<Formula<ValidatedNumber>
 
 template<class F,class SIG> auto
 FunctionMixin<F,ValidatedTag,SIG>::_call(const Argument<ValidatedScalarMultivariateFunction>& x) const -> Result<ValidatedScalarMultivariateFunction> {
+    return this->_base_call(x); }
+
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<ApproximateNumber>& x) const -> Result<ApproximateNumber> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<FloatDPApproximation>& x) const -> Result<FloatDPApproximation> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<FloatMPApproximation>& x) const -> Result<FloatMPApproximation> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<Differential<FloatDPApproximation>>& x) const -> Result<Differential<FloatDPApproximation>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<Differential<FloatMPApproximation>>& x) const -> Result<Differential<FloatMPApproximation>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<TaylorModel<ApproximateTag,FloatDP>>& x) const -> Result<TaylorModel<ApproximateTag,FloatDP>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<TaylorModel<ApproximateTag,FloatMP>>& x) const -> Result<TaylorModel<ApproximateTag,FloatMP>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<ElementaryAlgebra<ApproximateNumber>>& x) const -> Result<ElementaryAlgebra<ApproximateNumber>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<Formula<ApproximateNumber>>& x) const -> Result<Formula<ApproximateNumber>> {
+    return this->_base_call(x); }
+
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<ValidatedNumber>& x) const -> Result<ValidatedNumber> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<FloatDPBounds>& x) const -> Result<FloatDPBounds> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<FloatMPBounds>& x) const -> Result<FloatMPBounds> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<Differential<FloatDPBounds>>& x) const -> Result<Differential<FloatDPBounds>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<Differential<FloatMPBounds>>& x) const -> Result<Differential<FloatMPBounds>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<TaylorModel<ValidatedTag,FloatDP>>& x) const -> Result<TaylorModel<ValidatedTag,FloatDP>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<TaylorModel<ValidatedTag,FloatMP>>& x) const -> Result<TaylorModel<ValidatedTag,FloatMP>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<TaylorModel<ValidatedTag,FloatDPBounds>>& x) const -> Result<TaylorModel<ValidatedTag,FloatDPBounds>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<TaylorModel<ValidatedTag,FloatMPBounds>>& x) const -> Result<TaylorModel<ValidatedTag,FloatMPBounds>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<TaylorModel<ValidatedTag,FloatDPUpperInterval>>& x) const -> Result<TaylorModel<ValidatedTag,FloatDPUpperInterval>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<TaylorModel<ValidatedTag,FloatMPUpperInterval>>& x) const -> Result<TaylorModel<ValidatedTag,FloatMPUpperInterval>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<ElementaryAlgebra<ValidatedNumber>>& x) const -> Result<ElementaryAlgebra<ValidatedNumber>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<Formula<ValidatedNumber>>& x) const -> Result<Formula<ValidatedNumber>> {
+    return this->_base_call(x); }
+template<class F,class SIG> auto
+FunctionMixin<F,EffectiveTag,SIG>::_call(const Argument<ValidatedScalarMultivariateFunction>& x) const -> Result<ValidatedScalarMultivariateFunction> {
     return this->_base_call(x); }
 
 template<class F,class SIG> auto

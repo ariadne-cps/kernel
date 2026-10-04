@@ -122,15 +122,23 @@ class FunctionMixin<F,ApproximateTag,SIG>
 template<class F, class SIG>
 class FunctionMixin<F,ValidatedTag,SIG>
     : public virtual FunctionInterface<ValidatedTag,SIG>
-    , public FunctionMixin<F,ApproximateTag,SIG>
+    , public FunctionMixin<F,Void,SIG>
 {
     using D=typename SignatureTraits<SIG>::DomainType;
     using C=typename SignatureTraits<SIG>::CodomainType;
     template<class X> using Argument = typename SignatureTraits<SIG>::template Argument<X>;
     template<class X> using Result = typename SignatureTraits<SIG>::template Result<X>;
   public:
-    using FunctionMixin<F,ApproximateTag,SIG>::_call;
     virtual FunctionInterface<ValidatedTag,SIG>* _clone() const override;
+    virtual Result<ApproximateNumber> _call(const Argument<ApproximateNumber>& x) const override;
+    virtual Result<FloatDPApproximation> _call(const Argument<FloatDPApproximation>& x) const override;
+    virtual Result<FloatMPApproximation> _call(const Argument<FloatMPApproximation>& x) const override;
+    virtual Result<Differential<FloatDPApproximation>> _call(const Argument<Differential<FloatDPApproximation>>& x) const override;
+    virtual Result<Differential<FloatMPApproximation>> _call(const Argument<Differential<FloatMPApproximation>>& x) const override;
+    virtual Result<TaylorModel<ApproximateTag,FloatDP>> _call(const Argument<TaylorModel<ApproximateTag,FloatDP>>& x) const override;
+    virtual Result<TaylorModel<ApproximateTag,FloatMP>> _call(const Argument<TaylorModel<ApproximateTag,FloatMP>>& x) const override;
+    virtual Result<Formula<ApproximateNumber>> _call(const Argument<Formula<ApproximateNumber>>& x) const override;
+    virtual Result<ElementaryAlgebra<ApproximateNumber>> _call(const Argument<ElementaryAlgebra<ApproximateNumber>>& x) const override;
     virtual FunctionInterface<ValidatedTag,SIG>* _derivative(ElementIndexType<D> i) const override;
     virtual Result<ValidatedNumber> _call(const Argument<ValidatedNumber>& x) const override;
     virtual Result<FloatDPBounds> _call(const Argument<FloatDPBounds>& x) const override;
@@ -154,15 +162,37 @@ class FunctionMixin<F,ValidatedTag,SIG>
 template<class F, class SIG>
 class FunctionMixin<F,EffectiveTag,SIG>
     : public virtual FunctionInterface<EffectiveTag,SIG>
-    , public FunctionMixin<F,ValidatedTag,SIG>
+    , public FunctionMixin<F,Void,SIG>
 {
     using D=typename SignatureTraits<SIG>::DomainType;
     using C=typename SignatureTraits<SIG>::CodomainType;
     template<class X> using Argument = typename SignatureTraits<SIG>::template Argument<X>;
     template<class X> using Result = typename SignatureTraits<SIG>::template Result<X>;
   public:
-    using FunctionMixin<F,ValidatedTag,SIG>::_call;
     virtual FunctionInterface<EffectiveTag,SIG>* _clone() const override;
+    virtual Result<ApproximateNumber> _call(const Argument<ApproximateNumber>& x) const override;
+    virtual Result<FloatDPApproximation> _call(const Argument<FloatDPApproximation>& x) const override;
+    virtual Result<FloatMPApproximation> _call(const Argument<FloatMPApproximation>& x) const override;
+    virtual Result<Differential<FloatDPApproximation>> _call(const Argument<Differential<FloatDPApproximation>>& x) const override;
+    virtual Result<Differential<FloatMPApproximation>> _call(const Argument<Differential<FloatMPApproximation>>& x) const override;
+    virtual Result<TaylorModel<ApproximateTag,FloatDP>> _call(const Argument<TaylorModel<ApproximateTag,FloatDP>>& x) const override;
+    virtual Result<TaylorModel<ApproximateTag,FloatMP>> _call(const Argument<TaylorModel<ApproximateTag,FloatMP>>& x) const override;
+    virtual Result<Formula<ApproximateNumber>> _call(const Argument<Formula<ApproximateNumber>>& x) const override;
+    virtual Result<ElementaryAlgebra<ApproximateNumber>> _call(const Argument<ElementaryAlgebra<ApproximateNumber>>& x) const override;
+    virtual Result<ValidatedNumber> _call(const Argument<ValidatedNumber>& x) const override;
+    virtual Result<FloatDPBounds> _call(const Argument<FloatDPBounds>& x) const override;
+    virtual Result<FloatMPBounds> _call(const Argument<FloatMPBounds>& x) const override;
+    virtual Result<Differential<FloatDPBounds>> _call(const Argument<Differential<FloatDPBounds>>& x) const override;
+    virtual Result<Differential<FloatMPBounds>> _call(const Argument<Differential<FloatMPBounds>>& x) const override;
+    virtual Result<TaylorModel<ValidatedTag,FloatDP>> _call(const Argument<TaylorModel<ValidatedTag,FloatDP>>& x) const override;
+    virtual Result<TaylorModel<ValidatedTag,FloatMP>> _call(const Argument<TaylorModel<ValidatedTag,FloatMP>>& x) const override;
+    virtual Result<TaylorModel<ValidatedTag,FloatDPBounds>> _call(const Argument<TaylorModel<ValidatedTag,FloatDPBounds>>& x) const override;
+    virtual Result<TaylorModel<ValidatedTag,FloatMPBounds>> _call(const Argument<TaylorModel<ValidatedTag,FloatMPBounds>>& x) const override;
+    virtual Result<TaylorModel<ValidatedTag,FloatDPUpperInterval>> _call(const Argument<TaylorModel<ValidatedTag,FloatDPUpperInterval>>& x) const override;
+    virtual Result<TaylorModel<ValidatedTag,FloatMPUpperInterval>> _call(const Argument<TaylorModel<ValidatedTag,FloatMPUpperInterval>>& x) const override;
+    virtual Result<Formula<ValidatedNumber>> _call(const Argument<Formula<ValidatedNumber>>& x) const override;
+    virtual Result<ElementaryAlgebra<ValidatedNumber>> _call(const Argument<ElementaryAlgebra<ValidatedNumber>>& x) const override;
+    virtual Result<ValidatedScalarMultivariateFunction> _call(const Argument<ValidatedScalarMultivariateFunction>& x) const override;
     virtual FunctionInterface<EffectiveTag,SIG>* _derivative(ElementIndexType<D> i) const override;
     virtual Result<EffectiveNumber> _call(const Argument<EffectiveNumber>& x) const override;
     virtual Result<Real> _call(const Argument<Real>& x) const override;
