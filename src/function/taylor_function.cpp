@@ -53,36 +53,21 @@
 
 namespace Ariadne {
 
-template class ScaledFunctionPatchFactory<ValidatedTaylorModelDP>;
-template class FunctionModelCreator<ScaledFunctionPatchFactory<ValidatedTaylorModelDP>,RealVector>;
-
 template class ScaledFunctionPatch<ValidatedTaylorModelDP>;
-template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
 template class VectorScaledFunctionPatch<ValidatedTaylorModelDP>;
-template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
-
-
-template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelDP>;
-template class FunctionModelCreator<ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelDP>,RealVector>;
+template class ScaledFunctionPatchFactory<ValidatedTaylorModelDP>;
 
 template class ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>;
-template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
 template class VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>;
-template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
-
-
-template class ScaledFunctionPatchFactory<ValidatedTaylorModelMP>;
-template class FunctionModelCreator<ScaledFunctionPatchFactory<ValidatedTaylorModelMP>,RealVector>;
+template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelDP>;
 
 template class ScaledFunctionPatch<ValidatedTaylorModelMP>;
 template class VectorScaledFunctionPatch<ValidatedTaylorModelMP>;
-
-
-template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelMP>;
-template class FunctionModelCreator<ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelMP>,RealVector>;
+template class ScaledFunctionPatchFactory<ValidatedTaylorModelMP>;
 
 template class ScaledFunctionPatch<ValidatedBoundsTaylorModelMP>;
 template class VectorScaledFunctionPatch<ValidatedBoundsTaylorModelMP>;
+template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelMP>;
 
 
 

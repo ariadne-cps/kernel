@@ -666,7 +666,7 @@ template<class F> Vector<TaylorModel<ValidatedTag,F>> embed(SizeType as1, const 
 }
 
 template<class P, class F> Vector<TaylorModel<P,F>> split(const Vector<TaylorModel<P,F>>& x, SizeType j, SplitPart h) {
-    Vector<TaylorModel<P,F>> r(x.size());
+    Vector<TaylorModel<P,F>> r(x.size(),x.zero_element());
     for(SizeType i=0; i!=x.size(); ++i) { r[i]=split(x[i],j,h); }
     return r;
 }

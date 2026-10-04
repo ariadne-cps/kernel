@@ -77,8 +77,17 @@ template<class U> class IntervalSet : public IntervalSetBase<U> {
 
 
 template<class F> class ScaledFunctionPatchFactory<ValidatedIntervalTaylorModel<F>> {
+    using M=ValidatedIntervalTaylorModel<F>;
   public:
-    ScaledFunctionPatchFactory(Sweeper<F> const&) { }
+    using Paradigm=typename M::Paradigm;
+    using PrecisionType=typename M::PrecisionType;
+    using ErrorPrecisionType=typename M::ErrorPrecisionType;
+    using PropertiesType=typename M::PropertiesType;
+
+    explicit ScaledFunctionPatchFactory(PropertiesType const& properties) : _properties(properties) { }
+    PropertiesType properties() const { return _properties; }
+  private:
+    PropertiesType _properties;
 };
 
 template<class F> class ScaledFunctionPatchMixin<ValidatedIntervalTaylorModel<F>>

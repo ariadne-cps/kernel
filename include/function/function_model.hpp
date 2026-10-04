@@ -587,15 +587,15 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
     friend VectorFunctionModel<P,ARG,PR,PRE> restriction(const VectorFunctionModel<P,ARG,PR,PRE>& f, const DomainType& d) {
         return VectorFunctionModel<P,ARG,PR,PRE>(f._ptr->_restriction(d)); }
 
-    friend Vector<CanonicalNumericType<P,PR,PRE>> evaluate(const VectorFunctionModel<P,ARG,PR,PRE>& f, const Vector<CanonicalNumericType<P,PR,PRE>>& x) {
+    friend Vector<CanonicalNumericType<P,PR,PRE>> evaluate(const VectorFunctionModel<P,ARG,PR,PRE>& f, const Argument<CanonicalNumericType<P,PR,PRE>>& x) {
         return f._ptr->_call(x); }
-    friend Vector<Number<P>> evaluate(const VectorFunctionModel<P,ARG,PR,PRE>& f, const Vector<Number<P>>& x) {
-        return f._ptr->_call(Vector<CanonicalNumericType<P,PR,PRE>>(x,f.precision())); }
+    friend Vector<Number<P>> evaluate(const VectorFunctionModel<P,ARG,PR,PRE>& f, const Argument<Number<P>>& x) {
+        return f._ptr->_call(Argument<CanonicalNumericType<P,PR,PRE>>(x,f.precision())); }
 
-    friend Vector<CanonicalNumericType<P,PR,PRE>> unchecked_evaluate(const VectorFunctionModel<P,ARG,PR,PRE>& f, const Vector<CanonicalNumericType<P,PR,PRE>>& x) {
+    friend Vector<CanonicalNumericType<P,PR,PRE>> unchecked_evaluate(const VectorFunctionModel<P,ARG,PR,PRE>& f, const Argument<CanonicalNumericType<P,PR,PRE>>& x) {
         return f._ptr->_unchecked_evaluate(x); }
-    friend Vector<Number<P>> unchecked_evaluate(const VectorFunctionModel<P,ARG,PR,PRE>& f, const Vector<Number<P>>& x) {
-        return f._ptr->_unchecked_evaluate(Vector<CanonicalNumericType<P,PR,PRE>>(x,f.precision())); }
+    friend Vector<Number<P>> unchecked_evaluate(const VectorFunctionModel<P,ARG,PR,PRE>& f, const Argument<Number<P>>& x) {
+        return f._ptr->_unchecked_evaluate(Argument<CanonicalNumericType<P,PR,PRE>>(x,f.precision())); }
 
     friend VectorFunctionModel<P,ARG,PR,PRE> partial_evaluate(const VectorFunctionModel<P,ARG,PR,PRE>& f, SizeType j, const CanonicalNumericType<P,PR,PRE>& c) {
         return VectorFunctionModel<P,ARG,PR,PRE>(f._ptr->_concrete_partial_evaluate(j,c)); }

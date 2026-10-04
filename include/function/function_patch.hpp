@@ -479,21 +479,21 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
     friend inline VectorFunctionPatch<P,ARGS...> operator*(const Number<P>& c1, const VectorFunctionPatch<P,ARGS...>& f2) {
         VectorFunctionPatch<P,ARGS...> r=f2; for(SizeType i=0; i!=r.size(); ++i) { r[i]=c1*f2[i]; } return r; }
 
-    friend inline VectorFunctionPatch<P,ARGS...> operator+(const VectorFunctionPatch<P,ARGS...>& f1, const VectorMultivariateFunction<P>& f2) {
+    friend inline VectorFunctionPatch<P,ARGS...> operator+(const VectorFunctionPatch<P,ARGS...>& f1, const VectorMultivariateFunction<P>& f2) requires Same<DomainType,BoxDomainType> {
         return f1+factory(f1).create(f2); }
-    friend inline VectorFunctionPatch<P,ARGS...> operator-(const VectorFunctionPatch<P,ARGS...>& f1, const VectorMultivariateFunction<P>& f2) {
+    friend inline VectorFunctionPatch<P,ARGS...> operator-(const VectorFunctionPatch<P,ARGS...>& f1, const VectorMultivariateFunction<P>& f2) requires Same<DomainType,BoxDomainType> {
         return f1-factory(f1).create(f2); }
-    friend inline VectorFunctionPatch<P,ARGS...> operator*(const VectorFunctionPatch<P,ARGS...>& f1, const ScalarMultivariateFunction<P>& f2) {
+    friend inline VectorFunctionPatch<P,ARGS...> operator*(const VectorFunctionPatch<P,ARGS...>& f1, const ScalarMultivariateFunction<P>& f2) requires Same<DomainType,BoxDomainType> {
         return f1*factory(f1).create(f2); }
-    friend inline VectorFunctionPatch<P,ARGS...> operator/(const VectorFunctionPatch<P,ARGS...>& f1, const ScalarMultivariateFunction<P>& f2) {
+    friend inline VectorFunctionPatch<P,ARGS...> operator/(const VectorFunctionPatch<P,ARGS...>& f1, const ScalarMultivariateFunction<P>& f2) requires Same<DomainType,BoxDomainType> {
         return f1/factory(f1).create(f2); }
-    friend inline VectorFunctionPatch<P,ARGS...> operator+(const VectorMultivariateFunction<P>& f1, const VectorFunctionPatch<P,ARGS...>& f2) {
+    friend inline VectorFunctionPatch<P,ARGS...> operator+(const VectorMultivariateFunction<P>& f1, const VectorFunctionPatch<P,ARGS...>& f2) requires Same<DomainType,BoxDomainType> {
         return factory(f2).create(f1)+f2; }
-    friend inline VectorFunctionPatch<P,ARGS...> operator-(const VectorMultivariateFunction<P>& f1, const VectorFunctionPatch<P,ARGS...>& f2) {
+    friend inline VectorFunctionPatch<P,ARGS...> operator-(const VectorMultivariateFunction<P>& f1, const VectorFunctionPatch<P,ARGS...>& f2) requires Same<DomainType,BoxDomainType> {
         return factory(f2).create(f1)-f2; }
-    friend inline VectorFunctionPatch<P,ARGS...> operator*(const ScalarMultivariateFunction<P>& f1, const VectorFunctionPatch<P,ARGS...>& f2) {
+    friend inline VectorFunctionPatch<P,ARGS...> operator*(const ScalarMultivariateFunction<P>& f1, const VectorFunctionPatch<P,ARGS...>& f2) requires Same<DomainType,BoxDomainType> {
         return factory(f2).create(f1)*f2; }
-    friend inline VectorFunctionPatch<P,ARGS...> operator/(const ScalarMultivariateFunction<P>& f1, const VectorFunctionPatch<P,ARGS...>& f2) {
+    friend inline VectorFunctionPatch<P,ARGS...> operator/(const ScalarMultivariateFunction<P>& f1, const VectorFunctionPatch<P,ARGS...>& f2) requires Same<DomainType,BoxDomainType> {
         return factory(f2).create(f1)/f2; }
 
 
