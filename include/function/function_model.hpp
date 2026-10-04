@@ -620,9 +620,9 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
         return VectorFunctionModel<P,ARG,PR,PRE>(f1._ptr->_concrete_join(*f2._ptr)); }
 
     friend VectorFunctionModel<P,ARG,PR,PRE> combine(const ScalarFunctionModel<P,ARG,PR,PRE>& f1, const ScalarFunctionModel<P,ARG,PR,PRE>& f2) {
-        return VectorFunctionModel<P,ARG,PR,PRE>(1,f1)._ptr->_concrete_combine(VectorFunctionModel<P,ARG,PR,PRE>(1,f2)); };
+        return VectorFunctionModel<P,ARG,PR,PRE>(VectorFunctionModel<P,ARG,PR,PRE>(1,f1)._ptr->_concrete_combine(VectorFunctionModel<P,ARG,PR,PRE>(1,f2))); };
     friend VectorFunctionModel<P,ARG,PR,PRE> combine(const ScalarFunctionModel<P,ARG,PR,PRE>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {
-        return VectorFunctionModel<P,ARG,PR,PRE>(1,f1)._ptr->_concrete_combine(f2); };
+        return VectorFunctionModel<P,ARG,PR,PRE>(VectorFunctionModel<P,ARG,PR,PRE>(1,f1)._ptr->_concrete_combine(f2)); };
     friend VectorFunctionModel<P,ARG,PR,PRE> combine(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const ScalarFunctionModel<P,ARG,PR,PRE>& f2) {
         return VectorFunctionModel<P,ARG,PR,PRE>(f1._ptr->_concrete_combine(VectorFunctionModel<P,ARG,PR,PRE>(1,f2))); };
     friend VectorFunctionModel<P,ARG,PR,PRE> combine(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {

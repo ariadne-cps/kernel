@@ -45,7 +45,7 @@ if(MSVC)
     # MSVC also reports dominance (C4250) and unavailable members of explicit class
     # instantiations (C4661) for template hierarchies accepted by GCC and Clang.
     # Keep /WX enabled while disabling only these compiler-specific diagnostics.
-    add_compile_options(/wd4244 /wd4250 /wd4661)
+    add_compile_options(/bigobj /wd4244 /wd4250 /wd4267 /wd4661 /wd4702)
 endif()
 
 add_library(kernel INTERFACE)

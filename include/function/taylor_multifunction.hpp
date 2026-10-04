@@ -29,13 +29,12 @@
 #define ARIADNE_TAYLOR_MULTIFUNCTION_HPP
 
 
+#include "numeric/numeric.hpp"
+
 #include "taylor_model.hpp"
 #include "scaled_function_patch.hpp"
 
 #include "multifunction.hpp"
-
-
-#include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
 #include "algebra/algebra.hpp"

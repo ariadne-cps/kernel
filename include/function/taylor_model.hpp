@@ -62,6 +62,7 @@ template<class F> class UnknownError {
   public:
 //    template<class... PRS> requires Constructible<Error<F>,PRS...> UnknownError(PRS...) { }
     template<class... PRS> UnknownError(PRS...) { }
+    friend Bool same(UnknownError const&, UnknownError const&) { return true; }
     F raw() const;
     typename F::PrecisionType precision() const;
     operator PositiveApproximation<F> () const;

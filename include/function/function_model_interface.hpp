@@ -88,8 +88,7 @@ template<class P, class ARG, class PR, class PRE> class FunctionModelAlgebraInte
 };
 
 template<class P, class SIG, class PR, class PRE> class FunctionModelInterface
-    : public virtual FunctionInterface<P,SIG>
-    , public virtual FunctionPatchInterface<P,SIG>
+    : public virtual FunctionPatchInterface<P,SIG>
     , public virtual FunctionModelAlgebraInterface<P,SIG,PR,PRE>
 {
     using RES=typename SignatureTraits<SIG>::ResultKind; using ARG=typename SignatureTraits<SIG>::ArgumentKind;
