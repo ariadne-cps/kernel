@@ -94,6 +94,11 @@ IncompleteFlowException::IncompleteFlowException(const StringType& what, FlowSte
     : std::runtime_error(what), _computed_model(new FlowStepModelType(model)) {
 }
 
+IncompleteFlowException::IncompleteFlowException(IncompleteFlowException const& other)
+    : std::runtime_error(other),
+      _computed_model(new FlowStepModelType(other.computed_model())) {
+}
+
 IntegratorBase::IntegratorBase(Sweeper<FloatDP> s)
     : _function_factory(make_taylor_function_patch_factory(s)) { }
 

@@ -53,6 +53,7 @@ template<class T> class Suggestion;
 //! \brief A solution to the differential equation could not be computed over the requested time interval.
 struct IncompleteFlowException : public std::runtime_error {
     IncompleteFlowException(const StringType& what, FlowStepModelType const& model);
+    IncompleteFlowException(IncompleteFlowException const& other);
     FlowStepModelType const& computed_model() const { return *this->_computed_model; }
   private:
     std::unique_ptr<FlowStepModelType> _computed_model;
