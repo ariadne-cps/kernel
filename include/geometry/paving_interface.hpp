@@ -262,7 +262,7 @@ class PavingHandle
     PavingHandle(const SubPavingInterface& p) : _ptr(&dynamic_cast<PavingInterface&>(*p.clone())) { }
     PavingHandle(const PavingHandle& other) : _ptr(dynamic_cast<PavingInterface*>(other._ptr->clone())) { ARIADNE_ASSERT(_ptr); }
     PavingHandle& operator=(const PavingHandle& other) {
-        if(_ptr!=other._ptr) { delete _ptr; _ptr=other._ptr->clone(); } return *this; }
+        if(_ptr!=other._ptr) { delete _ptr; _ptr=dynamic_cast<PavingInterface*>(other._ptr->clone()); ARIADNE_ASSERT(_ptr); } return *this; }
     operator PavingInterface& () { return *this->_ptr; }
     operator const PavingInterface& () const { return *this->_ptr; }
 

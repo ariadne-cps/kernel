@@ -1951,14 +1951,14 @@ Bool subset( const GridTreeSubpaving& theSet1, const GridTreeSubpaving& theSet2 
         //it is possible that theSet1 is a subset of theSet2 if all cells of theSet1
         //outside the bounding box of theSet2 are disabled cells. This we check by
         //following the path from the foor of theSet1 to the root of theSet2.
-        pathCommonPCtoRC2.erase_prefix( static_cast<Nat>(pathCommonPCtoRC1.size()) );
+        pathCommonPCtoRC2.erase_prefix( pathCommonPCtoRC1.size() );
         result = subset( theSet1.binary_tree(), pathCommonPCtoRC2, theSet2.binary_tree() );
     } else {
         if( pathCommonPCtoRC2.is_prefix( pathCommonPCtoRC1 ) ) {
             //Since pathCommonPCtoRC2 is a prefix of pathCommonPCtoRC1,
             //theSet1 can be a subset of theSet2. This is because theSet1
             //lies within the bounding cell of theSet2
-            pathCommonPCtoRC1.erase_prefix( static_cast<Nat>(pathCommonPCtoRC2.size()) );
+            pathCommonPCtoRC1.erase_prefix( pathCommonPCtoRC2.size() );
             result = subset( theSet1.binary_tree(), theSet2.binary_tree(), pathCommonPCtoRC1 );
         } else {
             //theSet1 is a definitely not a subset of theSet2 Since their bounding boxes
@@ -2016,12 +2016,12 @@ Bool intersect( const GridTreeSubpaving& theSet1, const GridTreeSubpaving& theSe
     //If not, then they definitely do not overlap.
     if( pathCommonPCtoRC1.is_prefix( pathCommonPCtoRC2 ) ){
         //theSet2 is located somewhere within the bounding box of theSet1
-        pathCommonPCtoRC2.erase_prefix( static_cast<Nat>(pathCommonPCtoRC1.size()) );
+        pathCommonPCtoRC2.erase_prefix( pathCommonPCtoRC1.size() );
         result = intersect( theSet1.binary_tree(), pathCommonPCtoRC2, theSet2.binary_tree() );
     } else {
         if( pathCommonPCtoRC2.is_prefix( pathCommonPCtoRC1 ) ){
             //theSet1 is located somewhere within the bounding box of theSet2
-            pathCommonPCtoRC1.erase_prefix( static_cast<Nat>(pathCommonPCtoRC2.size()) );
+            pathCommonPCtoRC1.erase_prefix( pathCommonPCtoRC2.size() );
             result = intersect( theSet2.binary_tree(), pathCommonPCtoRC1, theSet1.binary_tree() );
         } else {
             //The sets do not overlap
