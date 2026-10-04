@@ -96,8 +96,6 @@ setup_standalone_project_tests(
         "${PROJECT_SOURCE_DIR}/src"
 )
 
-add_custom_target(benchmarks)
-add_subdirectory(benchmarks)
 add_subdirectory(tutorials)
 
 if(BUILD_PYTHON_BINDINGS)
