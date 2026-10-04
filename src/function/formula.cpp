@@ -69,7 +69,7 @@ template<class Y> inline Formula<Y> Formula<Y>::zero() {
 template<class Y> inline Formula<Y> Formula<Y>::constant(const Y& c) {
     return Formula<Y>(new FormulaNode<Y>(ConstantFormulaNode<Y>(Cnst(),c)),PointerTag()); }
 template<class Y> inline Formula<Y> Formula<Y>::coordinate(SizeType j) {
-    return Formula<Y>(new FormulaNode<Y>(IndexFormulaNode<Y>(Var(),Index(j))),PointerTag()); }
+    return Formula<Y>(new FormulaNode<Y>(IndexFormulaNode<Y>(Var(),Index(static_cast<Nat>(j)))),PointerTag()); }
 template<class Y> inline Vector<Formula<Y>> Formula<Y>::coordinates(SizeType n) {
     return Vector<Formula<Y>>(n,[](SizeType i){return Formula<Y>::coordinate(i);}); }
 template<class Y> inline Vector<Formula<Y>> Formula<Y>::identity(SizeType n) {

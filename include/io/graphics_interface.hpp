@@ -28,6 +28,7 @@
 
 #ifndef ARIADNE_GRAPHICS_INTERFACE_HPP
 #define ARIADNE_GRAPHICS_INTERFACE_HPP
+#include "utility/container.hpp"
 #include "numeric/declarations.hpp"
 #include "algebra/declarations.hpp"
 #include "function/declarations.hpp"

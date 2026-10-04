@@ -131,7 +131,7 @@ class Expression
     //! \brief A write for Expression objects using infix notation.
     friend class OperatorExpressionWriter;
   public:
-    operator ElementaryAlgebra<Real>() const;
+    operator ElementaryAlgebra<Real>() const requires Same<T,Real>;
   public:
     //! \brief The variables needed to compute the expression.
     Set<UntypedVariable> arguments() const;

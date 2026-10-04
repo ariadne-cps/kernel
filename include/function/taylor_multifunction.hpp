@@ -51,10 +51,10 @@
 namespace Ariadne {
 
 inline ValidatedLowerKleenean operator<(UpperBound<FloatMP> const& x1, LowerBound<FloatDP> const& x2) {
-    if (x1.raw()<x2.raw()) { return true; } else { return ValidatedLowerKleenean(ValidatedKleenean(indeterminate)); }
+    if (x1.raw()<x2.raw()) { return true; } else { return ValidatedLowerKleenean(ValidatedKleenean(LogicalValue::INDETERMINATE)); }
 }
 inline ValidatedLowerKleenean operator>(LowerBound<FloatMP> const& x1, UpperBound<FloatDP> const& x2) {
-    if (x1.raw()>x2.raw()) { return true; } else { return ValidatedLowerKleenean(ValidatedKleenean(indeterminate)); }
+    if (x1.raw()>x2.raw()) { return true; } else { return ValidatedLowerKleenean(ValidatedKleenean(LogicalValue::INDETERMINATE)); }
 }
 
 

@@ -115,7 +115,7 @@ auto ConstraintSolver::feasible(const ExactBoxType& domain,
     } catch(const SingularMatrixException&) {
         LOGGING_PRINTLN(
             "Interior-point candidate search encountered a singular system");
-        return make_pair(ValidatedKleenean(indeterminate),ExactPointType());
+        return make_pair(ValidatedKleenean(LogicalValue::INDETERMINATE),ExactPointType());
     }
 
     if(definitely(candidate_result.first)) {
@@ -126,7 +126,7 @@ auto ConstraintSolver::feasible(const ExactBoxType& domain,
         return make_pair(false,ExactPointType());
     }
 
-    return make_pair(ValidatedKleenean(indeterminate),ExactPointType());
+    return make_pair(ValidatedKleenean(LogicalValue::INDETERMINATE),ExactPointType());
 }
 
 Bool ConstraintSolver::reduce(UpperBoxType& domain, const ValidatedVectorMultivariateFunction& function, const ExactBoxType& codomain) const

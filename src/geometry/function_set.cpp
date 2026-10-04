@@ -1065,7 +1065,7 @@ ValidatedLowerKleenean ValidatedConstrainedImageSet::overlaps(const ExactBoxType
         if(definitely(found_feasible)) { return true; }
         if(possibly(found_feasible)) {
             if(splittings==MAX_SPLITTINGS) {
-                feasible = ValidatedKleenean(indeterminate);
+                feasible = ValidatedKleenean(LogicalValue::INDETERMINATE);
             } else {
                 Pair<ExactBoxType,ExactBoxType> split_subdomains=subdomain.split();
                 subdomains.append(make_pair(splittings+1,split_subdomains.first));

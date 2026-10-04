@@ -41,7 +41,7 @@ namespace Ariadne {
 class Grid;
 class GridCell;
 
-#define ARIADNE_ABSTRACT_METHOD { throw std::runtime_error(StringType("ERROR: Unimplemented abstract method ")+__PRETTY_FUNCTION__); }
+#define ARIADNE_ABSTRACT_METHOD { throw std::runtime_error(StringType("ERROR: Unimplemented abstract method ")+ARIADNE_PRETTY_FUNCTION); }
 
 // A continuous predicate taking values in a three-valued logic.
 // NOTE: Corresponds to your SetCheckerInterface; I think that this name is better.

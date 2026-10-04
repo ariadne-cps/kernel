@@ -22,7 +22,8 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "function/functional.hpp"#include <iostream>
+#include "function/functional.hpp"
+#include <iostream>
 #include <iomanip>
 
 #include "utility/macros.hpp"

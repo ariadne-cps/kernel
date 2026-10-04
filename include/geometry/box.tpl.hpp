@@ -33,7 +33,7 @@
 namespace Ariadne {
 
 
-template<class I> decltype(declval<I>().is_empty()) Box<I>::is_empty() const
+template<class I> auto Box<I>::is_empty() const -> decltype(declval<IntervalType>().is_empty())
 {
     const Box<I>& bx=*this;
     decltype(declval<I>().is_empty()) res=false;
@@ -45,7 +45,7 @@ template<class I> decltype(declval<I>().is_empty()) Box<I>::is_empty() const
 }
 
 
-template<class I> decltype(declval<I>().is_bounded()) Box<I>::is_bounded() const
+template<class I> auto Box<I>::is_bounded() const -> decltype(declval<IntervalType>().is_bounded())
 {
     const Box<I>& bx=*this;
     decltype(declval<I>().is_bounded()) res=true;

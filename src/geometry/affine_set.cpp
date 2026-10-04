@@ -248,7 +248,7 @@ ValidatedAffineConstrainedImageSet::domain() const
 }
 
 ValidatedKleenean ValidatedAffineConstrainedImageSet::is_bounded() const {
-    return ValidatedKleenean(ExactBoxType(this->domain()).is_bounded()) || ValidatedKleenean(indeterminate);
+    return ValidatedKleenean(ExactBoxType(this->domain()).is_bounded()) || ValidatedKleenean(LogicalValue::INDETERMINATE);
 }
 
 UpperBoxType ValidatedAffineConstrainedImageSet::bounding_box() const {
@@ -286,7 +286,7 @@ ValidatedLowerKleenean ValidatedAffineConstrainedImageSet::separated(const Exact
 }
 
 ValidatedLowerKleenean ValidatedAffineConstrainedImageSet::is_empty() const {
-    return ValidatedLowerKleenean(this->separated(cast_exact_box(this->bounding_box()))) || ValidatedKleenean(indeterminate);
+    return ValidatedLowerKleenean(this->separated(cast_exact_box(this->bounding_box()))) || ValidatedKleenean(LogicalValue::INDETERMINATE);
 }
 
 ValidatedLowerKleenean ValidatedAffineConstrainedImageSet::inside(const ExactBoxType& bx) const {

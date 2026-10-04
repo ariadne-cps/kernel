@@ -24,7 +24,8 @@
  */
 
 #include <iostream>
-#include <iomanip>#include "function/functional.hpp"
+#include <iomanip>
+#include "function/functional.hpp"
 #include "utility/macros.hpp"
 #include "utility/exceptions.hpp"
 #include "utility/stlio.hpp"
