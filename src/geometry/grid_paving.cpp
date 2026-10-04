@@ -58,7 +58,7 @@ LatticeBoxType GridAbstractCell::primary_cell_lattice_box( const Nat theExtent, 
 }
 
 Nat GridAbstractCell::smallest_enclosing_primary_cell_extent( const LatticeBoxType& theLatticeBoxType ) {
-    const dimension_type dimensions = theLatticeBoxType.size();
+    const dimension_type dimensions = static_cast<dimension_type>(theLatticeBoxType.size());
     Int leftBottomCorner = 0, rightTopCorner = 1;
     Nat extent = 0;
     //The zero level coordinates are known, so we need to iterate only for higher level primary cells
@@ -198,7 +198,7 @@ class BinaryCode {
     }
     Array<BinaryCode> split(DimensionType dim) {
         assert(_height % dim==0);
-        Array<BinaryCode> codes(dim, BinaryCode(_height/dim,BinaryWord()));
+        Array<BinaryCode> codes(dim, BinaryCode(static_cast<Nat>(_height/dim),BinaryWord()));
         DimensionType k=0;
         for (SizeType i=0; i!=_word.size(); ++i) {
             codes[k]._word.append(this->_word[i]);
@@ -213,7 +213,7 @@ class BinaryCode {
 // 1. Compute the primary cell located the the extent \a theExtent above the zero level,
 // 2. Compute the cell defined by the path \a theWord (from the primary cell).
 LatticeBoxType GridCell::compute_lattice_box( const DimensionType dimensions, const Nat theExtent, const BinaryWord& theWord ) {
-    LatticeBoxType theResultLatticeBoxType( primary_cell_lattice_box( theExtent , dimensions ) );
+    LatticeBoxType theResultLatticeBoxType( primary_cell_lattice_box( theExtent , static_cast<Nat>(dimensions) ) );
 
     //2. Compute the cell on some grid, corresponding to the binary path from the primary cell.
     SizeType current_dimension = 0;
@@ -1116,18 +1116,18 @@ inline Nat GridTreeSubpaving::zero_cell_subdivisions_to_tree_subdivisions( const
     //to make. But, the given paving is has the root node different from the primary cell,
     //thus we have to subtract the length of the path from the primary cell to the root cell
     //of this subpaving, to get the proper number of subdivisions to make in the binary tree
-    Int theTreeDepth = ( primaryCellExtent + numSubdivInDim ) * _theGridCell.grid().dimension() - primaryToRootCellPathLength;
+    Int theTreeDepth = static_cast<Int>(( primaryCellExtent + numSubdivInDim ) * _theGridCell.grid().dimension()) - static_cast<Int>(primaryToRootCellPathLength);
     //If the new depth is not positive then we already have the required number
     //of subdivisions so then nothing has to be done, so we return zero!
     return (theTreeDepth > 0) ? static_cast<Nat>(theTreeDepth) : 0u;
 }
 
 Void GridTreeSubpaving::mince( Nat numSubdivInDim ) {
-    mince_to_tree_depth( zero_cell_subdivisions_to_tree_subdivisions( numSubdivInDim, _theGridCell.root_extent(), _theGridCell.word().size() ) );
+    mince_to_tree_depth( zero_cell_subdivisions_to_tree_subdivisions( numSubdivInDim, _theGridCell.root_extent(), static_cast<Nat>(_theGridCell.word().size()) ) );
 }
 
 Void GridTreeSubpaving::mince_to_depth( const Nat theNewDepth ) {
-    Int theNewTreeDepth = _theGridCell.root_extent() * _theGridCell.grid().dimension() + theNewDepth - _theGridCell.word().size();
+    Int theNewTreeDepth = static_cast<Int>(_theGridCell.root_extent() * _theGridCell.grid().dimension() + theNewDepth) - static_cast<Int>(_theGridCell.word().size());
     _pRootTreeNode->mince( (theNewTreeDepth > 0) ? static_cast<Nat>(theNewTreeDepth) : 0u );
 }
 
@@ -1215,7 +1215,7 @@ Void GridTreeSubpaving::subdivide( ApproximateDouble theInputMaxCellWidth ) {
         //Compute the max number of subdivisions and the dimension where to do them
         if( num_subdiv >= max_num_subdiv_dim ){
             max_num_subdiv_dim = num_subdiv;
-            max_subdiv_dim = i;
+            max_subdiv_dim = static_cast<DimensionType>(i);
         }
     }
 
@@ -1227,7 +1227,7 @@ Void GridTreeSubpaving::subdivide( ApproximateDouble theInputMaxCellWidth ) {
         //3.1 Compute the dimension C for which we had the last split, we should start with the primary cell which is the root of
         //the GridTreeSet because from this cell we begin subdividing in dimension one by one: 1,2,...,N, then again 1,2,...,N.
         //The path to the root of the sub-paving is given by the binary word, its length gives the number of tree subdivisions:
-        const Nat pathLength = _theGridCell.word().size();
+        const Nat pathLength = static_cast<Nat>(_theGridCell.word().size());
         //If pathLength == 0 then there were no subdivisions in the tree, so we assign last_subdiv_dim == -1
         const Int last_subdiv_dim = ( pathLength == 0 ) ? -1 : static_cast<Int>(( pathLength - 1 )  % dimensions);
 
@@ -1951,14 +1951,14 @@ Bool subset( const GridTreeSubpaving& theSet1, const GridTreeSubpaving& theSet2 
         //it is possible that theSet1 is a subset of theSet2 if all cells of theSet1
         //outside the bounding box of theSet2 are disabled cells. This we check by
         //following the path from the foor of theSet1 to the root of theSet2.
-        pathCommonPCtoRC2.erase_prefix( pathCommonPCtoRC1.size() );
+        pathCommonPCtoRC2.erase_prefix( static_cast<Nat>(pathCommonPCtoRC1.size()) );
         result = subset( theSet1.binary_tree(), pathCommonPCtoRC2, theSet2.binary_tree() );
     } else {
         if( pathCommonPCtoRC2.is_prefix( pathCommonPCtoRC1 ) ) {
             //Since pathCommonPCtoRC2 is a prefix of pathCommonPCtoRC1,
             //theSet1 can be a subset of theSet2. This is because theSet1
             //lies within the bounding cell of theSet2
-            pathCommonPCtoRC1.erase_prefix( pathCommonPCtoRC2.size() );
+            pathCommonPCtoRC1.erase_prefix( static_cast<Nat>(pathCommonPCtoRC2.size()) );
             result = subset( theSet1.binary_tree(), theSet2.binary_tree(), pathCommonPCtoRC1 );
         } else {
             //theSet1 is a definitely not a subset of theSet2 Since their bounding boxes
@@ -2016,12 +2016,12 @@ Bool intersect( const GridTreeSubpaving& theSet1, const GridTreeSubpaving& theSe
     //If not, then they definitely do not overlap.
     if( pathCommonPCtoRC1.is_prefix( pathCommonPCtoRC2 ) ){
         //theSet2 is located somewhere within the bounding box of theSet1
-        pathCommonPCtoRC2.erase_prefix( pathCommonPCtoRC1.size() );
+        pathCommonPCtoRC2.erase_prefix( static_cast<Nat>(pathCommonPCtoRC1.size()) );
         result = intersect( theSet1.binary_tree(), pathCommonPCtoRC2, theSet2.binary_tree() );
     } else {
         if( pathCommonPCtoRC2.is_prefix( pathCommonPCtoRC1 ) ){
             //theSet1 is located somewhere within the bounding box of theSet2
-            pathCommonPCtoRC1.erase_prefix( pathCommonPCtoRC2.size() );
+            pathCommonPCtoRC1.erase_prefix( static_cast<Nat>(pathCommonPCtoRC2.size()) );
             result = intersect( theSet2.binary_tree(), pathCommonPCtoRC1, theSet1.binary_tree() );
         } else {
             //The sets do not overlap
@@ -2361,7 +2361,7 @@ Void GridTreePaving::_adjoin_lower_approximation( const Grid & theGrid, BinaryTr
 
     if( definitely( theSet.covers( theCurrentCell.box() ) ) ) {
         pBinaryTreeNode->make_leaf(true);
-        pBinaryTreeNode->mince( max_mince_tree_depth - pPath->size() );
+        pBinaryTreeNode->mince( max_mince_tree_depth - static_cast<Nat>(pPath->size()) );
     } else if ( definitely( theSet.overlaps( theCurrentCell.box() ) ) ) {
         if( pPath->size() >= max_mince_tree_depth ) {
             //We should not mince any further.
@@ -2414,7 +2414,7 @@ Void GridTreePaving::adjoin_outer_approximation( const EffectiveEuclideanCompact
     //   that encloses the theSet (after it is mapped onto theGrid).
     const Nat extent = GridCell::smallest_enclosing_primary_cell_extent( theSet.bounding_box(), theGrid );
     //Compute the extent of the primary cell for the outer approximation stepping up by the number of dimensions
-    const Nat outer_approx_primary_cell_extent = extent + theGrid.dimension();
+    const Nat outer_approx_primary_cell_extent = extent + static_cast<Nat>(theGrid.dimension());
 
     //2. Align this paving and paving enclosing the provided set
     Bool has_stopped = false;
@@ -2446,7 +2446,7 @@ Void GridTreePaving::adjoin_outer_approximation( const ValidatedEuclideanCompact
     //   that encloses the theSet (after it is mapped onto theGrid).
     const Nat extent = GridCell::smallest_enclosing_primary_cell_extent( theSet.bounding_box(), theGrid );
     //Compute the extent of the primary cell for the outer approximation stepping up by the number of dimensions
-    const Nat outer_approx_primary_cell_extent = extent + theGrid.dimension();
+    const Nat outer_approx_primary_cell_extent = extent + static_cast<Nat>(theGrid.dimension());
 
     //2. Align this paving and paving enclosing the provided set
     Bool has_stopped = false;
@@ -3095,8 +3095,8 @@ GridTreePaving image(const GridTreePaving& theSet, const Projection& theProjecti
 
 GridTreePaving outer_skew_product(GridTreePaving const& gtp1, Grid const& g2, ValidatedVectorMultivariateFunction const& f) {
     Grid g1=gtp1.grid();
-    Nat tree_depth = gtp1.tree_depth();
-    Nat fineness=tree_depth/g1.dimension()-gtp1.root_cell().root_extent();
+    Nat tree_depth = static_cast<Nat>(gtp1.tree_depth());
+    Nat fineness=tree_depth/static_cast<Nat>(g1.dimension())-gtp1.root_cell().root_extent();
 
     const_cast<GridTreePaving&>(gtp1).mince(fineness);
     GridTreePaving gtp2(g2);
