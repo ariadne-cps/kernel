@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "ariadne-kernel.hpp"
-#include "io/cairo.hpp"
 
 using namespace Ariadne;
 

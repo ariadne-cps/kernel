@@ -25,7 +25,7 @@
 #ifndef ARIADNE_CAIRO_HPP
 #define ARIADNE_CAIRO_HPP
 
-#include <cairo/cairo.h>
+#include <cairo.h>
 #include "io/figure.hpp"
 
 namespace Ariadne {
