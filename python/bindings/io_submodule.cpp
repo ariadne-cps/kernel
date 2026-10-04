@@ -23,7 +23,7 @@
  */
 
 #include "pybind11.hpp"
-#include "utilities.hpp"
+#include "kernel-utilities.hpp"
 
 #include "io/command_line_interface.hpp"
 

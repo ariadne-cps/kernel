@@ -23,7 +23,7 @@
  */
 
 #include "pybind11.hpp"
-#include "utilities.hpp"
+#include "kernel-utilities.hpp"
 
 namespace Ariadne {
 

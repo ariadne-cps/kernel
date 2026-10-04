@@ -24,7 +24,7 @@
 
 #include "pybind11.hpp"
 #include "pybind11.hpp"
-#include "utilities.hpp"
+#include "kernel-utilities.hpp"
 #include "numeric_submodule.hpp"
 #include "interval-utilities.hpp"
 #include "geometry/geometry.hpp"

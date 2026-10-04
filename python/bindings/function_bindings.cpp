@@ -25,7 +25,7 @@
 #include <type_traits>
 
 #include "pybind11.hpp"
-#include "utilities.hpp"
+#include "kernel-utilities.hpp"
 #include "numeric_submodule.hpp"
 
 #include "algebra/expansion.tpl.hpp"
