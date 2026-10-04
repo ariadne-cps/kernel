@@ -175,8 +175,8 @@ template<class P, class... ARGS> class FunctionPatch<P,RealScalar(ARGS...)>
     FunctionPatch() : _ptr() { }
     explicit FunctionPatch(FunctionPatchInterface<P,SIG>* p) : _ptr(p) { }
     FunctionPatch(const SharedPointer<const FunctionPatchInterface<P,SIG>> p) : _ptr(p->_concrete_clone()) { }
-    FunctionPatch(const FunctionPatch<P,SIG>& f) : _ptr(f._ptr) { }
-    FunctionPatch& operator=(const FunctionPatch<P,SIG>& f) { this->_ptr=f._ptr; return *this; }
+    FunctionPatch(const FunctionPatch<P,SIG>& f) : _ptr(f._ptr.operator->() ? f._ptr->_concrete_clone() : nullptr) { }
+    FunctionPatch& operator=(const FunctionPatch<P,SIG>& f) { this->_ptr=f._ptr.operator->() ? f._ptr->_concrete_clone() : nullptr; return *this; }
         FunctionPatch(const FunctionPatchInterface<P,SIG>& f) : _ptr(f._concrete_clone()) { }
     FunctionPatch(const Function<P,SIG>& f) : _ptr(dynamic_cast<FunctionPatchInterface<P,SIG>*>(f.raw_pointer()->_clone())) { }
     template<class PR, class PRE> FunctionPatch(FunctionModel<P,SIG,PR,PRE> fm);
@@ -401,8 +401,8 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
     inline explicit FunctionPatch(FunctionPatchInterface<P,SIG>* p) : _ptr(p) { }
     template<class PR, class PRE> FunctionPatch(FunctionModel<P,SIG,PR,PRE> fm);
     inline FunctionPatch(const FunctionPatchInterface<P,SIG>& f) : _ptr(f._concrete_clone()) { }
-    inline FunctionPatch(const FunctionPatch<P,SIG>& f) : _ptr(f._ptr) { }
-    inline FunctionPatch& operator=(const FunctionPatch<P,SIG>& f) { this->_ptr=f._ptr; return *this; }
+    inline FunctionPatch(const FunctionPatch<P,SIG>& f) : _ptr(f._ptr.operator->() ? f._ptr->_concrete_clone() : nullptr) { }
+    inline FunctionPatch& operator=(const FunctionPatch<P,SIG>& f) { this->_ptr=f._ptr.operator->() ? f._ptr->_concrete_clone() : nullptr; return *this; }
     inline operator const FunctionPatchInterface<P,SIG>& () const { return *_ptr; }
     inline operator Function<P,SIG> () const { return Function<P,SIG>(*_ptr); } // DEPRECATED
     friend inline Function<P,SIG> cast_unchecked(FunctionPatch<P,SIG> const& fp) {
