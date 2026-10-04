@@ -78,7 +78,7 @@ template<class T> class ForwardConstantIteratorHandle
     ForwardConstantIteratorHandle(const ForwardConstantIteratorInterface<T>& p) : _ptr(p.clone()) { }
     ForwardConstantIteratorHandle(const ForwardConstantIteratorHandle<T>& other) : _ptr(other._ptr->clone()) { }
     ForwardConstantIteratorHandle<T>& operator=(const ForwardConstantIteratorHandle<T>& other) {
-        if(_ptr!=other._ptr) { delete _ptr; _ptr=dynamic_cast<PavingInterface*>(other._ptr->clone()); ARIADNE_ASSERT(_ptr); } return *this; }
+        if(_ptr!=other._ptr) { delete _ptr; _ptr=other._ptr->clone(); } return *this; }
 
     const T& operator*() const { return _ptr->dereference(); }
     const T* operator->() const { return &_ptr->dereference(); }
