@@ -82,7 +82,7 @@ template<class T, class Y> Expression<T> substitute(const Expression<T>& e, cons
 
 template<class T> Nat __hash__(const T&);
 template<> Nat __hash__<StringVariable>(const StringVariable& v) {
-    return std::hash<const char*>()(v.name().c_str()); }
+    return static_cast<Nat>(std::hash<const char*>()(v.name().c_str())); }
 
 
 

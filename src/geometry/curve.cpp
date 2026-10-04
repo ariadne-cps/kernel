@@ -146,7 +146,7 @@ InterpolatedCurve::bounding_box() const
 Void
 InterpolatedCurve::draw(CanvasInterface& c, const Projection2d& p) const
 {
-    Nat xi=p.x_coordinate(); Nat yi=p.y_coordinate();
+    DimensionType xi=p.x_coordinate(); DimensionType yi=p.y_coordinate();
     ConstIterator iter=this->begin();
     auto pt=join(iter->second,iter->first);
     c.move_to(pt[xi],pt[yi]);

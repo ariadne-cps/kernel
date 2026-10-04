@@ -621,10 +621,10 @@ Void graded_flow_init(const Vector<ValidatedProcedure>& f,
 
     CharacteristicsType<ValidatedDifferential> prs(xs+as,so,x.element_characteristics());
     GradedValidatedDifferential null(prs);
-    GradedValidatedDifferential zero(0u,prs);
+    GradedValidatedDifferential zero_differential(0u,prs);
     fy=Vector< GradedValidatedDifferential >(ress,null);
     tmp=List< GradedValidatedDifferential >(tmps,null);
-    yta=Vector< GradedValidatedDifferential >(args,zero);
+    yta=Vector< GradedValidatedDifferential >(args,zero_differential);
     for(SizeType i=0; i!=xs; ++i) {
         yta[i]=GradedValidatedDifferential(ValidatedDifferential::variable(xs+as,so,x[i],i));
     }

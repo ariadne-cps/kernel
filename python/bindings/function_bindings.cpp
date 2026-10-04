@@ -94,7 +94,7 @@ template<class P, class SIG, class PR, class PRE> OutputStream& operator<<(Outpu
 }
 
 ValidatedVectorMultivariateTaylorFunctionModelDP __getslice__(const ValidatedVectorMultivariateTaylorFunctionModelDP& tf, Int start, Int stop) {
-    Int rs = tf.result_size();
+    Int rs = static_cast<Int>(tf.result_size());
     if(start<0) { start+=rs; }
     if(stop<0) { stop+=rs; }
     ARIADNE_ASSERT_MSG(0<=start&&start<=stop&&stop<=rs,

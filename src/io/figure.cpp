@@ -134,8 +134,8 @@ Bool valid_axis_variables(const RealSpace& space, const Variables2d& variables) 
 
 Projection2d projection(const RealSpace& space, const Variables2d& variables) {
     ARIADNE_ASSERT(valid_axis_variables(space,variables));
-    Nat x_index = (variables.x()==TimeVariable() && !space.contains(variables.x())) ? space.dimension() : space.index(variables.x());
-    Nat y_index = space.index(variables.y());
+    DimensionType x_index = static_cast<DimensionType>((variables.x()==TimeVariable() && !space.contains(variables.x())) ? space.dimension() : space.index(variables.x()));
+    DimensionType y_index = static_cast<DimensionType>(space.index(variables.y()));
     return Projection2d(space.dimension(),x_index,y_index);
 }
 
