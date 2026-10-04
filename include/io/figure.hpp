@@ -28,9 +28,6 @@
 
 #ifndef ARIADNE_FIGURE_HPP
 #define ARIADNE_FIGURE_HPP
-
-#include "config.hpp"
-
 #include <iosfwd>
 #include <string>
 #include <vector>

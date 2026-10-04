@@ -30,7 +30,6 @@
 #define ARIADNE_GRAPHICS_BACKEND_INTERFACE_HPP
 
 #include <iosfwd>
-#include "config.hpp"
 #include "utility/pointer.hpp"
 #include "utility/handle.hpp"
 

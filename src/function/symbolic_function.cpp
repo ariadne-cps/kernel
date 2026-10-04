@@ -23,9 +23,6 @@
  */
 
 #include "function/functional.hpp"
-
-#include "config.hpp"
-
 #include "numeric/numeric.hpp"
 #include "algebra/differential.hpp"
 #include "numeric/operators.hpp"

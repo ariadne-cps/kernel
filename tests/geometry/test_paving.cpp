@@ -24,8 +24,6 @@
 
 #include <iostream>
 #include <fstream>
-
-#include "config.hpp"
 #include "geometry/paving_interface.hpp"
 #include "geometry/grid_paving.hpp"
 #include "function/function.hpp"

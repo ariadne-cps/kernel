@@ -33,7 +33,7 @@ The pinned revisions used for the extraction are:
 - Threading: `d3473103822e91ea7cde65a1226c93c1dd9b9347`
 - Utility on both dependency paths: `9194f4dd7c6a89fba422bed81382d4135cddc004`
 
-Cairo is optional and is used by the IO graphics backend when available.
+Cairo is a required external dependency of the Kernel IO graphics backend.
 
 ## Build
 

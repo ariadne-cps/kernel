@@ -22,7 +22,6 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "config.hpp"
 #include "utility/handle.hpp"
 #include "io/graphics_backend_interface.hpp"
 #include "io/graphics_manager.hpp"
@@ -35,11 +34,7 @@
 namespace Ariadne {
 
 GraphicsBackend default_backend() {
-    #if defined HAVE_CAIRO_H
-        return CairoGraphicsBackend();
-    #else
-        return NullGraphicsBackend();
-    #endif
+    return CairoGraphicsBackend();
 }
 
 GraphicsManager::GraphicsManager() : _backend(default_backend()), _drawer(AffineDrawer(0)) {

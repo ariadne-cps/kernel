@@ -26,9 +26,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-
-#include "config.hpp"
-
 #include "solving/solver.hpp"
 #include "function/function.hpp"
 #include "function/function_patch.hpp"

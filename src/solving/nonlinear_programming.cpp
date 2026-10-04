@@ -27,8 +27,6 @@
 // For some of the terminology used
 
 #include "function/functional.hpp"
-#include "config.hpp"
-
 #include <limits>
 
 #include "utility/macros.hpp"

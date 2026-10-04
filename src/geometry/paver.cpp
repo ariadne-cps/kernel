@@ -23,8 +23,6 @@
  */
 
 #include "function/functional.hpp"
-#include "config.hpp"
-
 #include "geometry/paver.hpp"
 
 #include "utility/macros.hpp"

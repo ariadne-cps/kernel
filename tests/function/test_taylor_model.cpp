@@ -24,7 +24,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include "config.hpp"
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"

@@ -1,0 +1,101 @@
+name: Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    name: Windows 2025 [Release]
+    runs-on: windows-2025
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/.vcpkg-cache,readwrite"
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Install Python Test Dependencies
+      run: python -m pip install pytest
+
+    - name: Get vcpkg revision
+      shell: pwsh
+      run: |
+        $rev = git -C C:/vcpkg rev-parse HEAD
+        "VCPKG_REV=$rev" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+    - name: Restore vcpkg binary cache
+      id: vcpkg-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/.vcpkg-cache
+        key: vcpkg-windows-release-${{ env.VCPKG_REV }}-${{ hashFiles('cmake/triplets/x64-windows-release.cmake') }}
+        restore-keys: |
+          vcpkg-windows-release-${{ env.VCPKG_REV }}-
+
+    - name: Install GMP, MPFR and Cairo with vcpkg
+      shell: pwsh
+      run: |
+        & C:/vcpkg/vcpkg.exe install gmp:x64-windows-release mpfr:x64-windows-release cairo:x64-windows-release --host-triplet=x64-windows-release --overlay-triplets="$env:GITHUB_WORKSPACE/cmake/triplets"
+
+    - name: Save vcpkg binary cache
+      if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/.vcpkg-cache
+        key: vcpkg-windows-release-${{ env.VCPKG_REV }}-${{ hashFiles('cmake/triplets/x64-windows-release.cmake') }}
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{ runner.workspace }}/build
+
+    - name: Configure CMake
+      working-directory: ${{ runner.workspace }}/build
+      run: cmake $env:GITHUB_WORKSPACE -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DX_VCPKG_APPLOCAL_DEPS_SERIALIZED=ON -DWARNINGS_AS_ERRORS=ON -DPYTHON_ENFORCE_TESTS=ON
+
+    - name: Build
+      working-directory: ${{ runner.workspace }}/build
+      run: cmake --build . --parallel --config Release --target everything
+
+    - name: Test C++
+      working-directory: ${{ runner.workspace }}/build
+      run: ctest -C Release -LE python -V --timeout 60
+
+    - name: Test Python
+      working-directory: ${{ runner.workspace }}/build
+      run: ctest -C Release -L python -V --timeout 60
+
+    - name: Install Ariadne Kernel
+      working-directory: ${{ runner.workspace }}/build
+      run: cmake --install . --config Release --prefix "${{ runner.workspace }}/install"
+
+    - name: Prepare C++ Kernel Tutorial
+      shell: pwsh
+      run: cmake -E copy_directory "$env:GITHUB_WORKSPACE/tutorials/tutorial_kernel" "${{ runner.workspace }}/tutorial_kernel"
+
+    - name: Check C++ Kernel Tutorial
+      shell: pwsh
+      working-directory: ${{ runner.workspace }}/tutorial_kernel
+      run: |
+        cmake -S . -B build -DCMAKE_PREFIX_PATH="${{ runner.workspace }}/install" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DX_VCPKG_APPLOCAL_DEPS_SERIALIZED=ON
+        cmake --build build --parallel --config Release
+        $env:PATH = "${{ runner.workspace }}\install\bin;C:\vcpkg\installed\x64-windows-release\bin;$env:PATH"
+        & ".\build\Release\tutorial_kernel.exe"
+
+    - name: Check Python Kernel Tutorial
+      shell: pwsh
+      working-directory: ${{ github.workspace }}/python/tutorials
+      run: |
+        $env:PYTHONPATH = "${{ runner.workspace }}\build\python\Release"
+        python function_demonstration.py
+
+    - name: Verify Final Installation
+      working-directory: ${{ runner.workspace }}/build
+      run: cmake --install . --config Release --prefix "${{ runner.workspace }}/verify-install"

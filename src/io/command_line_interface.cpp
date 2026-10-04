@@ -22,7 +22,6 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "config.hpp"
 #include "threading/thread_manager.hpp"
 #include "utility/handle.hpp"
 #include "drawer.hpp"
@@ -214,9 +213,7 @@ class GraphicsBackendArgumentParser : public ValuedArgumentParserBase {
 
     VoidFunction _create_processor(ArgumentStream& stream) const override {
         String val = stream.pop();
-        #ifdef HAVE_CAIRO_H
-	    if (val == "cairo") return []{ GraphicsManager::instance().set_backend(CairoGraphicsBackend()); };
-        #endif
+        if (val == "cairo") return []{ GraphicsManager::instance().set_backend(CairoGraphicsBackend()); };
         if (val == "none") return []{ GraphicsManager::instance().set_backend(NullGraphicsBackend()); };
 	    throw std::exception();
     }

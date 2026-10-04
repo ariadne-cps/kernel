@@ -26,8 +26,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-
-#include "config.hpp"
 #include "utility/stlio.hpp"
 
 #include "utility/macros.hpp"

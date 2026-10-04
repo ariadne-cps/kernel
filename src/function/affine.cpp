@@ -23,8 +23,6 @@
  */
 
 #include "numeric/numeric.hpp"
-#include "config.hpp"
-
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "function/function.hpp"

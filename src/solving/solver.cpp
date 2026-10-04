@@ -23,8 +23,6 @@
  */
 
 #include "function/functional.hpp"
-#include "config.hpp"
-
 #include "interval/interval.hpp"
 #include "function/function_model.hpp"
 

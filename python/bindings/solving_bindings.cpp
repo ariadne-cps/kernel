@@ -24,9 +24,6 @@
 
 #include "pybind11.hpp"
 #include "utilities.hpp"
-
-#include "config.hpp"
-
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"

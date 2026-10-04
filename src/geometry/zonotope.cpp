@@ -22,10 +22,7 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "function/functional.hpp"
-#include "config.hpp"
-
-#include "geometry/zonotope.hpp"
+#include "function/functional.hpp"#include "geometry/zonotope.hpp"
 
 #include <iostream>
 #include <vector>

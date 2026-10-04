@@ -23,8 +23,6 @@
  */
 
 #include "function/functional.hpp"
-#include "config.hpp"
-
 #include "utility/macros.hpp"
 #include "logging/logging.hpp"
 #include "algebra/polynomial.hpp"

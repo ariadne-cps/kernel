@@ -25,10 +25,6 @@
 #ifndef ARIADNE_CAIRO_HPP
 #define ARIADNE_CAIRO_HPP
 
-#include "config.hpp"
-
-#ifdef HAVE_CAIRO_H
-
 #include <cairo/cairo.h>
 #include "io/figure.hpp"
 
@@ -89,7 +85,6 @@ class CairoGraphicsBackend : public GraphicsBackendInterface {
 
 } // namespace Ariadne
 
-#endif // HAVE_CAIRO_H
 
 #endif // ARIADNE_CAIRO_HPP
 

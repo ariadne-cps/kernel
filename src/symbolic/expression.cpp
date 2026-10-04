@@ -23,9 +23,6 @@
  */
 
 #include "utility/standard.hpp"
-#include "config.hpp"
-
-
 #include "algebra/algebra.hpp"
 #include "algebra/algebra_wrapper.hpp"
 

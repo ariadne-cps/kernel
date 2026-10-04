@@ -23,8 +23,6 @@
  */
 
 #include "utility/standard.hpp"
-#include "config.hpp"
-
 #include "symbolic/expression_set.hpp"
 #include "symbolic/expression.hpp"
 #include "symbolic/space.hpp"

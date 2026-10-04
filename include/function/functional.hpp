@@ -27,11 +27,7 @@
  */
 
 #ifndef ARIADNE_FUNCTIONAL_HPP
-#define ARIADNE_FUNCTIONAL_HPP
-
-#include "config.hpp"
-
-#include "numeric/numeric.hpp"
+#define ARIADNE_FUNCTIONAL_HPP#include "numeric/numeric.hpp"
 
 #include "algebra/differential.hpp"
 

@@ -23,8 +23,6 @@
  */
 
 #include "function/functional.hpp"
-#include "config.hpp"
-
 #include "io/drawer.hpp"
 
 #include "utility/macros.hpp"

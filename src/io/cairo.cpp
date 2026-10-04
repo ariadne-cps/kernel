@@ -23,7 +23,6 @@
  */
 
 #include "utility/standard.hpp"
-#include "config.hpp"
 
 #include "utility/macros.hpp"
 #include "utility/stlio.hpp"
@@ -40,7 +39,6 @@
 
 namespace Ariadne {
 
-#ifdef HAVE_CAIRO_H
 
 static const Int LEFT_MARGIN = 160;
 static const Int BOTTOM_MARGIN = 40;
@@ -237,8 +235,6 @@ Void CairoCanvas::finalise()
 Void CairoCanvas::set_colour_palette() {  }
 Void CairoCanvas::fill_3d() {  }
 Void CairoCanvas::set_heat_map(Bool) {  }
-
-#endif
 
 } // namespace Ariadne
 

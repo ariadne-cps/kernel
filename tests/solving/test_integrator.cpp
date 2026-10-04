@@ -26,9 +26,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-
-#include "config.hpp"
-
 #include "solving/integrator.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/algebra.hpp"

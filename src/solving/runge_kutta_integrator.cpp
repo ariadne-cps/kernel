@@ -23,8 +23,6 @@
  */
 
 #include "utility/standard.hpp"
-#include "config.hpp"
-
 #include <iostream>
 
 #include "solving/runge_kutta_integrator.hpp"

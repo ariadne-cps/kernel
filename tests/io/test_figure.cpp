@@ -21,8 +21,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-#include "config.hpp"
 #include "utility/test.hpp"
 
 #include "function/function.hpp"

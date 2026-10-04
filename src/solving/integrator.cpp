@@ -23,8 +23,6 @@
  */
 
 #include "function/functional.hpp"
-#include "config.hpp"
-
 #include <iomanip>
 
 #include "solving/integrator.hpp"

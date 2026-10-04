@@ -29,8 +29,6 @@
 #include <iomanip>
 #include <stdexcept>
 #include <fenv.h>
-
-#include "config.hpp"
 #include "geometry/set.hpp"
 #include "geometry/set_wrapper.hpp"
 #include "geometry/measurable_set.hpp"

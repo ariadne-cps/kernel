@@ -23,9 +23,6 @@
  */
 
 #include "function/functional.hpp"
-
-#include "config.hpp"
-
 #include "utility/tuple.hpp"
 #include "utility/stlio.hpp"
 #include "numeric/numeric.hpp"

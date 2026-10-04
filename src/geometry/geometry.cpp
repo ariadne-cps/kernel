@@ -23,8 +23,6 @@
  */
 
 #include "numeric/numeric.hpp"
-#include "config.hpp"
-
 #include "geometry/geometry.hpp"
 #include "utility/tuple.hpp"
 

@@ -29,9 +29,6 @@
 #include <iomanip>
 #include <stdexcept>
 #include <type_traits>
-
-#include "config.hpp"
-
 #include "function/procedure.hpp"
 #include "symbolic/expression.hpp"
 #include "symbolic/space.hpp"

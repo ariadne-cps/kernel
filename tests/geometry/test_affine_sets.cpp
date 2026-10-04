@@ -23,8 +23,6 @@
  */
 
 #include <iostream>
-
-#include "config.hpp"
 #include "function/function.hpp"
 #include "geometry/box.hpp"
 #include "geometry/affine_set.hpp"

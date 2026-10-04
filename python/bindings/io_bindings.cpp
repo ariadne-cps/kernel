@@ -25,8 +25,6 @@
 #include "pybind11.hpp"
 #include "utilities.hpp"
 
-#include "config.hpp"
-
 #include "io/graphics_interface.hpp"
 #include "io/graphics_manager.hpp"
 #include "io/drawer.hpp"
@@ -150,13 +148,10 @@ Void export_plot(pybind11::module& module)
 
 Void export_backend(pybind11::module& module) {
     pybind11::class_<GraphicsBackend> backend_class(module,"GraphicsBackend");
-
-    #ifdef HAVE_CAIRO_H
         pybind11::class_<CairoGraphicsBackend> cairo_backend_class(module,"CairoGraphicsBackend");
         cairo_backend_class.def(pybind11::init<>());
         pybind11::implicitly_convertible<CairoGraphicsBackend,GraphicsBackend>();
         backend_class.def(pybind11::init<CairoGraphicsBackend>());
-    #endif
 }
 
 Void export_drawer(pybind11::module& module) {

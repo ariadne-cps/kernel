@@ -28,9 +28,6 @@
 #include <string>
 #include <iomanip>
 #include <stdexcept>
-
-#include "config.hpp"
-
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "function/formula.hpp"

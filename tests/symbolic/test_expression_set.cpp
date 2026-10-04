@@ -23,8 +23,6 @@
  */
 
 #include <iostream>
-
-#include "config.hpp"
 #include "utility/container.hpp"
 #include "utility/stlio.hpp"
 #include "numeric/numeric.hpp"

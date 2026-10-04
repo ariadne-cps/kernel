@@ -29,8 +29,6 @@
 #include <iomanip>
 #include <stdexcept>
 #include <fenv.h>
-
-#include "config.hpp"
 #include "algebra/sweeper.hpp"
 #include "function/multifunction.hpp"
 #include "function/taylor_multifunction.hpp"

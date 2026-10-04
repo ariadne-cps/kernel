@@ -22,10 +22,7 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "function/functional.hpp"
-#include "config.hpp"
-
-#include "utility/stlio.hpp"
+#include "function/functional.hpp"#include "utility/stlio.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
 #include "geometry/point.hpp"

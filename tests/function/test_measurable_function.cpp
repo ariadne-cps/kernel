@@ -29,8 +29,6 @@
 #include <iomanip>
 #include <stdexcept>
 #include <fenv.h>
-
-#include "config.hpp"
 #include "function/measurable_function.hpp"
 #include "function/formula.hpp"
 #include "function/symbolic_function.hpp"

@@ -1,0 +1,97 @@
+name: Unix
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "macOS 26 AppleClang 21 [Release]", os: macos-26, cxx: "/usr/bin/clang++" }
+          - { name: "Ubuntu 24.04 Clang 16 [Release]", os: ubuntu-24.04, cxx: "clang++-16", pkg: "clang-16" }
+          - { name: "Ubuntu 24.04 GCC 13 [Release]", os: ubuntu-24.04, cxx: "g++-13", pkg: "g++-13" }
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Install Python Test Dependencies
+      run: python -m pip install pytest
+
+    - name: Get macOS Concurrency
+      if: runner.os == 'macOS'
+      run: echo NPROC="sysctl -n hw.ncpu" >> $GITHUB_ENV
+
+    - name: Get Linux Concurrency
+      if: runner.os == 'Linux'
+      run: echo NPROC="nproc" >> $GITHUB_ENV
+
+    - name: Set Up macOS Dependencies
+      if: runner.os == 'macOS'
+      run: brew install ninja gmp mpfr cairo pkg-config
+
+    - name: Set Up Linux Dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build pkg-config ${{ matrix.config.pkg }} libgmp-dev libmpfr-dev libcairo2-dev
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{ runner.workspace }}/build
+
+    - name: Configure CMake
+      working-directory: ${{ runner.workspace }}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -G Ninja -DWARNINGS_AS_ERRORS=ON -DPYTHON_ENFORCE_TESTS=ON
+
+    - name: Build
+      working-directory: ${{ runner.workspace }}/build
+      run: cmake --build . --parallel $($NPROC) --target everything
+
+    - name: Test C++
+      working-directory: ${{ runner.workspace }}/build
+      run: ctest -j $($NPROC) -LE python --output-on-failure
+
+    - name: Test Python
+      working-directory: ${{ runner.workspace }}/build
+      run: ctest -L python -V --output-on-failure
+
+    - name: Install Ariadne Kernel
+      working-directory: ${{ runner.workspace }}/build
+      run: cmake --install . --prefix ${{ runner.workspace }}/install
+
+    - name: Prepare C++ Kernel Tutorial
+      run: cmake -E copy_directory $GITHUB_WORKSPACE/tutorials/tutorial_kernel ${{ runner.workspace }}/tutorial_kernel
+
+    - name: Check C++ Kernel Tutorial
+      working-directory: ${{ runner.workspace }}/tutorial_kernel
+      run: |
+        cmake -S . -B build -DCMAKE_PREFIX_PATH=${{ runner.workspace }}/install -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -G Ninja
+        cmake --build build --parallel $($NPROC)
+        export LD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${LD_LIBRARY_PATH:-}
+        export DYLD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${DYLD_LIBRARY_PATH:-}
+        ./build/tutorial_kernel
+
+    - name: Check Python Kernel Tutorial
+      working-directory: ${{ github.workspace }}/python/tutorials
+      env:
+        PYTHONPATH: ${{ runner.workspace }}/build/python
+      run: python function_demonstration.py
+
+    - name: Verify Final Installation
+      working-directory: ${{ runner.workspace }}/build
+      run: cmake --install . --prefix ${{ runner.workspace }}/verify-install

@@ -24,8 +24,6 @@
 
 #include <iostream>
 #include <fstream>
-
-#include "config.hpp"
 #include "utility/test.hpp"
 
 #include "numeric/numeric.hpp"

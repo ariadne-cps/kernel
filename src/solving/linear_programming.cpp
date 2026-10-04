@@ -23,8 +23,6 @@
  */
 
 #include "function/functional.hpp"
-#include "config.hpp"
-
 #include "utility/tuple.hpp"
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"

@@ -32,15 +32,10 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 find_package(Threads REQUIRED)
-find_package(Cairo)
+find_package(Cairo REQUIRED)
 
-configure_file(
-    "${PROJECT_SOURCE_DIR}/cmake/config.hpp.cmake"
-    "${PROJECT_BINARY_DIR}/config.hpp"
-)
 include_directories(SYSTEM
     "${PROJECT_SOURCE_DIR}/include"
-    "${PROJECT_BINARY_DIR}"
 )
 
 add_subdirectory(submodules)
@@ -48,13 +43,9 @@ add_subdirectory(submodules)
 add_library(kernel INTERFACE)
 target_include_directories(kernel INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
     $<INSTALL_INTERFACE:include/ariadne-kernel>
 )
-target_link_libraries(kernel INTERFACE algebra threading)
-if(Cairo_FOUND)
-    target_link_libraries(kernel INTERFACE Cairo::Cairo)
-endif()
+target_link_libraries(kernel INTERFACE algebra threading Cairo::Cairo)
 
 add_subdirectory(src)
 foreach(target
