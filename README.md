@@ -42,6 +42,3 @@ ctest --test-dir build --output-on-failure
 
 When a compatible Python development environment is available, the standalone build produces `pyariadne` from the lower Algebra bindings plus the Kernel bindings for Function, Geometry, IO, Solving and Symbolic. Sweeper bindings are supplied by Algebra, while IO provides the CLI and graphics facilities.
 
-## Benchmarks
-
-Function and Solving benchmarks are included. The full Barr3 binary benchmark is enabled only when `benchmarks/solving/data/smt_barr3_full64.bin` is present; the source/header-based regression test is included independently.
