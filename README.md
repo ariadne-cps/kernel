@@ -29,7 +29,7 @@ CMake verifies that the direct Configuration revisions agree and that the Utilit
 The pinned revisions used for the extraction are:
 
 - Configuration: `5286138155b55b57392d532adbd742dd542899bb`
-- Algebra: `df4eb2321422a389bc5c58c9250923992c30b9e8`
+- Algebra: `83966f292749152082b7d200dca36c31e496b183`
 - Threading: `d3473103822e91ea7cde65a1226c93c1dd9b9347`
 - Utility on both dependency paths: `9194f4dd7c6a89fba422bed81382d4135cddc004`
 
@@ -47,7 +47,7 @@ ctest --test-dir build --output-on-failure
 
 ## Python bindings
 
-When a compatible Python development environment is available, the standalone build produces `pyariadne` from the lower Algebra bindings plus the Kernel bindings for Function, Calculus, Geometry, IO, Solving, Optimization, Storage, Symbolic and Graphics.
+When a compatible Python development environment is available, the standalone build produces `pyariadne` from the lower Algebra bindings plus the Kernel bindings for Function, Geometry, IO, Solving and Symbolic. Sweeper bindings are supplied by Algebra; IO exports the CLI and graphics facilities but not Logging.
 
 Dynamics, Evolution and Hybrid bindings are intentionally not part of this repository.
 

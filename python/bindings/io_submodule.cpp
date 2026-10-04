@@ -25,36 +25,10 @@
 #include "pybind11.hpp"
 #include "utilities.hpp"
 
-#include "logging/logging.hpp"
 #include "io/command_line_interface.hpp"
 
 
 using namespace Ariadne;
-
-Void export_theme(pybind11::module& module)
-{
-    pybind11::class_<TerminalTextTheme> tt_text_theme_class(module,"TerminalTextTheme");
-    module.attr("TT_THEME_LIGHT") = TT_THEME_LIGHT;
-    module.attr("TT_THEME_DARK") = TT_THEME_DARK;
-    module.attr("TT_THEME_NONE") = TT_THEME_NONE;
-}
-
-Void export_logger(pybind11::module& module)
-{
-    auto const& reference = pybind11::return_value_policy::reference;
-
-    pybind11::class_<LoggerConfiguration> logger_configuration_class(module,"LoggerConfiguration");
-    logger_configuration_class.def("verbosity", &LoggerConfiguration::verbosity);
-    logger_configuration_class.def("set_verbosity", &LoggerConfiguration::set_verbosity);
-    logger_configuration_class.def("set_theme", &LoggerConfiguration::set_theme);
-
-    pybind11::class_<Logger> logger_class(module,"Logger");
-    logger_class.def_static("instance", &Logger::instance, reference);
-    logger_class.def("configuration", &Logger::configuration, reference);
-    logger_class.def("use_immediate_scheduler", &Logger::use_immediate_scheduler);
-    logger_class.def("use_blocking_scheduler", &Logger::use_blocking_scheduler);
-    logger_class.def("use_nonblocking_scheduler", &Logger::use_nonblocking_scheduler);
-}
 
 Void export_cli(pybind11::module& module)
 {
@@ -65,10 +39,11 @@ Void export_cli(pybind11::module& module)
     cli_class.def("acquire", pybind11::overload_cast<List<String> const&>(&CommandLineInterface::acquire,pybind11::const_));
 }
 
+Void export_io_graphics(pybind11::module& module);
+
 Void io_submodule(pybind11::module& module)
 {
-    export_theme(module);
-    export_logger(module);
     export_cli(module);
+    export_io_graphics(module);
 }
 

@@ -101,7 +101,7 @@ Void export_grid_tree_set(pybind11::module& module) {
 }
 
 
-Void storage_submodule(pybind11::module& module)
+Void export_geometry_storage(pybind11::module& module)
 {
     export_grid(module);
     export_grid_cell(module);

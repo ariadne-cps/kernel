@@ -48,24 +48,6 @@ template<class PR> std::string numeric_class_tag();
 template<template<class...>class T, class PR> std::string python_template_tag_name() { return python_template_name<T>()+numeric_class_tag<PR>(); }
 template<template<class...>class T, class FLT> std::string python_template_precision_tag_name() { return python_template_name<T>()+numeric_class_tag<typename FLT::PrecisionType>(); }
 
-template<> struct PythonTemplateName<Sweeper> { static std::string get() { return "Sweeper"; } };
-template<> struct PythonTemplateName<ThresholdSweeper> { static std::string get() { return "ThresholdSweeper"; } };
-template<> struct PythonTemplateName<GradedSweeper> { static std::string get() { return "GradedSweeper"; } };
-
-template<class FLT> struct PythonClassName<Sweeper<FLT>> {
-    static std::string get() { return python_template_precision_tag_name<Sweeper,FLT>(); } };
-template<class FLT> struct PythonClassName<ThresholdSweeper<FLT>> {
-    static std::string get() { return python_template_precision_tag_name<ThresholdSweeper,FLT>(); } };
-template<class FLT> struct PythonClassName<GradedSweeper<FLT>> {
-    static std::string get() { return python_template_precision_tag_name<GradedSweeper,FLT>(); } };
-
-template<> struct PythonTemplateName<ApproximateTaylorModel> { static std::string get() { return "ApproximateTaylorModel"; } };
-template<> struct PythonTemplateName<ValidatedTaylorModel> { static std::string get() { return "ValidatedTaylorModel"; } };
-template<> struct PythonTemplateName<ValidatedScalarMultivariateFunctionModel> { static std::string get() { return "ValidatedScalarMultivariateFunctionModel"; } };
-template<> struct PythonTemplateName<ValidatedVectorMultivariateFunctionModel> { static std::string get() { return "ValidatedVectorMultivariateFunctionModel"; } };
-template<> struct PythonTemplateName<ValidatedScalarMultivariateTaylorFunctionModel> { static std::string get() { return "ValidatedScalarMultivariateTaylorFunctionModel"; } };
-template<> struct PythonTemplateName<ValidatedVectorMultivariateTaylorFunctionModel> { static std::string get() { return "ValidatedVectorMultivariateTaylorFunctionModel"; } };
-
 template<class PR> struct PythonClassName<ValidatedScalarMultivariateFunctionModel<PR>> { static std::string get() { return python_template_tag_name<ValidatedScalarMultivariateFunctionModel,PR>(); } };
 template<class PR> struct PythonClassName<ValidatedVectorMultivariateFunctionModel<PR>> { static std::string get() { return python_template_tag_name<ValidatedVectorMultivariateFunctionModel,PR>(); } };
 
@@ -132,18 +114,6 @@ template<class X> OutputStream& operator<<(OutputStream& os, const PythonReprese
 OutputStream& operator<<(OutputStream& os, const PythonRepresentation< ExactBoxType >& bx) {
     return os << PythonRepresentation< Vector<ExactIntervalType> >(cast_vector(bx.reference())); }
 
-OutputStream& operator<<(OutputStream& os, const PythonRepresentation<Sweeper<FloatDP>>& repr) {
-    const Sweeper<FloatDP>& swp=repr.reference();
-    auto swp_ptr = &static_cast<const SweeperInterface<FloatDP>&>(swp);
-    auto thresh_swp_ptr = dynamic_cast<const ThresholdSweeper<FloatDP>*>(swp_ptr);
-    if(thresh_swp_ptr) {
-        os << "ThresholdSweeperDP(" << thresh_swp_ptr->sweep_threshold() << ")";
-    } else {
-        os << swp;
-    }
-    return os;
-}
-
 OutputStream& operator<<(OutputStream& os, const PythonRepresentation<ValidatedScalarMultivariateTaylorFunctionModelDP>& repr) {
     const ValidatedScalarMultivariateTaylorFunctionModelDP& stf=repr.reference();
     os << std::setprecision(17);
@@ -187,34 +157,6 @@ ValidatedVectorMultivariateFunction unrestrict(const ValidatedVectorMultivariate
 } // namespace Ariadne
 
 static constexpr auto self = pybind11::detail::self;
-
-Sweeper<FloatDP> make_threshold_sweeper(DoublePrecision pr, double x) {
-    return Sweeper<FloatDP>(std::make_shared<ThresholdSweeper<FloatDP>>(pr,x)); }
-Sweeper<FloatDP> make_graded_sweeper(DoublePrecision pr, SizeType n) {
-    return Sweeper<FloatDP>(std::make_shared<GradedSweeper<FloatDP>>(pr,n)); }
-
-
-template<class FLT> Void export_sweepers(pybind11::module& module)
-{
-    using PR=PrecisionType<FLT>;
-    pybind11::class_<Sweeper<FLT>> sweeper_class(module,python_class_name<Sweeper<FLT>>().c_str());
-    sweeper_class.def(pybind11::init<Sweeper<FLT>>());
-    sweeper_class.def("__str__", &__cstr__<Sweeper<FLT>>);
-
-    pybind11::class_<ThresholdSweeper<FLT>> threshold_sweeper_class(module,python_class_name<ThresholdSweeper<FLT>>().c_str());
-    threshold_sweeper_class.def(pybind11::init<PR,double>());
-    threshold_sweeper_class.def("__str__", &__cstr__<ThresholdSweeper<FLT>>);
-    sweeper_class.def(pybind11::init<ThresholdSweeper<FLT>>());
-    pybind11::implicitly_convertible<ThresholdSweeper<FLT>,Sweeper<FLT>>();
-
-    pybind11::class_<GradedSweeper<FLT>> graded_sweeper_class(module,python_class_name<GradedSweeper<FLT>>().c_str());
-    graded_sweeper_class.def(pybind11::init<PR,int>());
-    graded_sweeper_class.def("__str__", &__cstr__<GradedSweeper<FLT>>);
-    sweeper_class.def(pybind11::init<GradedSweeper<FLT>>());
-    pybind11::implicitly_convertible<GradedSweeper<FLT>,Sweeper<FLT>>();
-
-}
-
 
 Expansion<MultiIndex,FloatDP>const& get_expansion(ValidatedTaylorModelDP const& tm) { return tm.expansion(); }
 Expansion<MultiIndex,FloatDPApproximation>const& get_expansion(ApproximateTaylorModelDP const& tm) { return tm.expansion(); }
@@ -599,9 +541,8 @@ template<class FLT> Void export_vector_taylor_function(pybind11::module& module)
 }
 
 
-Void calculus_submodule(pybind11::module& module)
+Void export_function_models(pybind11::module& module)
 {
-    export_sweepers<FloatDP>(module);
 
     export_approximate_taylor_model<FloatDP>(module);
     export_validated_taylor_model<FloatDP>(module);
@@ -610,13 +551,6 @@ Void calculus_submodule(pybind11::module& module)
     export_vector_function_model<DP>(module);
     export_scalar_taylor_function<FloatDP>(module);
     export_vector_taylor_function<FloatDP>(module);
-
-    template_<ThresholdSweeper> threshold_sweeper_template(module);
-    threshold_sweeper_template.instantiate<FloatDP>();
-    threshold_sweeper_template.def_new([](DP pr,ApproximateDouble eps){return ThresholdSweeper<FloatDP>(pr,eps);});
-    template_<GradedSweeper> graded_sweeper_template(module);
-    graded_sweeper_template.instantiate<FloatDP>();
-    graded_sweeper_template.def_new([](DP pr,DegreeType deg){return GradedSweeper<FloatDP>(pr,deg);});
 
     template_<ValidatedScalarMultivariateFunctionModel> scalar_function_model_template(module);
     scalar_function_model_template.instantiate<DP>();

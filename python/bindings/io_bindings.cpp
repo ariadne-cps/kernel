@@ -188,7 +188,7 @@ Void export_graphics_manager(pybind11::module& module)
     graphics_manager_class.def("set_drawer", &GraphicsManager::set_drawer);
 }
 
-Void graphics_submodule(pybind11::module& module) {
+Void export_io_graphics(pybind11::module& module) {
     export_point2d(module);
     export_colour(module);
     export_figure(module);

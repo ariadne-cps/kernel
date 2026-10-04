@@ -4,15 +4,15 @@ get_target_property(PYTHON_COMMON_SOURCE_DIR pyariadne-python-common SOURCE_DIR)
 
 add_library(pyariadne-kernel-submodule-obj OBJECT
     utilities.cpp
-    calculus_submodule.cpp
-    symbolic_submodule.cpp
-    optimization_submodule.cpp
     function_submodule.cpp
+    function_bindings.cpp
     geometry_submodule.cpp
+    geometry_bindings.cpp
     io_submodule.cpp
-    solver_submodule.cpp
-    storage_submodule.cpp
-    graphics_submodule.cpp
+    io_bindings.cpp
+    solving_submodule.cpp
+    solving_bindings.cpp
+    symbolic_submodule.cpp
 )
 target_include_directories(pyariadne-kernel-submodule-obj PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"

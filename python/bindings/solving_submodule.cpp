@@ -182,10 +182,11 @@ Void export_integrators(pybind11::module& module)
 }
 
 
-Void solver_submodule(pybind11::module& module)
+Void export_solving_optimization(pybind11::module& module);
+
+Void solving_submodule(pybind11::module& module)
 {
     export_solvers(module);
     export_integrators(module);
+    export_solving_optimization(module);
 }
-
-

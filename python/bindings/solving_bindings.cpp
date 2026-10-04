@@ -147,7 +147,7 @@ Void export_simplex_solver(pybind11::module& module)
 }
 
 
-Void optimization_submodule(pybind11::module& module) {
+Void export_solving_optimization(pybind11::module& module) {
     export_slackness(module);
     export_constraint(module);
     export_optimiser_interface(module);

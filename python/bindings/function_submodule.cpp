@@ -483,6 +483,8 @@ Void export_function_patches(pybind11::module& module) {
 }
 
 
+Void export_function_models(pybind11::module& module);
+
 Void function_submodule(pybind11::module& module) {
 
 
@@ -506,4 +508,5 @@ Void function_submodule(pybind11::module& module) {
     function_template.def_new([](pybind11::object pyf){return univariate_function_from_python(pyf);});
     function_template.def_new([](SizeType as, pybind11::object pyf){return multivariate_function_from_python(as,pyf);});
 
+    export_function_models(module);
 }
