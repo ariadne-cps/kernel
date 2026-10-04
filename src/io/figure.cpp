@@ -495,6 +495,15 @@ Figure::write(const Char* cfilename) const
 Void
 Figure::write(const Char* cfilename, Nat drawing_width, Nat drawing_height) const
 {
+    SharedPointer<CanvasInterface> canvas=GraphicsManager::instance().backend().make_canvas(cfilename,drawing_width,drawing_height, this->_data->properties.is_animated);
+
+    if(this->_data->properties.is_3d && this->_data->properties.is_projected == false){
+        this->_paint3d(*canvas);
+    }else{
+        this->_paint_all(*canvas);
+    }
+
+    canvas->write(cfilename);
 }
 
 struct LabelledFigure::Data
@@ -679,6 +688,15 @@ LabelledFigure::write(const Char* cfilename) const
 Void
 LabelledFigure::write(const Char* cfilename, Nat drawing_width, Nat drawing_height) const
 {
+    SharedPointer<CanvasInterface> canvas=GraphicsManager::instance().backend().make_canvas(cfilename,drawing_width,drawing_height, this->_data->properties.is_animated);
+
+    if(this->_data->properties.is_3d && this->_data->properties.is_projected == false){
+        this->_paint3d(*canvas);
+    }else{
+        this->_paint_all(*canvas);
+    }
+
+    canvas->write(cfilename);
 }
 
 Void plot(const char* filename, const Projection2d& pr, const ApproximateBoxType& bbox, List<Pair<Colour,Drawable2dInterface const&>> const& csets) {
