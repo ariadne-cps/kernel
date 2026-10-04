@@ -136,7 +136,6 @@ template<class P, class T> class BoundedSetInterface
     using typename SetInterfaceBase<T>::BasicSetType;
     using typename SetInterfaceBase<T>::BoundingSetType;
 
-    virtual BoundedSetInterface<P,T>* clone() const = 0;
     //! \brief Tests if the set is a inside of \a bx.
     //! A set \a A is \em inside \a B if the closure of \a A is a subset of the interior of \a B.
     //! A set \f$A\f$ is \em inside \f$B\f$ if \f$\,\overline{\!A} \subset B^\circ\f$.
@@ -155,7 +154,6 @@ template<class P, class T> class OvertSetInterface
   public:
     using typename SetInterfaceBase<T>::BasicSetType;
 
-    virtual OvertSetInterface<P,T>* clone() const = 0;
     //! \brief Tests if the set overlaps \a bx.
     //! Sets \a A and \a B \em overlap if the interiors of \a A and \a B intersect.
     //! Sets \f$A\f$ and \f$B\f$ \em overlap if \f$A^\circ \cap B^\circ \neq \emptyset\f$.
@@ -173,7 +171,6 @@ template<class P, class T> class OpenSetInterface
   public:
     using typename SetInterfaceBase<T>::BasicSetType;
 
-    virtual OpenSetInterface<P,T>* clone() const = 0;
     //! \brief Tests if the set covers of \a bx.
     //! A set \a A \em covers \a B if the interiors of \a A is a superset of the closure of \a B.
     //! A set \f$A\f$ \em covers \f$B\f$ if \f$A^\circ \supset \overline{B}\f$.
@@ -194,7 +191,6 @@ template<class P, class T> class ClosedSetInterface
   public:
     using typename SetInterfaceBase<T>::BasicSetType;
 
-    virtual ClosedSetInterface<P,T>* clone() const = 0;
     //! \brief Tests if the set is separated from \a bx.
     //! A set \a A is \em separated from \a B if the closures of \a A and \a B are disjoint.
     //! A set \f$A\f$ is \em separated from \f$B\f$ if \f$\,\overline{\!A} \cap \overline{B} = \emptyset\f$.
@@ -213,7 +209,6 @@ template<class P, class T> class CompactSetInterface
   public:
     using typename SetInterfaceBase<T>::BasicSetType;
 
-    virtual CompactSetInterface<P,T>* clone() const = 0;
     //virtual ValidatedSierpinskian empty() const = 0;
     //! \brief Tests if \a ls is a inside of \a rs, to a tolerance of \a eps.
     friend LowerKleeneanType<P> inside(const CompactSetInterface<P,T>& ls, const OpenSetInterface<P,T>& rs);
@@ -233,7 +228,6 @@ template<class P, class T> class RegularSetInterface
   public:
     using typename SetInterfaceBase<T>::BasicSetType;
 
-    virtual RegularSetInterface<P,T>* clone() const = 0;
     //! \brief Tests if \a ls overlaps \a rs, to a tolerance of \a eps.
     friend KleeneanType<P> overlap(const LocatedSetInterface<P,T>& ls, const RegularSetInterface<P,T>& rs);
     friend KleeneanType<ValidatedTag> overlap(const LocatedSetInterface<ValidatedTag,T>& ls, const RegularSetInterface<ValidatedTag,T>& rs, const RawFloatDP& eps);
@@ -255,7 +249,6 @@ template<class P, class T> class LocatedSetInterface
   public:
     using typename SetInterfaceBase<T>::BasicSetType;
 
-    virtual LocatedSetInterface<P,T>* clone() const = 0;
     //! \brief Tests if \a ls overlaps \a rs, to a tolerance of \a eps.
     friend KleeneanType<P> overlap(const LocatedSetInterface<P,T>& ls, const RegularSetInterface<P,T>& rs);
     friend KleeneanType<ValidatedTag> overlap(const LocatedSetInterface<ValidatedTag,T>& ls, const RegularSetInterface<ValidatedTag,T>& rs, const RawFloatDP& eps);
@@ -274,7 +267,6 @@ template<class P, class T> class RegularLocatedSetInterface
       public virtual LocatedSetInterface<P,T>
 {
   public:
-    virtual RegularLocatedSetInterface<P,T>* clone() const = 0;
 };
 
 

@@ -78,7 +78,7 @@ template<class T> class ForwardConstantIteratorHandle
     ForwardConstantIteratorHandle(const ForwardConstantIteratorInterface<T>& p) : _ptr(p.clone()) { }
     ForwardConstantIteratorHandle(const ForwardConstantIteratorHandle<T>& other) : _ptr(other._ptr->clone()) { }
     ForwardConstantIteratorHandle<T>& operator=(const ForwardConstantIteratorHandle<T>& other) {
-        if(_ptr!=other._ptr) { delete _ptr; _ptr=other._ptr->clone(); } return *this; }
+        if(_ptr!=other._ptr) { delete _ptr; _ptr=dynamic_cast<PavingInterface*>(other._ptr->clone()); ARIADNE_ASSERT(_ptr); } return *this; }
 
     const T& operator*() const { return _ptr->dereference(); }
     const T* operator->() const { return &_ptr->dereference(); }
@@ -237,7 +237,6 @@ class PavingInterface
     : public virtual SubPavingInterface
 {
   public:
-    virtual PavingInterface* clone() const = 0;
     virtual GridCell smallest_enclosing_primary_cell(const UpperBoxType& bx) const = 0; // Useful query, but can also be implemented at the Grid level.
     virtual Void adjoin_cells(const PredicateInterface<ExactBoxType>&, const Nat) { ARIADNE_ABSTRACT_METHOD; }
     virtual Void adjoin_outer_approximation(const EffectiveEuclideanCompactSetInterface& set, const Nat fineness) = 0;
@@ -261,7 +260,7 @@ class PavingHandle
     ~PavingHandle() { delete _ptr; }
     PavingHandle(PavingInterface* p) : _ptr(p) { }
     PavingHandle(const SubPavingInterface& p) : _ptr(&dynamic_cast<PavingInterface&>(*p.clone())) { }
-    PavingHandle(const PavingHandle& other) : _ptr(other._ptr->clone()) { }
+    PavingHandle(const PavingHandle& other) : _ptr(dynamic_cast<PavingInterface*>(other._ptr->clone())) { ARIADNE_ASSERT(_ptr); }
     PavingHandle& operator=(const PavingHandle& other) {
         if(_ptr!=other._ptr) { delete _ptr; _ptr=other._ptr->clone(); } return *this; }
     operator PavingInterface& () { return *this->_ptr; }
