@@ -33,6 +33,27 @@
 namespace Ariadne {
 
 
+template<class I> decltype(declval<I>().is_empty()) Box<I>::is_empty() const
+{
+    const Box<I>& bx=*this;
+    decltype(declval<I>().is_empty()) res=false;
+    for(SizeType i=0; i!=bx.dimension(); ++i) {
+        res=res || bx[i].is_empty();
+        if(definitely(res)) { return true; }
+    }
+    return res;
+}
+
+
+template<class I> decltype(declval<I>().is_bounded()) Box<I>::is_bounded() const
+{
+    const Box<I>& bx=*this;
+    decltype(declval<I>().is_bounded()) res=true;
+    for(SizeType i=0; i!=bx.dimension(); ++i) {
+        res=res && bx[i].is_bounded();
+    }
+    return res;
+}
 
 
 
