@@ -603,7 +603,7 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
         return partial_evaluate(f,j,CanonicalNumericType<P,PR,PRE>(c,f.precision())); }
 
     friend OutputStream& operator<<(OutputStream& os, const VectorFunctionModel<P,ARG,PR,PRE>& f) {
-        return os <<  f.operator VectorMultivariateFunction<P>(); }
+        return os << static_cast<GenericType>(f); }
 
     friend ScalarFunctionModel<P,ARG,PR,PRE> unchecked_compose(const ScalarMultivariateFunction<P>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
         ScalarFunctionModelInterface<P,RealVector,PR,PRE> const* fptr = dynamic_cast<ScalarFunctionModelInterface<P,RealVector,PR,PRE> const*>(f.raw_pointer());

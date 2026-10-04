@@ -356,7 +356,7 @@ template<class M> class ScaledFunctionPatch
   public:
     template<class X> X operator()(const Vector<X>& a) const;
   private:
-    ScaledFunctionPatch<M>* _create() const;
+    ScaledFunctionPatch<M>* _concrete_create() const;
     virtual ScaledFunctionPatchFactory<M>* _factory() const;
     OutputStream& _write(OutputStream& os) const;
   public:
@@ -433,7 +433,7 @@ template<class M> class ScaledFunctionPatch
     friend NormType distance(const ScaledFunctionPatch<M>& f1, const ScaledFunctionPatch<M>& f2) {
         return norm(f1-f2); }
     friend NormType distance(const ScaledFunctionPatch<M>& f1, const ScalarMultivariateFunction<P>& f2) {
-        return distance(f1,f1.create(f2)); }
+        return distance(f1,factory(f1).create(f2)); }
 
     friend MultivariatePolynomial<NumericType> polynomial(const ScaledFunctionPatch<M>& tfn) { return tfn.polynomial(); }
 
@@ -723,7 +723,7 @@ template<class M> class VectorScaledFunctionPatch
     Void _compute_jacobian() const;
     Void _set_argument_size(SizeType n);
     SizeType _compute_maximum_component_size() const;
-    virtual VectorScaledFunctionPatch<M>* _create() const;
+    virtual VectorScaledFunctionPatch<M>* _concrete_create() const;
     virtual ScaledFunctionPatchFactory<M>* _factory() const;
     OutputStream& _write(OutputStream& os) const;
   private:

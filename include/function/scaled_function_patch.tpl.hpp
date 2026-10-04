@@ -60,6 +60,8 @@ Box<Interval<FloatMP>> convert_box(BoxDomainType const& bx, MultiplePrecision pr
 
 inline decltype(auto) contains(IntervalDomainType const& bx, Scalar<FloatMPBounds> const& x) { return contains(convert_interval(bx,x.precision()),x); }
 inline decltype(auto) contains(IntervalDomainType const& bx, Scalar<FloatMPApproximation> const& x) { return contains(convert_interval(bx,x.precision()),x); }
+template<class F> inline decltype(auto) contains(IntervalDomainType const& bx, UpperInterval<F> const& x) {
+    return contains(convert_interval(bx,x.upper_bound().precision()),x); }
 inline decltype(auto) contains(BoxDomainType const& bx, Vector<FloatMPBounds> const& x) { return contains(convert_box(bx,x.zero_element().precision()),x); }
 inline decltype(auto) contains(BoxDomainType const& bx, Vector<FloatMPApproximation> const& x) { return contains(convert_box(bx,x.zero_element().precision()),x); }
 template<class F> inline decltype(auto) contains(BoxDomainType const& bx, Vector<UpperInterval<F>> const& x) {
@@ -305,7 +307,7 @@ template<class M> ScaledFunctionPatchFactory<M>* ScaledFunctionPatch<M>::_factor
     return new ScaledFunctionPatchFactory<M>(this->_model.properties());
 }
 
-template<class M> ScaledFunctionPatch<M>* ScaledFunctionPatch<M>::_create() const
+template<class M> ScaledFunctionPatch<M>* ScaledFunctionPatch<M>::_concrete_create() const
 {
     return new ScaledFunctionPatch<M>(this->domain(),this->_model.properties());
 }
@@ -652,7 +654,7 @@ template<class M> ScaledFunctionPatchFactory<M>* VectorScaledFunctionPatch<M>::_
     return new ScaledFunctionPatchFactory<M>(this->_models.zero_element().properties());
 }
 
-template<class M> VectorScaledFunctionPatch<M>* VectorScaledFunctionPatch<M>::_create() const
+template<class M> VectorScaledFunctionPatch<M>* VectorScaledFunctionPatch<M>::_concrete_create() const
 {
     return new VectorScaledFunctionPatch<M>(this->result_size(), ScaledFunctionPatch<M>(this->domain(),this->properties()));
 }

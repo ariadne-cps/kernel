@@ -504,9 +504,9 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
         return VectorFunctionPatch<P,ARGS...>(f._ptr->_embed(d1,d2)); }
     friend VectorFunctionPatch<P,ARGS...> embed(const DomainType& d, const VectorFunctionPatch<P,ARGS...>& f) {
         return embed(d,f,DomainType()); }
-    friend VectorFunctionPatch<P,ARGS...> embed(const VectorFunctionPatch<P,ARGS...>& f, const BoxDomainType& d) {
+    friend VectorFunctionPatch<P,ARGS...> embed(const VectorFunctionPatch<P,ARGS...>& f, const BoxDomainType& d) requires Same<DomainType,BoxDomainType> {
         return embed(DomainType(),f,d); }
-    friend VectorFunctionPatch<P,ARGS...> embed(const VectorFunctionPatch<P,ARGS...>& f, const IntervalDomainType& d) {
+    friend VectorFunctionPatch<P,ARGS...> embed(const VectorFunctionPatch<P,ARGS...>& f, const IntervalDomainType& d) requires Same<DomainType,BoxDomainType> {
         return embed(f,DomainType(1,d)); }
     friend VectorFunctionPatch<P,ARGS...> restriction(const VectorFunctionPatch<P,ARGS...>& f, const DomainType& d) {
         return VectorFunctionPatch<P,ARGS...>(f._ptr->_restriction(d)); }

@@ -80,7 +80,7 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _concrete_clone() const override {
         return new FM(static_cast<const FM&>(*this)); }
     ScalarFunctionPatchInterface<P,ARG>* _patch_create() const override {
-        return this->_create(); }
+        return this->_concrete_create(); }
 
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _create_copy() const override {
         return new FM(static_cast<const FM&>(*this)); }
@@ -183,7 +183,7 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
     typedef typename Element<FM>::Type ScalarMultivariateFunctionType;
   public:
     virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _concrete_clone() const override { return new FM(static_cast<const FM&>(*this)); }
-    virtual VectorFunctionPatchInterface<P,ARG>* _patch_create() const override { return this->_create(); }
+    virtual VectorFunctionPatchInterface<P,ARG>* _patch_create() const override { return this->_concrete_create(); }
     virtual ScalarFunctionPatchInterface<P,ARG>* _patch_get(SizeType i) const override {
         return heap_copy(static_cast<const FM&>(*this)[i]); }
     virtual ScalarFunctionModelInterface<P,ARG,PR,PRE>* _concrete_get(SizeType i) const override {
