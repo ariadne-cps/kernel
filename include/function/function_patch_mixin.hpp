@@ -77,7 +77,7 @@ template<class FP, class P, class... ARGS> class FunctionPatchMixin<FP,P,RealSca
     DomainType const domain() const override { return static_cast<FP const&>(*this).domain(); }
     CodomainType const codomain() const override { return static_cast<FP const&>(*this).codomain(); }
 
-    ScalarFunctionPatchInterface<P,ARGS...>* _clone() const override {
+    ScalarFunctionPatchInterface<P,ARGS...>* _concrete_clone() const override {
         return new FP(static_cast<const FP&>(*this)); }
 
     ScalarFunctionPatchInterface<P,ARGS...>* _create_copy() const override {
@@ -110,7 +110,7 @@ template<class FP, class P, class... ARGS> class FunctionPatchMixin<FP,P,RealSca
 
     NormType const _norm() const override {
         return static_cast<NormType>(norm(static_cast<const FP&>(*this))); }
-    ScalarFunctionPatchInterface<P,ARGS...>* _derivative(SizeType j) const override {
+    ScalarFunctionPatchInterface<P,ARGS...>* _concrete_derivative(SizeType j) const override {
         return new FP(derivative(static_cast<const FP&>(*this),j)); }
     ScalarFunctionPatchInterface<P,ARGS...>* _antiderivative(SizeType j) const override {
         return new FP(antiderivative(static_cast<const FP&>(*this),j)); }
@@ -177,12 +177,12 @@ template<class FP, class P, class... ARGS> class FunctionPatchMixin<FP,P,RealVec
     inline virtual VectorFunctionPatchInterface<P,ARGS...>* _unchecked_compose(VectorFunction<P,RES> const& f) const override {
         return this->_compose(f); }
 
-    virtual VectorFunctionPatchInterface<P,ARGS...>* _clone() const override { return new FP(static_cast<const FP&>(*this)); }
+    virtual VectorFunctionPatchInterface<P,ARGS...>* _concrete_clone() const override { return new FP(static_cast<const FP&>(*this)); }
     virtual Void _set(SizeType i, const ScalarFunctionPatchInterface<P,ARGS...>& sf) override {
         if(!dynamic_cast<const typename FP::ScalarMultivariateFunctionType*>(&sf)) {
             ARIADNE_FAIL_MSG("Cannot set element of VectorMultivariateFunctionPatch "<<*this<<" to "<<sf<<"\n"); }
         static_cast<FP&>(*this).FP::set(i,dynamic_cast<const ScalarMultivariateFunctionType&>(sf)); }
-    virtual VectorFunctionPatchInterface<P,ARGS...>* _derivative(SizeType) const override {
+    virtual VectorFunctionPatchInterface<P,ARGS...>* _concrete_derivative(SizeType) const override {
         ARIADNE_NOT_IMPLEMENTED; }
     virtual VectorFunctionPatchInterface<P,ARGS...>* _antiderivative(SizeType) const override {
         ARIADNE_NOT_IMPLEMENTED; }

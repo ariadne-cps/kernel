@@ -174,10 +174,10 @@ template<class P, class... ARGS> class FunctionPatch<P,RealScalar(ARGS...)>
   public:
     FunctionPatch() : _ptr() { }
     explicit FunctionPatch(FunctionPatchInterface<P,SIG>* p) : _ptr(p) { }
-    FunctionPatch(const SharedPointer<const FunctionPatchInterface<P,SIG>> p) : _ptr(p->_clone()) { }
+    FunctionPatch(const SharedPointer<const FunctionPatchInterface<P,SIG>> p) : _ptr(p->_concrete_clone()) { }
     FunctionPatch(const FunctionPatch<P,SIG>& f) : _ptr(f._ptr) { }
     FunctionPatch& operator=(const FunctionPatch<P,SIG>& f) { this->_ptr=f._ptr; return *this; }
-        FunctionPatch(const FunctionPatchInterface<P,SIG>& f) : _ptr(f._clone()) { }
+        FunctionPatch(const FunctionPatchInterface<P,SIG>& f) : _ptr(f._concrete_clone()) { }
     FunctionPatch(const Function<P,SIG>& f) : _ptr(dynamic_cast<FunctionPatchInterface<P,SIG>*>(f.raw_pointer()->_clone())) { }
     template<class PR, class PRE> FunctionPatch(FunctionModel<P,SIG,PR,PRE> fm);
     operator Function<P,SIG>() const { return Function<P,SIG>(this->_ptr->_clone()); } // DEPRECATED
@@ -187,7 +187,7 @@ template<class P, class... ARGS> class FunctionPatch<P,RealScalar(ARGS...)>
     operator const FunctionPatchInterface<P,SIG>& () const { return *_ptr; }
     const FunctionPatchInterface<P,SIG>* raw_pointer() const { return _ptr.operator->(); }
     SharedPointer<FunctionPatchInterface<P,SIG>> managed_pointer() const {
-        return SharedPointer<FunctionPatchInterface<P,SIG>>(this->_ptr->_clone()); }
+        return SharedPointer<FunctionPatchInterface<P,SIG>>(this->_ptr->_concrete_clone()); }
     FunctionPatchInterface<P,SIG>& reference() { return *_ptr; }
     const FunctionPatchInterface<P,SIG>& reference() const { return *_ptr; }
 
@@ -256,7 +256,7 @@ template<class P, class... ARGS> class FunctionPatch<P,RealScalar(ARGS...)>
     friend NormType norm(const ScalarFunctionPatch<P,ARGS...>& f) {
         return f._ptr->_generic_norm(); }
     friend ScalarFunctionPatch<P,ARGS...> derivative(const ScalarFunctionPatch<P,ARGS...>& f, SizeType j) {
-        return ScalarFunctionPatch<P,ARGS...>(f._ptr->_derivative(j)); }
+        return ScalarFunctionPatch<P,ARGS...>(f._ptr->_concrete_derivative(j)); }
     friend ScalarFunctionPatch<P,ARGS...> antiderivative(const ScalarFunctionPatch<P,ARGS...>& f, SizeType j) {
         return ScalarFunctionPatch<P,ARGS...>(f._ptr->_antiderivative(j)); }
     friend ScalarFunctionPatch<P,ARGS...> antiderivative(const ScalarFunctionPatch<P,ARGS...>& f, SizeType j, Number<P> c) {
@@ -329,7 +329,7 @@ FunctionPatch<P,RealScalar(ARGS...)>::operator=(const ScalarFunction<P,ARGS...>&
     return (*this)=factory(*this).create(f); }
 template<class P, class... ARGS> inline auto
 FunctionPatch<P,RealScalar(ARGS...)>::operator=(const ScalarFunctionPatchInterface<P,ARGS...>& f) -> ScalarFunctionPatch<P,ARGS...>& {
-    return (*this)=ScalarFunctionPatch<P,ARGS...>(f._clone()); }
+    return (*this)=ScalarFunctionPatch<P,ARGS...>(f._concrete_clone()); }
 
 
 
@@ -390,7 +390,7 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
   public:
     inline FunctionPatch() : _ptr() { }
     inline FunctionPatch(SharedPointer<const FunctionPatchInterface<P,SIG>> vfp)
-        : _ptr(vfp->_clone()) { }
+        : _ptr(vfp->_concrete_clone()) { }
     inline FunctionPatch(SizeType n, const ScalarFunctionPatchInterface<P,ARGS...>& sf) {
         FunctionPatchFactory<P> factory(sf._factory()); *this=factory.create_zeros(n,sf.domain());
         for(SizeType i=0; i!=n; ++i) { (*this)[i]=sf; } }
@@ -400,7 +400,7 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
         : FunctionPatch(lsf.size(),lsf[0]) { for(SizeType i=0; i!=lsf.size(); ++i) { (*this)[i]=lsf[i]; } }
     inline explicit FunctionPatch(FunctionPatchInterface<P,SIG>* p) : _ptr(p) { }
     template<class PR, class PRE> FunctionPatch(FunctionModel<P,SIG,PR,PRE> fm);
-    inline FunctionPatch(const FunctionPatchInterface<P,SIG>& f) : _ptr(f._clone()) { }
+    inline FunctionPatch(const FunctionPatchInterface<P,SIG>& f) : _ptr(f._concrete_clone()) { }
     inline FunctionPatch(const FunctionPatch<P,SIG>& f) : _ptr(f._ptr) { }
     inline FunctionPatch& operator=(const FunctionPatch<P,SIG>& f) { this->_ptr=f._ptr; return *this; }
     inline operator const FunctionPatchInterface<P,SIG>& () const { return *_ptr; }
@@ -409,7 +409,7 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
         return Function<P,SIG>(*fp._ptr); }
     inline const FunctionPatchInterface<P,SIG>* raw_pointer() const { return _ptr.operator->(); }
     SharedPointer<FunctionPatchInterface<P,SIG>> managed_pointer() const {
-        return SharedPointer<FunctionPatchInterface<P,SIG>>(this->_ptr->_clone()); }
+        return SharedPointer<FunctionPatchInterface<P,SIG>>(this->_ptr->_concrete_clone()); }
     inline const FunctionPatchInterface<P,SIG>& reference() const { return *_ptr; }
     inline FunctionPatchInterface<P,SIG>& reference() { return *_ptr; }
 
@@ -453,7 +453,7 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
         return VectorFunctionPatch<P,ARGS...>(g._ptr->_compose(cast_unchecked(f))); }
 
     friend inline VectorFunctionPatch<P,ARGS...> operator+(const VectorFunctionPatch<P,ARGS...>& f) {
-        return VectorFunctionPatch<P,ARGS...>(f._ptr->_clone()); }
+        return VectorFunctionPatch<P,ARGS...>(f._ptr->_concrete_clone()); }
     friend inline VectorFunctionPatch<P,ARGS...> operator-(const VectorFunctionPatch<P,ARGS...>& f) {
         VectorFunctionPatch<P,ARGS...> r=f; for(SizeType i=0; i!=r.size(); ++i) { r[i]=-f[i]; } return r; }
     friend inline VectorFunctionPatch<P,ARGS...> operator+(const VectorFunctionPatch<P,ARGS...>& f1, const VectorFunctionPatch<P,ARGS...>& f2) {
@@ -534,11 +534,11 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
         return os <<  f.operator VectorFunction<P,ARGS...>(); }
 
     friend ScalarFunctionPatch<P,ARGS...> unchecked_compose(const ScalarMultivariateFunction<P>& f, const VectorFunctionPatch<P,ARGS...>& g) {
-        ScalarFunctionPatchInterface<P,ARGS...> const* fptr = dynamic_cast<ScalarFunctionPatchInterface<P,ARGS...> const*>(f.raw_pointer());
-        if(fptr) { return unchecked_compose(cast_unchecked(ScalarFunctionPatch<P,ARGS...>(*fptr)),g); } else { return compose(f,g); } }
+        ScalarMultivariateFunctionPatchInterface<P> const* fptr = dynamic_cast<ScalarMultivariateFunctionPatchInterface<P> const*>(f.raw_pointer());
+        if(fptr) { return ScalarFunctionPatch<P,ARGS...>(g._ptr->_unchecked_compose(cast_unchecked(ScalarMultivariateFunctionPatch<P>(*fptr)))); } else { return compose(f,g); } }
     friend VectorFunctionPatch<P,ARGS...> unchecked_compose(const VectorMultivariateFunction<P>& f, const VectorFunctionPatch<P,ARGS...>& g) {
-        VectorFunctionPatchInterface<P,ARGS...> const* fptr = dynamic_cast<VectorFunctionPatchInterface<P,ARGS...> const*>(f.raw_pointer());
-        if(fptr) { return unchecked_compose(cast_unchecked(VectorFunctionPatch<P,ARGS...>(*fptr)),g); } else { return compose(f,g); } }
+        VectorMultivariateFunctionPatchInterface<P> const* fptr = dynamic_cast<VectorMultivariateFunctionPatchInterface<P> const*>(f.raw_pointer());
+        if(fptr) { return VectorFunctionPatch<P,ARGS...>(g._ptr->_unchecked_compose(cast_unchecked(VectorMultivariateFunctionPatch<P>(*fptr)))); } else { return compose(f,g); } }
 
     friend VectorFunctionPatch<P,ARGS...> antiderivative(const VectorFunctionPatch<P,ARGS...>& f, SizeType j) {
         VectorFunctionPatch<P,ARGS...> r(f);
@@ -556,7 +556,7 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
     friend VectorFunctionPatch<P,ARGS...> join(const ScalarFunctionPatch<P,ARGS...>& f1, const VectorFunctionPatch<P,ARGS...>& f2) {
         return join(VectorFunctionPatch<P,ARGS...>(1u,f1),f2); }
     friend VectorFunctionPatch<P,ARGS...> join(const VectorFunctionPatch<P,ARGS...>& f1, const ScalarFunctionPatch<P,ARGS...>& f2) {
-        VectorFunctionPatch<P,ARGS...> r=VectorFunctionPatch<P,ARGS...>(f1._ptr->_clone()); r._ptr->_adjoin(f2); return r; }
+        VectorFunctionPatch<P,ARGS...> r=VectorFunctionPatch<P,ARGS...>(f1._ptr->_concrete_clone()); r._ptr->_adjoin(f2); return r; }
     friend VectorFunctionPatch<P,ARGS...> join(const VectorFunctionPatch<P,ARGS...>& f1, const VectorFunctionPatch<P,ARGS...>& f2) {
         return VectorFunctionPatch<P,ARGS...>(f1._ptr->_join(f2)); }
 

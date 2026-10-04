@@ -134,7 +134,7 @@ class LabelledPoint : public LabelledDrawable2dInterface, public Point<X> {
     template<class Y, class... PRS> requires Constructible<X,Y,PRS...>
     LabelledPoint(const LabelledPoint<Y>& pt, PRS... prs) : Point<X>(pt,prs...), _state_variables(pt.state_variables()) { }
 
-    LabelledPoint* clone() const override;
+    LabelledPoint* labelled_clone() const override;
 
     List<Identifier> const& state_variables() const { return _state_variables; }
     RealSpace state_space() const;

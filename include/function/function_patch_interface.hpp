@@ -123,12 +123,12 @@ template<class P, class SIG> class FunctionPatchInterface
     virtual ScalarFunctionPatchInterface<P,ARG>* _unchecked_compose(const ScalarFunction<P,RES>& f) const = 0;
     virtual VectorFunctionPatchInterface<P,ARG>* _unchecked_compose(const VectorFunction<P,RES>& f) const = 0;
 
-    virtual FunctionPatchInterface<P,SIG>* _clone() const override = 0;
+    virtual FunctionPatchInterface<P,SIG>* _concrete_clone() const = 0;
     virtual FunctionPatchInterface<P,SIG>* _create() const = 0;
     virtual FunctionPatchInterface<P,SIG>* _embed(const DomainType& d1, const DomainType& d2) const = 0;
     virtual FunctionPatchInterface<P,SIG>* _restriction(const DomainType& d) const = 0;
 
-    virtual FunctionPatchInterface<P,SIG>* _derivative(ArgumentIndexType j) const override = 0;
+    virtual FunctionPatchInterface<P,SIG>* _concrete_derivative(ArgumentIndexType j) const = 0;
     virtual FunctionPatchInterface<P,SIG>* _antiderivative(ArgumentIndexType j) const = 0;
     virtual FunctionPatchInterface<P,SIG>* _antiderivative(ArgumentIndexType j, Number<P> c) const = 0;
 

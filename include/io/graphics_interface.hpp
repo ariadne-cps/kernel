@@ -194,7 +194,7 @@ class LabelledDrawable2dInterface {
     //! brief Virtual destructor.
     virtual ~LabelledDrawable2dInterface() = default;
     //! brief Make a dynamically-allocated copy.
-    virtual LabelledDrawable2dInterface* clone() const = 0;
+    virtual LabelledDrawable2dInterface* labelled_clone() const = 0;
     //! brief Draw the projection of object onto variables \a p on the canvas \a c .
     virtual Void draw(CanvasInterface& c, const Variables2d& p) const = 0;
 };
@@ -205,7 +205,7 @@ class LabelledDrawable2d3dInterface : public LabelledDrawable2dInterface {
     virtual ~LabelledDrawable2d3dInterface() = default;
     //! brief Make a dynamically-allocated copy.
     virtual LabelledDrawable2d3dInterface* clone2d3d() const = 0;
-    virtual LabelledDrawable2dInterface* clone() const = 0;
+    virtual LabelledDrawable2dInterface* labelled_clone() const override = 0;
 
     //! brief Draw the projection of object onto variables \a p on the canvas \a c .
     virtual Void draw(CanvasInterface& c, const Variables3d& p) const = 0;

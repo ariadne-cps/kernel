@@ -71,7 +71,7 @@ template<class X> LabelledPoint<X>::LabelledPoint(List<Assignment<RealVariable,X
 template<class X> LabelledPoint<X>::LabelledPoint(InitializerList<Assignment<RealVariable,X>> const& x)
         : LabelledPoint<X>(List<Assignment<RealVariable,X>>(x)) { }
 
-template<class X> LabelledPoint<X>* LabelledPoint<X>::clone() const {
+template<class X> LabelledPoint<X>* LabelledPoint<X>::labelled_clone() const {
     return new LabelledPoint(*this);
 }
 

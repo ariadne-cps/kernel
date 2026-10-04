@@ -318,7 +318,7 @@ template<class S> class LabelledDrawableWrapper : public LabelledDrawable2dInter
     LabelledSet<S> _lset;
   public:
     LabelledDrawableWrapper(LabelledSet<S> lset) : _lset(lset) { }
-    virtual LabelledDrawableWrapper<S>* clone() const { return new LabelledDrawableWrapper<S>(*this); }
+    virtual LabelledDrawableWrapper<S>* labelled_clone() const override { return new LabelledDrawableWrapper<S>(*this); }
     virtual Void draw(CanvasInterface& cnvs, Variables2d const& vars) const {
         Projection2d prj(this->_lset.euclidean_set().dimension(),this->_lset.space()[vars.x()],this->_lset.space()[vars.y()]);
         this->_lset.euclidean_set().draw(cnvs,prj);

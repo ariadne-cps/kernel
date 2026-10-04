@@ -164,9 +164,9 @@ struct GraphicsObject {
 
 struct LabelledGraphicsObject {
     LabelledGraphicsObject(const GraphicsProperties& gp, const LabelledDrawable2dInterface& sh)
-        : properties(gp), shape_ptr(sh.clone()), shape3d_ptr(nullptr) { }
+        : properties(gp), shape_ptr(sh.labelled_clone()), shape3d_ptr(nullptr) { }
     LabelledGraphicsObject(const GraphicsProperties& gp, const LabelledDrawable2d3dInterface& sh)
-        : properties(gp), shape_ptr(sh.clone()), shape3d_ptr(sh.clone2d3d()) { }
+        : properties(gp), shape_ptr(sh.labelled_clone()), shape3d_ptr(sh.clone2d3d()) { }
     GraphicsProperties properties;
     std::shared_ptr<const LabelledDrawable2dInterface> shape_ptr;
     std::shared_ptr<const LabelledDrawable2d3dInterface> shape3d_ptr;

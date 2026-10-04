@@ -525,10 +525,10 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
     friend inline VectorFunctionModel<P,ARG,PR,PRE> compose(const VectorFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
         return VectorFunctionModel<P,ARG,PR,PRE>(g._ptr->_compose(f)); }
 
-    friend inline ScalarFunctionModel<P,ARG,PR,PRE> unchecked_compose(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
-        return ScalarFunctionModel<P,ARG,PR,PRE>(g._ptr->_concrete_unchecked_compose(f)); }
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> unchecked_compose(const VectorFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
-        return VectorFunctionModel<P,ARG,PR,PRE>(g._ptr->_concrete_unchecked_compose(f)); }
+    friend inline ScalarFunctionModel<P,ARG,PR,PRE> unchecked_compose(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) requires Same<ARG,RealVector> {
+        return ScalarFunctionModel<P,ARG,PR,PRE>(g._ptr->_unchecked_compose(static_cast<ScalarMultivariateFunction<P>>(f))); }
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> unchecked_compose(const VectorFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) requires Same<ARG,RealVector> {
+        return VectorFunctionModel<P,ARG,PR,PRE>(g._ptr->_unchecked_compose(static_cast<VectorMultivariateFunction<P>>(f))); }
 
     friend inline VectorFunctionModel<P,ARG,PR,PRE> operator+(const VectorFunctionModel<P,ARG,PR,PRE>& f) {
         return VectorFunctionModel<P,ARG,PR,PRE>(f._ptr->_concrete_clone()); }

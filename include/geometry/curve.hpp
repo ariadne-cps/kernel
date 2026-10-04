@@ -194,7 +194,7 @@ class LabelledInterpolatedCurve
     List<Identifier> const& state_variables() const { return _state_variables; }
     RealSpace state_space() const;
 
-    virtual LabelledInterpolatedCurve* clone() const override;
+    virtual LabelledInterpolatedCurve* labelled_clone() const override;
 
     using InterpolatedCurve::draw;
     virtual Void draw(CanvasInterface&, const Variables2d&) const override;

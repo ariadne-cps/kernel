@@ -77,10 +77,8 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
     typedef typename Interface::NormType NormType;
     typedef typename Interface::RangeType RangeType;
   public:
-    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _clone() const override {
-        return new FM(static_cast<const FM&>(*this)); }
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _concrete_clone() const override {
-        return this->_clone(); }
+        return new FM(static_cast<const FM&>(*this)); }
 
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _create_copy() const override {
         return new FM(static_cast<const FM&>(*this)); }
@@ -108,10 +106,8 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
         return norm(static_cast<const FM&>(*this)); }
     Void _clobber() override {
         static_cast<FM&>(*this).clobber(); }
-    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _derivative(SizeType j) const override {
-        return new FM(derivative(static_cast<const FM&>(*this),j)); }
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _concrete_derivative(SizeType j) const override {
-        return this->_derivative(j); }
+        return new FM(derivative(static_cast<const FM&>(*this),j)); }
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _antiderivative(SizeType j) const override {
         return new FM(antiderivative(static_cast<const FM&>(*this),j)); }
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _antiderivative(SizeType j, Number<P> c) const override {
@@ -184,8 +180,7 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
 
     typedef typename Element<FM>::Type ScalarMultivariateFunctionType;
   public:
-    virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _clone() const override { return new FM(static_cast<const FM&>(*this)); }
-    virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _concrete_clone() const override { return this->_clone(); }
+    virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _concrete_clone() const override { return new FM(static_cast<const FM&>(*this)); }
     virtual Void _set(SizeType i, const ScalarFunctionPatchInterface<P,ARG>& sf) override {
         if(!dynamic_cast<const typename FM::ScalarMultivariateFunctionType*>(&sf)) {
             ARIADNE_FAIL_MSG("Cannot set element of VectorMultivariateFunctionModel "<<*this<<" to "<<sf); }
@@ -210,8 +205,6 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
         return static_cast<const FM&>(*this).error(); }
     NormType const _concrete_norm() const override {
          return norm(static_cast<const FM&>(*this)); }
-    virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _derivative(SizeType) const override {
-        ARIADNE_NOT_IMPLEMENTED; }
     virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _concrete_derivative(SizeType) const override {
         ARIADNE_NOT_IMPLEMENTED; }
     virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _antiderivative(SizeType j) const override {
