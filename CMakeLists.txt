@@ -40,6 +40,12 @@ include_directories(SYSTEM
 
 add_subdirectory(submodules)
 
+if(MSVC)
+    # Numeric headers instantiate intentional narrowing conversions reported as C4244.
+    # Keep /WX enabled for Kernel while avoiding warnings owned by the lower layer.
+    add_compile_options(/wd4244)
+endif()
+
 add_library(kernel INTERFACE)
 target_include_directories(kernel INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

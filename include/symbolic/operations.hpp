@@ -34,6 +34,7 @@
 #include <iostream>
 
 #include "utility/typedefs.hpp"
+#include "numeric/concepts.hpp"
 
 namespace Ariadne {
 
@@ -70,11 +71,6 @@ template<class A> using NotType = decltype(!declval<A>());
 template<class A1, class A2> using AndType = decltype(declval<A1>()&&declval<A2>());
 template<class A1, class A2> using OrType = decltype(declval<A1>()||declval<A2>());
 
-template<class A> using UnaryPlusType = decltype(+declval<A>());
-template<class A> using UnaryMinusType = decltype(-declval<A>());
-template<class A1, class A2> using PlusType = decltype(declval<A1>()+declval<A2>());
-template<class A1, class A2> using MinusType = decltype(declval<A1>()-declval<A2>());
-template<class A1, class A2> using TimesType = decltype(declval<A1>()*declval<A2>());
 template<class A1, class A2> using DivideType = decltype(declval<A1>()/declval<A2>());
 
 template<class A> using SgnType = decltype(sgn(-declval<A>()));

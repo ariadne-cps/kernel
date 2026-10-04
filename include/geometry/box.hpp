@@ -163,9 +163,22 @@ class Box
     Box<IntervalType> bounding_box() const;
 
     //! \brief Test if the box is empty. Returns the same type as IntervalType::is_empty().
-    auto is_empty() const -> decltype(declval<IntervalType>().is_empty());
+    auto is_empty() const -> decltype(declval<IntervalType>().is_empty()) {
+        decltype(declval<IntervalType>().is_empty()) res=false;
+        for(SizeType i=0; i!=this->dimension(); ++i) {
+            res=res || (*this)[i].is_empty();
+            if(definitely(res)) { return true; }
+        }
+        return res;
+    }
     //! \brief Test if the box is bounded.Returns the same type as IntervalType::is_bounded().
-    auto is_bounded() const -> decltype(declval<IntervalType>().is_bounded());
+    auto is_bounded() const -> decltype(declval<IntervalType>().is_bounded()) {
+        decltype(declval<IntervalType>().is_bounded()) res=true;
+        for(SizeType i=0; i!=this->dimension(); ++i) {
+            res=res && (*this)[i].is_bounded();
+        }
+        return res;
+    }
 
     //! Splits the box along coordinate \a k and takes the lower , middle, or upper part as given by \a lmu.
     Box<IntervalType> split(SizeType k, SplitPart lmu) const;
@@ -177,16 +190,34 @@ class Box
     Pair< Box<IntervalType>, Box<IntervalType> > split() const;
 
     //! \brief Test if the box contains the point \a pt.
-    template<class X> auto contains(const Point<X>& pt) const -> decltype(Ariadne::contains(declval<I>(),declval<X>()));
+    template<class X> auto contains(const Point<X>& pt) const -> decltype(Ariadne::contains(declval<I>(),declval<X>())) {
+        return Ariadne::contains(*this,pt);
+    }
 
-    template<class II> auto intersects(const Box<II>& bx) const -> decltype(Ariadne::intersect(declval<I>(),declval<II>()));
-    template<class II> auto disjoint(const Box<II>& bx) const -> decltype(Ariadne::disjoint(declval<I>(),declval<II>()));
-    template<class II> auto subset(const Box<II>& bx) const -> decltype(Ariadne::subset(declval<I>(),declval<II>()));
-    template<class II> auto superset(const Box<II>& bx) const -> decltype(Ariadne::superset(declval<I>(),declval<II>()));
-    template<class II> auto covers(const Box<II>& bx) const -> decltype(Ariadne::covers(declval<I>(),declval<II>()));
-    template<class II> auto overlaps(const Box<II>& bx) const -> decltype(Ariadne::overlap(declval<I>(),declval<II>()));
-    template<class II> auto inside(const Box<II>& bx) const -> decltype(Ariadne::inside(declval<I>(),declval<II>()));
-    template<class II> auto separated(const Box<II>& bx) const -> decltype(Ariadne::separated(declval<I>(),declval<II>()));
+    template<class II> auto intersects(const Box<II>& bx) const -> decltype(Ariadne::intersect(declval<I>(),declval<II>())) {
+        return Ariadne::intersect(*this,bx);
+    }
+    template<class II> auto disjoint(const Box<II>& bx) const -> decltype(Ariadne::disjoint(declval<I>(),declval<II>())) {
+        return Ariadne::disjoint(*this,bx);
+    }
+    template<class II> auto subset(const Box<II>& bx) const -> decltype(Ariadne::subset(declval<I>(),declval<II>())) {
+        return Ariadne::subset(*this,bx);
+    }
+    template<class II> auto superset(const Box<II>& bx) const -> decltype(Ariadne::superset(declval<I>(),declval<II>())) {
+        return Ariadne::superset(*this,bx);
+    }
+    template<class II> auto covers(const Box<II>& bx) const -> decltype(Ariadne::covers(declval<I>(),declval<II>())) {
+        return Ariadne::covers(*this,bx);
+    }
+    template<class II> auto overlaps(const Box<II>& bx) const -> decltype(Ariadne::overlap(declval<I>(),declval<II>())) {
+        return Ariadne::overlap(*this,bx);
+    }
+    template<class II> auto inside(const Box<II>& bx) const -> decltype(Ariadne::inside(declval<I>(),declval<II>())) {
+        return Ariadne::inside(*this,bx);
+    }
+    template<class II> auto separated(const Box<II>& bx) const -> decltype(Ariadne::separated(declval<I>(),declval<II>())) {
+        return Ariadne::separated(*this,bx);
+    }
 
 
     //! The exact centre of the box.
@@ -444,25 +475,6 @@ template<class I> inline decltype(refines(declval<I>(),declval<I>())) refines(co
 }
 
 
-template<class I> template<class X> inline auto Box<I>::contains(const Point<X>& pt) const -> decltype(Ariadne::contains(declval<I>(),declval<X>())) {
-    return Ariadne::contains(*this,pt); }
-
-template<class I1> template<class I2> inline auto Box<I1>::intersects(const Box<I2>& bx) const -> decltype(Ariadne::intersect(declval<I1>(),declval<I2>())) {
-    return Ariadne::intersect(*this,bx); }
-template<class I1> template<class I2> inline auto Box<I1>::disjoint(const Box<I2>& bx) const -> decltype(Ariadne::disjoint(declval<I1>(),declval<I2>())) {
-    return Ariadne::disjoint(*this,bx); }
-template<class I1> template<class I2> inline auto Box<I1>::subset(const Box<I2>& bx) const -> decltype(Ariadne::subset(declval<I1>(),declval<I2>())) {
-    return Ariadne::subset(*this,bx); }
-template<class I1> template<class I2> inline auto Box<I1>::superset(const Box<I2>& bx) const -> decltype(Ariadne::superset(declval<I1>(),declval<I2>())) {
-    return Ariadne::superset(*this,bx); }
-template<class I1> template<class I2> inline auto Box<I1>::covers(const Box<I2>& bx) const -> decltype(Ariadne::covers(declval<I1>(),declval<I2>())) {
-    return Ariadne::covers(*this,bx); }
-template<class I1> template<class I2> inline auto Box<I1>::overlaps(const Box<I2>& bx) const -> decltype(Ariadne::overlap(declval<I1>(),declval<I2>())) {
-    return Ariadne::overlap(*this,bx); }
-template<class I1> template<class I2> inline auto Box<I1>::inside(const Box<I2>& bx) const -> decltype(Ariadne::inside(declval<I1>(),declval<I2>())) {
-    return Ariadne::inside(*this,bx); }
-template<class I1> template<class I2> inline auto Box<I1>::separated(const Box<I2>& bx) const -> decltype(Ariadne::separated(declval<I1>(),declval<I2>())) {
-    return Ariadne::separated(*this,bx); }
 
 
 

@@ -169,8 +169,6 @@ template<class UB> class VariableUpperInterval
 typedef VariableLowerInterval<Real> RealVariableLowerInterval;
 typedef VariableUpperInterval<Real> RealVariableUpperInterval;
 
-template<class X> using UnaryPlusType = decltype(+declval<X>());
-template<class X> using UnaryMinusType = decltype(-declval<X>());
 
 template<class UB> inline VariableInterval<UB> operator<=(const VariableLowerInterval<UB>& lv, const UnaryPlusType<UB>& u) {
     return VariableInterval<UB>(lv.lower_bound(),lv.variable(),u); }

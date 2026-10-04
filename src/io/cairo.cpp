@@ -22,6 +22,8 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <numbers>
+
 #include "utility/standard.hpp"
 
 #include "utility/macros.hpp"
@@ -93,8 +95,8 @@ ImageSize2d CairoCanvas::size_in_pixels() const {
 
 Void CairoCanvas::move_to(double x, double y) { cairo_move_to (cr, x, y); }
 Void CairoCanvas::line_to(double x, double y) { cairo_line_to (cr, x, y); }
-Void CairoCanvas::circle(double x, double y, double r) { cairo_arc (cr, x, y, r, 0, 2*M_PI); }
-Void CairoCanvas::dot(double x, double y) { cairo_arc (cr, x, y, dr/1000, 0, 2*M_PI); }
+Void CairoCanvas::circle(double x, double y, double r) { cairo_arc (cr, x, y, r, 0, 2*std::numbers::pi); }
+Void CairoCanvas::dot(double x, double y) { cairo_arc (cr, x, y, dr/1000, 0, 2*std::numbers::pi); }
 Void CairoCanvas::set_dot_radius(double radius) { this->dr=radius; }
 Void CairoCanvas::set_line_width(double width) { this->lw=width; }
 Void CairoCanvas::set_line_colour(double r, double g, double b) { lc.red=r; lc.green=g; lc.blue=b; }
