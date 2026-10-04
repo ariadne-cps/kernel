@@ -57,10 +57,8 @@ template class ScaledFunctionPatchFactory<ValidatedTaylorModelDP>;
 template class FunctionModelCreator<ScaledFunctionPatchFactory<ValidatedTaylorModelDP>,RealVector>;
 
 template class ScaledFunctionPatch<ValidatedTaylorModelDP>;
-template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelDP>,ApproximateTag,RealScalar(RealVector)>;
 template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
 template class VectorScaledFunctionPatch<ValidatedTaylorModelDP>;
-template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelDP>,ApproximateTag,RealVector(RealVector)>;
 template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
 
 
@@ -68,10 +66,8 @@ template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelDP>;
 template class FunctionModelCreator<ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelDP>,RealVector>;
 
 template class ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>;
-template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ApproximateTag,RealScalar(RealVector)>;
 template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
 template class VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>;
-template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ApproximateTag,RealVector(RealVector)>;
 template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
 
 
