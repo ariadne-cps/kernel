@@ -52,7 +52,7 @@ template<class A, class X=typename A::NumericType> struct ProvideAlgebraOperatio
 template<class X> struct ProvideAlgebraOperations<Affine<X>,X> {
     //! \relates Affine
     //! \brief Test equality of two affine expressions.
-    friend inline Bool operator==(const Affine<X>& f1, const Affine<X>& f2) {
+    friend inline auto operator==(const Affine<X>& f1, const Affine<X>& f2) {
         return f1._c==f2._c && f1._g == f2._g; }
     //! \relates Affine
     //! \brief Negation of an affine expression.

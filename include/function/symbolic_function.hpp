@@ -202,7 +202,7 @@ inline EffectiveVectorMultivariateFunction noise_independent_component(Effective
 
     CoordinateFormulaPairs substitutions;
     for (auto i : range(ff->result_size(),ff->result_size()+num_inputs)) {
-        substitutions.append({i,EffectiveFormula::zero()});
+        substitutions.append({static_cast<Nat>(i),EffectiveFormula::zero()});
     }
 
     return EffectiveVectorMultivariateFormulaFunction(function.argument_size(),simplify(substitute(ff->formulae(),substitutions)));
@@ -651,7 +651,7 @@ class JoinedFunction
     using RES2=ElementKind<C1>;
     using RES=ElementKind<C>;
     using SIG=RES(ARG);
-    static_assert(Same<typename VectorFunctionMixin<JoinedFunction<P,D,C1,C2>,P,ARG>::CodomainType,CartesianProductType<C1,C2>>);
+    static_assert(Same<typename SignatureTraits<SIG>::CodomainType,CartesianProductType<C1,C2>>);
 
   public:
     typedef D DomainType;

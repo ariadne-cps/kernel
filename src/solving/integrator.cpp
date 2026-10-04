@@ -163,7 +163,7 @@ IntegratorBase::flow_step(const ValidatedVectorMultivariateFunction& vf, const E
     while(true) {
         try {
             return flow_step(vf,dx,h,dx);
-        } catch(const FlowTimeStepException& e) {
+        } catch(const FlowTimeStepException&) {
             StepSizeType hnew=hlf(hprev);
             hprev=h;
             h=StepSizeType(hnew.get_d());
@@ -234,7 +234,7 @@ BoundedIntegratorBase::flow_step(const ValidatedVectorMultivariateFunction& vf, 
     while(true) {
         try {
             return this->flow_step(vf,dx,h,bx);
-        } catch(const FlowTimeStepException& e) {
+        } catch(const FlowTimeStepException&) {
             StepSizeType hnew=hlf(hprev);
             hprev=h;
             h=StepSizeType(hnew.get_d());

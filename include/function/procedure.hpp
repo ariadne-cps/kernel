@@ -33,6 +33,7 @@
 
 #include "utility/attribute.hpp"
 #include "utility/container.hpp"
+#include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "symbolic/templates.hpp"
 #include "function/function.decl.hpp"

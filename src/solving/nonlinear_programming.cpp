@@ -551,7 +551,7 @@ contains_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, E
     try {
         ivlR=inverse(ivlS);
     }
-    catch (SingularMatrixException const& e) {
+    catch (SingularMatrixException const&) {
         return indeterminate;
     }
 

@@ -175,7 +175,7 @@ auto SolverBase::solve_all(const ValidatedVectorMultivariateFunction& f,
     try {
         Matrix<ValidatedNumericType> Jinv=inverse(f.jacobian(nx));
     }
-    catch(const SingularMatrixException& e) {
+    catch(const SingularMatrixException&) {
         invertible_jacobian=false;
     }
 
@@ -197,7 +197,7 @@ auto SolverBase::solve_all(const ValidatedVectorMultivariateFunction& f,
             }
             need_to_split=false;
         }
-        catch(const NoSolutionException& e) {
+        catch(const NoSolutionException&) {
             //ARIADNE_WARN("NoSolutionException exception: "<<e.what());
             need_to_split=false;
         }

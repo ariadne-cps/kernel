@@ -191,7 +191,7 @@ validate_feasibility(const Vector<X>& xl, const Vector<X>& xu,
     try {
         Vector<VX> d = transpose(A) * solve(S,e);
         x += d;
-    } catch (SingularMatrixException const& err) {
+    } catch (SingularMatrixException const&) {
         return indeterminate;
     }
 
@@ -431,7 +431,7 @@ _minimisation_step(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu,
 
     try {
         dy = solve(S, Vector<AX>( rx + A * (D * ryz) ) );
-    } catch(SingularMatrixException const& err) {
+    } catch(SingularMatrixException const&) {
         return LinearProgramStatus::DEGENERATE_FEASIBILITY;
     }
 
