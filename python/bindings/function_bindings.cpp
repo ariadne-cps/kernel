@@ -45,6 +45,13 @@ namespace Ariadne {
 
 template<class PR> std::string numeric_class_tag();
 
+template<> struct PythonTemplateName<ApproximateTaylorModel> { static std::string get() { return "ApproximateTaylorModel"; } };
+template<> struct PythonTemplateName<ValidatedTaylorModel> { static std::string get() { return "ValidatedTaylorModel"; } };
+template<> struct PythonTemplateName<ValidatedScalarMultivariateFunctionModel> { static std::string get() { return "ValidatedScalarMultivariateFunctionModel"; } };
+template<> struct PythonTemplateName<ValidatedVectorMultivariateFunctionModel> { static std::string get() { return "ValidatedVectorMultivariateFunctionModel"; } };
+template<> struct PythonTemplateName<ValidatedScalarMultivariateTaylorFunctionModel> { static std::string get() { return "ValidatedScalarMultivariateTaylorFunctionModel"; } };
+template<> struct PythonTemplateName<ValidatedVectorMultivariateTaylorFunctionModel> { static std::string get() { return "ValidatedVectorMultivariateTaylorFunctionModel"; } };
+
 template<template<class...>class T, class PR> std::string python_template_tag_name() { return python_template_name<T>()+numeric_class_tag<PR>(); }
 template<template<class...>class T, class FLT> std::string python_template_precision_tag_name() { return python_template_name<T>()+numeric_class_tag<typename FLT::PrecisionType>(); }
 
