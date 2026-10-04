@@ -811,7 +811,7 @@ Function<P,R(AS...)> _validated_compose(const Function<P,R(T)>& f, const Functio
 
     auto gp=std::dynamic_pointer_cast<typename FunctionModel<P,T(AS...),PR>::Interface const>(g.managed_pointer());
     if(gp) {
-        return compose(f,FunctionModel<P,T(AS...),PR>(gp->_clone()));
+        return compose(f,FunctionModel<P,T(AS...),PR>(gp->_concrete_clone()));
     } else {
         return make_composed_function(f,g);
     }
