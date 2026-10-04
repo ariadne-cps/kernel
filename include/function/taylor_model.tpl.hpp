@@ -57,7 +57,6 @@ namespace Ariadne {
 typedef IntegralConstant<Int,0> Zero;
 typedef IntegralConstant<Int,1> One;
 static const Zero zero = Zero();
-static const One one = One();
 
 
 template<class F> F UnknownError<F>::raw() const {

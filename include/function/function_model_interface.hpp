@@ -126,14 +126,14 @@ template<class P, class SIG, class PR, class PRE> class FunctionModelInterface
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _embed(const DomainType& d1, const DomainType& d2) const = 0;
 
     virtual FunctionModelFactoryInterface<P,PR,PRE>* _factory() const = 0;
-    virtual FunctionModelInterface<P,SIG,PR,PRE>* _clone() const = 0;
+    virtual FunctionModelInterface<P,SIG,PR,PRE>* _concrete_clone() const = 0;
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _create() const = 0;
-    inline FunctionModelInterface<P,SIG,PR,PRE>* clone() const { return this->_clone(); }
-    inline FunctionModelInterface<P,SIG,PR,PRE>* _copy() const { return this->_clone(); }
+    inline FunctionModelInterface<P,SIG,PR,PRE>* clone() const { return this->_concrete_clone(); }
+    inline FunctionModelInterface<P,SIG,PR,PRE>* _copy() const { return this->_concrete_clone(); }
 
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _restriction(const DomainType& d) const = 0;
 
-    virtual FunctionModelInterface<P,SIG,PR,PRE>* _derivative(ArgumentIndexType j) const = 0;
+    virtual FunctionModelInterface<P,SIG,PR,PRE>* _concrete_derivative(ArgumentIndexType j) const = 0;
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _antiderivative(ArgumentIndexType j) const = 0;
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _antiderivative(ArgumentIndexType j, Number<P>) const = 0;
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _concrete_antiderivative(ArgumentIndexType j, CanonicalNumericType<P,PR,PRE> c) const = 0;

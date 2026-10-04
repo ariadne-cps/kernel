@@ -535,10 +535,10 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
 
     friend ScalarFunctionPatch<P,ARGS...> unchecked_compose(const ScalarMultivariateFunction<P>& f, const VectorFunctionPatch<P,ARGS...>& g) {
         ScalarFunctionPatchInterface<P,ARGS...> const* fptr = dynamic_cast<ScalarFunctionPatchInterface<P,ARGS...> const*>(f.raw_pointer());
-        if(fptr) { return unchecked_compose(ScalarFunctionPatch<P,ARGS...>(*fptr),g); } else { return compose(f,g); } }
+        if(fptr) { return unchecked_compose(cast_unchecked(ScalarFunctionPatch<P,ARGS...>(*fptr)),g); } else { return compose(f,g); } }
     friend VectorFunctionPatch<P,ARGS...> unchecked_compose(const VectorMultivariateFunction<P>& f, const VectorFunctionPatch<P,ARGS...>& g) {
         VectorFunctionPatchInterface<P,ARGS...> const* fptr = dynamic_cast<VectorFunctionPatchInterface<P,ARGS...> const*>(f.raw_pointer());
-        if(fptr) { return unchecked_compose(VectorFunctionPatch<P,ARGS...>(*fptr),g); } else { return compose(f,g); } }
+        if(fptr) { return unchecked_compose(cast_unchecked(VectorFunctionPatch<P,ARGS...>(*fptr)),g); } else { return compose(f,g); } }
 
     friend VectorFunctionPatch<P,ARGS...> antiderivative(const VectorFunctionPatch<P,ARGS...>& f, SizeType j) {
         VectorFunctionPatch<P,ARGS...> r(f);

@@ -221,11 +221,11 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealScal
     FunctionModel(UniquePointer<Interface> p) : Handle<Interface>(std::move(p)) { }
 
     FunctionModel() : FunctionModel(nullptr) { }
-    FunctionModel(const SharedPointer<const Interface> p) : Handle<Interface>(p->_clone()) { }
-    FunctionModel(const FunctionModel<P,SIG,PR,PRE>& f) : Handle<Interface>(f._ptr->_clone()) { }
+    FunctionModel(const SharedPointer<const Interface> p) : Handle<Interface>(p->_concrete_clone()) { }
+    FunctionModel(const FunctionModel<P,SIG,PR,PRE>& f) : Handle<Interface>(f._ptr->_concrete_clone()) { }
     FunctionModel& operator=(const FunctionModel<P,SIG,PR,PRE>& f) {
         this->Handle<FunctionModelInterface<P,RealScalar(ARG),PR,PRE>>::operator=(f); return *this; }
-    FunctionModel(const Interface& f) : Handle<Interface>(f._clone()) { }
+    FunctionModel(const Interface& f) : Handle<Interface>(f._concrete_clone()) { }
     FunctionModel(const Function<P,SIG>& f) : FunctionModel(dynamic_cast<Interface*>(f.raw_pointer()->_clone())) { }
     operator Function<P,SIG>() const { return Function<P,SIG>(this->_ptr->_clone()); }
     operator Interface& () { return this->reference(); }
@@ -276,7 +276,7 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealScal
     friend NormType norm(const ScalarFunctionModel<P,ARG,PR,PRE>& f) {
         return f._ptr->_concrete_norm(); }
     friend ScalarFunctionModel<P,ARG,PR,PRE> derivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, SizeType j) {
-        return ScalarFunctionModel<P,ARG,PR,PRE>(f._ptr->_derivative(j)); }
+        return ScalarFunctionModel<P,ARG,PR,PRE>(f._ptr->_concrete_derivative(j)); }
     friend ScalarFunctionModel<P,ARG,PR,PRE> antiderivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, SizeType j) {
         return ScalarFunctionModel<P,ARG,PR,PRE>(f._ptr->_antiderivative(j)); }
     friend ScalarFunctionModel<P,ARG,PR,PRE> antiderivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, SizeType j, CanonicalNumericType<P,PR,PRE> c) {
@@ -399,7 +399,7 @@ FunctionModel<P,RealScalar(ARG),PR,PRE>::operator=(const ScalarFunction<P,ARG>& 
     return (*this)=factory(*this).create(f); }
 template<class P, class ARG, class PR, class PRE> inline auto
 FunctionModel<P,RealScalar(ARG),PR,PRE>::operator=(const ScalarFunctionModelInterface<P,ARG,PR,PRE>& f) -> ScalarFunctionModel<P,ARG,PR,PRE>& {
-    return (*this)=ScalarFunctionModel<P,ARG,PR,PRE>(f._clone()); }
+    return (*this)=ScalarFunctionModel<P,ARG,PR,PRE>(f._concrete_clone()); }
 
 
 
@@ -469,11 +469,11 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
     template<class Y> using Result = typename SignatureTraits<SIG>::template Result<Y>;
   public:
     inline explicit FunctionModel(Interface* p) : Handle<Interface>(p) { }
-    inline FunctionModel(UniquePointer<Interface> p) : Handle<Interface>(p->_clone()) { }
+    inline FunctionModel(UniquePointer<Interface> p) : Handle<Interface>(p->_concrete_clone()) { }
 
     inline FunctionModel() : FunctionModel(nullptr) { }
     inline FunctionModel(SharedPointer<const Interface> vfp)
-        : FunctionModel(vfp->_clone()) { }
+        : FunctionModel(vfp->_concrete_clone()) { }
     inline FunctionModel(SizeType n, const ScalarFunctionModelInterface<P,ARG,PR,PRE>& sf) : FunctionModel() {
         FunctionModelFactory<P,PR,PRE> factory(sf._factory()); *this=factory.create_zeros(n,sf.domain());
         for(SizeType i=0; i!=n; ++i) { (*this)[i]=sf; } }
@@ -481,7 +481,7 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
         : FunctionModel(asf.size(),asf[0]) { for(SizeType i=0; i!=asf.size(); ++i) { (*this)[i]=asf[i]; } }
     inline FunctionModel(List<ScalarFunctionModel<P,ARG,PR,PRE>> const& lsf)
         : FunctionModel(lsf.size(),lsf[0]) { for(SizeType i=0; i!=lsf.size(); ++i) { (*this)[i]=lsf[i]; } }
-    inline FunctionModel(const Interface& f) : FunctionModel(f._clone()) { }
+    inline FunctionModel(const Interface& f) : FunctionModel(f._concrete_clone()) { }
     inline operator Function<P,SIG> () const { return Function<P,SIG>(*this->_ptr); }
 
     inline SizeType result_size() const { return this->_ptr->result_size(); }
@@ -531,7 +531,7 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
         return VectorFunctionModel<P,ARG,PR,PRE>(g._ptr->_concrete_unchecked_compose(f)); }
 
     friend inline VectorFunctionModel<P,ARG,PR,PRE> operator+(const VectorFunctionModel<P,ARG,PR,PRE>& f) {
-        return VectorFunctionModel<P,ARG,PR,PRE>(f._ptr->_clone()); }
+        return VectorFunctionModel<P,ARG,PR,PRE>(f._ptr->_concrete_clone()); }
     friend inline VectorFunctionModel<P,ARG,PR,PRE> operator-(const VectorFunctionModel<P,ARG,PR,PRE>& f) {
         VectorFunctionModel<P,ARG,PR,PRE> r=f; for(SizeType i=0; i!=r.size(); ++i) { r[i]=-f[i]; } return r; }
     friend inline VectorFunctionModel<P,ARG,PR,PRE> operator+(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {
@@ -577,7 +577,7 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
     friend NormType norm(const VectorFunctionModel<P,ARG,PR,PRE>& f) {
         return f._ptr->_concrete_norm(); }
     friend VectorFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d1, const VectorFunctionModel<P,ARG,PR,PRE>& f, const DomainType& d2) {
-        return VectorFunctionModel<P,ARG,PR,PRE>(f._ptr->_concrete_embed(d1,d2)); }
+        return VectorFunctionModel<P,ARG,PR,PRE>(f._ptr->_embed(d1,d2)); }
     friend VectorFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d, const VectorFunctionModel<P,ARG,PR,PRE>& f) {
         return embed(d,f,DomainType()); }
     friend VectorFunctionModel<P,ARG,PR,PRE> embed(const VectorFunctionModel<P,ARG,PR,PRE>& f, const BoxDomainType& d) {
@@ -615,7 +615,7 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
     friend VectorFunctionModel<P,ARG,PR,PRE> join(const ScalarFunctionModel<P,ARG,PR,PRE>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {
         return join(VectorFunctionModel<P,ARG,PR,PRE>(1u,f1),f2); }
     friend VectorFunctionModel<P,ARG,PR,PRE> join(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const ScalarFunctionModel<P,ARG,PR,PRE>& f2) {
-        VectorFunctionModel<P,ARG,PR,PRE> r=VectorFunctionModel<P,ARG,PR,PRE>(f1._ptr->_clone()); r._ptr->_concrete_adjoin(f2); return r; }
+        VectorFunctionModel<P,ARG,PR,PRE> r=VectorFunctionModel<P,ARG,PR,PRE>(f1._ptr->_concrete_clone()); r._ptr->_concrete_adjoin(f2); return r; }
     friend VectorFunctionModel<P,ARG,PR,PRE> join(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {
         return VectorFunctionModel<P,ARG,PR,PRE>(f1._ptr->_concrete_join(*f2._ptr)); }
 

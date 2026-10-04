@@ -62,6 +62,8 @@ inline decltype(auto) contains(IntervalDomainType const& bx, Scalar<FloatMPBound
 inline decltype(auto) contains(IntervalDomainType const& bx, Scalar<FloatMPApproximation> const& x) { return contains(convert_interval(bx,x.precision()),x); }
 inline decltype(auto) contains(BoxDomainType const& bx, Vector<FloatMPBounds> const& x) { return contains(convert_box(bx,x.zero_element().precision()),x); }
 inline decltype(auto) contains(BoxDomainType const& bx, Vector<FloatMPApproximation> const& x) { return contains(convert_box(bx,x.zero_element().precision()),x); }
+template<class F> inline decltype(auto) contains(BoxDomainType const& bx, Vector<UpperInterval<F>> const& x) {
+    return subset(Box<UpperInterval<F>>(x),convert_box(bx,x.zero_element().upper_bound().precision())); }
 
 
 template<class M> Void _set_scaling(ScaledFunctionPatch<M>& x, const IntervalDomainType& ivl, SizeType j)
