@@ -1,6 +1,12 @@
 # Ariadne Kernel
 
-Ariadne Kernel is the standalone C++20 kernel layer extracted from Ariadne. It contains the Function, Geometry, IO, Symbolic and Solving modules and consumes the standalone Algebra and Threading repositories as direct dependencies.
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Unix Status](https://github.com/ariadne-cps/kernel/actions/workflows/unix.yml/badge.svg)](https://github.com/ariadne-cps/kernel/actions/workflows/unix.yml)
+[![Windows Status](https://github.com/ariadne-cps/kernel/actions/workflows/win.yml/badge.svg)](https://github.com/ariadne-cps/kernel/actions/workflows/win.yml)
+[![Coverage Status](https://github.com/ariadne-cps/kernel/actions/workflows/coverage.yml/badge.svg)](https://github.com/ariadne-cps/kernel/actions/workflows/coverage.yml)
+[![codecov](https://codecov.io/gh/ariadne-cps/kernel/branch/main/graph/badge.svg)](https://codecov.io/gh/ariadne-cps/kernel)
+
+Ariadne Kernel is the standalone C++20 kernel layer of Ariadne. It contains the Function, Geometry, IO, Symbolic and Solving modules and consumes the standalone Algebra and Threading repositories as direct dependencies.
 
 ## Layout
 
@@ -42,13 +48,12 @@ ctest --test-dir build --output-on-failure
 
 When a compatible Python development environment is available, the standalone build produces `pyariadne` from the lower Algebra bindings plus the Kernel bindings for Function, Geometry, IO, Solving and Symbolic. Sweeper bindings are supplied by Algebra, while IO provides the CLI and graphics facilities.
 
-
 ## Contribution guidelines
 
-If you would like to contribute to Kernel, please contact the developer:
+If you would like to contribute to Ariadne Kernel, please contact the developer:
 
 - Luca Geretti <luca.geretti@univr.it>
 
 ## License
 
-Kernel is released under the GNU General Public License v3.0.
+Ariadne Kernel is released under the GNU General Public License v3.0.
