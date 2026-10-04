@@ -1,0 +1,7 @@
+#ifndef ARIADNE_CONFIG_HPP
+#define ARIADNE_CONFIG_HPP
+
+#cmakedefine ARIADNE_ENABLE_STACK_TRACE
+#cmakedefine HAVE_CAIRO_H
+
+#endif

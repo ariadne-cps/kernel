@@ -1,0 +1,3 @@
+add_executable(benchmark_taylor_model benchmark_taylor_model.cpp)
+target_link_libraries(benchmark_taylor_model PRIVATE ariadne-kernel kernel)
+add_dependencies(benchmarks benchmark_taylor_model)

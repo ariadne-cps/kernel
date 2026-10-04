@@ -1,0 +1,5 @@
+add_subdirectory(function)
+add_subdirectory(geometry)
+add_subdirectory(io)
+add_subdirectory(symbolic)
+add_subdirectory(solving)

@@ -1,0 +1,20 @@
+set(UNIT_TESTS
+    test_bounder
+    test_constraint_solver
+    test_integrator
+    test_linear_programming
+    test_nonlinear_programming
+    test_solvers
+    test_smt_solver
+    test_smt_neural_benchmarks
+    test_smt_boolean
+    test_smt_theory
+)
+foreach(TEST ${UNIT_TESTS})
+    add_executable(${TEST} ${TEST}.cpp)
+    target_link_libraries(${TEST} ariadne-kernel kernel)
+    add_test(NAME ${TEST} COMMAND $<TARGET_FILE:${TEST}>)
+    set_property(TEST ${TEST} PROPERTY LABELS "solving")
+endforeach()
+target_include_directories(test_smt_neural_benchmarks PRIVATE ${PROJECT_SOURCE_DIR}/benchmarks/solving)
+add_dependencies(tests-cpp ${UNIT_TESTS})
