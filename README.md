@@ -42,3 +42,13 @@ ctest --test-dir build --output-on-failure
 
 When a compatible Python development environment is available, the standalone build produces `pyariadne` from the lower Algebra bindings plus the Kernel bindings for Function, Geometry, IO, Solving and Symbolic. Sweeper bindings are supplied by Algebra, while IO provides the CLI and graphics facilities.
 
+
+## Contribution guidelines
+
+If you would like to contribute to Kernel, please contact the developer:
+
+- Luca Geretti <luca.geretti@univr.it>
+
+## License
+
+Kernel is released under the GNU General Public License v3.0.
