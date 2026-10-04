@@ -34,6 +34,7 @@
 #include "solving/nonlinear_programming.hpp"
 
 #include "io/figure.hpp"
+#include "io/cairo.hpp"
 #include "io/graphics_manager.hpp"
 #include "io/command_line_interface.hpp"
 

@@ -104,11 +104,7 @@ endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     ariadne_install_dependency_bundle(
-        TARGET algebra
-        DESTINATION include/ariadne-kernel
-    )
-    ariadne_install_dependency_bundle(
-        TARGET threading
+        TARGET kernel
         DESTINATION include/ariadne-kernel
     )
 endif()
