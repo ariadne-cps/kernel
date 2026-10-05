@@ -535,9 +535,9 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
     inline Vector<ErrorType> const errors() const { return this->_ptr->_concrete_errors(); }
     inline ErrorType const error() const { return this->_ptr->_concrete_error(); }
     inline Void clobber() { this->pointer()->clobber(); }
-    inline Matrix<NumericType> const jacobian(const Vector<NumericType>& x) const;
-//        Vector<Differential<NumericType>> dfx=this->_ptr->_call(Differential<NumericType>::variables(1u,x));
-//        return dfx.jacobian(); }
+    inline Matrix<NumericType> const jacobian(const Vector<NumericType>& x) const {
+        Vector<Differential<NumericType>> dfx=this->_ptr->_call(Differential<NumericType>::variables(1u,x));
+        return dfx.jacobian(); }
 
     inline Void restrict(const DomainType& d) { *this=restriction(*this,d); }
   public:
