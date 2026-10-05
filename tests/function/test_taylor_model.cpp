@@ -64,7 +64,7 @@ template<class T> T norm(T const& t) { return t; }
             ++ARIADNE_TEST_FAILURES;                                    \
             std::cout << "false\nERROR: refines(" << #expression << "," << #expected << "):\n"; \
             std::cout << "    " << #expression << "=" << (result) << "\n    #expected="<< (expected) << std::endl; \
-            std::cerr << "ERROR: " << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << ": "; \
+            std::cerr << "ERROR: " << __FILE__ << ":" << __LINE__ << ": " << ARIADNE_PRETTY_FUNCTION << ": "; \
             std::cerr << "`refines(" << #expression << "," << #expected << ")' failed;\n"; \
             std::cerr << "result=" << (result) << "\nexpected="<< (expected) << std::endl; \
             auto exact_result=result; auto exact_expected=expected; clobber(exact_expected); clobber(exact_result); \

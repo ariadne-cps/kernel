@@ -270,7 +270,7 @@ class TestIntegrator
             ARIADNE_TEST_WARN("Integrator "<<*integrator_ptr<<" cannot compute flow of dx/dt=x^2 starting in [1.0:1.5] up to time 1/1024.")
             ARIADNE_TEST_WARN("Integrator::flow_step(f,d,"<<h<<") threw IncompleteFlowException.")
             ARIADNE_TEST_COMPARE(e.computed_model().domain()[1].upper_bound(),<,h);
-        } catch (FlowBoundsException const& e) {
+        } catch (FlowBoundsException const&) {
             ARIADNE_TEST_WARN("Integrator "<<*integrator_ptr<<" cannot compute flow of dx/dt=x^2 starting in [1.0:1.5] up to time 1/1024.")
             ARIADNE_TEST_WARN("Integrator::flow_step(f,d,"<<h<<") threw FlowBoundsException.")
         }
@@ -284,11 +284,11 @@ class TestIntegrator
         } catch (IncompleteFlowException const& e) {
             ARIADNE_TEST_NOTIFY("Integrator::flow_step(f,d,"<<h<<") caught IncompleteFlowException as expected.")
             ARIADNE_TEST_COMPARE(e.computed_model().domain()[1].upper_bound(),<,h);
-        } catch (FlowBoundsException const& e) {
+        } catch (FlowBoundsException const&) {
             ARIADNE_TEST_WARN("Integrator::flow_step(f,d,"<<h<<") threw FlowBoundsException.")
-        } catch (FlowTimeStepException const& e) {
+        } catch (FlowTimeStepException const&) {
             ARIADNE_TEST_WARN("Integrator::flow_step(f,d,"<<h<<") threw FlowTimeStepException.")
-        } catch (DivideByZeroException const& e) {
+        } catch (DivideByZeroException const&) {
             ARIADNE_TEST_WARN("Integrator::flow_step(f,d,"<<h<<") threw DivideByZeroException.")
         }
 
@@ -303,11 +303,11 @@ class TestIntegrator
         } catch (IncompleteFlowException const& e) {
             ARIADNE_TEST_WARN("Integrator::flow_step(f,d,suggest("<<h<<")) caught IncompleteFlowException.")
             ARIADNE_TEST_COMPARE(e.computed_model().domain()[1].upper_bound(),<,h);
-        } catch (FlowBoundsException const& e) {
+        } catch (FlowBoundsException const&) {
             ARIADNE_TEST_WARN("Integrator::flow_step(f,d,suggest("<<h<<")) threw FlowBoundsException, when a smaller step-size should be tried.")
-        } catch (FlowTimeStepException const& e) {
+        } catch (FlowTimeStepException const&) {
             ARIADNE_TEST_WARN("Integrator::flow_step(f,d,suggest("<<h<<")) threw FlowTimeStepException, when a smaller step-size should be tried.")
-        } catch (DivideByZeroException const& e) {
+        } catch (DivideByZeroException const&) {
             ARIADNE_TEST_ERROR("Integrator::flow_step(f,d,suggest("<<h<<")) threw DivideByZeroException, when a smaller step-size should be tried.")
         }
 

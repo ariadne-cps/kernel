@@ -324,12 +324,20 @@ FunctionSet<P,SIG,SET>::FunctionSet(FS const& fs)
 template<class RES, class ARG> class CompactSet<ValidatedTag,RES(ARG)>
     : public FunctionSet<ValidatedTag,RES(ARG),CompactSet>
 {
-    using FunctionSet<ValidatedTag,RES(ARG),CompactSet>::FunctionSet;
+    using Base=FunctionSet<ValidatedTag,RES(ARG),CompactSet>;
+  public:
+    using Base::Base;
+    template<AFunctionSet<ValidatedTag,RES(ARG),CompactSet> FS>
+    explicit CompactSet(FS const& fs) : Base(fs) { }
 };
 template<class RES, class ARG> class LocatedSet<ValidatedTag,RES(ARG)>
     : public FunctionSet<ValidatedTag,RES(ARG),LocatedSet>
 {
-    using FunctionSet<ValidatedTag,RES(ARG),LocatedSet>::FunctionSet;
+    using Base=FunctionSet<ValidatedTag,RES(ARG),LocatedSet>;
+  public:
+    using Base::Base;
+    template<AFunctionSet<ValidatedTag,RES(ARG),LocatedSet> FS>
+    explicit LocatedSet(FS const& fs) : Base(fs) { }
 };
 
 

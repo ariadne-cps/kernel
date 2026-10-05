@@ -26,6 +26,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include "numeric/numeric.hpp"
 #include "function/taylor_model.hpp"
 #include "utility/stopwatch.hpp"
 

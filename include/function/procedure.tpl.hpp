@@ -86,15 +86,15 @@ template<class Y> SizeType _convert(List<ProcedureInstruction>& p, List<Y>& c, c
 
 
 
-OutputStream& operator<<(OutputStream& os, ConstantProcedureInstruction const& s) { return os << "c[" << s._val << "]"; }
-OutputStream& operator<<(OutputStream& os, IndexProcedureInstruction const& s) { return os << "x[" << s._ind << "]"; }
-OutputStream& operator<<(OutputStream& os, UnaryProcedureInstruction const& s) { return os << s._op << "(v[" << s._arg << "])"; }
-OutputStream& operator<<(OutputStream& os, BinaryProcedureInstruction const& s) { return os << s._op << "(v[" << s._arg1 << "],v[" << s._arg2 << "])"; }
-OutputStream& operator<<(OutputStream& os, GradedProcedureInstruction const& s) { return os << s._op << "(v[" << s._arg << "]," << s._num << ")"; }
-OutputStream& operator<<(OutputStream& os, ScalarProcedureInstruction const& s) { return os << s._op << "(c[" << s._arg1 << "],v[" << s._arg2 << "])"; }
+inline OutputStream& operator<<(OutputStream& os, ConstantProcedureInstruction const& s) { return os << "c[" << s._val << "]"; }
+inline OutputStream& operator<<(OutputStream& os, IndexProcedureInstruction const& s) { return os << "x[" << s._ind << "]"; }
+inline OutputStream& operator<<(OutputStream& os, UnaryProcedureInstruction const& s) { return os << s._op << "(v[" << s._arg << "])"; }
+inline OutputStream& operator<<(OutputStream& os, BinaryProcedureInstruction const& s) { return os << s._op << "(v[" << s._arg1 << "],v[" << s._arg2 << "])"; }
+inline OutputStream& operator<<(OutputStream& os, GradedProcedureInstruction const& s) { return os << s._op << "(v[" << s._arg << "]," << s._num << ")"; }
+inline OutputStream& operator<<(OutputStream& os, ScalarProcedureInstruction const& s) { return os << s._op << "(c[" << s._arg1 << "],v[" << s._arg2 << "])"; }
 
 
-OutputStream& operator<<(OutputStream& os, ProcedureInstruction const& pri) { pri.accept([&os](auto s){os<<s;}); return os; }
+inline OutputStream& operator<<(OutputStream& os, ProcedureInstruction const& pri) { pri.accept([&os](auto s){os<<s;}); return os; }
 
 template<class Y>
 Void _write(OutputStream& os, const List<ProcedureInstruction>& p, const List<Y>&)
