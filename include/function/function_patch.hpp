@@ -254,7 +254,7 @@ template<class P, class... ARGS> class FunctionPatch<P,RealScalar(ARGS...)>
         return ScalarFunctionPatch<P,ARGS...>(f._ptr->_partial_evaluate(j,c)); }
 
     friend NormType norm(const ScalarFunctionPatch<P,ARGS...>& f) {
-        return f._ptr->_generic_norm(); }
+        return f._ptr->_norm(); }
     friend ScalarFunctionPatch<P,ARGS...> derivative(const ScalarFunctionPatch<P,ARGS...>& f, ArgumentIndexType j) {
         return ScalarFunctionPatch<P,ARGS...>(f._ptr->_concrete_derivative(j)); }
     friend ScalarFunctionPatch<P,ARGS...> antiderivative(const ScalarFunctionPatch<P,ARGS...>& f, ArgumentIndexType j) {

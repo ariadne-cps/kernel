@@ -50,14 +50,15 @@ namespace Ariadne {
 
 namespace {
 
-BoxDomainType const& convert_box(BoxDomainType const& bx, DoublePrecision) {
-    return bx;
-}
-
-Box<Interval<FloatMP>> convert_box(BoxDomainType const& bx, MultiplePrecision pr) {
-    Box<Interval<FloatMP>> r(bx.dimension(),Interval<FloatMP>(FloatMP(pr),FloatMP(pr)));
-    for(SizeType i=0; i!=r.dimension(); ++i) { r[i]=convert_interval(bx[i],pr); }
-    return r;
+template<class PR> auto convert_box(BoxDomainType const& bx, PR pr) {
+    if constexpr (Same<PR,DoublePrecision>) {
+        return bx;
+    } else {
+        static_assert(Same<PR,MultiplePrecision>);
+        Box<Interval<FloatMP>> r(bx.dimension(),Interval<FloatMP>(FloatMP(pr),FloatMP(pr)));
+        for(SizeType i=0; i!=r.dimension(); ++i) { r[i]=convert_interval(bx[i],pr); }
+        return r;
+    }
 }
 
 } // namespace

@@ -548,13 +548,13 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
         return ScalarFunctionModel<P,ARG,PR,PRE>(g._ptr->_compose(f)); }
     friend inline ScalarFunctionModel<P,ARG,PR,PRE> compose(const ScalarMultivariateFunctionPatch<P>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
         return ScalarFunctionModel<P,ARG,PR,PRE>(g._ptr->_compose(f)); }
-    friend inline ScalarFunctionModel<P,ARG,PR,PRE> compose(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
+    friend inline ScalarFunctionModel<P,ARG,PR,PRE> compose(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) requires Same<ARG,RealVector> {
         return ScalarFunctionModel<P,ARG,PR,PRE>(g._ptr->_compose(f)); }
     friend inline VectorFunctionModel<P,ARG,PR,PRE> compose(const VectorMultivariateFunction<P>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
         return VectorFunctionModel<P,ARG,PR,PRE>(g._ptr->_compose(f)); }
     friend inline VectorFunctionModel<P,ARG,PR,PRE> compose(const VectorMultivariateFunctionPatch<P>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
         return VectorFunctionModel<P,ARG,PR,PRE>(g._ptr->_compose(f)); }
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> compose(const VectorFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> compose(const VectorFunctionModel<P,ARG,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) requires Same<ARG,RealVector> {
         return VectorFunctionModel<P,ARG,PR,PRE>(g._ptr->_compose(f)); }
 
     friend inline ScalarFunctionModel<P,ARG,PR,PRE> unchecked_compose(const ScalarFunctionModel<P,RealVector,PR,PRE>& f, const VectorFunctionModel<P,ARG,PR,PRE>& g) {
