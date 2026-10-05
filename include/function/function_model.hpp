@@ -243,6 +243,7 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealScal
     typedef typename Interface::GenericNumericType GenericNumericType;
     typedef typename Interface::NormType NormType;
     typedef typename Interface::RangeType RangeType;
+    typedef typename Interface::ArgumentIndexType ArgumentIndexType;
 
     template<class Y> using Argument = typename SignatureTraits<SIG>::template Argument<Y>;
     template<class Y> using Result = typename SignatureTraits<SIG>::template Result<Y>;
@@ -305,13 +306,13 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealScal
 
     friend NormType norm(const ScalarFunctionModel<P,ARG,PR,PRE>& f) {
         return f._ptr->_concrete_norm(); }
-    friend ScalarFunctionModel<P,ARG,PR,PRE> derivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, SizeType j) {
+    friend ScalarFunctionModel<P,ARG,PR,PRE> derivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, ArgumentIndexType j) {
         return ScalarFunctionModel<P,ARG,PR,PRE>(f._ptr->_concrete_derivative(j)); }
-    friend ScalarFunctionModel<P,ARG,PR,PRE> antiderivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, SizeType j) {
+    friend ScalarFunctionModel<P,ARG,PR,PRE> antiderivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, ArgumentIndexType j) {
         return ScalarFunctionModel<P,ARG,PR,PRE>(f._ptr->_antiderivative(j)); }
-    friend ScalarFunctionModel<P,ARG,PR,PRE> antiderivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, SizeType j, CanonicalNumericType<P,PR,PRE> c) {
+    friend ScalarFunctionModel<P,ARG,PR,PRE> antiderivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, ArgumentIndexType j, CanonicalNumericType<P,PR,PRE> c) {
         return ScalarFunctionModel<P,ARG,PR,PRE>(f._ptr->_antiderivative(j,c)); }
-    friend ScalarFunctionModel<P,ARG,PR,PRE> antiderivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, SizeType j, const Number<P>& c) {
+    friend ScalarFunctionModel<P,ARG,PR,PRE> antiderivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, ArgumentIndexType j, const Number<P>& c) {
         return antiderivative(f,j,CanonicalNumericType<P,PR,PRE>(c,f.value().precision())); }
 
     friend ScalarFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d1, const ScalarFunctionModel<P,ARG,PR,PRE>& f, const DomainType& d2) requires Same<ARG,RealVector> {
@@ -585,21 +586,21 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
     friend inline VectorFunctionModel<P,ARG,PR,PRE> operator*(const CanonicalNumericType<P,PR,PRE>& c1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {
         VectorFunctionModel<P,ARG,PR,PRE> r=f2; for(SizeType i=0; i!=r.size(); ++i) { r[i]=c1*f2[i]; } return r; }
 
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator+(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const VectorMultivariateFunction<P>& f2) {
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator+(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const VectorMultivariateFunction<P>& f2) requires Same<ARG,RealVector> {
         return f1+factory(f1).create(f2); }
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator-(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const VectorMultivariateFunction<P>& f2) {
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator-(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const VectorMultivariateFunction<P>& f2) requires Same<ARG,RealVector> {
         return f1-factory(f1).create(f2); }
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator*(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const ScalarMultivariateFunction<P>& f2) {
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator*(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const ScalarMultivariateFunction<P>& f2) requires Same<ARG,RealVector> {
         return f1*factory(f1).create(f2); }
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator/(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const ScalarMultivariateFunction<P>& f2) {
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator/(const VectorFunctionModel<P,ARG,PR,PRE>& f1, const ScalarMultivariateFunction<P>& f2) requires Same<ARG,RealVector> {
         return f1/factory(f1).create(f2); }
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator+(const VectorMultivariateFunction<P>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator+(const VectorMultivariateFunction<P>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) requires Same<ARG,RealVector> {
         return factory(f2).create(f1)+f2; }
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator-(const VectorMultivariateFunction<P>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator-(const VectorMultivariateFunction<P>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) requires Same<ARG,RealVector> {
         return factory(f2).create(f1)-f2; }
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator*(const ScalarMultivariateFunction<P>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator*(const ScalarMultivariateFunction<P>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) requires Same<ARG,RealVector> {
         return factory(f2).create(f1)*f2; }
-    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator/(const ScalarMultivariateFunction<P>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) {
+    friend inline VectorFunctionModel<P,ARG,PR,PRE> operator/(const ScalarMultivariateFunction<P>& f1, const VectorFunctionModel<P,ARG,PR,PRE>& f2) requires Same<ARG,RealVector> {
         return factory(f2).create(f1)/f2; }
 
 

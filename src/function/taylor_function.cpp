@@ -53,29 +53,87 @@
 
 namespace Ariadne {
 
-template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
-template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
+// FunctionMixin::_call is defined out-of-line. Instantiate only those virtual
+// members required by the exported patch vtables. Instantiating the whole class
+// also materializes unrelated virtuals and triggers premature instantiation.
+#define ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(F, ...) \
+    template auto FunctionMixin<F,ValidatedTag,RealScalar(RealVector)>:: \
+    _call(Vector<__VA_ARGS__> const&) const -> Scalar<__VA_ARGS__>;
+#define ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(F, ...) \
+    template auto FunctionMixin<F,ValidatedTag,RealVector(RealVector)>:: \
+    _call(Vector<__VA_ARGS__> const&) const -> Vector<__VA_ARGS__>;
+
+#define ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS(M) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,ApproximateNumber) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,FloatDPApproximation) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,FloatMPApproximation) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,Differential<FloatDPApproximation>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,Differential<FloatMPApproximation>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,TaylorModel<ApproximateTag,FloatDP>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,TaylorModel<ApproximateTag,FloatMP>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,Formula<ApproximateNumber>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,ElementaryAlgebra<ApproximateNumber>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,ValidatedNumber) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,FloatDPBounds) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,FloatMPBounds) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,Differential<FloatDPBounds>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,Differential<FloatMPBounds>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatDP>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatMP>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatDPBounds>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatMPBounds>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatDPUpperInterval>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatMPUpperInterval>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,Formula<ValidatedNumber>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,ElementaryAlgebra<ValidatedNumber>) \
+    ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(ScaledFunctionPatch<M>,ValidatedScalarMultivariateFunction) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,ApproximateNumber) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,FloatDPApproximation) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,FloatMPApproximation) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,Differential<FloatDPApproximation>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,Differential<FloatMPApproximation>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,TaylorModel<ApproximateTag,FloatDP>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,TaylorModel<ApproximateTag,FloatMP>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,Formula<ApproximateNumber>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,ElementaryAlgebra<ApproximateNumber>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,ValidatedNumber) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,FloatDPBounds) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,FloatMPBounds) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,Differential<FloatDPBounds>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,Differential<FloatMPBounds>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatDP>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatMP>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatDPBounds>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatMPBounds>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatDPUpperInterval>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,TaylorModel<ValidatedTag,FloatMPUpperInterval>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,Formula<ValidatedNumber>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,ElementaryAlgebra<ValidatedNumber>) \
+    ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,ValidatedScalarMultivariateFunction)
+
+ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS(ValidatedTaylorModelDP)
 template class ScaledFunctionPatch<ValidatedTaylorModelDP>;
 template class VectorScaledFunctionPatch<ValidatedTaylorModelDP>;
 template class ScaledFunctionPatchFactory<ValidatedTaylorModelDP>;
 
-template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
-template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
+ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS(ValidatedBoundsTaylorModelDP)
 template class ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>;
 template class VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>;
 template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelDP>;
 
-template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelMP>,ValidatedTag,RealScalar(RealVector)>;
-template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelMP>,ValidatedTag,RealVector(RealVector)>;
+ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS(ValidatedTaylorModelMP)
 template class ScaledFunctionPatch<ValidatedTaylorModelMP>;
 template class VectorScaledFunctionPatch<ValidatedTaylorModelMP>;
 template class ScaledFunctionPatchFactory<ValidatedTaylorModelMP>;
 
-template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelMP>,ValidatedTag,RealScalar(RealVector)>;
-template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelMP>,ValidatedTag,RealVector(RealVector)>;
+ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS(ValidatedBoundsTaylorModelMP)
 template class ScaledFunctionPatch<ValidatedBoundsTaylorModelMP>;
 template class VectorScaledFunctionPatch<ValidatedBoundsTaylorModelMP>;
 template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelMP>;
+
+#undef ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS
+#undef ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL
+#undef ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL
 
 
 

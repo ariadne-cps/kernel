@@ -255,11 +255,11 @@ template<class P, class... ARGS> class FunctionPatch<P,RealScalar(ARGS...)>
 
     friend NormType norm(const ScalarFunctionPatch<P,ARGS...>& f) {
         return f._ptr->_generic_norm(); }
-    friend ScalarFunctionPatch<P,ARGS...> derivative(const ScalarFunctionPatch<P,ARGS...>& f, SizeType j) {
+    friend ScalarFunctionPatch<P,ARGS...> derivative(const ScalarFunctionPatch<P,ARGS...>& f, ArgumentIndexType j) {
         return ScalarFunctionPatch<P,ARGS...>(f._ptr->_concrete_derivative(j)); }
-    friend ScalarFunctionPatch<P,ARGS...> antiderivative(const ScalarFunctionPatch<P,ARGS...>& f, SizeType j) {
+    friend ScalarFunctionPatch<P,ARGS...> antiderivative(const ScalarFunctionPatch<P,ARGS...>& f, ArgumentIndexType j) {
         return ScalarFunctionPatch<P,ARGS...>(f._ptr->_antiderivative(j)); }
-    friend ScalarFunctionPatch<P,ARGS...> antiderivative(const ScalarFunctionPatch<P,ARGS...>& f, SizeType j, Number<P> c) {
+    friend ScalarFunctionPatch<P,ARGS...> antiderivative(const ScalarFunctionPatch<P,ARGS...>& f, ArgumentIndexType j, Number<P> c) {
         return ScalarFunctionPatch<P,ARGS...>(f._ptr->_antiderivative(j,c)); }
 
     friend ScalarFunctionPatch<P,ARGS...> embed(const DomainType& d1, const ScalarFunctionPatch<P,ARGS...>& f, const DomainType& d2) requires Same<DomainType,BoxDomainType> {

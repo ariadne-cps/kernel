@@ -67,17 +67,6 @@ template<class M> using ScalarScaledFunctionPatch = ScaledFunctionPatch<M>;
 template<class M> class VectorScaledFunctionPatch;
 template<class M> class VectorScaledFunctionPatchElementReference;
 
-// The out-of-line virtual calls are emitted once in taylor_function.cpp.
-// Declare them before a concrete patch can instantiate its function mixin.
-extern template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
-extern template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
-extern template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
-extern template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
-extern template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelMP>,ValidatedTag,RealScalar(RealVector)>;
-extern template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelMP>,ValidatedTag,RealVector(RealVector)>;
-extern template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelMP>,ValidatedTag,RealScalar(RealVector)>;
-extern template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelMP>,ValidatedTag,RealVector(RealVector)>;
-
 inline FloatDPApproximation convert_error_to_bounds(const PositiveFloatDPApproximation&) { return FloatDPApproximation(0.0,dp); }
 inline FloatDPBounds convert_error_to_bounds(const PositiveFloatDPUpperBound& e) { return FloatDPBounds(-e.raw(),+e.raw()); }
 inline FloatDPBounds convert_error_to_bounds(const FloatDPError& e) { return FloatDPBounds(-e.raw(),+e.raw()); }
