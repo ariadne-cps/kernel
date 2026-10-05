@@ -193,7 +193,7 @@ template<class PR> UnionOfIntervals<Float<PR>> preimage_intervals(ValidatedConti
     }
 }
 
-ValidatedOpenSet<Real> preimage(ValidatedContinuousFunction<Real(Real)> const& f, ValidatedOpenSet<Real> const& ops, IntervalDomainType dom, Accuracy acc) {
+inline ValidatedOpenSet<Real> preimage(ValidatedContinuousFunction<Real(Real)> const& f, ValidatedOpenSet<Real> const& ops, IntervalDomainType dom, Accuracy acc) {
     DoublePrecision pr;
     Interval<FloatDP> ivl=cast_exact(Interval<UpperBound<FloatDP>>(dom,pr));
     auto rgsp=dynamic_pointer_cast<ValidatedRegularSet<Real>::Interface>(ops.managed_pointer());

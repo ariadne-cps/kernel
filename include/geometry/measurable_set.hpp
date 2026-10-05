@@ -40,7 +40,7 @@
 
 namespace Ariadne {
 
-TwoExp exp2(Integer z) {
+inline TwoExp exp2(Integer z) {
     Int n=z.get_si();
     ARIADNE_ASSERT(n==z);
     return exp2(n);
