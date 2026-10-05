@@ -59,13 +59,6 @@ target_link_libraries(kernel INTERFACE algebra threading Cairo::Cairo)
 # On Windows this disables dllimport/dllexport annotations inside those binaries.
 target_compile_definitions(numeric INTERFACE ARIADNE_NUMERIC_EMBEDDED)
 
-# Numeric templates use the process floating-point rounding mode. Propagate the
-# required compiler semantics to every translation unit that instantiates them,
-# rather than applying them only to NUMERIC_SRC.
-target_compile_options(numeric INTERFACE
-    $<$<CXX_COMPILER_ID:MSVC>:/fp:strict>
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-frounding-math>
-)
 
 add_subdirectory(src)
 foreach(target
@@ -111,6 +104,11 @@ if(WIN32)
         target_sources(ariadne-kernel PRIVATE $<TARGET_OBJECTS:${_object_target}>)
     endforeach()
     target_link_libraries(ariadne-kernel PUBLIC kernel)
+    # A shared library used to include every object file. Preserve that
+    # initialization/registration behaviour when consuming the static archive.
+    target_link_options(ariadne-kernel INTERFACE
+        "$<$<CXX_COMPILER_ID:MSVC>:/WHOLEARCHIVE:$<TARGET_FILE:ariadne-kernel>>"
+    )
     set_property(GLOBAL PROPERTY ARIADNE_PROJECT_LIBRARY_TARGET ariadne-kernel)
     install(TARGETS ariadne-kernel ARCHIVE DESTINATION lib)
 else()
