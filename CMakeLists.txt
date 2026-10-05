@@ -55,6 +55,10 @@ target_include_directories(kernel INTERFACE
 )
 target_link_libraries(kernel INTERFACE algebra threading Cairo::Cairo)
 
+# Numeric is embedded into the monolithic kernel/Python binaries in this project.
+# On Windows this disables dllimport/dllexport annotations inside those binaries.
+target_compile_definitions(numeric INTERFACE ARIADNE_NUMERIC_EMBEDDED)
+
 add_subdirectory(src)
 foreach(target
     KERNEL_FUNCTION_SRC
@@ -77,9 +81,12 @@ ariadne_register_public_headers(
     FILES "${PROJECT_SOURCE_DIR}/include/ariadne-kernel.hpp"
 )
 
-setup_project_library(
-    TARGET ariadne-kernel
-    OBJECTS
+if(WIN32)
+    # CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS turns every global symbol in this
+    # monolithic target into an import-library member. The aggregate exceeds
+    # the 65535-member COFF library limit, so use a static archive on Windows.
+    add_library(ariadne-kernel STATIC)
+    foreach(_object_target
         KERNEL_FUNCTION_SRC
         KERNEL_GEOMETRY_SRC
         KERNEL_IO_SRC
@@ -92,8 +99,31 @@ setup_project_library(
         THREADING_SRC
         LOGGING_SRC
         UTILITY_SRC
-    LINK_LIBRARIES kernel
-)
+    )
+        target_sources(ariadne-kernel PRIVATE $<TARGET_OBJECTS:${_object_target}>)
+    endforeach()
+    target_link_libraries(ariadne-kernel PUBLIC kernel)
+    set_property(GLOBAL PROPERTY ARIADNE_PROJECT_LIBRARY_TARGET ariadne-kernel)
+    install(TARGETS ariadne-kernel ARCHIVE DESTINATION lib)
+else()
+    setup_project_library(
+        TARGET ariadne-kernel
+        OBJECTS
+            KERNEL_FUNCTION_SRC
+            KERNEL_GEOMETRY_SRC
+            KERNEL_IO_SRC
+            KERNEL_SYMBOLIC_SRC
+            KERNEL_SOLVING_SRC
+            ALGEBRA_SRC
+            INTERVAL_SRC
+            NUMERIC_SRC
+            FOUNDATION_SRC
+            THREADING_SRC
+            LOGGING_SRC
+            UTILITY_SRC
+        LINK_LIBRARIES kernel
+    )
+endif()
 
 setup_standalone_project_tests(
     TARGET ariadne-kernel
