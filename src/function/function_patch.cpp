@@ -27,6 +27,7 @@
 #include "algebra/algebra.hpp"
 
 #include "function/formula.hpp"
+#include "function/taylor_model.hpp"
 
 namespace Ariadne {
 
