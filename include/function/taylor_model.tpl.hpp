@@ -1362,7 +1362,11 @@ template<class P, class F> auto TaylorModel<P,F>::range() const -> RangeType {
             err+=mag(iter->coefficient());
         }
     }
-    err=err+tm.error();
+    if constexpr(Same<P,ValidatedTag>) {
+        err+=NormType(UpperBound<RawFloatType>(tm.error().raw()));
+    } else {
+        err+=tm.error();
+    }
     RangeType r(-err,+err);
     if constexpr(Same<P,ValidatedTag>) {
         r=r+constant_term;
@@ -1616,7 +1620,7 @@ template<class P, class F> TaylorModel<P,F> TaylorModel<P,F>::_embed_error(const
         MultiIndex ra(as+1u);
 
         // The new error term is first in reverse lexicographic order.
-        CoefficientType err_coef=static_cast<CoefficientType>(cast_exact(tm.error()));
+        CoefficientType err_coef=static_cast<CoefficientType>(tm.error().raw());
         ra[as]=1;
         rtm._append(ra,err_coef);
         ra[as]=0;
@@ -1958,7 +1962,11 @@ template<class P, class F> auto TaylorModel<P,F>::radius() const -> NormType {
             r+=mag(iter->coefficient());
         }
     }
-    r+=this->error();
+    if constexpr(Same<P,ValidatedTag>) {
+        r+=NormType(UpperBound<RawFloatType>(this->error().raw()));
+    } else {
+        r+=this->error();
+    }
     return r;
 }
 
@@ -1967,7 +1975,11 @@ template<class P, class F> auto TaylorModel<P,F>::norm() const -> NormType {
     for(ConstIterator iter=this->begin(); iter!=this->end(); ++iter) {
         r+=mag(iter->coefficient());
     }
-    r+=this->error();
+    if constexpr(Same<P,ValidatedTag>) {
+        r+=NormType(UpperBound<RawFloatType>(this->error().raw()));
+    } else {
+        r+=this->error();
+    }
     return r;
 }
 
