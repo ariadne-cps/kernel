@@ -59,6 +59,14 @@ target_link_libraries(kernel INTERFACE algebra threading Cairo::Cairo)
 # On Windows this disables dllimport/dllexport annotations inside those binaries.
 target_compile_definitions(numeric INTERFACE ARIADNE_NUMERIC_EMBEDDED)
 
+# Numeric templates use the process floating-point rounding mode. Propagate the
+# required compiler semantics to every translation unit that instantiates them,
+# rather than applying them only to NUMERIC_SRC.
+target_compile_options(numeric INTERFACE
+    $<$<CXX_COMPILER_ID:MSVC>:/fp:strict>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-frounding-math>
+)
+
 add_subdirectory(src)
 foreach(target
     KERNEL_FUNCTION_SRC
