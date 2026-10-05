@@ -270,9 +270,9 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealScal
 
     inline PrecisionType const precision() const { return this->value().precision(); }
     inline SizeType argument_size() const { return this->_ptr->argument_size(); }
-    template<class X> X operator() (const Vector<X>& x) const {
+    template<class X> X operator() (const Argument<X>& x) const {
         return this->_ptr->_call(x); }
-    template<class X> X evaluate(const Vector<X>& x) const {
+    template<class X> X evaluate(const Argument<X>& x) const {
         return this->_ptr->_call(x); }
     inline DomainType const domain() const { return this->_ptr->domain(); }
     inline CodomainType const codomain() const { return this->_ptr->codomain(); }
@@ -290,14 +290,14 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealScal
         FunctionModelFactory<P,PR,PRE> factory(f._ptr->_factory()); return FunctionModelCreator<FunctionModelFactory<P,PR,PRE>,ARG>(f.domain(),factory); }
   public:
   public:
-    friend CanonicalNumericType<P,PR,PRE> evaluate(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const Vector<CanonicalNumericType<P,PR,PRE>>& x) {
+    friend CanonicalNumericType<P,PR,PRE> evaluate(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const Argument<CanonicalNumericType<P,PR,PRE>>& x) {
         return f._ptr->_call(x); }
-    friend Number<P> evaluate(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const Vector<Number<P>>& x) {
-        return f._ptr->_call(Vector<CanonicalNumericType<P,PR,PRE>>(x,f.precision())); }
-    friend CanonicalNumericType<P,PR,PRE> unchecked_evaluate(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const Vector<CanonicalNumericType<P,PR,PRE>>& x) {
+    friend Number<P> evaluate(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const Argument<Number<P>>& x) {
+        return f._ptr->_call(Argument<CanonicalNumericType<P,PR,PRE>>(x,f.precision())); }
+    friend CanonicalNumericType<P,PR,PRE> unchecked_evaluate(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const Argument<CanonicalNumericType<P,PR,PRE>>& x) {
         return f._ptr->_unchecked_evaluate(x); }
-    friend Number<P> unchecked_evaluate(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const Vector<Number<P>>& x) {
-        return f._ptr->_unchecked_evaluate(Vector<CanonicalNumericType<P,PR,PRE>>(x,f.precision())); }
+    friend Number<P> unchecked_evaluate(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const Argument<Number<P>>& x) {
+        return f._ptr->_unchecked_evaluate(Argument<CanonicalNumericType<P,PR,PRE>>(x,f.precision())); }
 
     friend ScalarFunctionModel<P,ARG,PR,PRE> partial_evaluate(const ScalarFunctionModel<P,ARG,PR,PRE>& f, SizeType j, const CanonicalNumericType<P,PR,PRE>& c) {
         return ScalarFunctionModel<P,ARG,PR,PRE>(f._ptr->_concrete_partial_evaluate(j,c)); }
@@ -341,7 +341,7 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealScal
         return f1._ptr->_concrete_refines(f2); }
   public:
     friend OutputStream& operator<<(OutputStream& os, const ScalarFunctionModel<P,ARG,PR,PRE>& f) {
-        return os <<  f.operator ScalarMultivariateFunction<P>(); }
+        return os << static_cast<GenericType>(f); }
 };
 
 template<class P, class ARG, class PR, class PRE> struct AlgebraOperations<ScalarFunctionModel<P,ARG,PR,PRE>> {

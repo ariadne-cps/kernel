@@ -237,17 +237,17 @@ template<class P, class... ARGS> class FunctionPatch<P,RealScalar(ARGS...)>
     friend VectorFunctionPatch<P,ARGS...> operator/(VectorFunction<P,ARGS...> const& f1, ScalarFunctionPatch<P,ARGS...> const& fp2) {
         return factory(fp2).create(f1)/fp2; }
   public:
-    friend Number<P> evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Vector<Number<P>>& x) {
+    friend Number<P> evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Argument<Number<P>>& x) {
         return f._ptr->_call(x); }
-    friend CanonicalNumericType<P,DP> evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Vector<CanonicalNumericType<P,DP>>& x) {
+    friend CanonicalNumericType<P,DP> evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Argument<CanonicalNumericType<P,DP>>& x) {
         return f._ptr->_call(x); }
-    friend CanonicalNumericType<P,MP> evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Vector<CanonicalNumericType<P,MP>>& x) {
+    friend CanonicalNumericType<P,MP> evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Argument<CanonicalNumericType<P,MP>>& x) {
         return f._ptr->_call(x); }
-    friend Number<P> unchecked_evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Vector<Number<P>>& x) {
+    friend Number<P> unchecked_evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Argument<Number<P>>& x) {
         return f._ptr->_unchecked_evaluate(x); }
-    friend CanonicalNumericType<P,DP> unchecked_evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Vector<CanonicalNumericType<P,DP>>& x) {
+    friend CanonicalNumericType<P,DP> unchecked_evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Argument<CanonicalNumericType<P,DP>>& x) {
         return f._ptr->_unchecked_evaluate(x); }
-    friend CanonicalNumericType<P,MP> unchecked_evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Vector<CanonicalNumericType<P,MP>>& x) {
+    friend CanonicalNumericType<P,MP> unchecked_evaluate(const ScalarFunctionPatch<P,ARGS...>& f, const Argument<CanonicalNumericType<P,MP>>& x) {
         return f._ptr->_unchecked_evaluate(x); }
 
     friend ScalarFunctionPatch<P,ARGS...> partial_evaluate(const ScalarFunctionPatch<P,ARGS...>& f, SizeType j, const Number<P>& c) {
