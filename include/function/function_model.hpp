@@ -124,22 +124,52 @@ template<class FCTRY, class ARG> class FunctionModelCreator {
 
     explicit FunctionModelCreator(DomainType domain, FactoryType factory) : _factory(factory), _domain(domain) { }
 
-    decltype(auto) create(Number<P> const& c) const { return this->_factory.create(c); }
-    decltype(auto) create(ScalarFunction<P,ARG> const& f) { return this->_factory.create(this->_domain,f); }
-    decltype(auto) create(VectorFunction<P,ARG> const& f) { return this->_factory.create(this->_domain,f); }
-    decltype(auto) create_zero() { return this->_factory.create_zero(this->_domain); }
-    decltype(auto) create_zeros(SizeType n) { return this->_factory.create_zeros(n,this->_domain); }
-    decltype(auto) create_constant(Number<P> const& c) const { return this->_factory.create_constant(this->_domain,c); }
-    decltype(auto) create_constants(Vector<Number<P>> const& c) const { return this->_factory.create_constants(this->_domain,c); }
-    decltype(auto) create_identity() { return this->_factory.create_identity(this->_domain); }
+    decltype(auto) create(Number<P> const& c) const
+        requires requires(FactoryType const& factory) { factory.create(c); }
+        { return this->_factory.create(c); }
+    decltype(auto) create(ScalarFunction<P,ARG> const& f)
+        requires requires(FactoryType& factory, DomainType& domain) { factory.create(domain,f); }
+        { return this->_factory.create(this->_domain,f); }
+    decltype(auto) create(VectorFunction<P,ARG> const& f)
+        requires requires(FactoryType& factory, DomainType& domain) { factory.create(domain,f); }
+        { return this->_factory.create(this->_domain,f); }
+    decltype(auto) create_zero()
+        requires requires(FactoryType& factory, DomainType& domain) { factory.create_zero(domain); }
+        { return this->_factory.create_zero(this->_domain); }
+    decltype(auto) create_zeros(SizeType n)
+        requires requires(FactoryType& factory, DomainType& domain) { factory.create_zeros(n,domain); }
+        { return this->_factory.create_zeros(n,this->_domain); }
+    decltype(auto) create_constant(Number<P> const& c) const
+        requires requires(FactoryType const& factory, DomainType const& domain) { factory.create_constant(domain,c); }
+        { return this->_factory.create_constant(this->_domain,c); }
+    decltype(auto) create_constants(Vector<Number<P>> const& c) const
+        requires requires(FactoryType const& factory, DomainType const& domain) { factory.create_constants(domain,c); }
+        { return this->_factory.create_constants(this->_domain,c); }
+    decltype(auto) create_identity()
+        requires requires(FactoryType& factory, DomainType& domain) { factory.create_identity(domain); }
+        { return this->_factory.create_identity(this->_domain); }
 
-    decltype(auto) create(DomainType const& dom, ScalarFunction<P,ARG> const& f) { return this->_factory.create(dom,f); }
-    decltype(auto) create(DomainType const& dom, VectorFunction<P,ARG> const& f) { return this->_factory.create(dom,f); }
-    decltype(auto) create_zero(DomainType const& dom) { return this->_factory.create_zero(dom); }
-    decltype(auto) create_zeros(DomainType const& dom, SizeType n) { return this->_factory.create_zeros(n,dom); }
-    decltype(auto) create_constant(DomainType const& dom, Number<P> const& c) const { return this->_factory.create_constant(dom,c); }
-    decltype(auto) create_constants(DomainType const& dom, Vector<Number<P>> const& c) const { return this->_factory.create_constants(dom,c); }
-    decltype(auto) create_identity(DomainType const& dom) { return this->_factory.create_identity(dom); }
+    decltype(auto) create(DomainType const& dom, ScalarFunction<P,ARG> const& f)
+        requires requires(FactoryType& factory) { factory.create(dom,f); }
+        { return this->_factory.create(dom,f); }
+    decltype(auto) create(DomainType const& dom, VectorFunction<P,ARG> const& f)
+        requires requires(FactoryType& factory) { factory.create(dom,f); }
+        { return this->_factory.create(dom,f); }
+    decltype(auto) create_zero(DomainType const& dom)
+        requires requires(FactoryType& factory) { factory.create_zero(dom); }
+        { return this->_factory.create_zero(dom); }
+    decltype(auto) create_zeros(DomainType const& dom, SizeType n)
+        requires requires(FactoryType& factory) { factory.create_zeros(n,dom); }
+        { return this->_factory.create_zeros(n,dom); }
+    decltype(auto) create_constant(DomainType const& dom, Number<P> const& c) const
+        requires requires(FactoryType const& factory) { factory.create_constant(dom,c); }
+        { return this->_factory.create_constant(dom,c); }
+    decltype(auto) create_constants(DomainType const& dom, Vector<Number<P>> const& c) const
+        requires requires(FactoryType const& factory) { factory.create_constants(dom,c); }
+        { return this->_factory.create_constants(dom,c); }
+    decltype(auto) create_identity(DomainType const& dom)
+        requires requires(FactoryType& factory) { factory.create_identity(dom); }
+        { return this->_factory.create_identity(dom); }
 
     CanonicalNumericType<P,PR,PRE> const& create(CanonicalNumericType<P,PR,PRE> const& c) const { return c; }
   protected:
@@ -284,13 +314,13 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealScal
     friend ScalarFunctionModel<P,ARG,PR,PRE> antiderivative(const ScalarFunctionModel<P,ARG,PR,PRE>& f, SizeType j, const Number<P>& c) {
         return antiderivative(f,j,CanonicalNumericType<P,PR,PRE>(c,f.value().precision())); }
 
-    friend ScalarFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d1, const ScalarFunctionModel<P,ARG,PR,PRE>& f, const DomainType& d2) {
+    friend ScalarFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d1, const ScalarFunctionModel<P,ARG,PR,PRE>& f, const DomainType& d2) requires Same<ARG,RealVector> {
         return ScalarFunctionModel<P,ARG,PR,PRE>(f._ptr->_embed(d1,d2)); }
-    friend ScalarFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d, const ScalarFunctionModel<P,ARG,PR,PRE>& f) {
+    friend ScalarFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d, const ScalarFunctionModel<P,ARG,PR,PRE>& f) requires Same<ARG,RealVector> {
         return embed(d,f,DomainType()); }
-    friend ScalarFunctionModel<P,ARG,PR,PRE> embed(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const BoxDomainType& d) {
+    friend ScalarFunctionModel<P,ARG,PR,PRE> embed(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const BoxDomainType& d) requires Same<ARG,RealVector> {
         return embed(DomainType(),f,d); }
-    friend ScalarFunctionModel<P,ARG,PR,PRE> embed(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const IntervalDomainType& d) {
+    friend ScalarFunctionModel<P,ARG,PR,PRE> embed(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const IntervalDomainType& d) requires Same<ARG,RealVector> {
         return embed(f,DomainType(1,d)); }
     friend ScalarFunctionModel<P,ARG,PR,PRE> restrict(const ScalarFunctionModel<P,ARG,PR,PRE>& f, const DomainType& d) {
         return ScalarFunctionModel<P,ARG,PR,PRE>(f._ptr->_restriction(d)); }
@@ -576,13 +606,13 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
   public:
     friend NormType norm(const VectorFunctionModel<P,ARG,PR,PRE>& f) {
         return f._ptr->_concrete_norm(); }
-    friend VectorFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d1, const VectorFunctionModel<P,ARG,PR,PRE>& f, const DomainType& d2) {
+    friend VectorFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d1, const VectorFunctionModel<P,ARG,PR,PRE>& f, const DomainType& d2) requires Same<ARG,RealVector> {
         return VectorFunctionModel<P,ARG,PR,PRE>(f._ptr->_embed(d1,d2)); }
-    friend VectorFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d, const VectorFunctionModel<P,ARG,PR,PRE>& f) {
+    friend VectorFunctionModel<P,ARG,PR,PRE> embed(const DomainType& d, const VectorFunctionModel<P,ARG,PR,PRE>& f) requires Same<ARG,RealVector> {
         return embed(d,f,DomainType()); }
-    friend VectorFunctionModel<P,ARG,PR,PRE> embed(const VectorFunctionModel<P,ARG,PR,PRE>& f, const BoxDomainType& d) {
+    friend VectorFunctionModel<P,ARG,PR,PRE> embed(const VectorFunctionModel<P,ARG,PR,PRE>& f, const BoxDomainType& d) requires Same<ARG,RealVector> {
         return embed(DomainType(),f,d); }
-    friend VectorFunctionModel<P,ARG,PR,PRE> embed(const VectorFunctionModel<P,ARG,PR,PRE>& f, const IntervalDomainType& d) {
+    friend VectorFunctionModel<P,ARG,PR,PRE> embed(const VectorFunctionModel<P,ARG,PR,PRE>& f, const IntervalDomainType& d) requires Same<ARG,RealVector> {
         return embed(f,DomainType(1,d)); }
     friend VectorFunctionModel<P,ARG,PR,PRE> restriction(const VectorFunctionModel<P,ARG,PR,PRE>& f, const DomainType& d) {
         return VectorFunctionModel<P,ARG,PR,PRE>(f._ptr->_restriction(d)); }

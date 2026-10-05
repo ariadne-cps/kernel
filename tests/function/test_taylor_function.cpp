@@ -59,6 +59,23 @@ template<class X> Vector< Expansion<MultiIndex,X> > operator*(const Expansion<Mu
     return r;
 }
 
+// Every domain-extension overload must reject univariate models.
+template<class Model> concept CanAppendBox = requires(Model const& f, BoxDomainType const& d) { embed(f,d); };
+template<class Model> concept CanAppendInterval = requires(Model const& f, IntervalDomainType const& d) { embed(f,d); };
+template<class Model> concept CanPrependBox = requires(Model const& f, BoxDomainType const& d) { embed(d,f); };
+template<class Model> concept CanEmbedBetweenBoxes = requires(Model const& f, BoxDomainType const& d) { embed(d,f,d); };
+template<class Model> concept CanExtendDomain = CanAppendBox<Model> && CanAppendInterval<Model> && CanPrependBox<Model> && CanEmbedBetweenBoxes<Model>;
+template<class Model> concept CannotExtendDomain = !CanAppendBox<Model> && !CanAppendInterval<Model> && !CanPrependBox<Model> && !CanEmbedBetweenBoxes<Model>;
+static_assert(CanExtendDomain<ScalarFunctionModel<ValidatedTag,RealVector,DoublePrecision>>);
+static_assert(CanExtendDomain<VectorFunctionModel<ValidatedTag,RealVector,DoublePrecision>>);
+static_assert(CannotExtendDomain<ScalarFunctionModel<ValidatedTag,RealScalar,DoublePrecision>>);
+static_assert(CannotExtendDomain<VectorFunctionModel<ValidatedTag,RealScalar,DoublePrecision>>);
+
+static_assert(CanExtendDomain<ScalarFunctionPatch<ValidatedTag,RealVector>>);
+static_assert(CanExtendDomain<VectorFunctionPatch<ValidatedTag,RealVector>>);
+static_assert(CannotExtendDomain<ScalarFunctionPatch<ValidatedTag,RealScalar>>);
+static_assert(CannotExtendDomain<VectorFunctionPatch<ValidatedTag,RealScalar>>);
+
 class TestScalarTaylorFunction
 {
     DoublePrecision pr;
@@ -731,6 +748,26 @@ Void TestTaylorFunctionFactory::test_create()
 
     ValidatedVectorMultivariateTaylorFunctionModelDP vtf=factory.create(dom, EffectiveVectorMultivariateFunction::identity(dom.size()) );
     ARIADNE_TEST_PRINT(vtf);
+
+    // Creation through both abstract interfaces must keep domain, precision and shape.
+    auto scalar_source=factory.create(dom,EffectiveScalarMultivariateFunction::coordinate(dom.size(),0u));
+    using ScalarModel=ScalarFunctionModel<ValidatedTag,RealVector,DoublePrecision>;
+    using VectorModel=VectorFunctionModel<ValidatedTag,RealVector,DoublePrecision>;
+    auto const& scalar_interface=static_cast<ScalarModel::Interface const&>(scalar_source);
+    auto const& vector_interface=static_cast<VectorModel::Interface const&>(vtf);
+    ScalarModel scalar_zero(scalar_interface._concrete_create());
+    VectorModel vector_zero(vector_interface._concrete_create());
+    ARIADNE_TEST_EQUALS(scalar_zero.domain(),scalar_source.domain());
+    ARIADNE_TEST_EQUALS(vector_zero.domain(),vtf.domain());
+    ARIADNE_TEST_EQUALS(scalar_zero.precision(),pr);
+    ARIADNE_TEST_EQUALS(vector_zero.precision(),pr);
+    ARIADNE_TEST_EQUALS(vector_zero.result_size(),vtf.result_size());
+    ARIADNE_TEST_EQUALS(evaluate(scalar_zero,args),FloatDPBounds(0.0_x,pr));
+    ARIADNE_TEST_EQUALS(evaluate(vector_zero,args),Vector<FloatDPBounds>(vtf.result_size(),FloatDPBounds(0.0_x,pr)));
+    ValidatedScalarMultivariateFunctionPatch scalar_patch_zero(scalar_interface._patch_create());
+    ValidatedVectorMultivariateFunctionPatch vector_patch_zero(vector_interface._patch_create());
+    ARIADNE_TEST_EQUALS(evaluate(scalar_patch_zero,args),FloatDPBounds(0.0_x,pr));
+    ARIADNE_TEST_EQUALS(evaluate(vector_patch_zero,args),Vector<FloatDPBounds>(vtf.result_size(),FloatDPBounds(0.0_x,pr)));
 
     // Test evaluation gives a superset with small additional error
     Vector<FloatDPBounds> errs(2,FloatDPBounds(-1e-15_pr,+1e-15_pr,pr));

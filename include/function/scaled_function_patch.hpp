@@ -67,6 +67,17 @@ template<class M> using ScalarScaledFunctionPatch = ScaledFunctionPatch<M>;
 template<class M> class VectorScaledFunctionPatch;
 template<class M> class VectorScaledFunctionPatchElementReference;
 
+// The out-of-line virtual calls are emitted once in taylor_function.cpp.
+// Declare them before a concrete patch can instantiate its function mixin.
+extern template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
+extern template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
+extern template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
+extern template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
+extern template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelMP>,ValidatedTag,RealScalar(RealVector)>;
+extern template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelMP>,ValidatedTag,RealVector(RealVector)>;
+extern template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelMP>,ValidatedTag,RealScalar(RealVector)>;
+extern template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelMP>,ValidatedTag,RealVector(RealVector)>;
+
 inline FloatDPApproximation convert_error_to_bounds(const PositiveFloatDPApproximation&) { return FloatDPApproximation(0.0,dp); }
 inline FloatDPBounds convert_error_to_bounds(const PositiveFloatDPUpperBound& e) { return FloatDPBounds(-e.raw(),+e.raw()); }
 inline FloatDPBounds convert_error_to_bounds(const FloatDPError& e) { return FloatDPBounds(-e.raw(),+e.raw()); }
@@ -109,11 +120,24 @@ template<class M> struct AlgebraOperations<ScaledFunctionPatch<M>> {
 
 template<class M> class ScaledFunctionPatchMixin
     : public ScalarMultivariateFunctionModelMixin<ScaledFunctionPatch<M>, typename M::Paradigm, typename M::PrecisionType, typename M::ErrorPrecisionType>
-{ };
+{
+    using Base = ScalarMultivariateFunctionModelMixin<ScaledFunctionPatch<M>, typename M::Paradigm, typename M::PrecisionType, typename M::ErrorPrecisionType>;
+  public:
+    // Use the interface return type so explicit instantiation needs no covariant thunk.
+    typename Base::Interface* _concrete_create() const override {
+        auto const& f=static_cast<ScaledFunctionPatch<M> const&>(*this);
+        return new ScaledFunctionPatch<M>(f.domain(),f.properties()); }
+};
 
 template<class M> class VectorScaledFunctionPatchMixin
     : public VectorMultivariateFunctionModelMixin<VectorScaledFunctionPatch<M>,typename M::Paradigm, typename M::PrecisionType, typename M::ErrorPrecisionType>
-{ };
+{
+    using Base = VectorMultivariateFunctionModelMixin<VectorScaledFunctionPatch<M>,typename M::Paradigm, typename M::PrecisionType, typename M::ErrorPrecisionType>;
+  public:
+    typename Base::Interface* _concrete_create() const override {
+        auto const& f=static_cast<VectorScaledFunctionPatch<M> const&>(*this);
+        return new VectorScaledFunctionPatch<M>(f.result_size(),ScaledFunctionPatch<M>(f.domain(),f.properties())); }
+};
 
 
 
@@ -356,7 +380,6 @@ template<class M> class ScaledFunctionPatch
   public:
     template<class X> X operator()(const Vector<X>& a) const;
   private:
-    ScaledFunctionPatch<M>* _concrete_create() const;
     virtual ScaledFunctionPatchFactory<M>* _factory() const;
     OutputStream& _write(OutputStream& os) const;
   public:
@@ -432,7 +455,8 @@ template<class M> class ScaledFunctionPatch
         return norm(f.model()); }
     friend NormType distance(const ScaledFunctionPatch<M>& f1, const ScaledFunctionPatch<M>& f2) {
         return norm(f1-f2); }
-    friend NormType distance(const ScaledFunctionPatch<M>& f1, const ScalarMultivariateFunction<P>& f2) {
+    friend NormType distance(const ScaledFunctionPatch<M>& f1, const ScalarMultivariateFunction<P>& f2)
+        requires requires { factory(f1).create(f2); } {
         return distance(f1,factory(f1).create(f2)); }
 
     friend MultivariatePolynomial<NumericType> polynomial(const ScaledFunctionPatch<M>& tfn) { return tfn.polynomial(); }
@@ -723,7 +747,6 @@ template<class M> class VectorScaledFunctionPatch
     Void _compute_jacobian() const;
     Void _set_argument_size(SizeType n);
     SizeType _compute_maximum_component_size() const;
-    virtual VectorScaledFunctionPatch<M>* _concrete_create() const;
     virtual ScaledFunctionPatchFactory<M>* _factory() const;
     OutputStream& _write(OutputStream& os) const;
   private:

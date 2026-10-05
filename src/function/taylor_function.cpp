@@ -53,18 +53,26 @@
 
 namespace Ariadne {
 
+template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
+template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
 template class ScaledFunctionPatch<ValidatedTaylorModelDP>;
 template class VectorScaledFunctionPatch<ValidatedTaylorModelDP>;
 template class ScaledFunctionPatchFactory<ValidatedTaylorModelDP>;
 
+template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealScalar(RealVector)>;
+template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>,ValidatedTag,RealVector(RealVector)>;
 template class ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>;
 template class VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>;
 template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelDP>;
 
+template class FunctionMixin<ScaledFunctionPatch<ValidatedTaylorModelMP>,ValidatedTag,RealScalar(RealVector)>;
+template class FunctionMixin<VectorScaledFunctionPatch<ValidatedTaylorModelMP>,ValidatedTag,RealVector(RealVector)>;
 template class ScaledFunctionPatch<ValidatedTaylorModelMP>;
 template class VectorScaledFunctionPatch<ValidatedTaylorModelMP>;
 template class ScaledFunctionPatchFactory<ValidatedTaylorModelMP>;
 
+template class FunctionMixin<ScaledFunctionPatch<ValidatedBoundsTaylorModelMP>,ValidatedTag,RealScalar(RealVector)>;
+template class FunctionMixin<VectorScaledFunctionPatch<ValidatedBoundsTaylorModelMP>,ValidatedTag,RealVector(RealVector)>;
 template class ScaledFunctionPatch<ValidatedBoundsTaylorModelMP>;
 template class VectorScaledFunctionPatch<ValidatedBoundsTaylorModelMP>;
 template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelMP>;

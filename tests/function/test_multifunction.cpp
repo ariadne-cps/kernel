@@ -43,6 +43,22 @@
 using namespace std;
 using namespace Ariadne;
 
+// Explicit instantiation must not require operations absent from interval factories.
+namespace Ariadne {
+template class FunctionModelCreator<ScaledFunctionPatchFactory<ValidatedIntervalTaylorModelDP>,RealVector>;
+template class FunctionModelCreator<ScaledFunctionPatchFactory<ValidatedIntervalTaylorModelMP>,RealVector>;
+}
+
+template<class Creator> concept CanCreateZero = requires(Creator& creator) { creator.create_zero(); };
+static_assert(CanCreateZero<ScaledFunctionPatchCreator<ValidatedTaylorModelDP>>);
+static_assert(!CanCreateZero<ScaledFunctionPatchCreator<ValidatedIntervalTaylorModelDP>>);
+static_assert(!CanCreateZero<ScaledFunctionPatchCreator<ValidatedIntervalTaylorModelMP>>);
+
+template<class Model> concept CanMeasureGenericDistance = requires(Model const& f, ValidatedScalarMultivariateFunction const& g) { distance(f,g); };
+static_assert(CanMeasureGenericDistance<ScaledFunctionPatch<ValidatedTaylorModelDP>>);
+static_assert(!CanMeasureGenericDistance<ScaledFunctionPatch<ValidatedIntervalTaylorModelDP>>);
+static_assert(!CanMeasureGenericDistance<ScaledFunctionPatch<ValidatedIntervalTaylorModelMP>>);
+
 class TestMultifunction
 {
     using ScalarIntervalFunctionModel = ValidatedIntervalTaylorFunctionModel<FloatMP>;

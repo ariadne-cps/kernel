@@ -262,13 +262,13 @@ template<class P, class... ARGS> class FunctionPatch<P,RealScalar(ARGS...)>
     friend ScalarFunctionPatch<P,ARGS...> antiderivative(const ScalarFunctionPatch<P,ARGS...>& f, SizeType j, Number<P> c) {
         return ScalarFunctionPatch<P,ARGS...>(f._ptr->_antiderivative(j,c)); }
 
-    friend ScalarFunctionPatch<P,ARGS...> embed(const DomainType& d1, const ScalarFunctionPatch<P,ARGS...>& f, const DomainType& d2) {
+    friend ScalarFunctionPatch<P,ARGS...> embed(const DomainType& d1, const ScalarFunctionPatch<P,ARGS...>& f, const DomainType& d2) requires Same<DomainType,BoxDomainType> {
         return ScalarFunctionPatch<P,ARGS...>(f._ptr->_embed(d1,d2)); }
-    friend ScalarFunctionPatch<P,ARGS...> embed(const DomainType& d, const ScalarFunctionPatch<P,ARGS...>& f) {
+    friend ScalarFunctionPatch<P,ARGS...> embed(const DomainType& d, const ScalarFunctionPatch<P,ARGS...>& f) requires Same<DomainType,BoxDomainType> {
         return embed(d,f,DomainType()); }
-    friend ScalarFunctionPatch<P,ARGS...> embed(const ScalarFunctionPatch<P,ARGS...>& f, const BoxDomainType& d) {
+    friend ScalarFunctionPatch<P,ARGS...> embed(const ScalarFunctionPatch<P,ARGS...>& f, const BoxDomainType& d) requires Same<DomainType,BoxDomainType> {
         return embed(DomainType(),f,d); }
-    friend ScalarFunctionPatch<P,ARGS...> embed(const ScalarFunctionPatch<P,ARGS...>& f, const IntervalDomainType& d) {
+    friend ScalarFunctionPatch<P,ARGS...> embed(const ScalarFunctionPatch<P,ARGS...>& f, const IntervalDomainType& d) requires Same<DomainType,BoxDomainType> {
         return embed(f,DomainType(1,d)); }
     friend ScalarFunctionPatch<P,ARGS...> restriction(const ScalarFunctionPatch<P,ARGS...>& f, const DomainType& d) {
         return ScalarFunctionPatch<P,ARGS...>(f._ptr->_restriction(d)); }
@@ -500,9 +500,9 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
   public:
     friend NormType norm(const VectorFunctionPatch<P,ARGS...>& f) {
         return f._ptr->_norm(); }
-    friend VectorFunctionPatch<P,ARGS...> embed(const DomainType& d1, const VectorFunctionPatch<P,ARGS...>& f, const DomainType& d2) {
+    friend VectorFunctionPatch<P,ARGS...> embed(const DomainType& d1, const VectorFunctionPatch<P,ARGS...>& f, const DomainType& d2) requires Same<DomainType,BoxDomainType> {
         return VectorFunctionPatch<P,ARGS...>(f._ptr->_embed(d1,d2)); }
-    friend VectorFunctionPatch<P,ARGS...> embed(const DomainType& d, const VectorFunctionPatch<P,ARGS...>& f) {
+    friend VectorFunctionPatch<P,ARGS...> embed(const DomainType& d, const VectorFunctionPatch<P,ARGS...>& f) requires Same<DomainType,BoxDomainType> {
         return embed(d,f,DomainType()); }
     friend VectorFunctionPatch<P,ARGS...> embed(const VectorFunctionPatch<P,ARGS...>& f, const BoxDomainType& d) requires Same<DomainType,BoxDomainType> {
         return embed(DomainType(),f,d); }

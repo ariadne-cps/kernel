@@ -307,10 +307,6 @@ template<class M> ScaledFunctionPatchFactory<M>* ScaledFunctionPatch<M>::_factor
     return new ScaledFunctionPatchFactory<M>(this->_model.properties());
 }
 
-template<class M> ScaledFunctionPatch<M>* ScaledFunctionPatch<M>::_concrete_create() const
-{
-    return new ScaledFunctionPatch<M>(this->domain(),this->_model.properties());
-}
 
 
 template<class M> Void VectorScaledFunctionPatch<M>::adjoin(const ScaledFunctionPatch<M>& sf)
@@ -654,10 +650,6 @@ template<class M> ScaledFunctionPatchFactory<M>* VectorScaledFunctionPatch<M>::_
     return new ScaledFunctionPatchFactory<M>(this->_models.zero_element().properties());
 }
 
-template<class M> VectorScaledFunctionPatch<M>* VectorScaledFunctionPatch<M>::_concrete_create() const
-{
-    return new VectorScaledFunctionPatch<M>(this->result_size(), ScaledFunctionPatch<M>(this->domain(),this->properties()));
-}
 
 
 
