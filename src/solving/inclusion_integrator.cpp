@@ -252,7 +252,7 @@ template<class A, class R> Vector<ErrorType> ApproximationErrorProcessor<A,R>::p
                                              Ariadne::input_derivatives(_f, _inputs.size()), _inputs, h, B);
     LOGGING_PRINTLN("norms: " << norms);
     Set<Nat> input_idx;
-    for (SizeType i : range(_f.result_size(),_f.result_size()+_inputs.size())) { input_idx.insert(i); }
+    for (SizeType i : range(_f.result_size(),_f.result_size()+_inputs.size())) { input_idx.insert(static_cast<Nat>(i)); }
     if (is_additive_in(_f,input_idx))
         norms.pK=mag(norm(_inputs));
     return process(norms,h);

@@ -304,7 +304,7 @@ public:
         SizeType m = inputs.size();
         ARIADNE_ASSERT_MSG(f.argument_size()-n == m, "ApproximationErrorProcessorFactory was given an incompatible f argument space in respect to the inputs box");
         Set<Nat> input_idx;
-        for (SizeType i : range(n,n+m)) { input_idx.insert(i); }
+        for (SizeType i : range(n,n+m)) { input_idx.insert(static_cast<Nat>(i)); }
         if (is_additive_in(f,input_idx)) return SharedPointer<Processor>(new ApproximationErrorProcessor<A,AdditiveInputs>(f,inputs));
         else if (m == 1) return SharedPointer<Processor>(new ApproximationErrorProcessor<A,SingularInput>(f, inputs));
         else if (m == 2) return SharedPointer<Processor>(new ApproximationErrorProcessor<A,DualInputs>(f, inputs));

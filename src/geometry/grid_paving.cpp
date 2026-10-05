@@ -213,7 +213,7 @@ class BinaryCode {
 // 1. Compute the primary cell located the the extent \a theExtent above the zero level,
 // 2. Compute the cell defined by the path \a theWord (from the primary cell).
 LatticeBoxType GridCell::compute_lattice_box( const DimensionType dimensions, const Nat theExtent, const BinaryWord& theWord ) {
-    LatticeBoxType theResultLatticeBoxType( primary_cell_lattice_box( theExtent , static_cast<Nat>(dimensions) ) );
+    LatticeBoxType theResultLatticeBoxType( primary_cell_lattice_box( theExtent , dimensions ) );
 
     //2. Compute the cell on some grid, corresponding to the binary path from the primary cell.
     SizeType current_dimension = 0;

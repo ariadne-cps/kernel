@@ -623,7 +623,7 @@ Void LabelledFigure::_paint3d(CanvasInterface& canvas) const
 
     SizeType total_objects = this->_data->objects.size();
     SizeType processed_objects = 0;
-    ProgressIndicator indicator(total_objects);
+    ProgressIndicator indicator(static_cast<double>(total_objects));
 
     canvas.initialise(tx, ty, tz, xl, xu, yl, yu, zl, zu);
     canvas.set_colour_palette();
@@ -639,7 +639,7 @@ Void LabelledFigure::_paint3d(CanvasInterface& canvas) const
             ARIADNE_ERROR("ERROR: Cannot draw a 2D object in a 3D graphic");
             break;
         }
-        indicator.update_current(processed_objects++);
+        indicator.update_current(static_cast<double>(processed_objects++));
         LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] " << indicator.percentage() << "% ");
     }
 
@@ -667,13 +667,13 @@ Void LabelledFigure::_paint_all(CanvasInterface& canvas) const
     // Draw shapes
     SizeType total_objects = this->_data->objects.size();
     SizeType processed_objects = 0;
-    ProgressIndicator indicator(total_objects);
+    ProgressIndicator indicator(static_cast<double>(total_objects));
     LOGGING_PRINTLN("Writing " << total_objects << " object" << (total_objects > 1 ? "s..." : "..."));
     for(const LabelledGraphicsObject& object : this->_data->objects) {
         const LabelledDrawable2dInterface& shape=object.shape_ptr.operator*();
         set_properties(canvas, object.properties);
         shape.draw(canvas,this->_data->variables);
-        indicator.update_current(processed_objects++);
+        indicator.update_current(static_cast<double>(processed_objects++));
         LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] " << indicator.percentage() << "% ");
     }
     canvas.finalise();
