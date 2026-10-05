@@ -44,8 +44,7 @@ template<class F> Approximation<F> const& make_validated_approximation(Approxima
 template<class F> ValidatedApproximation<F> make_validated_approximation(Bounds<F> const& x) { return ValidatedApproximation<F>(x); }
 
 
-template<ARawFloat F> Rounded<F> const& cast_rounded(F const& x) { return reinterpret_cast<Rounded<F>const&>(x); }
-template<ARawFloat F> Rounded<F>& cast_rounded(Error<F>& x) { return reinterpret_cast<Rounded<F>&>(x); }
+template<ARawFloat F> Rounded<F> cast_rounded(F const& x) { return Rounded<F>(x); }
 
 template<class F> inline Void acc_err(F const& ml, F const& u, F& e) {
     e=add(rounded,e,hlf(add(rounded,ml,u)));
@@ -338,13 +337,16 @@ template<class F> Approximation<F> fma_err(Approximation<F> const& x, Approximat
 // Returns an approximation to a1*b2+a2*b2, adding error to e
 template<class F> F lin_err(F const& a1, F const& b1, F const& a2, F const& b2, Error<F>& e) {
     F::set_rounding_to_nearest();
-    F r=cast_exact(cast_rounded(a1)*cast_rounded(b2)+cast_rounded(b1)*cast_rounded(a2));
+    Rounded<F> rr=cast_rounded(a1)*cast_rounded(b2)+cast_rounded(b1)*cast_rounded(a2);
+    F r=rr.raw();
     F::set_rounding_upward();
     F mb1=-b1;
     F mb2=-b2;
     Rounded<F> u=cast_rounded(a1)*cast_rounded(b2)+cast_rounded(b1)*cast_rounded(a2);
     Rounded<F> ml=cast_rounded(a1)*cast_rounded(mb2)+cast_rounded(mb1)*cast_rounded(a2);
-    cast_rounded(e) += hlf(ml+u);
+    Rounded<F> re(e.raw());
+    re += hlf(ml+u);
+    e=Error<F>(re.raw());
     return r;
 }
 
