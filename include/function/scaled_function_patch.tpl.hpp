@@ -50,6 +50,10 @@ namespace Ariadne {
 
 namespace {
 
+BoxDomainType const& convert_box(BoxDomainType const& bx, DoublePrecision) {
+    return bx;
+}
+
 Box<Interval<FloatMP>> convert_box(BoxDomainType const& bx, MultiplePrecision pr) {
     Box<Interval<FloatMP>> r(bx.dimension(),Interval<FloatMP>(FloatMP(pr),FloatMP(pr)));
     for(SizeType i=0; i!=r.dimension(); ++i) { r[i]=convert_interval(bx[i],pr); }
@@ -61,7 +65,7 @@ Box<Interval<FloatMP>> convert_box(BoxDomainType const& bx, MultiplePrecision pr
 inline decltype(auto) contains(IntervalDomainType const& bx, Scalar<FloatMPBounds> const& x) { return contains(convert_interval(bx,x.precision()),x); }
 inline decltype(auto) contains(IntervalDomainType const& bx, Scalar<FloatMPApproximation> const& x) { return contains(convert_interval(bx,x.precision()),x); }
 template<class F> inline decltype(auto) contains(IntervalDomainType const& bx, UpperInterval<F> const& x) {
-    return contains(convert_interval(bx,x.upper_bound().precision()),x); }
+    return subset(x,convert_interval(bx,x.upper_bound().precision())); }
 inline decltype(auto) contains(BoxDomainType const& bx, Vector<FloatMPBounds> const& x) { return contains(convert_box(bx,x.zero_element().precision()),x); }
 inline decltype(auto) contains(BoxDomainType const& bx, Vector<FloatMPApproximation> const& x) { return contains(convert_box(bx,x.zero_element().precision()),x); }
 template<class F> inline decltype(auto) contains(BoxDomainType const& bx, Vector<UpperInterval<F>> const& x) {

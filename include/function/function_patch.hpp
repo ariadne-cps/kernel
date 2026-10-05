@@ -540,13 +540,13 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
         VectorMultivariateFunctionPatchInterface<P> const* fptr = dynamic_cast<VectorMultivariateFunctionPatchInterface<P> const*>(f.raw_pointer());
         if(fptr) { return VectorFunctionPatch<P,ARGS...>(g._ptr->_unchecked_compose(cast_unchecked(VectorMultivariateFunctionPatch<P>(*fptr)))); } else { return compose(f,g); } }
 
-    friend VectorFunctionPatch<P,ARGS...> antiderivative(const VectorFunctionPatch<P,ARGS...>& f, SizeType j) {
+    friend VectorFunctionPatch<P,ARGS...> antiderivative(const VectorFunctionPatch<P,ARGS...>& f, ArgumentIndexType j) {
         VectorFunctionPatch<P,ARGS...> r(f);
         for(SizeType i=0; i!=r.size(); ++i) { r[i]=antiderivative(f[i],j); }
         return r;
     }
 
-    friend VectorFunctionPatch<P,ARGS...> antiderivative(const VectorFunctionPatch<P,ARGS...>& f, SizeType j, const Number<P>& c) {
+    friend VectorFunctionPatch<P,ARGS...> antiderivative(const VectorFunctionPatch<P,ARGS...>& f, ArgumentIndexType j, const Number<P>& c) {
         VectorFunctionPatch<P,ARGS...> r(f);
         for(SizeType i=0; i!=r.size(); ++i) { r[i]=antiderivative(f[i],j,c); }
         return r;

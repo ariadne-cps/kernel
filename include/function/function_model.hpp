@@ -495,6 +495,7 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
     typedef typename Interface::ErrorType ErrorType;
     typedef typename Interface::NumericType NumericType;
     typedef typename Interface::GenericNumericType GenericNumericType;
+    typedef typename Interface::ArgumentIndexType ArgumentIndexType;
 
     template<class Y> using Argument = typename SignatureTraits<SIG>::template Argument<Y>;
     template<class Y> using Result = typename SignatureTraits<SIG>::template Result<Y>;
@@ -663,19 +664,19 @@ template<class P, class ARG, class PR, class PRE> class FunctionModel<P,RealVect
         ARIADNE_ASSERT_MSG(f1.size()==f2.size(),"refinement(f1,f2): f1="<<f1<<", f2="<<f2<<")");
         VectorFunctionModel<ValidatedTag,ARG,PR,PRE> r=+f1; for(SizeType i=0; i!=r.size(); ++i) { r[i]=refinement(f1[i],f2[i]); } return r; }
 
-    friend VectorFunctionModel<P,ARG,PR,PRE> antiderivative(const VectorFunctionModel<P,ARG,PR,PRE>& f, SizeType j) {
+    friend VectorFunctionModel<P,ARG,PR,PRE> antiderivative(const VectorFunctionModel<P,ARG,PR,PRE>& f, ArgumentIndexType j) {
         VectorFunctionModel<P,ARG,PR,PRE> r(f);
         for(SizeType i=0; i!=r.size(); ++i) { r[i]=antiderivative(f[i],j); }
         return r;
     }
 
-    friend VectorFunctionModel<P,ARG,PR,PRE> antiderivative(const VectorFunctionModel<P,ARG,PR,PRE>& f, SizeType j, const CanonicalNumericType<P,PR,PRE>& c) {
+    friend VectorFunctionModel<P,ARG,PR,PRE> antiderivative(const VectorFunctionModel<P,ARG,PR,PRE>& f, ArgumentIndexType j, const CanonicalNumericType<P,PR,PRE>& c) {
         VectorFunctionModel<P,ARG,PR,PRE> r(f);
         for(SizeType i=0; i!=r.size(); ++i) { r[i]=antiderivative(f[i],j,c); }
         return r;
     }
 
-    friend VectorFunctionModel<P,ARG,PR,PRE> antiderivative(const VectorFunctionModel<P,ARG,PR,PRE>& f, SizeType j, const Number<P>& c) {
+    friend VectorFunctionModel<P,ARG,PR,PRE> antiderivative(const VectorFunctionModel<P,ARG,PR,PRE>& f, ArgumentIndexType j, const Number<P>& c) {
         return antiderivative(f,j,CanonicalNumericType<P,PR,PRE>(c,f[0].value().precision()));
     }
 
