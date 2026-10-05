@@ -43,9 +43,9 @@
 
 namespace Ariadne {
 
-Pair<SizeType,FloatDP> nonlinearity_index_and_error(const ValidatedVectorMultivariateFunction& function, const ExactBoxType& domain);
-Pair<SizeType,FloatDP> lipschitz_index_and_error(const ValidatedVectorMultivariateFunction& function, const ExactBoxType& domain);
-inline Pair<SizeType,FloatDP> lipschitz_index_and_error(const ValidatedVectorMultivariateFunction& function, const UpperBoxType& domain) {
+Pair<SizeType,FloatDPError> nonlinearity_index_and_error(const ValidatedVectorMultivariateFunction& function, const ExactBoxType& domain);
+Pair<SizeType,FloatDPError> lipschitz_index_and_error(const ValidatedVectorMultivariateFunction& function, const ExactBoxType& domain);
+inline Pair<SizeType,FloatDPError> lipschitz_index_and_error(const ValidatedVectorMultivariateFunction& function, const UpperBoxType& domain) {
     return lipschitz_index_and_error(function,cast_exact_box(domain));
 }
 
@@ -171,7 +171,7 @@ Void AffinePaver::adjoin_outer_approximation(PavingInterface& paving,
     for(Nat i=0; i!=MAXIMUM_DEPTH; ++i) {
         //std::cerr<<"i="<<i<<"\nsubdomains="<<subdomains<<"\nunsplitdomains="<<unsplitdomains<<"\n\n";
         for(SizeType n=0; n!=unsplitdomains.size(); ++n) {
-            SizeType k; FloatDP err(dp);
+            SizeType k; FloatDPError err(dp);
             make_lpair(k,err)=nonlinearity_index_and_error(fg,unsplitdomains[n]);
             //std::cerr<<"  domain="<<unsplitdomains[n]<<" k="<<k<<" err="<<err<<" max_err="<<max_error<<"\n";
             if(k==subdomain.size() || err < max_error) {
@@ -306,7 +306,7 @@ Void procedure_constraint_adjoin_outer_approximation_recursion(
     ExactDouble RELATIVE_SPLITTING_SIZE = 4.0_x;
 
     if( !strictly_smaller_by_factor(bbxmaxwdth, clmaxwdth, RELATIVE_SPLITTING_SIZE) || (cell.depth()>=max_dpth && strictly_smaller(clmaxwdth, bbxmaxwdth)) ) {
-        Pair<SizeType,FloatDP> lipsch = lipschitz_index_and_error(f,new_domain);
+        Pair<SizeType,FloatDPError> lipsch = lipschitz_index_and_error(f,new_domain);
         LOGGING_PRINTLN("Splitting domain on coordinate "<<lipsch.first);
         Pair<ExactBoxType,ExactBoxType> sd=cast_exact_box(new_domain).split(lipsch.first);
         procedure_constraint_adjoin_outer_approximation_recursion(paving, sd.first, f, g, codomain, cell, max_dpth, splt+1, procedures);

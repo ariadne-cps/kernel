@@ -37,8 +37,6 @@ namespace Ariadne {
 Void box_draw(CanvasInterface& cnvs, const Projection2d& proj, const ValidatedConstrainedImageSet& set);
 Void affine_draw(CanvasInterface& cnvs, const Projection2d& proj, const ValidatedConstrainedImageSet& set, Nat splittings_remaining);
 
-Pair<Nat,FloatDP> nonlinearity_index_and_error(const ValidatedVectorMultivariateFunction& function, const ExactBoxType& domain);
-
 OutputStream& BoxDrawer::_write(OutputStream& os) const {
     return os << "BoxDrawer()"; }
 OutputStream& AffineDrawer::_write(OutputStream& os) const {
