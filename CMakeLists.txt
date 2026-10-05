@@ -104,11 +104,6 @@ if(WIN32)
         target_sources(ariadne-kernel PRIVATE $<TARGET_OBJECTS:${_object_target}>)
     endforeach()
     target_link_libraries(ariadne-kernel PUBLIC kernel)
-    # A shared library used to include every object file. Preserve that
-    # initialization/registration behaviour when consuming the static archive.
-    target_link_options(ariadne-kernel INTERFACE
-        "$<$<CXX_COMPILER_ID:MSVC>:/WHOLEARCHIVE:$<TARGET_FILE:ariadne-kernel>>"
-    )
     set_property(GLOBAL PROPERTY ARIADNE_PROJECT_LIBRARY_TARGET ariadne-kernel)
     install(TARGETS ariadne-kernel ARCHIVE DESTINATION lib)
 else()
