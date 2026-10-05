@@ -564,8 +564,6 @@ class TaylorModel
     static Bool _inconsistent(const TaylorModel<P,F>& tm1, const TaylorModel<P,F>& tm2);
     static Bool _refines(const TaylorModel<P,F>& tm1, const TaylorModel<P,F>& tm2);
     static TaylorModel<P,F> _refinement(const TaylorModel<P,F>& tm1, const TaylorModel<P,F>& tm2);
-    static TaylorModel<P,F> _antiderivative(const TaylorModel<P,F>& tm, SizeType k);
-    static TaylorModel<P,F> _weak_derivative(const TaylorModel<P,F>& tm, SizeType k);
     static TaylorModel<P,F> _embed_error(const TaylorModel<P,F>& tm);
     static TaylorModel<P,F>  _discard_variables(const TaylorModel<P,F>&, const Array<SizeType>& variables);
     static TaylorModel<P,F> _split(const TaylorModel<P,F>& tm, SizeType k, SplitPart part);
