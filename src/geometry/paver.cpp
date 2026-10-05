@@ -174,7 +174,7 @@ Void AffinePaver::adjoin_outer_approximation(PavingInterface& paving,
             SizeType k; FloatDPError err(dp);
             make_lpair(k,err)=nonlinearity_index_and_error(fg,unsplitdomains[n]);
             //std::cerr<<"  domain="<<unsplitdomains[n]<<" k="<<k<<" err="<<err<<" max_err="<<max_error<<"\n";
-            if(k==subdomain.size() || err < max_error) {
+            if(k==subdomain.size() || definitely(err < max_error)) {
                 subdomains.append(unsplitdomains[n]);
             } else {
                 make_lpair(splitdomain1,splitdomain2)=unsplitdomains[n].split(k);
