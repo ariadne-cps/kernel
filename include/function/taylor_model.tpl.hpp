@@ -1448,7 +1448,7 @@ template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>:
             Nat j=(n-2)-i;
             r=s*r+p[j];
         }
-        r.error()+=err;
+        r.error()+=typename TaylorModel<P,F>::ErrorType(err,r.error().precision());
         return r*xmag;
     }
 }
