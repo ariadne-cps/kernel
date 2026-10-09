@@ -42,7 +42,6 @@
 #include "algebra/sweeper.hpp"
 #include "algebra/operations.hpp"
 #include "algebra/evaluate.hpp"
-#include "algebra/evaluate.tpl.hpp"
 #include "function/domain.hpp"
 #include "function/scaling.hpp"
 #include "algebra/polynomial.hpp"
