@@ -96,4 +96,6 @@ template<class F, class P, class SIG> F const& extract(Function<P,SIG> const& f)
 
 } // namespace Ariadne
 
+#include "function/function_mixin.tpl.hpp"
+
 #endif // ARIADNE_FUNCTION_WRAPPER_HPP
