@@ -537,7 +537,7 @@ contains_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, E
     FloatDPBoundsMatrix ivlA=jacobian(ge,X);
     LOGGING_PRINTLN("ivlA="<<ivlA);
     FloatDPApproximationVector fltD(X.size(),dp);
-    for(SizeType i=0; i!=X.size(); ++i) { fltD[i]=rec(sqr(X[i].error())); }
+    for(SizeType i=0; i!=X.size(); ++i) { fltD[i]=rec(cast_positive(+sqr(X[i].error()))); }
     FloatDPApproximationMatrix fltA=midpoint(ivlA);
     LOGGING_PRINTLN("A="<<fltA);
     LOGGING_PRINTLN("D="<<fltD);
