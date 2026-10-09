@@ -113,9 +113,8 @@ template<class M> class ScaledFunctionPatchMixin
     using Base = ScalarMultivariateFunctionModelMixin<ScaledFunctionPatch<M>, typename M::Paradigm, typename M::PrecisionType, typename M::ErrorPrecisionType>;
   public:
     // Use the interface return type so explicit instantiation needs no covariant thunk.
-    typename Base::Interface* _concrete_create() const override {
-        auto const& f=static_cast<ScaledFunctionPatch<M> const&>(*this);
-        return new ScaledFunctionPatch<M>(f.domain(),f.properties()); }
+    // Define this only after ScaledFunctionPatch<M> is complete.
+    typename Base::Interface* _concrete_create() const override;
 };
 
 template<class M> class VectorScaledFunctionPatchMixin
@@ -123,9 +122,8 @@ template<class M> class VectorScaledFunctionPatchMixin
 {
     using Base = VectorMultivariateFunctionModelMixin<VectorScaledFunctionPatch<M>,typename M::Paradigm, typename M::PrecisionType, typename M::ErrorPrecisionType>;
   public:
-    typename Base::Interface* _concrete_create() const override {
-        auto const& f=static_cast<VectorScaledFunctionPatch<M> const&>(*this);
-        return new VectorScaledFunctionPatch<M>(f.result_size(),ScaledFunctionPatch<M>(f.domain(),f.properties())); }
+    // Define this only after VectorScaledFunctionPatch<M> is complete.
+    typename Base::Interface* _concrete_create() const override;
 };
 
 
@@ -718,8 +716,6 @@ template<class M> class VectorScaledFunctionPatch
     //! \brief Cast to a generic function.
     VectorFunctionType<M> generic() const;
 
-    //! \brief Truncate terms higher than \a bd.
-    VectorScaledFunctionPatch<M>& truncate(const MultiIndexBound& bd);
     //! \brief Restrict to a subdomain.
     Void restrict(const BoxDomainType& d);
     //! \brief Adjoin a scalar function.
@@ -1299,6 +1295,21 @@ template<class M> class ScaledFunctionPatchCreator
         : FunctionModelCreator<ScaledFunctionPatchFactory<M>,RealVector>(domain,ScaledFunctionPatchFactory<M>(properties)) { }
     PropertiesType properties() const { return this->_factory.properties(); }
 };
+
+
+template<class M>
+auto ScaledFunctionPatchMixin<M>::_concrete_create() const -> typename Base::Interface*
+{
+    auto const& f=static_cast<ScaledFunctionPatch<M> const&>(*this);
+    return new ScaledFunctionPatch<M>(f.domain(),f.properties());
+}
+
+template<class M>
+auto VectorScaledFunctionPatchMixin<M>::_concrete_create() const -> typename Base::Interface*
+{
+    auto const& f=static_cast<VectorScaledFunctionPatch<M> const&>(*this);
+    return new VectorScaledFunctionPatch<M>(f.result_size(),ScaledFunctionPatch<M>(f.domain(),f.properties()));
+}
 
 
 } // namespace Ariadne
