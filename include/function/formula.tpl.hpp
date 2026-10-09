@@ -22,6 +22,9 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef ARIADNE_FORMULA_TPL_HPP
+#define ARIADNE_FORMULA_TPL_HPP
+
 #include "symbolic/templates.tpl.hpp"
 
 namespace Ariadne {
@@ -277,3 +280,5 @@ template<class Y> Bool is_additive_in(const Vector<Formula<Y>>& fs, const Set<Na
 
 
 } // namespace Ariadne
+
+#endif // ARIADNE_FORMULA_TPL_HPP

@@ -49,6 +49,7 @@
 #include "function/function_wrapper.hpp"
 #include "function/projection.hpp"
 #include "function/formula.hpp"
+#include "function/formula.tpl.hpp"
 
 namespace Ariadne {
 
