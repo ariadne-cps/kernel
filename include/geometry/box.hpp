@@ -229,7 +229,7 @@ template<class I> decltype(declval<Box<I>>().is_empty()) is_empty(const Box<I>& 
 template<class I> decltype(declval<Box<I>>().is_bounded()) is_bounded(const Box<I>& bx) { return bx.is_bounded(); }
 
 template<class I> decltype(declval<Box<I>>().centre()) centre(const Box<I>& bx) { return bx.centre(); }
-template<class I> decltype(declval<Box<I>>().midpoint()) midpoint(const Box<I>& bx) { return bx.midpoint(); }
+template<AnInterval I> auto midpoint(const Box<I>& bx) { return bx.midpoint(); }
 template<class I> decltype(declval<Box<I>>().radius()) radius(const Box<I>& bx) { return bx.radius(); }
 template<class I> decltype(declval<Box<I>>().radii()) radii(const Box<I>& bx) { return bx.radii(); }
 template<class I> decltype(declval<Box<I>>().widths()) widths(const Box<I>& bx) { return bx.widths(); }
