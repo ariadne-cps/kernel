@@ -149,7 +149,7 @@ Pair<SizeType,Pair<Bool,Bool>> sensitivity_split_coordinate(
             if(not derivative_is_exactly_zero) {
                 active=true;
                 PositiveFloatDPUpperBound candidate=
-                    domain[variable].width()*mag(derivative_image);
+                    cast_positive(+(domain[variable].width()*mag(derivative_image)));
                 sensitivity+=candidate;
             }
         }
