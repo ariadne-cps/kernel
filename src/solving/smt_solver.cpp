@@ -1098,6 +1098,18 @@ SmtSolver::_split_box(
     double& derivative_evaluation_seconds) const
 {
     SplitBoxResult result;
+
+    // Terminal DP boxes still pass through reduction, whole-box epsilon
+    // certification and deterministic witness probing. At the splitting stage,
+    // however, no derivative/lookahead work can produce distinct children.
+    // Detect that case with the ordinary geometric split before evaluating any
+    // split heuristic, preserving the documented processing order.
+    auto geometric_children=domain.split();
+    if(same_box(geometric_children.first,geometric_children.second)) {
+        result.children=geometric_children;
+        return result;
+    }
+
     if(not _configuration.sensitivity_split_enabled()
        && not _configuration.interval_lookahead_split_enabled()) {
         result.children=domain.split();
@@ -1192,66 +1204,6 @@ SmtSolver::_process_box(
             result.epsilon_box_certification=true;
             return result;
         }
-    }
-
-    auto terminal_children=domain.split();
-    Bool const splittable_before_reduction=
-        not same_box(terminal_children.first,terminal_children.second);
-    if(not splittable_before_reduction) {
-        Bool all_epsilon_satisfied=true;
-        FloatDP epsilon(_configuration.epsilon(),dp);
-
-        for(auto const& item:conjunction) {
-            UpperIntervalType image=apply(this->_function(item),domain);
-
-            Bool original_infeasible=false;
-            if constexpr(std::is_same_v<Conjunction,CompiledTheoryLiterals>) {
-                if(item.strict_lower
-                   && definitely(image.upper_bound()<=item.bounds.lower_bound())) {
-                    original_infeasible=true;
-                } else if(definitely(disjoint(image,item.bounds))) {
-                    original_infeasible=true;
-                }
-
-                auto relaxed_lower=sub(down,item.bounds.lower_bound(),epsilon);
-                auto relaxed_upper=add(up,item.bounds.upper_bound(),epsilon);
-                Bool epsilon_satisfied=
-                    item.strict_lower
-                        ? definitely(image.lower_bound()>relaxed_lower)
-                        : definitely(image.lower_bound()>=relaxed_lower);
-                epsilon_satisfied=
-                    epsilon_satisfied
-                    && definitely(image.upper_bound()<=relaxed_upper);
-                if(not epsilon_satisfied) {
-                    all_epsilon_satisfied=false;
-                }
-            } else {
-                if(definitely(disjoint(image,item.bounds()))) {
-                    original_infeasible=true;
-                }
-                if(not definitely(subset(image,this->_epsilon_bounds(item)))) {
-                    all_epsilon_satisfied=false;
-                }
-            }
-
-            if(original_infeasible) {
-                result.status=BoxProcessingStatus::PRUNED;
-                return result;
-            }
-        }
-
-        if(all_epsilon_satisfied) {
-            result.status=BoxProcessingStatus::EPSILON_SAT;
-            result.witness=domain;
-            result.epsilon_box_certification=true;
-            return result;
-        }
-
-        result.status=BoxProcessingStatus::UNKNOWN;
-        result.dp_resolution_exhausted=true;
-        result.candidate_witness_search=false;
-        result.non_splittable_epsilon_overlap=true;
-        return result;
     }
 
     auto phase_start=std::chrono::steady_clock::now();
