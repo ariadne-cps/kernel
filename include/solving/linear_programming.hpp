@@ -174,16 +174,6 @@ class SimplexSolver
                         Array<Slackness>& vt, Array<SizeType>& p, Matrix<XX>& B) const;
 
     //! \ingroup LinearProgrammingModule
-    //! Test if there exists a point \f$x\f$ with \f$0 \leq x\f$ and \f$Ax=b\f$.
-    ValidatedKleenean
-    primal_feasible(const Matrix<X>& A, const Vector<X>& b) const;
-
-    //! \ingroup LinearProgrammingModule
-    //! Test if there exists a point \f$y\f$ with \f$yA\leq c\f$.
-    ValidatedKleenean
-    dual_feasible(const Matrix<X>& A, const Vector<X>& c) const;
-
-    //! \ingroup LinearProgrammingModule
     //! Test if there exists a point \f$x\f$ with \f$l \leq x \leq u\f$ and \f$Ax=b\f$.
     ValidatedKleenean
     feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b) const;
@@ -206,16 +196,6 @@ class SimplexSolver
 
 
 
-
-    //! \ingroup LinearProgrammingModule
-    //! Check whether the assignment of basis, lower and upper variables yields a certificate of feasibility or infeasibility.
-    ValidatedKleenean
-    verify_primal_feasibility(const Matrix<X>& A, const Vector<X>& b, const Array<Slackness>& vt) const;
-
-    //! \ingroup LinearProgrammingModule
-    //! Check whether the assignment of basis, lower and upper variables yields a certificate of feasibility or infeasibility.
-    ValidatedKleenean
-    verify_dual_feasibility(const Matrix<X>& A, const Vector<X>& c, const Array<Slackness>& vt) const;
 
     //! \ingroup LinearProgrammingModule
     //! Check whether the assignment of basis, lower and upper variables yields a certificate of feasibility or infeasibility.

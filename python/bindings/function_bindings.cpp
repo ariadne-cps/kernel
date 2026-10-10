@@ -163,7 +163,7 @@ ValidatedVectorMultivariateFunction unrestrict(const ValidatedVectorMultivariate
 
 } // namespace Ariadne
 
-static constexpr auto self = pybind11::detail::self;
+static constexpr auto py_self = pybind11::detail::self;
 
 Expansion<MultiIndex,FloatDP>const& get_expansion(ValidatedTaylorModelDP const& tm) { return tm.expansion(); }
 Expansion<MultiIndex,FloatDPApproximation>const& get_expansion(ApproximateTaylorModelDP const& tm) { return tm.expansion(); }
@@ -272,18 +272,18 @@ template<class PR> Void export_scalar_function_model(pybind11::module& module)
     scalar_function_model_class.def("clobber", &ValidatedScalarMultivariateFunctionModel<PR>::clobber);
     scalar_function_model_class.def("error", &ValidatedScalarMultivariateFunctionModel<PR>::error);
     scalar_function_model_class.def("__call__", (FloatBounds<PR>(ValidatedScalarMultivariateFunctionModel<PR>::*)(const Vector<FloatBounds<PR>>&)const) &ValidatedScalarMultivariateFunctionModel<PR>::operator());
-    scalar_function_model_class.def(self+self);
-    scalar_function_model_class.def(self-self);
-    scalar_function_model_class.def(self*self);
-    scalar_function_model_class.def(self/self);
-    scalar_function_model_class.def(self+NumericType(pr));
-    scalar_function_model_class.def(self-NumericType(pr));
-    scalar_function_model_class.def(self*NumericType(pr));
-    scalar_function_model_class.def(self/NumericType(pr));
-    scalar_function_model_class.def(NumericType(pr)+self);
-    scalar_function_model_class.def(NumericType(pr)-self);
-    scalar_function_model_class.def(NumericType(pr)*self);
-    scalar_function_model_class.def(NumericType(pr)/self);
+    scalar_function_model_class.def(py_self+py_self);
+    scalar_function_model_class.def(py_self-py_self);
+    scalar_function_model_class.def(py_self*py_self);
+    scalar_function_model_class.def(py_self/py_self);
+    scalar_function_model_class.def(py_self+NumericType(pr));
+    scalar_function_model_class.def(py_self-NumericType(pr));
+    scalar_function_model_class.def(py_self*NumericType(pr));
+    scalar_function_model_class.def(py_self/NumericType(pr));
+    scalar_function_model_class.def(NumericType(pr)+py_self);
+    scalar_function_model_class.def(NumericType(pr)-py_self);
+    scalar_function_model_class.def(NumericType(pr)*py_self);
+    scalar_function_model_class.def(NumericType(pr)/py_self);
     scalar_function_model_class.def("__str__", &__cstr__<ValidatedScalarMultivariateFunctionModel<PR>>);
     scalar_function_model_class.def("__repr__", &__crepr__<ValidatedScalarMultivariateFunctionModel<PR>>);
 

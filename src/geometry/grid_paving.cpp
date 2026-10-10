@@ -33,6 +33,7 @@
 #include "geometry/function_set.hpp"
 #include "geometry/list_set.hpp"
 #include "geometry/grid_paving.hpp"
+#include <limits>
 #include "geometry/binary_tree.hpp"
 
 #include "geometry/set_interface.hpp"
@@ -213,7 +214,9 @@ class BinaryCode {
 // 1. Compute the primary cell located the the extent \a theExtent above the zero level,
 // 2. Compute the cell defined by the path \a theWord (from the primary cell).
 LatticeBoxType GridCell::compute_lattice_box( const DimensionType dimensions, const Nat theExtent, const BinaryWord& theWord ) {
-    LatticeBoxType theResultLatticeBoxType( primary_cell_lattice_box( theExtent , dimensions ) );
+    ARIADNE_ASSERT(dimensions<=std::numeric_limits<dimension_type>::max());
+    const dimension_type grid_dimensions=static_cast<dimension_type>(dimensions);
+    LatticeBoxType theResultLatticeBoxType( primary_cell_lattice_box( theExtent , grid_dimensions ) );
 
     //2. Compute the cell on some grid, corresponding to the binary path from the primary cell.
     SizeType current_dimension = 0;

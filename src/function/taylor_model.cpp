@@ -24,6 +24,7 @@
 
 #include "numeric/numeric.hpp"
 #include "function/taylor_model.tpl.hpp"
+#include "algebra/sweeper.tpl.hpp"
 
 namespace Ariadne {
 

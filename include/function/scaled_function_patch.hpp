@@ -191,7 +191,6 @@ template<class M> class ScaledFunctionPatch
     template<class Y> using Argument = typename SignatureTraits<SIG>::template Argument<Y>;
     template<class Y> using Result = typename SignatureTraits<SIG>::template Result<Y>;
   private:
-    static const CoefficientType _zero;
     DomainType _domain;
     ModelType _model;
   public:
