@@ -33,9 +33,7 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 find_package(Cairo REQUIRED)
 
-include_directories(
-    "${PROJECT_SOURCE_DIR}/include"
-)
+include_directories("${PROJECT_SOURCE_DIR}/include")
 
 add_subdirectory(submodules)
 
@@ -46,10 +44,6 @@ target_include_directories(kernel INTERFACE
     $<INSTALL_INTERFACE:include/ariadne-kernel>
 )
 target_link_libraries(kernel INTERFACE algebra threading Cairo::Cairo)
-
-# Numeric is embedded into the monolithic kernel/Python binaries in this project.
-# On Windows this disables dllimport/dllexport annotations inside those binaries.
-target_compile_definitions(numeric INTERFACE ARIADNE_NUMERIC_EMBEDDED)
 
 
 add_subdirectory(src)
