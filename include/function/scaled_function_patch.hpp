@@ -180,6 +180,7 @@ template<class M> class ScaledFunctionPatch
     typedef typename ModelType::NumericType NumericType;
     typedef typename ModelType::Paradigm Paradigm;
     typedef typename ModelType::PrecisionType PrecisionType;
+    typedef typename ModelType::ErrorPrecisionType ErrorPrecisionType;
     typedef typename ModelType::NormType NormType;
     typedef ScaledFunctionPatch<M> ScaledFunctionPatchType;
     typedef ScalarMultivariateFunction<Paradigm> FunctionType;
