@@ -33,7 +33,7 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 find_package(Cairo REQUIRED)
 
-include_directories(SYSTEM
+include_directories(
     "${PROJECT_SOURCE_DIR}/include"
 )
 
@@ -100,8 +100,6 @@ setup_standalone_project_tests(
         "${PROJECT_SOURCE_DIR}/include"
         "${PROJECT_SOURCE_DIR}/src"
 )
-
-add_subdirectory(tutorials)
 
 if(BUILD_PYTHON_BINDINGS)
     add_subdirectory(python)
