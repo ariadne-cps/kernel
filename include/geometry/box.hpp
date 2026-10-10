@@ -486,6 +486,10 @@ template<class I> inline Box<I> Box<I>::unit_box(SizeType n) {
     return Box<IntervalType>(n,IntervalType(-1,1));
 }
 
+template<class I> inline Box<I> Box<I>::upper_orthant(SizeType n) {
+    return Box<IntervalType>(n,IntervalType(0,+infty));
+}
+
 template<class I> inline UniformArray<I> const& Box<I>::array() const {
     return this->_vec.array();
 }
