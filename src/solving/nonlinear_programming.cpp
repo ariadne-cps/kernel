@@ -76,6 +76,10 @@ typedef Matrix<UpperIntervalType> UpperIntervalMatrixType;
 
 typedef FloatDPApproximation ApproximateNumericType;
 
+inline Vector<FloatDP> exact_vector(Vector<FloatDPApproximation> const& v) {
+    return Ariadne::cast_exact<FloatDPApproximation>(v);
+}
+
 Matrix<ApproximateNumericType> join(Matrix<ApproximateNumericType> const&, Matrix<ApproximateNumericType> const&, Matrix<ApproximateNumericType> const&);
 
 inline Vector<Differential<RawFloatDP>>const& cast_raw(Vector<Differential<FloatDPApproximation>>const& v) {
@@ -473,7 +477,7 @@ const FloatDP OptimiserBase::one = FloatDP(1,dp);
 Bool OptimiserBase::
 almost_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactBoxType C, ApproximateVectorType ax, FloatDPApproximation error) const
 {
-    ExactVectorType ex=cast_exact(ax);
+    ExactVectorType ex=exact_vector(ax);
     if(!contains(D,ex)) { return false; }
     ApproximateVectorType gx=g(ax);
     return probably(contains(cast_exact_widen(C,cast_exact(error)),gx));
@@ -826,7 +830,7 @@ minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorM
         oldx=x;
         FloatDPApproximation oldfx=f(oldx);
         this->step(f,D,g,C,v);
-        if(this->is_infeasibility_certificate(D,g,C,cast_exact(y))) {
+        if(this->is_infeasibility_certificate(D,g,C,exact_vector(y))) {
             LOGGING_PRINTLN_AT(1,"f(x)="<<f(x)<<", x="<<x<<", y="<<y<<", g(x)="<<g(x));
             LOGGING_PRINTLN_AT(1,"Infeasible");
             throw InfeasibleProblemException();
@@ -841,9 +845,9 @@ minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorM
     }
     LOGGING_PRINTLN("f(x)="<<f(x)<<", x="<<x<<", y="<<y<<", g(x)="<<g(x));
 
-    if(this->validate_feasibility(D,g,C,cast_exact(x))) {
+    if(this->validate_feasibility(D,g,C,exact_vector(x))) {
         LOGGING_PRINTLN("f(x)="<<f(x)<<", x="<<x<<", y="<<y<<", g(x)="<<g(x));
-        return cast_exact(x);
+        return exact_vector(x);
     }
     LOGGING_PRINTLN("indeterminate_feasibility");
     throw IndeterminateFeasibilityException();
@@ -870,7 +874,7 @@ feasible_candidate(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactB
     FloatDPApproximationVector& y=cast_approximate(v.y);
 
     auto safe_candidate=[&D](FloatDPApproximationVector const& candidate) -> FloatDPApproximationVector {
-        if(contains(D,cast_exact(candidate))) {
+        if(contains(D,exact_vector(candidate))) {
             return candidate;
         }
         return midpoint(D);
@@ -890,12 +894,12 @@ feasible_candidate(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactB
             LOGGING_PRINTLN("Near boundary of feasible domain; returning indeterminate candidate");
             return {indeterminate,safe_candidate(x)};
         }
-        if(this->validate_feasibility(D,g,C,cast_exact(x))) {
+        if(this->validate_feasibility(D,g,C,exact_vector(x))) {
             LOGGING_PRINTLN_AT(1,"f(x)="<<f(x)<<", x="<<x<<", y="<<y<<", g(x)="<<g(x));
             LOGGING_PRINTLN("Feasible");
             return {true,x};
         }
-        if(this->is_infeasibility_certificate(D,g,C,cast_exact(y))) {
+        if(this->is_infeasibility_certificate(D,g,C,exact_vector(y))) {
             LOGGING_PRINTLN_AT(1,"f(x)="<<f(x)<<", x="<<x<<", y="<<y<<", g(x)="<<g(x));
             LOGGING_PRINTLN("Infeasible");
             return {false,safe_candidate(x)};
@@ -1216,7 +1220,7 @@ minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorM
         if(i%3==0 && i<=10) { mu *= 0.25_exact; }
     }
 
-    return ValidatedVectorType(cast_exact(x));
+    return ValidatedVectorType(exact_vector(x));
 }
 
 
@@ -1243,8 +1247,8 @@ minimisation_step(const ApproximateScalarMultivariateFunction& f, const ExactBox
     ARIADNE_DEBUG_PRECONDITION(h.argument_size()==n);
     ARIADNE_DEBUG_PRECONDITION(g.result_size()==m);
     ARIADNE_DEBUG_PRECONDITION(h.result_size()==l);
-    ARIADNE_DEBUG_PRECONDITION(contains(d,cast_exact(x)));
-    ARIADNE_DEBUG_PRECONDITION(contains(c,cast_exact(w)));
+    ARIADNE_DEBUG_PRECONDITION(contains(d,exact_vector(x)));
+    ARIADNE_DEBUG_PRECONDITION(contains(c,exact_vector(w)));
     ARIADNE_DEBUG_PRECONDITION(mu.raw()>0);
 
     LOGGING_SCOPE_CREATE;
@@ -1369,7 +1373,7 @@ minimisation_step(const ApproximateScalarMultivariateFunction& f, const ExactBox
     do {
         newx = x - alpha * dx;
         neww = w - alpha * dw;
-        if (contains(d,cast_exact(newx)) && contains(c,cast_exact(neww))) { success = true; }
+        if (contains(d,exact_vector(newx)) && contains(c,exact_vector(neww))) { success = true; }
         else { alpha *= ALPHA_SCALE_FACTOR; }
         if(probably(alpha<MINIMUM_ALPHA)) { throw NearBoundaryOfFeasibleDomainException(); }
     } while(!success);
@@ -1407,13 +1411,13 @@ feasible(ExactBoxType d, ValidatedVectorMultivariateFunction g, ExactBoxType c) 
         this->feasibility_step(d,g,c,x,y);
         if(probably(LogicalValue(t>0))) {
             LOGGING_PRINTLN_AT(1,"y="<<y<<", g(y)="<<g(y));
-            if(this->is_feasible_point(d,g,c,cast_exact(y))) {
+            if(this->is_feasible_point(d,g,c,exact_vector(y))) {
                 return true;
             }
         }
     }
     LOGGING_PRINTLN("t="<<t<<", y="<<y<<", g(y)="<<g(y));
-    if(this->is_infeasibility_certificate(d,g,c,cast_exact(x))) {
+    if(this->is_infeasibility_certificate(d,g,c,exact_vector(x))) {
         return false;
     }
     return indeterminate;
@@ -1637,7 +1641,7 @@ feasible(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactBoxType C) 
     for(SizeType i=0; i!=10; ++i) {
         this->feasibility_step(D,g,C,x,y,w);
     }
-    return this->check_feasibility(D,g,C,cast_exact(x),cast_exact(y));
+    return this->check_feasibility(D,g,C,exact_vector(x),exact_vector(y));
 }
 
 Void PenaltyFunctionOptimiser::
@@ -1716,7 +1720,7 @@ feasibility_step(const ExactBoxType& X, const ApproximateVectorMultivariateFunct
         newx = x - alpha * dx;
         neww = w - alpha * dw;
         alpha *= ALPHA_SCALE_FACTOR;
-    } while ( !contains(X,cast_exact(newx)) || !contains(W,cast_exact(neww)) );
+    } while ( !contains(X,exact_vector(newx)) || !contains(W,exact_vector(neww)) );
     alpha /= ALPHA_SCALE_FACTOR;
 
     LOGGING_PRINTLN("alpha="<<alpha);
@@ -1842,7 +1846,7 @@ feasibility_step(ExactBoxType const& D, ApproximateVectorMultivariateFunction co
     ApproximateVectorType ny(m,dp);
     LOGGING_PRINTLN("sx="<<sx);
     LOGGING_PRINTLN("sw="<<sw);
-    while(!contains(C,cast_exact(nw)) || !contains(D,cast_exact(nx))) {
+    while(!contains(C,exact_vector(nw)) || !contains(D,exact_vector(nx))) {
         al*=0.75;
         nw=w+al*sw;
         nx=x+al*sx;
@@ -1868,7 +1872,7 @@ feasible_zero(ExactBoxType D, ValidatedVectorMultivariateFunction h) const
 
     if( decide(norm(h(x))<1e-10) ) { return true; }
 
-    if(!possibly(contains(UpperIntervalType(dot(UpperIntervalVectorType(cast_exact(y)),apply(h,D))),zero))) { return false; }
+    if(!possibly(contains(UpperIntervalType(dot(UpperIntervalVectorType(exact_vector(y)),apply(h,D))),zero))) { return false; }
 
     return indeterminate;
 }
@@ -1917,7 +1921,7 @@ feasibility_step(const ExactBoxType& D, const ApproximateVectorMultivariateFunct
 
     FloatDPApproximation ax = one;
     FloatDPApproximationVector nx = x-ax*dx;
-    while(!contains(D,cast_exact(nx))) {
+    while(!contains(D,exact_vector(nx))) {
         ax*=SCALE_FACTOR;
         nx = x - ax * dx;
     }

@@ -154,8 +154,10 @@ template<class X, class XX> XX compute_mu(const Vector<X>& xl, const Vector<X>& 
 
 
 inline FloatDPBounds mul_val(FloatDP x1, FloatDP x2) { return FloatDPBounds(mul(down,x1,x2),mul(up,x1,x2)); }
-inline Vector<FloatDP> const& cast_exact(Vector<FloatDP> const& v) { return reinterpret_cast<Vector<FloatDP>const&>(v); }
-inline Matrix<FloatDP> const& cast_exact(Matrix<FloatDP> const& A) { return reinterpret_cast<Matrix<FloatDP>const&>(A); }
+
+inline Vector<FloatDP> exact_vector(Vector<FloatDPApproximation> const& v) {
+    return Ariadne::cast_exact<FloatDPApproximation>(v);
+}
 
 OutputStream& operator<<(OutputStream& os, LinearProgramStatus lps) {
     switch (lps) {
@@ -175,8 +177,8 @@ validate_feasibility(const Vector<X>& xl, const Vector<X>& xu,
 {
     LOGGING_SCOPE_CREATE;
 
-    Vector<VX> x = cast_exact(ax);
-    Vector<VX> y = cast_exact(ay);
+    Vector<VX> x = exact_vector(ax);
+    Vector<VX> y = exact_vector(ay);
 
     X zero=A.zero_element();
 
@@ -347,7 +349,7 @@ feasible(const Vector<X>& xl, const Vector<X>& xu,
             ValidatedKleenean validated_feasible=this->validate_feasibility(xl,xu,A,b, x,y);
             if(definitely(validated_feasible)) { return true; }
         }
-        Vector<X> yv=cast_exact(y);
+        Vector<X> yv=exact_vector(y);
         VX yb=dot(yv,b);
         // NOTE: Must compute y*A first, as A*X may give NaN.
         VX yAX = dot( transpose(A) * yv, ivlx );
