@@ -342,7 +342,10 @@ class Function
     //! \brief Get the \a i -th component of a vector function.
     const Function<P,Real(ARG)> operator[](SizeType i) const;
     //! \brief Get the components of a specified by \a rng function.
-    const Function<P,RealVector(ARG)> operator[](Range rng) const;
+    const Function<P,RealVector(ARG)> operator[](Range rng) const requires Same<ResultSizeType,SizeType> {
+        Function<P,RealVector(ARG)> r(rng.size(),this->domain());
+        for(SizeType i=0; i!=rng.size(); ++i) { r.set(i,this->get(rng[i])); }
+        return r; }
     //! \brief A reference to the \a i -th component of a vector function.
     VectorFunctionElementReference<P,ARG> operator[](SizeType i);
     //!@}

@@ -430,7 +430,14 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
     inline Vector<ErrorType> const errors() const { return this->_ptr->_errors(); }
     inline ErrorType const error() const { return this->_ptr->_error(); }
     inline Void clobber() { this->_ptr->_clobber(); }
-    inline Matrix<NumericType> const jacobian(const Vector<NumericType>& x) const;
+    inline Matrix<NumericType> const jacobian(const Vector<NumericType>& x) const requires Same<DomainType,BoxDomainType> {
+        Matrix<NumericType> r(this->result_size(),this->argument_size(),x.zero_element());
+        for(SizeType i=0; i!=this->result_size(); ++i) {
+            for(SizeType j=0; j!=this->argument_size(); ++j) {
+                r[i][j]=derivative(this->get(i),j)(x);
+            }
+        }
+        return r; }
 
   public:
     friend FunctionPatchCreator<FunctionPatchFactory<P>,ARGS...> factory(VectorFunctionPatch<P,ARGS...> const& f) {

@@ -202,7 +202,6 @@ template<class M> class ScaledFunctionPatch
     //! \brief Construct a ScaledFunctionPatch<M> over the domain \a d.
     //explicit ScaledFunctionPatch(const DomainType& d);
     explicit ScaledFunctionPatch(const DomainType& d, PropertiesType prp);
-    explicit ScaledFunctionPatch(const CharacteristicsType& chrs);
     //! \brief Construct a ScaledFunctionPatch<M> over the domain \a d, based on the scaled model \a m.
     explicit ScaledFunctionPatch(const DomainType& d, const ModelType& m);
 
