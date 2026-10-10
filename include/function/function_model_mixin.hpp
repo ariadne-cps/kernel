@@ -56,10 +56,7 @@ template<class FM, class P, class PR=DoublePrecision, class PRE=PR> using Scalar
 template<class FM, class P, class PR=DoublePrecision, class PRE=PR> using VectorMultivariateFunctionModelMixin = FunctionModelMixin<FM,P,RealVector(RealVector),PR,PRE>;
 
 template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelMixin<FM,P,RealScalar(ARG),PR,PRE>
-    : public virtual ScalarFunctionModelInterface<P,ARG,PR,PRE>
-    , public ScalarFunctionMixin<FM,P,ARG>
-    , public ElementaryAlgebraMixin<FM,CanonicalNumericType<P,PR,PRE>>
-    , public ElementaryAlgebraMixin<FM,Number<P>>
+    : public FunctionMixin<FM,P,RealScalar(ARG),ScalarFunctionModelInterface<P,ARG,PR,PRE>>
 {
     static_assert(Same<ARG,RealScalar> or Same<ARG,RealVector>);
     using RES = RealScalar; using SIG=RES(ARG);
@@ -77,17 +74,6 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
     typedef typename Interface::NormType NormType;
     typedef typename Interface::RangeType RangeType;
 
-    using ScalarFunctionMixin<FM,P,ARG>::argument_size;
-    using ScalarFunctionMixin<FM,P,ARG>::result_size;
-    using ScalarFunctionMixin<FM,P,ARG>::_repr;
-    using ScalarFunctionMixin<FM,P,ARG>::_clone;
-    using ScalarFunctionMixin<FM,P,ARG>::_call;
-    using ScalarFunctionMixin<FM,P,ARG>::_derivative;
-
-    using ElementaryAlgebraMixin<FM,CanonicalNumericType<P,PR,PRE>>::_apply;
-    using ElementaryAlgebraMixin<FM,CanonicalNumericType<P,PR,PRE>>::_rapply;
-    using ElementaryAlgebraMixin<FM,Number<P>>::_apply;
-    using ElementaryAlgebraMixin<FM,Number<P>>::_rapply;
   public:
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _concrete_clone() const override {
         return new FM(static_cast<const FM&>(*this)); }
@@ -102,6 +88,37 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
         return new FM(factory(static_cast<FM const&>(*this)).create_constant(c)); }
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _create_constant(CanonicalNumericType<P,PR,PRE> const& c) const override {
         return new FM(factory(static_cast<FM const&>(*this)).create_constant(c)); }
+
+    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _apply(UnaryElementaryOperator op) const override {
+        return new FM(op(static_cast<FM const&>(*this))); }
+    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _apply(GradedElementaryOperator op, Int n) const override {
+        return new FM(op(static_cast<FM const&>(*this),n)); }
+
+    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _apply(
+            BinaryElementaryOperator op,
+            ElementaryAlgebraInterface<CanonicalNumericType<P,PR,PRE>> const& other) const override {
+        auto const* ptr=dynamic_cast<FM const*>(&other);
+        ARIADNE_ASSERT(ptr);
+        return new FM(op(static_cast<FM const&>(*this),*ptr)); }
+    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _apply(
+            BinaryElementaryOperator op, CanonicalNumericType<P,PR,PRE> const& value) const override {
+        return new FM(op(static_cast<FM const&>(*this),value)); }
+    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _rapply(
+            BinaryElementaryOperator op, CanonicalNumericType<P,PR,PRE> const& value) const override {
+        return new FM(op(value,static_cast<FM const&>(*this))); }
+
+    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _apply(
+            BinaryElementaryOperator op,
+            ElementaryAlgebraInterface<Number<P>> const& other) const override {
+        auto const* ptr=dynamic_cast<FM const*>(&other);
+        ARIADNE_ASSERT(ptr);
+        return new FM(op(static_cast<FM const&>(*this),*ptr)); }
+    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _apply(
+            BinaryElementaryOperator op, Number<P> const& value) const override {
+        return new FM(op(static_cast<FM const&>(*this),value)); }
+    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _rapply(
+            BinaryElementaryOperator op, Number<P> const& value) const override {
+        return new FM(op(value,static_cast<FM const&>(*this))); }
 
     GenericRangeType const _range() const override {
         return static_cast<GenericRangeType>(static_cast<const FM&>(*this).range()); }
@@ -174,8 +191,8 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
 
 
 template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelMixin<FM,P,RealVector(ARG),PR,PRE>
-    : public virtual VectorFunctionModelInterface<P,ARG,PR,PRE>
-    , public VectorFunctionMixin<FM,P,ARG>
+    : public FunctionMixin<FM,P,RealVector(ARG),VectorFunctionModelInterface<P,ARG,PR,PRE>>
+    , public FunctionGetterMixin<FM,P,RealVector(ARG)>
 {
     using RES = RealVector; using SIG=RES(ARG);
     using C = BoundedDomainType<RES>; using D = BoundedDomainType<ARG>;
@@ -192,12 +209,6 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
     typedef typename Interface::NormType NormType;
     typedef typename Interface::RangeType RangeType;
 
-    using VectorFunctionMixin<FM,P,ARG>::argument_size;
-    using VectorFunctionMixin<FM,P,ARG>::result_size;
-    using VectorFunctionMixin<FM,P,ARG>::_repr;
-    using VectorFunctionMixin<FM,P,ARG>::_clone;
-    using VectorFunctionMixin<FM,P,ARG>::_call;
-    using VectorFunctionMixin<FM,P,ARG>::_derivative;
 
     typedef typename Element<FM>::Type ScalarMultivariateFunctionType;
   public:
