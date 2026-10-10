@@ -382,7 +382,7 @@ class GridTreeSubpaving
     //!@}
 
   private:
-    virtual GridTreeSubpaving* _branch(Bool left_or_right) const override;
+    virtual SubPavingInterface* _branch(Bool left_or_right) const override;
     virtual ForwardConstantIteratorInterface<GridCell>* _begin() const override;
     virtual ForwardConstantIteratorInterface<GridCell>* _end() const override;
 
