@@ -132,14 +132,16 @@ Void TestPaving::test_branch() const {
     ARIADNE_TEST_ASSERT(paving.size()==4);
 
     SubPavingHandle branch0 = paving.branch(0);
-    ARIADNE_TEST_PRINT(branch0);
     ARIADNE_TEST_ASSERT(branch0.size()==2);
+    ARIADNE_TEST_PRINT(branch0.root_cell());
+    ARIADNE_TEST_PRINT(branch0);
     ARIADNE_TEST_ASSERT(branch0.begin()->word()==word1);
     ARIADNE_TEST_ASSERT((++branch0.begin())->word()==word2);
 
     SubPavingHandle branch1 = paving.branch(1);
-    ARIADNE_TEST_PRINT(branch1);
     ARIADNE_TEST_ASSERT(branch1.size()==2);
+    ARIADNE_TEST_PRINT(branch1.root_cell());
+    ARIADNE_TEST_PRINT(branch1);
     ARIADNE_TEST_ASSERT(branch1.begin()->word()==word3);
     ARIADNE_TEST_ASSERT((++branch1.begin())->word()==word4);
 }
