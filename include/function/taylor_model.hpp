@@ -309,23 +309,23 @@ class TaylorModel
 
     decltype(auto) operator<(const TaylorModel<P,F>& sd) const {
         if constexpr(Same<P,ValidatedTag>) { return (sd-*this)>0; }
-        else { ARIADNE_ASSERT_MSG(false,"Comparison only available for a Validated TaylorModel."); }
+        else { ARIADNE_FAIL_MSG("Comparison only available for a Validated TaylorModel."); }
     }
     //! \brief Comparison with another Taylor model.
     decltype(auto) operator>(const TaylorModel<P,F>& sd) const {
         if constexpr(Same<P,ValidatedTag>) { return (*this-sd)>0; }
-        else { ARIADNE_ASSERT_MSG(false,"Comparison only available for a Validated TaylorModel."); }
+        else { ARIADNE_FAIL_MSG("Comparison only available for a Validated TaylorModel."); }
     }
 
     //! \brief Comparison with a scalar.
     decltype(auto) operator<(Int c) const {
         if constexpr(Same<P,ValidatedTag>) { return this->range().upper_bound()<c; }
-        else { ARIADNE_ASSERT_MSG(false,"Comparison only available for a Validated TaylorModel."); }
+        else { ARIADNE_FAIL_MSG("Comparison only available for a Validated TaylorModel."); }
     }
     //! \brief Comparison with a scalar.
     decltype(auto) operator>(Int c) const {
         if constexpr(Same<P,ValidatedTag>) { return this->range().lower_bound()>c; }
-        else { ARIADNE_ASSERT_MSG(false,"Comparison only available for a Validated TaylorModel."); }
+        else { ARIADNE_FAIL_MSG("Comparison only available for a Validated TaylorModel."); }
     }
     //!@}
 

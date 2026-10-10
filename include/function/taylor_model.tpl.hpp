@@ -1328,7 +1328,7 @@ template<class P, class F> auto TaylorModel<P,F>::codomain() const -> CodomainTy
         RangeType rng=this->range();
         return cast_exact_interval(convert_interval(rng,dp));
     } else {
-        ARIADNE_ASSERT_MSG(false,"Codomain only available for a Validated TaylorModel.");
+        ARIADNE_FAIL_MSG("Codomain only available for a Validated TaylorModel.");
     }
 }
 
@@ -1384,7 +1384,7 @@ template<class P, class F> auto TaylorModel<P,F>::range() const -> RangeType {
         }
         return r;
     } else {
-        ARIADNE_ASSERT_MSG(false,"Range only available for a Validated TaylorModel.");
+        ARIADNE_FAIL_MSG("Range only available for a Validated TaylorModel.");
     }
 }
 
@@ -1486,19 +1486,19 @@ template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>:
 
 template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Max op, const TaylorModel<P,F>& x, const NumericType& c) {
     if constexpr(Same<P,ValidatedTag>) { return apply(op, x, x.create_constant(c)); }
-    else { ARIADNE_ASSERT_MSG(false,"Maximum only available for a Validated TaylorModel."); }
+    else { ARIADNE_FAIL_MSG("Maximum only available for a Validated TaylorModel."); }
 }
 template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Min op, const TaylorModel<P,F>& x, const NumericType& c) {
     if constexpr(Same<P,ValidatedTag>) { return apply(op, x, x.create_constant(c)); }
-    else { ARIADNE_ASSERT_MSG(false,"Minimum only available for a Validated TaylorModel."); }
+    else { ARIADNE_FAIL_MSG("Minimum only available for a Validated TaylorModel."); }
 }
 template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Max op, const NumericType& c, const TaylorModel<P,F>& x) {
     if constexpr(Same<P,ValidatedTag>) { return apply(op, x.create_constant(c), x); }
-    else { ARIADNE_ASSERT_MSG(false,"Maximum only available for a Validated TaylorModel."); }
+    else { ARIADNE_FAIL_MSG("Maximum only available for a Validated TaylorModel."); }
 }
 template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Min op, const NumericType& c, const TaylorModel<P,F>& x) {
     if constexpr(Same<P,ValidatedTag>) { return apply(op, x.create_constant(c), x); }
-    else { ARIADNE_ASSERT_MSG(false,"Minimum only available for a Validated TaylorModel."); }
+    else { ARIADNE_FAIL_MSG("Minimum only available for a Validated TaylorModel."); }
 }
 
 //////////////////////////////////////////////////////////////////////////////
