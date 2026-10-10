@@ -59,9 +59,7 @@ template<class FP, class P> using ScalarMultivariateFunctionPatchMixin = Functio
 template<class FP, class P> using VectorMultivariateFunctionPatchMixin = FunctionPatchMixin<FP,P,RealVector(RealVector)>;
 
 template<class FP, class P, class... ARGS> class FunctionPatchMixin<FP,P,RealScalar(ARGS...)>
-    : public virtual ScalarFunctionPatchInterface<P,ARGS...>
-    , public ScalarFunctionMixin<FP,P,ARGS...>
-    , public ElementaryAlgebraMixin<FP,Number<P>>
+    : public FunctionMixin<FP,P,RealScalar(ARGS...),ScalarFunctionPatchInterface<P,ARGS...>>
 {
     using RES=RealScalar; using SIG=RES(ARGS...);
     using D=typename ScalarFunctionPatchInterface<P,ARGS...>::DomainType;
@@ -86,6 +84,23 @@ template<class FP, class P, class... ARGS> class FunctionPatchMixin<FP,P,RealSca
         return new FP(factory(static_cast<FP const&>(*this)).create_zero()); }
     ScalarFunctionPatchInterface<P,ARGS...>* _create_constant(Number<P> const& c) const override {
         return new FP(factory(static_cast<FP const&>(*this)).create_constant(c)); }
+
+    ScalarFunctionPatchInterface<P,ARGS...>* _apply(UnaryElementaryOperator op) const override {
+        return new FP(op(static_cast<FP const&>(*this))); }
+    ScalarFunctionPatchInterface<P,ARGS...>* _apply(GradedElementaryOperator op, Int n) const override {
+        return new FP(op(static_cast<FP const&>(*this),n)); }
+    ScalarFunctionPatchInterface<P,ARGS...>* _apply(
+            BinaryElementaryOperator op,
+            ElementaryAlgebraInterface<Number<P>> const& other) const override {
+        auto const* ptr=dynamic_cast<FP const*>(&other);
+        ARIADNE_ASSERT(ptr);
+        return new FP(op(static_cast<FP const&>(*this),*ptr)); }
+    ScalarFunctionPatchInterface<P,ARGS...>* _apply(
+            BinaryElementaryOperator op, Number<P> const& value) const override {
+        return new FP(op(static_cast<FP const&>(*this),value)); }
+    ScalarFunctionPatchInterface<P,ARGS...>* _rapply(
+            BinaryElementaryOperator op, Number<P> const& value) const override {
+        return new FP(op(value,static_cast<FP const&>(*this))); }
 
 
     RangeType const _range() const override {
@@ -139,8 +154,8 @@ template<class FP, class P, class... ARGS> class FunctionPatchMixin<FP,P,RealSca
 
 
 template<class FP, class P, class... ARGS> class FunctionPatchMixin<FP,P,RealVector(ARGS...)>
-    : public virtual VectorFunctionPatchInterface<P,ARGS...>
-    , public VectorFunctionMixin<FP,P,ARGS...>
+    : public FunctionMixin<FP,P,RealVector(ARGS...),VectorFunctionPatchInterface<P,ARGS...>>
+    , public FunctionGetterMixin<FP,P,RealVector(ARGS...)>
 {
     using RES=RealVector; using SIG=RES(ARGS...);
     using C=BoxDomainType;
