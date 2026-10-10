@@ -58,7 +58,7 @@ template<> class TaylorSeries<FloatDPBounds> {
 
     template<class OP> TaylorSeries(OP unary_operator, const IntervalDomainType& domain, const FloatDP& centre, DegreeType degree);
 
-    DegreeType degree() const { return _expansion.size()-1u; }
+    DegreeType degree() const { return static_cast<DegreeType>(_expansion.size()-1u); }
     FloatDP const& operator[](DegreeType i) const { return _expansion[i]; }
     Array<FloatDP> expansion() const { return _expansion; }
     FloatDPError error() const { return _error; }
