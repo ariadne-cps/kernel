@@ -73,7 +73,6 @@ template<> inline BoxDomainType make_domain(SizeType d) { return BoxDomainType(d
 
 template<class F, class SIG>
 class FunctionMixin<F,Void,SIG>
-    : public virtual FunctionInterface<Void,SIG>
 {
     using D=typename SignatureTraits<SIG>::DomainType;
     using C=typename SignatureTraits<SIG>::CodomainType;
@@ -85,12 +84,9 @@ class FunctionMixin<F,Void,SIG>
   protected:
     FunctionMixin() { }
     template<class X> ElementType<C,X> _base_call(const ElementType<D,X>& x) const;
-  public:
-    virtual ArgumentSizeType argument_size() const override = 0;
-    virtual ResultSizeType result_size() const override = 0;
-  private:
-    virtual OutputStream& _write(OutputStream& os) const override { return os << static_cast<F const&>(*this); }
-    virtual OutputStream& _repr(OutputStream& os) const override { return os << representation(static_cast<F const&>(*this)); }
+  protected:
+    OutputStream& _write_base(OutputStream& os) const { return os << static_cast<F const&>(*this); }
+    OutputStream& _repr_base(OutputStream& os) const { return os << representation(static_cast<F const&>(*this)); }
 };
 
 
@@ -102,9 +98,13 @@ class FunctionMixin<F,ApproximateTag,SIG>
     using P=ApproximateTag;
     using D=typename SignatureTraits<SIG>::DomainType;
     using C=typename SignatureTraits<SIG>::CodomainType;
+    using ArgumentSizeType=typename FunctionInterface<Void,SIG>::ArgumentSizeType;
+    using ResultSizeType=typename FunctionInterface<Void,SIG>::ResultSizeType;
     template<class X> using Argument = typename SignatureTraits<SIG>::template Argument<X>;
     template<class X> using Result = typename SignatureTraits<SIG>::template Result<X>;
   public:
+    virtual ArgumentSizeType argument_size() const override = 0;
+    virtual ResultSizeType result_size() const override = 0;
     virtual FunctionInterface<ApproximateTag,SIG>* _clone() const override;
     virtual FunctionInterface<ApproximateTag,SIG>* _derivative(ElementIndexType<D> i) const override;
     virtual Result<ApproximateNumber> _call(const Argument<ApproximateNumber>& x) const override;
@@ -116,6 +116,9 @@ class FunctionMixin<F,ApproximateTag,SIG>
     virtual Result<TaylorModel<ApproximateTag,FloatMP>> _call(const Argument<TaylorModel<ApproximateTag,FloatMP>>& x) const override;
     virtual Result<Formula<ApproximateNumber>> _call(const Argument<Formula<ApproximateNumber>>& x) const override;
     virtual Result<ElementaryAlgebra<ApproximateNumber>> _call(const Argument<ElementaryAlgebra<ApproximateNumber>>& x) const override;
+  private:
+    virtual OutputStream& _write(OutputStream& os) const override { return this->_write_base(os); }
+    virtual OutputStream& _repr(OutputStream& os) const override { return this->_repr_base(os); }
 };
 
 // A wrapper for classes with non-static _compute and _compute_approx methods
@@ -126,9 +129,13 @@ class FunctionMixin<F,ValidatedTag,SIG>
 {
     using D=typename SignatureTraits<SIG>::DomainType;
     using C=typename SignatureTraits<SIG>::CodomainType;
+    using ArgumentSizeType=typename FunctionInterface<Void,SIG>::ArgumentSizeType;
+    using ResultSizeType=typename FunctionInterface<Void,SIG>::ResultSizeType;
     template<class X> using Argument = typename SignatureTraits<SIG>::template Argument<X>;
     template<class X> using Result = typename SignatureTraits<SIG>::template Result<X>;
   public:
+    virtual ArgumentSizeType argument_size() const override = 0;
+    virtual ResultSizeType result_size() const override = 0;
     virtual FunctionInterface<ValidatedTag,SIG>* _clone() const override;
     virtual Result<ApproximateNumber> _call(const Argument<ApproximateNumber>& x) const override;
     virtual Result<FloatDPApproximation> _call(const Argument<FloatDPApproximation>& x) const override;
@@ -156,6 +163,9 @@ class FunctionMixin<F,ValidatedTag,SIG>
 
     virtual Result<ValidatedScalarMultivariateFunction> _call(const Argument<ValidatedScalarMultivariateFunction>& x) const override;
 
+  private:
+    virtual OutputStream& _write(OutputStream& os) const override { return this->_write_base(os); }
+    virtual OutputStream& _repr(OutputStream& os) const override { return this->_repr_base(os); }
 };
 
 // A wrapper for classes with non-static _compute and _compute_approx methods
@@ -166,9 +176,13 @@ class FunctionMixin<F,EffectiveTag,SIG>
 {
     using D=typename SignatureTraits<SIG>::DomainType;
     using C=typename SignatureTraits<SIG>::CodomainType;
+    using ArgumentSizeType=typename FunctionInterface<Void,SIG>::ArgumentSizeType;
+    using ResultSizeType=typename FunctionInterface<Void,SIG>::ResultSizeType;
     template<class X> using Argument = typename SignatureTraits<SIG>::template Argument<X>;
     template<class X> using Result = typename SignatureTraits<SIG>::template Result<X>;
   public:
+    virtual ArgumentSizeType argument_size() const override = 0;
+    virtual ResultSizeType result_size() const override = 0;
     virtual FunctionInterface<EffectiveTag,SIG>* _clone() const override;
     virtual Result<ApproximateNumber> _call(const Argument<ApproximateNumber>& x) const override;
     virtual Result<FloatDPApproximation> _call(const Argument<FloatDPApproximation>& x) const override;
@@ -200,6 +214,9 @@ class FunctionMixin<F,EffectiveTag,SIG>
     virtual Result<Formula<Real>> _call(const Argument<Formula<Real>>& x) const override;
     virtual Result<ElementaryAlgebra<EffectiveNumber>> _call(const Argument<ElementaryAlgebra<EffectiveNumber>>& x) const override;
     virtual Result<Formula<EffectiveNumber>> _call(const Argument<Formula<EffectiveNumber>>& x) const override;
+  private:
+    virtual OutputStream& _write(OutputStream& os) const override { return this->_write_base(os); }
+    virtual OutputStream& _repr(OutputStream& os) const override { return this->_repr_base(os); }
 };
 
 
