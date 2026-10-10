@@ -84,6 +84,11 @@ setup_standalone_project_tests(
     TEST_DIRECTORY tests
     TEST_TARGET tests
     MODULE_REPORTS
+        function
+        geometry
+        io
+        symbolic
+        solving
     SOURCES
         "${PROJECT_SOURCE_DIR}/include"
         "${PROJECT_SOURCE_DIR}/src"
