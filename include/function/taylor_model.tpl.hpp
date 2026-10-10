@@ -1322,7 +1322,7 @@ template<class P, class F> UnitBox TaylorModel<P,F>::domain() const
     return UnitBox(this->argument_size(),UnitInterval());
 }
 
-template<class P, class F> auto TaylorModel<P,F>::codomain() const -> CodomainType
+template<class P, class F> auto TaylorModel<P,F>::codomain() const -> CodomainType requires Same<P,ValidatedTag>
 {
     RangeType rng=this->range();
     return cast_exact_interval(convert_interval(rng,dp));
@@ -1331,7 +1331,7 @@ template<class P, class F> auto TaylorModel<P,F>::codomain() const -> CodomainTy
 
 // Compute the range by grouping all quadratic terms x[i]^2 with linear terms x[i]
 // The range of ax^2+bx+c is a([-1,1]+b/2a)^2+(c-b^2/4a)
-template<class P, class F> auto TaylorModel<P,F>::range() const -> RangeType {
+template<class P, class F> auto TaylorModel<P,F>::range() const -> RangeType requires Same<P,ValidatedTag> {
     const TaylorModel<P,F>& tm=*this;
     const SizeType as=tm.argument_size();
     const PrecisionType prec = tm.precision();
@@ -1356,30 +1356,22 @@ template<class P, class F> auto TaylorModel<P,F>::range() const -> RangeType {
             err+=mag(iter->coefficient());
         }
     }
-    if constexpr(Same<P,ValidatedTag>) {
-        err+=NormType(UpperBound<RawFloatType>(tm.error().raw()));
-    } else {
-        err+=tm.error();
-    }
+    err+=NormType(UpperBound<RawFloatType>(tm.error().raw()));
     RangeType r(-err,+err);
-    if constexpr(Same<P,ValidatedTag>) {
-        r=r+constant_term;
-        const RangeType unit_ivl(-1,+1,this->precision());
-        // If the ratio b/a is very large, then roundoff error can cause a significant
-        // additional error. We compute both |a|+|b| and a([-1,+1]+b/2a)-b^2/4a and take best bound
-        for(SizeType j=0; j!=as; ++j) {
-            const CoefficientType& a=quadratic_terms[j];
-            const CoefficientType& b=linear_terms[j];
-            RangeType ql=abs(a)*unit_ivl + abs(b)*unit_ivl;
-            if(not is_same_as_zero(a)) { // Explicitly test for zero
-                RangeType qf=a*(sqr(unit_ivl+b/a/2))-sqr(b)/a/4;
-                r += refinement(ql,qf); // NOTE: ql must be the first term in case of NaN in qf
-            } else {
-                r += ql;
-            }
+    r=r+constant_term;
+    const RangeType unit_ivl(-1,+1,this->precision());
+    // If the ratio b/a is very large, then roundoff error can cause a significant
+    // additional error. We compute both |a|+|b| and a([-1,+1]+b/2a)-b^2/4a and take best bound
+    for(SizeType j=0; j!=as; ++j) {
+        const CoefficientType& a=quadratic_terms[j];
+        const CoefficientType& b=linear_terms[j];
+        RangeType ql=abs(a)*unit_ivl + abs(b)*unit_ivl;
+        if(not is_same_as_zero(a)) { // Explicitly test for zero
+            RangeType qf=a*(sqr(unit_ivl+b/a/2))-sqr(b)/a/4;
+            r += refinement(ql,qf); // NOTE: ql must be the first term in case of NaN in qf
+        } else {
+            r += ql;
         }
-    } else {
-        ARIADNE_ASSERT_MSG(false,"Range only available for a Validated TaylorModel.");
     }
     return r;
 }
@@ -1391,7 +1383,7 @@ template<class P, class F> auto TaylorModel<P,F>::range() const -> RangeType {
 
 // ExactTag functions (max, min, abs, neg) and arithmetical functions (sqr, pow)
 
-template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Max, const TaylorModel<P,F>& x, const TaylorModel<P,F>& y) {
+template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Max, const TaylorModel<P,F>& x, const TaylorModel<P,F>& y) requires Same<P,ValidatedTag> {
     typedef typename TaylorModel<P,F>::RangeType RangeType;
     RangeType xr=x.range();
     RangeType yr=y.range();
@@ -1405,7 +1397,7 @@ template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>:
 }
 
 
-template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Min, const TaylorModel<P,F>& x, const TaylorModel<P,F>& y) {
+template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Min, const TaylorModel<P,F>& x, const TaylorModel<P,F>& y) requires Same<P,ValidatedTag> {
     typedef typename TaylorModel<P,F>::RangeType RangeType;
     RangeType xr=x.range();
     RangeType yr=y.range();
@@ -1418,7 +1410,7 @@ template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>:
     }
 }
 
-template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Abs, const TaylorModel<P,F>& x) {
+template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Abs, const TaylorModel<P,F>& x) requires Same<P,ValidatedTag> {
     using CoefficientType = typename TaylorModel<P,F>::CoefficientType;
     typedef typename TaylorModel<P,F>::RangeType RangeType;
     RangeType xr=x.range();
@@ -1480,16 +1472,16 @@ template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>:
     }
 }
 
-template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Max op, const TaylorModel<P,F>& x, const NumericType& c) {
+template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Max op, const TaylorModel<P,F>& x, const NumericType& c) requires Same<P,ValidatedTag> {
     return apply(op, x, x.create_constant(c));
 }
-template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Min op, const TaylorModel<P,F>& x, const NumericType& c) {
+template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Min op, const TaylorModel<P,F>& x, const NumericType& c) requires Same<P,ValidatedTag> {
     return apply(op, x, x.create_constant(c));
 }
-template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Max op, const NumericType& c, const TaylorModel<P,F>& x) {
+template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Max op, const NumericType& c, const TaylorModel<P,F>& x) requires Same<P,ValidatedTag> {
     return apply(op, x.create_constant(c), x);
 }
-template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Min op, const NumericType& c, const TaylorModel<P,F>& x) {
+template<class P, class F> TaylorModel<P,F> AlgebraOperations<TaylorModel<P,F>>::apply(Min op, const NumericType& c, const TaylorModel<P,F>& x) requires Same<P,ValidatedTag> {
     return apply(op, x.create_constant(c), x);
 }
 
