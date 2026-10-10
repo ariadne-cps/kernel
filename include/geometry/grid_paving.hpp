@@ -381,7 +381,7 @@ class GridTreeSubpaving
     friend OutputStream& operator<<(OutputStream& os, const GridTreeSubpaving& theGridTreeSubset);
     //!@}
 
-  private:
+  protected:
     virtual SubPavingInterface* _branch(Bool left_or_right) const override;
     virtual ForwardConstantIteratorInterface<GridCell>* _begin() const override;
     virtual ForwardConstantIteratorInterface<GridCell>* _end() const override;
@@ -584,6 +584,14 @@ class GridTreePaving
     ValidatedLowerKleenean separated(const ExactBoxType& box) const override { return GridTreeSubpaving::separated(box); }
     ValidatedLowerKleenean overlaps(const ExactBoxType& box) const override { return GridTreeSubpaving::overlaps(box); }
     Void draw(CanvasInterface& canvas, const Projection2d& projection) const override { GridTreeSubpaving::draw(canvas,projection); }
+
+  protected:
+    OutputStream& _write(OutputStream& os) const override { return GridTreeSubpaving::_write(os); }
+    SubPavingInterface* _branch(Bool left_or_right) const override { return GridTreeSubpaving::_branch(left_or_right); }
+    ForwardConstantIteratorInterface<GridCell>* _begin() const override { return GridTreeSubpaving::_begin(); }
+    ForwardConstantIteratorInterface<GridCell>* _end() const override { return GridTreeSubpaving::_end(); }
+
+  public:
 
 
 
