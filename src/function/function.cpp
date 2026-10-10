@@ -957,16 +957,23 @@ Vector<FloatDPUpperInterval> evaluate_range(ValidatedVectorMultivariateFunction 
 
 Vector<Differential<FloatDPUpperInterval>> derivative_range(ValidatedVectorMultivariateFunction const& f,
                                                             const Vector<Differential<FloatDPUpperInterval>>& x) {
-    if(x.size()==0u) { return Vector<Differential<FloatDPUpperInterval>>(); }
+    if(x.size()==0u) {
+        return Vector<Differential<FloatDPUpperInterval>>(
+            f.result_size(),0u,0u,dp);
+    }
 
-    Vector<Differential<FloatDPBounds>> bx(x.size(),singleton_bounds(x[0]));
-    for(SizeType i=0; i!=x.size(); ++i) { bx[i]=singleton_bounds(x[i]); }
+    SizeType const argument_size=x[0].argument_size();
+    DegreeType const degree=x[0].degree();
+
+    Vector<Differential<FloatDPBounds>> bx(
+        x.size(),argument_size,degree,dp);
+    for(SizeType i=0; i!=x.size(); ++i) {
+        bx[i]=singleton_bounds(x[i]);
+    }
 
     auto by=f(bx);
-    if(by.size()==0u) { return Vector<Differential<FloatDPUpperInterval>>(); }
-
     Vector<Differential<FloatDPUpperInterval>> r(
-        by.size(),upper_interval_differential(by[0]));
+        by.size(),argument_size,degree,dp);
     for(SizeType i=0; i!=by.size(); ++i) {
         r[i]=upper_interval_differential(by[i]);
     }
