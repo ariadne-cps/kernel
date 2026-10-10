@@ -524,7 +524,11 @@ template<> inline Void Box<Interval<Real>>::draw(CanvasInterface& c, const Proje
     Ariadne::draw(c,p,ApproximateBoxType(*this,dp)); }
 
 inline FloatDPExactBox cast_exact_box(FloatDPApproximateBox const& abx) {
-    return FloatDPExactBox(reinterpret_cast<FloatDPExactBox const&>(abx));
+    FloatDPExactBox result(abx.dimension());
+    for(DimensionType i=0; i!=abx.dimension(); ++i) {
+        result[i]=FloatDPExactInterval(abx[i].lower_bound().raw(),abx[i].upper_bound().raw());
+    }
+    return result;
 }
 
 inline FloatDPExactBox cast_exact_box(FloatDPUpperBox const& ubx) {
@@ -536,7 +540,11 @@ inline FloatDPExactBox cast_exact_box(FloatDPUpperBox const& ubx) {
 }
 
 inline Box<FloatDPExactInterval> cast_exact_box(Vector<FloatDPBounds> const& bv) {
-    return Box<FloatDPExactInterval>(reinterpret_cast<Vector<FloatDPExactInterval>const&>(bv));
+    Box<FloatDPExactInterval> result(bv.size());
+    for(DimensionType i=0; i!=bv.size(); ++i) {
+        result[i]=FloatDPExactInterval(bv[i].lower_raw(),bv[i].upper_raw());
+    }
+    return result;
 }
 
 template<class I, class X> inline Box<decltype(declval<I>()+declval<X>())> operator+(Box<I> const& bx1, Vector<X> const& v2) {
@@ -568,7 +576,7 @@ inline FloatDPUpperBox widen(const FloatDPUpperBox& bx, ValidatedUpperNumber con
 }
 
 inline FloatDPUpperBox widen(const FloatDPExactBox& bx, FloatDP eps) {
-    return widen(reinterpret_cast<const FloatDPUpperBox&>(bx),FloatDPUpperBound(eps));
+    return widen(FloatDPUpperBox(bx),FloatDPUpperBound(eps));
 }
 
 inline FloatDPUpperBox widen(const FloatDPUpperBox& bx) {

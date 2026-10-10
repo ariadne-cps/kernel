@@ -917,12 +917,25 @@ ValidatedVectorMultivariateFunction join(ValidatedScalarMultivariateFunction con
 }
 
 
+namespace {
+
+Vector<FloatDPBounds> singleton_bounds(Vector<FloatDPUpperInterval> const& x) {
+    Vector<FloatDPBounds> r(x.size(),FloatDPBounds(dp));
+    for(SizeType i=0; i!=x.size(); ++i) { r[i]=cast_singleton(x[i]); }
+    return r;
+}
+
+} // namespace
+
 FloatDPUpperInterval evaluate_range(ValidatedScalarMultivariateFunction const& f, const Vector<FloatDPUpperInterval>& x) {
-    return static_cast<FloatDPUpperInterval>(f(reinterpret_cast<Vector<FloatDPBounds>const&>(x)));
+    return make_interval(f(singleton_bounds(x)));
 }
 
 Vector<FloatDPUpperInterval> evaluate_range(ValidatedVectorMultivariateFunction const& f, const Vector<FloatDPUpperInterval>& x) {
-    return static_cast<Vector<FloatDPUpperInterval>>(f(reinterpret_cast<Vector<FloatDPBounds>const&>(x)));
+    auto y=f(singleton_bounds(x));
+    Vector<FloatDPUpperInterval> r(y.size(),FloatDPUpperInterval::empty_interval());
+    for(SizeType i=0; i!=y.size(); ++i) { r[i]=make_interval(y[i]); }
+    return r;
 }
 
 Vector<Differential<FloatDPUpperInterval>> derivative_range(ValidatedVectorMultivariateFunction const& f,
@@ -933,11 +946,19 @@ Vector<Differential<FloatDPUpperInterval>> derivative_range(ValidatedVectorMulti
 
 Covector<FloatDPUpperInterval> gradient_range(ValidatedScalarMultivariateFunction const& f,
                                               const Vector<FloatDPUpperInterval>& x) {
-    return static_cast<Covector<FloatDPUpperInterval>>(gradient(f,reinterpret_cast<Vector<FloatDPBounds>const&>(x)));
+    auto y=gradient(f,singleton_bounds(x));
+    Covector<FloatDPUpperInterval> r(y.size(),FloatDPUpperInterval::empty_interval());
+    for(SizeType i=0; i!=y.size(); ++i) { r[i]=make_interval(y[i]); }
+    return r;
 }
 
 Matrix<FloatDPUpperInterval> jacobian_range(ValidatedVectorMultivariateFunction const& f, const Vector<FloatDPUpperInterval>& x) {
-    return static_cast<Matrix<FloatDPUpperInterval>>(jacobian(f,reinterpret_cast<Vector<FloatDPBounds>const&>(x)));
+    auto A=jacobian(f,singleton_bounds(x));
+    Matrix<FloatDPUpperInterval> r(A.row_size(),A.column_size(),FloatDPUpperInterval::empty_interval());
+    for(SizeType i=0; i!=A.row_size(); ++i) {
+        for(SizeType j=0; j!=A.column_size(); ++j) { r[i][j]=make_interval(A.get(i,j)); }
+    }
+    return r;
 }
 
 //------------------------ Validated univariate function operators -------------------------------//

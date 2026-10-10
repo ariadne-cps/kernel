@@ -85,7 +85,8 @@ PositiveFloatDPUpperBound average_scaled_width(const UpperBoxType& bx, const Vec
 
 
 FloatDP average_scaled_width(const UpperBoxType& bx, const Vector<FloatDP>& sf) {
-    return average_scaled_width(bx,reinterpret_cast<Vector<PositiveFloatDP>const&>(sf)).raw();
+    Vector<PositiveFloatDP> positive_sf(sf.size(),[&](SizeType i){ return cast_positive(sf[i]); });
+    return average_scaled_width(bx,positive_sf).raw();
 }
 
 } // namespace
