@@ -1194,6 +1194,66 @@ SmtSolver::_process_box(
         }
     }
 
+    auto terminal_children=domain.split();
+    Bool const splittable_before_reduction=
+        not same_box(terminal_children.first,terminal_children.second);
+    if(not splittable_before_reduction) {
+        Bool all_epsilon_satisfied=true;
+        FloatDP epsilon(_configuration.epsilon(),dp);
+
+        for(auto const& item:conjunction) {
+            UpperIntervalType image=apply(this->_function(item),domain);
+
+            Bool original_infeasible=false;
+            if constexpr(std::is_same_v<Conjunction,CompiledTheoryLiterals>) {
+                if(item.strict_lower
+                   && definitely(image.upper_bound()<=item.bounds.lower_bound())) {
+                    original_infeasible=true;
+                } else if(definitely(disjoint(image,item.bounds))) {
+                    original_infeasible=true;
+                }
+
+                auto relaxed_lower=sub(down,item.bounds.lower_bound(),epsilon);
+                auto relaxed_upper=add(up,item.bounds.upper_bound(),epsilon);
+                Bool epsilon_satisfied=
+                    item.strict_lower
+                        ? definitely(image.lower_bound()>relaxed_lower)
+                        : definitely(image.lower_bound()>=relaxed_lower);
+                epsilon_satisfied=
+                    epsilon_satisfied
+                    && definitely(image.upper_bound()<=relaxed_upper);
+                if(not epsilon_satisfied) {
+                    all_epsilon_satisfied=false;
+                }
+            } else {
+                if(definitely(disjoint(image,item.bounds()))) {
+                    original_infeasible=true;
+                }
+                if(not definitely(subset(image,this->_epsilon_bounds(item)))) {
+                    all_epsilon_satisfied=false;
+                }
+            }
+
+            if(original_infeasible) {
+                result.status=BoxProcessingStatus::PRUNED;
+                return result;
+            }
+        }
+
+        if(all_epsilon_satisfied) {
+            result.status=BoxProcessingStatus::EPSILON_SAT;
+            result.witness=domain;
+            result.epsilon_box_certification=true;
+            return result;
+        }
+
+        result.status=BoxProcessingStatus::UNKNOWN;
+        result.dp_resolution_exhausted=true;
+        result.candidate_witness_search=false;
+        result.non_splittable_epsilon_overlap=true;
+        return result;
+    }
+
     auto phase_start=std::chrono::steady_clock::now();
     if(not direct.used || direct.preclassification) {
         Bool const pruned=this->_original_reduce(domain,conjunction,reductions);
