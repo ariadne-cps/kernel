@@ -545,8 +545,8 @@ class FunctionElement
     friend OutputStream& operator<<(OutputStream& os, FunctionElement<P,ARGS...> const& f) {
         return os<<f._vf<<"["<<f._i<<"]"; }
 
-    friend FunctionElement<P,ARGS...> derivative(FunctionElement<P,ARGS...> const&, ArgumentIndexType) {
-        ARIADNE_NOT_IMPLEMENTED; }
+    friend FunctionElement<P,ARGS...> derivative(FunctionElement<P,ARGS...> const& f, ArgumentIndexType j) {
+        return FunctionElement<P,ARGS...>(f._vf.derivative(j),f._i); }
   private:
     VectorFunction<P,ARGS...> _vf;
     SizeType _i;
@@ -626,18 +626,14 @@ class ComposedFunction
     template<class X> inline ElementType<C,X> operator() (const ElementType<D,X>& x) const {
         return _f.evaluate(_g.evaluate(x)); }
     Function<P,R(AS...)> derivative(ArgumentIndexType j) const {
-        if constexpr (Same<P,ApproximateTag>) {
-            ARIADNE_NOT_IMPLEMENTED;
+        if constexpr (Same<T,RealScalar>) {
+            return compose(this->_f.derivative(IndexZero()),this->_g)*this->_g.derivative(j);
         } else {
-            if constexpr (Same<T,RealScalar>) {
-                return compose(this->_f.derivative(IndexZero()),this->_g)*this->_g.derivative(j);
-            } else {
-                Function<P,R(AS...)> r=Function<P,R(AS...)>(this->result_size(),this->argument_size());
-                for (SizeType k=0; k!=this->_g.result_size(); ++k) {
-                    r=r+compose(this->_f.derivative(k),this->_g)*this->_g[k].derivative(j);
-                }
-                return r;
+            Function<P,R(AS...)> r=Function<P,R(AS...)>(this->result_size(),this->argument_size());
+            for (SizeType k=0; k!=this->_g.result_size(); ++k) {
+                r=r+compose(this->_f.derivative(k),this->_g)*this->_g[k].derivative(j);
             }
+            return r;
         }
     }
     friend Function<P,R(AS...)> derivative(ComposedFunction<P,R,T,AS...> const& f, ArgumentIndexType j) {
@@ -680,8 +676,8 @@ class JoinedFunction
     ArgumentSizeType argument_size() const { return _f1.argument_size(); }
     template<class X> inline ElementType<C,X> operator() (const ElementType<D,X>& x) const {
         return join(_f1.evaluate(x),_f2.evaluate(x)); }
-    friend JoinedFunction<P,D,C1,C2> derivative(JoinedFunction<P,D,C1,C2> const&, ArgumentIndexType) {
-        ARIADNE_NOT_IMPLEMENTED; }
+    friend JoinedFunction<P,D,C1,C2> derivative(JoinedFunction<P,D,C1,C2> const& f, ArgumentIndexType j) {
+        return JoinedFunction<P,D,C1,C2>(f._f1.derivative(j),f._f2.derivative(j)); }
     friend OutputStream& operator<<(OutputStream& os, JoinedFunction<P,D,C1,C2> const& f) {
         return os << "JoinedFunction( f1="<<f._f1<<", f2="<<f._f2<<" )"; }
   private:
@@ -740,8 +736,8 @@ class ProjectedFunction
 
     template<class X> inline Vector<X> operator() (const ElementType<D,X>& x) const {
         return _prj(_f(x)); }
-    friend ProjectedFunction<P,D> derivative(ProjectedFunction<P,D> const&, ArgumentIndexType) {
-        ARIADNE_NOT_IMPLEMENTED; }
+    friend ProjectedFunction<P,D> derivative(ProjectedFunction<P,D> const& f, ArgumentIndexType j) {
+        return ProjectedFunction<P,D>(f._f.derivative(j),f._prj); }
     friend OutputStream& operator<<(OutputStream& os, ProjectedFunction<P,D>const& f) {
         return os << "ProjectedFunction( f="<<f._f<<", prj="<<f._prj<<" )"; }
   private:

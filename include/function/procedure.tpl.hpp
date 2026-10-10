@@ -41,6 +41,8 @@
 
 namespace Ariadne {
 
+template<class X> class UnivariateSecondDifferential;
+
 extern template class Procedure<ApproximateNumber>;
 extern template class Procedure<ValidatedNumber>;
 
@@ -212,8 +214,31 @@ namespace {
 
 template<class X, class OP> Void propagate(X& r, OP op, X const& x1, X const& x2) { r=op(x1,x2); }
 template<class X, class OP> Void propagate(X& r, OP op, X const& x) { r=op(x); }
+
+template<class X> Void propagate(UnivariateSecondDifferential<X>& r, Asin op, UnivariateSecondDifferential<X> const& x) {
+    const X one=nul(x.value())+1;
+    const X q=one-sqr(x.value());
+    const X inv_sqrt_q=rec(sqrt(q));
+    const X half_second=hlf(x.value()*inv_sqrt_q/q);
+    r=UnivariateSecondDifferential<X>(
+        op(x.value()),
+        inv_sqrt_q*x.gradient(),
+        inv_sqrt_q*x.half_hessian()+half_second*sqr(x.gradient()));
+}
+template<class X> Void propagate(UnivariateSecondDifferential<X>& r, Acos op, UnivariateSecondDifferential<X> const& x) {
+    const X one=nul(x.value())+1;
+    const X q=one-sqr(x.value());
+    const X inv_sqrt_q=rec(sqrt(q));
+    const X first=-inv_sqrt_q;
+    const X half_second=-hlf(x.value()*inv_sqrt_q/q);
+    r=UnivariateSecondDifferential<X>(
+        op(x.value()),
+        first*x.gradient(),
+        first*x.half_hessian()+half_second*sqr(x.gradient()));
+}
+
 template<class X> Void propagate(X& r, BinaryElementaryOperator eop, X const& x1, X const& x2) { eop.accept([&](auto op){r=op(x1,x2);}); }
-template<class X> Void propagate(X& r, UnaryElementaryOperator eop, X const& x) { eop.accept([&](auto op){r=op(x);}); }
+template<class X> Void propagate(X& r, UnaryElementaryOperator eop, X const& x) { eop.accept([&](auto op){propagate(r,op,x);}); }
 template<class X, class N> Void propagate(X& r, GradedElementaryOperator eop, X const& x, N n) { eop.accept([&](auto op){r=op(x,n);}); }
 template<class Y, class X> Void propagate(X& r, BinaryElementaryOperator eop, Y const& y1, X const& x2) { eop.accept([&](auto op){r=op(y1,x2);}); }
 

@@ -40,7 +40,6 @@
 
 namespace Ariadne {
 
-template class LieDerivativeFunction<ValidatedTag>;
 
 
 template<> String class_name<Function<ApproximateTag,RealScalar(RealScalar)>>() {
