@@ -1098,18 +1098,6 @@ SmtSolver::_split_box(
     double& derivative_evaluation_seconds) const
 {
     SplitBoxResult result;
-
-    // Terminal DP boxes still pass through reduction, whole-box epsilon
-    // certification and deterministic witness probing. At the splitting stage,
-    // however, no derivative/lookahead work can produce distinct children.
-    // Detect that case with the ordinary geometric split before evaluating any
-    // split heuristic, preserving the documented processing order.
-    auto geometric_children=domain.split();
-    if(same_box(geometric_children.first,geometric_children.second)) {
-        result.children=geometric_children;
-        return result;
-    }
-
     if(not _configuration.sensitivity_split_enabled()
        && not _configuration.interval_lookahead_split_enabled()) {
         result.children=domain.split();
