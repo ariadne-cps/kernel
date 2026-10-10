@@ -23,6 +23,7 @@
  */
 
 #include <iostream>
+#include <limits>
 #include "function/function.hpp"
 #include "function/taylor_model.hpp"
 #include "algebra/algebra.hpp"
@@ -272,7 +273,8 @@ class TestConstrainedImageSet
     Void test_draw(const StringType& str, const EffectiveConstrainedImageSet& set, Nat acc) {
         figure.clear();
         figure.set_bounding_box(ExactBoxType({{-2.75_x,+2.75_x},{-1.5_x,+2.0_x}}));
-        GridTreePaving paving(set.dimension());
+        ARIADNE_TEST_ASSERT(set.dimension()<=std::numeric_limits<Nat>::max());
+        GridTreePaving paving(static_cast<Nat>(set.dimension()));
         set.adjoin_outer_approximation_to(paving,acc+1);
         figure.set_fill_opacity(1.0);
         figure.set_fill_colour(red);

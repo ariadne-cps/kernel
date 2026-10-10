@@ -743,7 +743,10 @@ Void TestTaylorFunctionFactory::test_create()
     ARIADNE_TEST_PRINT(stf);
     ARIADNE_TEST_PRINT(stf.properties());
 
-    ARIADNE_TEST_EQUALS(dynamic_handle_extract<ThresholdSweeper<FloatDP>>(stf.properties()).sweep_threshold(),threshold_sweeper.sweep_threshold());
+    auto const properties=stf.properties();
+    auto const* stored_threshold_sweeper=dynamic_cast<ThresholdSweeper<FloatDP> const*>(properties.raw_const_pointer());
+    ARIADNE_TEST_ASSERT(stored_threshold_sweeper!=nullptr);
+    ARIADNE_TEST_EQUALS(stored_threshold_sweeper->sweep_threshold(),threshold_sweeper.sweep_threshold());
     ARIADNE_TEST_EQUALS(stf(args),FloatDPBounds(0.0_x,pr));
     ARIADNE_TEST_EQUALS(evaluate(stf,args),FloatDPBounds(0.0_x,pr));
 
