@@ -1154,7 +1154,14 @@ GridTreeSubpaving& GridTreeSubpaving::operator=( const GridTreeSubpaving &otherS
 }
 
 inline GridTreeSubpaving* GridTreeSubpaving::_branch(Bool left_or_right) const {
-    return new GridTreeSubpaving(this->branch(left_or_right));
+    BinaryWord word=this->_theGridCell.word();
+    word.append(left_or_right);
+    BinaryTreeNode* node=this->_pRootTreeNode->child_node(left_or_right);
+    return new GridTreeSubpaving(
+        this->_theGridCell.grid(),
+        this->_theGridCell.root_extent(),
+        word,
+        node);
 }
 
 inline ForwardConstantIteratorInterface<GridCell>* GridTreeSubpaving::_begin() const {
