@@ -156,7 +156,11 @@ template<class X, class XX> XX compute_mu(const Vector<X>& xl, const Vector<X>& 
 inline FloatDPBounds mul_val(FloatDP x1, FloatDP x2) { return FloatDPBounds(mul(down,x1,x2),mul(up,x1,x2)); }
 
 inline Vector<FloatDP> exact_vector(Vector<FloatDPApproximation> const& v) {
-    return Ariadne::cast_exact<FloatDPApproximation>(v);
+    Vector<FloatDP> result(v.size(),dp);
+    for(SizeType i=0; i!=v.size(); ++i) {
+        result[i]=Ariadne::cast_exact(v[i]);
+    }
+    return result;
 }
 
 OutputStream& operator<<(OutputStream& os, LinearProgramStatus lps) {

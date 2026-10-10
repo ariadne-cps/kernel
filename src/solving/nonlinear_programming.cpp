@@ -77,7 +77,11 @@ typedef Matrix<UpperIntervalType> UpperIntervalMatrixType;
 typedef FloatDPApproximation ApproximateNumericType;
 
 inline Vector<FloatDP> exact_vector(Vector<FloatDPApproximation> const& v) {
-    return Ariadne::cast_exact<FloatDPApproximation>(v);
+    Vector<FloatDP> result(v.size(),dp);
+    for(SizeType i=0; i!=v.size(); ++i) {
+        result[i]=Ariadne::cast_exact(v[i]);
+    }
+    return result;
 }
 
 Matrix<ApproximateNumericType> join(Matrix<ApproximateNumericType> const&, Matrix<ApproximateNumericType> const&, Matrix<ApproximateNumericType> const&);
