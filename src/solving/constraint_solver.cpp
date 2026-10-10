@@ -673,6 +673,9 @@ Bool ConstraintSolver::propagate(
                         if(variable>=constraint.derivatives.size()) {
                             continue;
                         }
+                        if(definitely(domain[variable].lower_bound()>=domain[variable].upper_bound())) {
+                            continue;
+                        }
                         auto const& derivative=constraint.derivatives[variable];
                         if(not derivative.has_value()) {
                             continue;
