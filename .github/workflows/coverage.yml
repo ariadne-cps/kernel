@@ -57,6 +57,13 @@ jobs:
       working-directory: ${{ runner.workspace }}/build
       run: cmake --build . --parallel $($NPROC) --target coverage
 
+    - name: Upload Per-Module Coverage Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-modules-${{ runner.os }}
+        path: ${{ runner.workspace }}/build/coverage/modules
+        if-no-files-found: error
+
     - name: Check Codecov Token
       if: runner.os == 'macOS'
       env:
