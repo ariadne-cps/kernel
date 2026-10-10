@@ -562,7 +562,6 @@ class GridTreePaving
     //! GridTreeSubset referencing this %GridTreeSet becomes invalid.
     virtual ~GridTreePaving();
 
-
     //! Explicit overrides resolve the shared SubPavingInterface virtual base.
     SizeType size() const override { return GridTreeSubpaving::size(); }
     DimensionType dimension() const override { return GridTreeSubpaving::dimension(); }
