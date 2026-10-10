@@ -563,6 +563,25 @@ class GridTreePaving
     virtual ~GridTreePaving();
 
 
+    //! Explicit overrides resolve the shared SubPavingInterface virtual base.
+    SizeType size() const override { return GridTreeSubpaving::size(); }
+    DimensionType dimension() const override { return GridTreeSubpaving::dimension(); }
+    const Grid& grid() const override { return GridTreeSubpaving::grid(); }
+    GridCell root_cell() const override { return GridTreeSubpaving::root_cell(); }
+    UpperBoxType bounding_box() const override { return GridTreeSubpaving::bounding_box(); }
+    Bool equals(const SubPavingInterface& paving) const override { return GridTreeSubpaving::equals(paving); }
+    Bool subset(const SubPavingInterface& paving) const override { return GridTreeSubpaving::subset(paving); }
+    Bool intersects(const SubPavingInterface& paving) const override { return GridTreeSubpaving::intersects(paving); }
+    Bool superset(const GridCell& cell) const override { return GridTreeSubpaving::superset(cell); }
+    Void set_root_cell(Bool enabled) override { GridTreeSubpaving::set_root_cell(enabled); }
+    Void mince(Nat fineness) override { GridTreeSubpaving::mince(fineness); }
+    Void recombine() override { GridTreeSubpaving::recombine(); }
+    ValidatedLowerKleenean inside(const ExactBoxType& box) const override { return GridTreeSubpaving::inside(box); }
+    ValidatedLowerKleenean separated(const ExactBoxType& box) const override { return GridTreeSubpaving::separated(box); }
+    ValidatedLowerKleenean overlaps(const ExactBoxType& box) const override { return GridTreeSubpaving::overlaps(box); }
+    Void draw(CanvasInterface& canvas, const Projection2d& projection) const override { GridTreeSubpaving::draw(canvas,projection); }
+
+
 
     //!@{
     //! \name Geometric Operations

@@ -33,6 +33,7 @@
 #include <iomanip>
 #include <string>
 #include <memory>
+#include <limits>
 
 #include "foundation/logical.hpp"
 #include "utility/array.hpp"
@@ -433,11 +434,16 @@ inline Nat GridAbstractCell::root_extent() const {
 }
 
 inline Nat GridAbstractCell::root_height() const {
-    return _theExtent * _theGrid.dimension();
+    const SizeType height = static_cast<SizeType>(_theExtent) * _theGrid.dimension();
+    ARIADNE_ASSERT(height <= std::numeric_limits<Nat>::max());
+    return static_cast<Nat>(height);
 }
 
 inline Int GridAbstractCell::depth() const {
-    return _theWord.size() - _theExtent * _theGrid.dimension();
+    const SizeType root_height = static_cast<SizeType>(_theExtent) * _theGrid.dimension();
+    ARIADNE_ASSERT(_theWord.size() <= static_cast<SizeType>(std::numeric_limits<Int>::max()));
+    ARIADNE_ASSERT(root_height <= static_cast<SizeType>(std::numeric_limits<Int>::max()));
+    return static_cast<Int>(_theWord.size()) - static_cast<Int>(root_height);
 }
 
 inline const BinaryWord& GridAbstractCell::word() const {
@@ -449,7 +455,8 @@ inline const ExactBoxType& GridAbstractCell::box() const {
 }
 
 inline dimension_type GridAbstractCell::dimension() const {
-    return _theGrid.dimension();
+    ARIADNE_ASSERT(_theGrid.dimension() <= std::numeric_limits<dimension_type>::max());
+    return static_cast<dimension_type>(_theGrid.dimension());
 }
 
 inline ExactIntervalType GridAbstractCell::operator[](dimension_type i) const {
