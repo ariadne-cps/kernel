@@ -75,7 +75,7 @@ template<class F> F add_err(F const& x, ValidatedApproximation<F> const& c, Erro
     F rv=add(rounded,xv,cm);
     rounding.set(up);
     F u=add(rounded,xv,cu);
-    F ml=add(rounded,(-xv),cl);
+    F ml=sub(rounded,(-xv),cl);
     acc_err(ml,u,re);
     return F(rv);
 }
