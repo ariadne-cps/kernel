@@ -61,10 +61,6 @@ _call(Argument<Number<P>> const& x) const -> CompactSet<P,RES>
     return CompactSet<P,RealVector>(std::make_shared<CompactSetWrapper<BoxType,ValidatedTag,RealVector>>(rbx));
 }
 
-template class ScaledFunctionPatch<ValidatedIntervalTaylorModelDP>;
-template class VectorScaledFunctionPatch<ValidatedIntervalTaylorModelDP>;
-template class ScaledFunctionPatch<ValidatedIntervalTaylorModelMP>;
-template class VectorScaledFunctionPatch<ValidatedIntervalTaylorModelMP>;
 
 template auto ScaledFunctionPatchMixin<ValidatedIntervalTaylorModel<FloatDP>>::
 _call(Argument<Number<P>> const& x) const -> CompactSet<P,RES>;

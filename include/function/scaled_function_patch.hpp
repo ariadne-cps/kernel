@@ -1312,4 +1312,6 @@ auto VectorScaledFunctionPatchMixin<M>::_concrete_create() const -> typename Bas
 
 } // namespace Ariadne
 
+#include "function/scaled_function_patch.tpl.hpp"
+
 #endif // ARIADNE_FUNCTION_PATCH_HPP

@@ -112,23 +112,15 @@ namespace Ariadne {
     ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(VectorScaledFunctionPatch<M>,ValidatedScalarMultivariateFunction)
 
 ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS(ValidatedTaylorModelDP)
-template class ScaledFunctionPatch<ValidatedTaylorModelDP>;
-template class VectorScaledFunctionPatch<ValidatedTaylorModelDP>;
 template class ScaledFunctionPatchFactory<ValidatedTaylorModelDP>;
 
 ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS(ValidatedBoundsTaylorModelDP)
-template class ScaledFunctionPatch<ValidatedBoundsTaylorModelDP>;
-template class VectorScaledFunctionPatch<ValidatedBoundsTaylorModelDP>;
 template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelDP>;
 
 ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS(ValidatedTaylorModelMP)
-template class ScaledFunctionPatch<ValidatedTaylorModelMP>;
-template class VectorScaledFunctionPatch<ValidatedTaylorModelMP>;
 template class ScaledFunctionPatchFactory<ValidatedTaylorModelMP>;
 
 ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS(ValidatedBoundsTaylorModelMP)
-template class ScaledFunctionPatch<ValidatedBoundsTaylorModelMP>;
-template class VectorScaledFunctionPatch<ValidatedBoundsTaylorModelMP>;
 template class ScaledFunctionPatchFactory<ValidatedBoundsTaylorModelMP>;
 
 #undef ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS
