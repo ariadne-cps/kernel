@@ -31,7 +31,6 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-find_package(Threads REQUIRED)
 find_package(Cairo REQUIRED)
 
 include_directories(SYSTEM
@@ -40,9 +39,6 @@ include_directories(SYSTEM
 
 add_subdirectory(submodules)
 
-if(MSVC)
-    add_compile_options(/bigobj)
-endif()
 
 add_library(kernel INTERFACE)
 target_include_directories(kernel INTERFACE
@@ -78,12 +74,9 @@ ariadne_register_public_headers(
     FILES "${PROJECT_SOURCE_DIR}/include/ariadne-kernel.hpp"
 )
 
-if(WIN32)
-    # CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS turns every global symbol in this
-    # monolithic target into an import-library member. The aggregate exceeds
-    # the 65535-member COFF library limit, so use a static archive on Windows.
-    add_library(ariadne-kernel STATIC)
-    foreach(_object_target
+setup_project_library(
+    TARGET ariadne-kernel
+    OBJECTS
         KERNEL_FUNCTION_SRC
         KERNEL_GEOMETRY_SRC
         KERNEL_IO_SRC
@@ -96,31 +89,8 @@ if(WIN32)
         THREADING_SRC
         LOGGING_SRC
         UTILITY_SRC
-    )
-        target_sources(ariadne-kernel PRIVATE $<TARGET_OBJECTS:${_object_target}>)
-    endforeach()
-    target_link_libraries(ariadne-kernel PUBLIC kernel)
-    set_property(GLOBAL PROPERTY ARIADNE_PROJECT_LIBRARY_TARGET ariadne-kernel)
-    install(TARGETS ariadne-kernel ARCHIVE DESTINATION lib)
-else()
-    setup_project_library(
-        TARGET ariadne-kernel
-        OBJECTS
-            KERNEL_FUNCTION_SRC
-            KERNEL_GEOMETRY_SRC
-            KERNEL_IO_SRC
-            KERNEL_SYMBOLIC_SRC
-            KERNEL_SOLVING_SRC
-            ALGEBRA_SRC
-            INTERVAL_SRC
-            NUMERIC_SRC
-            FOUNDATION_SRC
-            THREADING_SRC
-            LOGGING_SRC
-            UTILITY_SRC
-        LINK_LIBRARIES kernel
-    )
-endif()
+    LINK_LIBRARIES kernel
+)
 
 setup_standalone_project_tests(
     TARGET ariadne-kernel
