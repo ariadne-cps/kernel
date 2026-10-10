@@ -113,8 +113,8 @@ template<class P, class SIG, class PR, class PRE> class FunctionModelInterface
     typedef typename FunctionModelTraits<P,PR,PRE>::GenericNumericType GenericNumericType;
     typedef typename SignatureTraits<SIG>::ArgumentIndexType ArgumentIndexType;
   public:
-    virtual DomainType const domain() const = 0;
-    virtual CodomainType const codomain() const = 0;
+    virtual DomainType const domain() const override = 0;
+    virtual CodomainType const codomain() const override = 0;
     virtual RangeType const range() const = 0;
     virtual NormType const _concrete_norm() const = 0;
     virtual ErrorType const _concrete_error() const = 0;
@@ -123,33 +123,32 @@ template<class P, class SIG, class PR, class PRE> class FunctionModelInterface
 
     virtual Result<CanonicalNumericType<P,PR,PRE>> _concrete_unchecked_evaluate(const Argument<CanonicalNumericType<P,PR,PRE>>& x) const = 0;
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _concrete_partial_evaluate(SizeType j, const CanonicalNumericType<P,PR,PRE>& c) const = 0;
-    virtual FunctionModelInterface<P,SIG,PR,PRE>* _embed(const DomainType& d1, const DomainType& d2) const = 0;
+    virtual FunctionModelInterface<P,SIG,PR,PRE>* _embed(const DomainType& d1, const DomainType& d2) const override = 0;
 
-    virtual FunctionModelFactoryInterface<P,PR,PRE>* _factory() const = 0;
+    virtual FunctionModelFactoryInterface<P,PR,PRE>* _factory() const override = 0;
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _concrete_clone() const override = 0;
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _concrete_create() const = 0;
     inline FunctionModelInterface<P,SIG,PR,PRE>* clone() const { return this->_concrete_clone(); }
-    inline FunctionModelInterface<P,SIG,PR,PRE>* _copy() const { return this->_concrete_clone(); }
 
-    virtual FunctionModelInterface<P,SIG,PR,PRE>* _restriction(const DomainType& d) const = 0;
+    virtual FunctionModelInterface<P,SIG,PR,PRE>* _restriction(const DomainType& d) const override = 0;
 
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _concrete_derivative(ArgumentIndexType j) const override = 0;
-    virtual FunctionModelInterface<P,SIG,PR,PRE>* _antiderivative(ArgumentIndexType j) const = 0;
-    virtual FunctionModelInterface<P,SIG,PR,PRE>* _antiderivative(ArgumentIndexType j, Number<P>) const = 0;
+    virtual FunctionModelInterface<P,SIG,PR,PRE>* _antiderivative(ArgumentIndexType j) const override = 0;
+    virtual FunctionModelInterface<P,SIG,PR,PRE>* _antiderivative(ArgumentIndexType j, Number<P>) const override = 0;
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _concrete_antiderivative(ArgumentIndexType j, CanonicalNumericType<P,PR,PRE> c) const = 0;
 
     using FunctionPatchInterface<P,SIG>::_compose;
     using FunctionPatchInterface<P,SIG>::_unchecked_compose;
-    virtual ScalarFunctionModelInterface<P,ARG,PR,PRE>* _compose(const ScalarFunction<P,RES>& f) const = 0;
-    virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _compose(const VectorFunction<P,RES>& f) const = 0;
-    virtual ScalarFunctionModelInterface<P,ARG,PR,PRE>* _unchecked_compose(const ScalarFunction<P,RES>& f) const = 0;
-    virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _unchecked_compose(const VectorFunction<P,RES>& f) const = 0;
+    virtual ScalarFunctionModelInterface<P,ARG,PR,PRE>* _compose(const ScalarFunction<P,RES>& f) const override = 0;
+    virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _compose(const VectorFunction<P,RES>& f) const override = 0;
+    virtual ScalarFunctionModelInterface<P,ARG,PR,PRE>* _unchecked_compose(const ScalarFunction<P,RES>& f) const override = 0;
+    virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _unchecked_compose(const VectorFunction<P,RES>& f) const override = 0;
 
     virtual Boolean _concrete_refines(const FunctionModelInterface<P,SIG,PR,PRE>& f) const = 0;
     virtual Boolean _concrete_inconsistent(const FunctionModelInterface<P,SIG,PR,PRE>& f) const = 0;
     virtual FunctionModelInterface<P,SIG,PR,PRE>* _concrete_refinement(const FunctionModelInterface<P,SIG,PR,PRE>& f) const = 0;
 
-    virtual OutputStream& _write(OutputStream&) const = 0;
+    virtual OutputStream& _write(OutputStream&) const override = 0;
 
     friend OutputStream& operator<<(OutputStream& os, FunctionModelInterface<P,SIG,PR,PRE> const& f) {
         return f._write(os); }
@@ -169,24 +168,24 @@ template<class P, class PR, class PRE> class FunctionModelFactoryInterface
   public:
     typedef SD ScalarDomainType;
     typedef VD VectorDomainType;
-    virtual ~FunctionModelFactoryInterface() = default;
-    virtual FunctionModelFactoryInterface<P,PR,PRE>* clone() const = 0;
+    virtual ~FunctionModelFactoryInterface() override = default;
+    virtual FunctionModelFactoryInterface<P,PR,PRE>* clone() const override = 0;
     inline FunctionModelFactoryInterface<P,PR,PRE>* _copy() const { return this->clone(); }
-    virtual OutputStream& _write(OutputStream& os) const = 0;
+    virtual OutputStream& _write(OutputStream& os) const override = 0;
     friend OutputStream& operator<<(OutputStream& os, FunctionModelFactoryInterface<P,PR,PRE> const& factory) { factory._write(os); return os; }
   private:
     using FunctionPatchFactoryInterface<P>::_create;
     virtual CanonicalNumericType<P,PR,PRE> _create(const Number<P>& number) const = 0;
-    virtual ScalarFunctionModelInterface<P,VARG,PR,PRE>* _create(const VectorDomainType& domain, const ScalarMultivariateFunctionInterface<P>& function) const = 0;
-    virtual VectorFunctionModelInterface<P,VARG,PR,PRE>* _create(const VectorDomainType& domain, const VectorMultivariateFunctionInterface<P>& function) const = 0;
+    virtual ScalarFunctionModelInterface<P,VARG,PR,PRE>* _create(const VectorDomainType& domain, const ScalarMultivariateFunctionInterface<P>& function) const override = 0;
+    virtual VectorFunctionModelInterface<P,VARG,PR,PRE>* _create(const VectorDomainType& domain, const VectorMultivariateFunctionInterface<P>& function) const override = 0;
 
-    virtual ScalarFunctionModelInterface<P,VARG,PR,PRE>* _create_zero(const VectorDomainType& domain) const = 0;
-    virtual ScalarFunctionModelInterface<P,VARG,PR,PRE>* _create_constant(const VectorDomainType& domain, const Number<P>& value) const = 0;
-    virtual ScalarFunctionModelInterface<P,VARG,PR,PRE>* _create_coordinate(const VectorDomainType& domain, SizeType index) const = 0;
-    virtual VectorFunctionModelInterface<P,VARG,PR,PRE>* _create_zeros(SizeType rsize, const VectorDomainType& domain) const = 0;
-    virtual VectorFunctionModelInterface<P,VARG,PR,PRE>* _create_constants(const VectorDomainType& domain, const Vector<Number<P>>& values) const = 0;
-    virtual VectorFunctionModelInterface<P,VARG,PR,PRE>* _create_projection(const VectorDomainType& domain, Range indices) const = 0;
-    virtual VectorFunctionModelInterface<P,VARG,PR,PRE>* _create_identity(const VectorDomainType& domain) const = 0;
+    virtual ScalarFunctionModelInterface<P,VARG,PR,PRE>* _create_zero(const VectorDomainType& domain) const override = 0;
+    virtual ScalarFunctionModelInterface<P,VARG,PR,PRE>* _create_constant(const VectorDomainType& domain, const Number<P>& value) const override = 0;
+    virtual ScalarFunctionModelInterface<P,VARG,PR,PRE>* _create_coordinate(const VectorDomainType& domain, SizeType index) const override = 0;
+    virtual VectorFunctionModelInterface<P,VARG,PR,PRE>* _create_zeros(SizeType rsize, const VectorDomainType& domain) const override = 0;
+    virtual VectorFunctionModelInterface<P,VARG,PR,PRE>* _create_constants(const VectorDomainType& domain, const Vector<Number<P>>& values) const override = 0;
+    virtual VectorFunctionModelInterface<P,VARG,PR,PRE>* _create_projection(const VectorDomainType& domain, Range indices) const override = 0;
+    virtual VectorFunctionModelInterface<P,VARG,PR,PRE>* _create_identity(const VectorDomainType& domain) const override = 0;
   public:
     CanonicalNumericType<P,PR,PRE> create(const Number<P>& number) const {
         return CanonicalNumericType<P,PR,PRE>(this->_create(number)); }
