@@ -240,6 +240,20 @@ template<class X> Void propagate(UnivariateSecondDifferential<X>& r, Acos op, Un
 template<class X> Void propagate(X& r, BinaryElementaryOperator eop, X const& x1, X const& x2) { eop.accept([&](auto op){r=op(x1,x2);}); }
 template<class X> Void propagate(X& r, UnaryElementaryOperator eop, X const& x) { eop.accept([&](auto op){propagate(r,op,x);}); }
 template<class X, class N> Void propagate(X& r, GradedElementaryOperator eop, X const& x, N n) { eop.accept([&](auto op){r=op(x,n);}); }
+template<class Y, class X>
+Void propagate(UnivariateSecondDifferential<X>& r, BinaryElementaryOperator eop, Y const& y1, UnivariateSecondDifferential<X> const& x2) {
+    switch(eop.code()) {
+        case OperatorCode::ADD: r=Add()(y1,x2); return;
+        case OperatorCode::SUB: r=Sub()(y1,x2); return;
+        case OperatorCode::MUL: r=Mul()(y1,x2); return;
+        case OperatorCode::DIV: r=Div()(y1,x2); return;
+        case OperatorCode::MAX:
+        case OperatorCode::MIN:
+            ARIADNE_FAIL_MSG("Scalar max/min is not supported for UnivariateSecondDifferential.");
+        default:
+            ARIADNE_FAIL_MSG("Unsupported scalar binary operator "<<eop);
+    }
+}
 template<class Y, class X> Void propagate(X& r, BinaryElementaryOperator eop, Y const& y1, X const& x2) { eop.accept([&](auto op){r=op(y1,x2);}); }
 
 template<class X, class Y> Void _execute_impl(SizeType r, List<X>& v, const ProcedureInstruction& pri, const List<Y>& c, const Vector<X>& x) {

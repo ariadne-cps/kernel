@@ -626,12 +626,29 @@ class ComposedFunction
     template<class X> inline ElementType<C,X> operator() (const ElementType<D,X>& x) const {
         return _f.evaluate(_g.evaluate(x)); }
     Function<P,R(AS...)> derivative(ArgumentIndexType j) const {
-        if constexpr (Same<T,RealScalar>) {
-            return compose(this->_f.derivative(IndexZero()),this->_g)*this->_g.derivative(j);
+        if constexpr (Same<R,RealScalar>) {
+            if constexpr (Same<T,RealScalar>) {
+                return compose(this->_f.derivative(IndexZero()),this->_g)*this->_g.derivative(j);
+            } else {
+                Function<P,R(AS...)> r=this->_f.create_zero();
+                for (SizeType k=0; k!=this->_g.result_size(); ++k) {
+                    r=r+compose(this->_f.derivative(k),this->_g)*this->_g[k].derivative(j);
+                }
+                return r;
+            }
         } else {
-            Function<P,R(AS...)> r=Function<P,R(AS...)>(this->result_size(),this->argument_size());
-            for (SizeType k=0; k!=this->_g.result_size(); ++k) {
-                r=r+compose(this->_f.derivative(k),this->_g)*this->_g[k].derivative(j);
+            Function<P,R(AS...)> r(this->result_size(),this->_g.domain());
+            for (SizeType i=0; i!=this->result_size(); ++i) {
+                ScalarFunction<P,AS...> ri;
+                if constexpr (Same<T,RealScalar>) {
+                    ri=compose(this->_f[i].derivative(IndexZero()),this->_g)*this->_g.derivative(j);
+                } else {
+                    ri=ScalarFunction<P,AS...>::zero(this->_g.domain());
+                    for (SizeType k=0; k!=this->_g.result_size(); ++k) {
+                        ri=ri+compose(this->_f[i].derivative(k),this->_g)*this->_g[k].derivative(j);
+                    }
+                }
+                r.set(i,ri);
             }
             return r;
         }
