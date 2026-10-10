@@ -131,6 +131,11 @@ Void TestPaving::test_branch() const {
     ARIADNE_TEST_PRINT(paving);
     ARIADNE_TEST_ASSERT(paving.size()==4);
 
+    GridTreeSubpaving direct_branch0 =
+        static_cast<GridTreeSubpaving const&>(grid_set).branch(0);
+    ARIADNE_TEST_ASSERT(direct_branch0.size()==2);
+    ARIADNE_TEST_PRINT(direct_branch0.root_cell());
+
     SubPavingHandle branch0 = paving.branch(0);
     ARIADNE_TEST_ASSERT(branch0.size()==2);
     ARIADNE_TEST_PRINT(branch0.root_cell());
