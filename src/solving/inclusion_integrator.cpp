@@ -33,7 +33,7 @@ namespace Ariadne {
 template<class I> decltype(auto) inline norm(Box<I> const& bx) { return norm(cast_vector(bx)); }
 
 namespace {
-static const typename ErrorType::PrecisionType pr=typename ErrorType::PrecisionType();
+static const typename ErrorType::PrecisionType error_precision=typename ErrorType::PrecisionType();
 
 template<class M> inline VectorScaledFunctionPatch<M> compose(const ValidatedVectorMultivariateFunctionPatch& g, const VectorScaledFunctionPatch<M>& f) {
     return compose(cast_unrestricted(g),f);
@@ -41,14 +41,14 @@ template<class M> inline VectorScaledFunctionPatch<M> compose(const ValidatedVec
 
 } // namespace
 
-template<> ErrorType wstar_multiplier<ZeroApproximation>() { return ErrorType(0u,pr); }
-template<> ErrorType wstar_multiplier<ConstantApproximation>() { return ErrorType(1u,pr); }
-template<> ErrorType wstar_multiplier<AffineApproximation>() { return ErrorType(5u,pr)/3u; }
-template<> ErrorType wstar_multiplier<SinusoidalApproximation>() { return ErrorType(1.3645_dec,pr); }
-template<> ErrorType wstar_multiplier<PiecewiseApproximation>() { return ErrorType(1.25_x,pr); }
+template<> ErrorType wstar_multiplier<ZeroApproximation>() { return ErrorType(0u,error_precision); }
+template<> ErrorType wstar_multiplier<ConstantApproximation>() { return ErrorType(1u,error_precision); }
+template<> ErrorType wstar_multiplier<AffineApproximation>() { return ErrorType(5u,error_precision)/3u; }
+template<> ErrorType wstar_multiplier<SinusoidalApproximation>() { return ErrorType(1.3645_dec,error_precision); }
+template<> ErrorType wstar_multiplier<PiecewiseApproximation>() { return ErrorType(1.25_x,error_precision); }
 
 ErrorType vstar(BoxDomainType const& inputs) {
-    ErrorType result(0u,pr);
+    ErrorType result(0u,error_precision);
     for (auto i : range(0,inputs.size())) {
         result = max(result,cast_positive(cast_exact(abs(inputs[i]).upper_bound())));
     }
@@ -102,9 +102,9 @@ compute_constants(EffectiveVectorMultivariateFunction const& noise_independent_c
 
     auto n = noise_independent_component.result_size();
     auto m = input_derivatives.size();
-    ErrorType ze(pr);
+    ErrorType ze(error_precision);
     ErrorType K=ze, pK=ze, pKv=ze, pKw=ze, L=ze, pL=ze, pLv=ze, pLw=ze, H=ze, pH=ze, pHv=ze, pHw=ze;
-    Vector<ErrorType> Kj(n,pr), pKj(n,pr), pKjv(n,pr), pKjw(n,pr), Lj(n,pr), pLj(n,pr), pLjv(n,pr), pLjw(n,pr), Hj(n,pr), pHj(n,pr), pHjv(n,pr), pHjw(n,pr);
+    Vector<ErrorType> Kj(n,error_precision), pKj(n,error_precision), pKjv(n,error_precision), pKjw(n,error_precision), Lj(n,error_precision), pLj(n,error_precision), pLjv(n,error_precision), pLjw(n,error_precision), Hj(n,error_precision), pHj(n,error_precision), pHjv(n,error_precision), pHjw(n,error_precision);
     FloatDPUpperBound Lambda(-infty,double_precision);
 
     auto Df=noise_independent_component.differential(cast_singleton(B),2);
@@ -131,7 +131,7 @@ compute_constants(EffectiveVectorMultivariateFunction const& noise_independent_c
         Hj[j] = H_j;
     }
 
-    Matrix<ErrorType> pK_ij(m,n,pr), pL_ij(m,n,pr), pH_ij(m,n,pr);
+    Matrix<ErrorType> pK_ij(m,n,error_precision), pL_ij(m,n,error_precision), pH_ij(m,n,error_precision);
 
     for (auto i : range(m)) {
         auto Diff_g_i=input_derivatives[i].differential(cast_singleton(B),2);
@@ -171,7 +171,7 @@ compute_constants(EffectiveVectorMultivariateFunction const& noise_independent_c
         pKw = max(pKw,pKjw[j]); pLw = max(pLw,pLjw[j]); pHw = max(pHw,pHjw[j]);
     }
 
-    ErrorType expLambda = (possibly(Lambda>0)) ? ErrorType(dexp(Lambda*h)) : ErrorType(1u,pr);
+    ErrorType expLambda = (possibly(Lambda>0)) ? ErrorType(dexp(Lambda*h)) : ErrorType(1u,error_precision);
     ErrorType expL = cast_positive(exp(L*h));
 
     return ErrorConstants(K, Kj, pK, pKv, pKw, pKj, pKjv, pKjw,

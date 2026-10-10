@@ -32,6 +32,7 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
+#include <limits>
 
 #include "solving/integrator_interface.hpp"
 #include "solving/bounder.hpp"
@@ -219,9 +220,9 @@ class TaylorPicardIntegrator
 
     //! \brief The order of the method in time.
     DegreeType minimum_temporal_order() const { return this->_minimum_temporal_order; }
-    Void set_minimum_temporal_order(Nat m) { this->_minimum_temporal_order=m; }
+    Void set_minimum_temporal_order(Nat m) { ARIADNE_ASSERT(m<=std::numeric_limits<DegreeType>::max()); this->_minimum_temporal_order=static_cast<DegreeType>(m); }
     DegreeType maximum_temporal_order() const { return this->_maximum_temporal_order; }
-    Void set_maximum_temporal_order(Nat m) { this->_maximum_temporal_order=m; }
+    Void set_maximum_temporal_order(Nat m) { ARIADNE_ASSERT(m<=std::numeric_limits<DegreeType>::max()); this->_maximum_temporal_order=static_cast<DegreeType>(m); }
     //! \brief  Set the sweep threshold of the Taylor model.
     Sweeper<FloatDP> const& sweeper() const { return this->_sweeper; }
     //! \brief  Set the maximum error of a single step.
@@ -275,8 +276,10 @@ class GradedTaylorPicardIntegrator
     //! \brief The order of the method.
     DegreeType order() const { return this->_order; }
     Void set_order(Nat m) {
-        this->_order=m;
-        this->_sweeper = GradedThresholdSweeper<FloatDP>(DoublePrecision(),m,FloatDP(cast_exact(this->_sweep_threshold),DoublePrecision()));
+        ARIADNE_ASSERT(m<=std::numeric_limits<DegreeType>::max());
+        const DegreeType order=static_cast<DegreeType>(m);
+        this->_order=order;
+        this->_sweeper = GradedThresholdSweeper<FloatDP>(DoublePrecision(),order,FloatDP(cast_exact(this->_sweep_threshold),DoublePrecision()));
         this->set_function_factory(ValidatedFunctionPatchFactory(make_taylor_function_patch_factory(this->_sweeper)));
     }
     //! \brief  Set the maximum error of a single step.
