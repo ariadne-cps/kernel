@@ -538,7 +538,7 @@ template<class P, class... ARGS> class FunctionPatch<P,RealVector(ARGS...)>
         return VectorFunctionPatch<P,ARGS...>(f._ptr->_partial_evaluate(j,c)); }
 
     friend OutputStream& operator<<(OutputStream& os, const VectorFunctionPatch<P,ARGS...>& f) {
-        return os <<  f.operator VectorFunction<P,ARGS...>(); }
+        return os << static_cast<VectorFunction<P,ARGS...>>(f); }
 
     friend ScalarFunctionPatch<P,ARGS...> unchecked_compose(const ScalarMultivariateFunction<P>& f, const VectorFunctionPatch<P,ARGS...>& g) {
         ScalarMultivariateFunctionPatchInterface<P> const* fptr = dynamic_cast<ScalarMultivariateFunctionPatchInterface<P> const*>(f.raw_pointer());

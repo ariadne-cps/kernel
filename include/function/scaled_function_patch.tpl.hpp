@@ -93,7 +93,7 @@ template<class M> Void _set_scaling(ScaledFunctionPatch<M>& x, const IntervalDom
 inline OutputStream& operator<<(OutputStream& os, const Representation<FloatDP>& flt_repr)
 {
     const FloatDP& flt=*flt_repr.pointer;
-    Int precision=os.precision(); std::ios_base::fmtflags flags = os.flags();
+    std::streamsize precision=os.precision(); std::ios_base::fmtflags flags = os.flags();
     os.precision(17); os.setf(std::ios_base::showpoint);
     os << "FloatDP(" << flt << ")";
     os.precision(precision); os.flags(flags);
@@ -118,7 +118,7 @@ template<class PR> inline OutputStream& operator<<(OutputStream& os, const Repre
 template<class PR> inline OutputStream& operator<<(OutputStream& os, const Representation<IntervalDomainType>& ivl_repr)
 {
     const IntervalDomainType& ivl=*ivl_repr.pointer;
-    Int precision=os.precision(); std::ios_base::fmtflags flags = os.flags();
+    std::streamsize precision=os.precision(); std::ios_base::fmtflags flags = os.flags();
     os.precision(17); os.setf(std::ios_base::showpoint);
     os << "IntervalDomainType("<<ivl.lower_bound()<<","<<ivl.upper_bound()<<")";
     os.precision(precision); os.flags(flags);
@@ -128,7 +128,7 @@ template<class PR> inline OutputStream& operator<<(OutputStream& os, const Repre
 template<class PR> inline OutputStream& operator<<(OutputStream& os, const Representation< Expansion<MultiIndex,RawFloat<PR>> >& exp_repr)
 {
     const Expansion<MultiIndex,RawFloat<PR>>& exp=*exp_repr.pointer;
-    Int precision=os.precision(); std::ios_base::fmtflags flags = os.flags();
+    std::streamsize precision=os.precision(); std::ios_base::fmtflags flags = os.flags();
     os.precision(17); os.setf(std::ios_base::showpoint);
     os << "Expansion<MultiIndex,Float<PR>>(" << exp.argument_size() << "," << exp.number_of_nonzeros();
     for(typename Expansion<MultiIndex,RawFloat<PR>>::ConstIterator iter=exp.begin(); iter!=exp.end(); ++iter) {
@@ -175,7 +175,7 @@ inline OutputStream& operator<<(OutputStream& os, const Representation< BoxDomai
 template<class F> inline OutputStream& operator<<(OutputStream& os, const Representation< Sweeper<F> >& swp_repr)
 {
     const Sweeper<F>& swp=*swp_repr.pointer;
-    Int precision=os.precision(); std::ios_base::fmtflags flags = os.flags();
+    std::streamsize precision=os.precision(); std::ios_base::fmtflags flags = os.flags();
     os.precision(17); os.setf(std::ios_base::showpoint);
     os << swp;
     os.precision(precision); os.flags(flags);

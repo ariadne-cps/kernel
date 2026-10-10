@@ -320,8 +320,8 @@ template<class E, class OP, class A> inline E _simplify_node(const Symbolic<OP,A
     } else if (sarg.op().code()==Cnst::code()) { // FIXME: This is a crude test for a constant
         return op(std::get<0>(sarg.node_ref().base()).val());
     } else {
-        auto* up = std::get_if<Symbolic<OP,A>>(&sarg.node_ref());
-        if (up && are_inverses(op,up->_op)) { return up->_arg; }
+        auto* inverse_node = std::get_if<Symbolic<OP,A>>(&sarg.node_ref());
+        if (inverse_node && are_inverses(op,inverse_node->_op)) { return inverse_node->_arg; }
         else { return op(sarg); }
     }
 }
