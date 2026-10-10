@@ -816,21 +816,35 @@ Bool ConstraintSolver::monotone_reduce(
     static const Int MAX_STEPS=3;
     const FloatDP threshold = div(near, lower.width().raw(), FloatDP(pow(two,MAX_STEPS),dp));
     for(Int step=0; step!=MAX_STEPS; ++step) {
-        FloatDPUpperBound ub(dp); FloatDPUpperInterval ivl(-ub,+ub); FloatDP val(dp); ub=val;
-
         // Apply Newton contractor on lower and upper strips.
-        if(lower.width().raw()>threshold) {
+        if(not definitely(lower.is_empty()) && lower.width().raw()>threshold) {
             splitpoint=lower.midpoint();
             slice[variable]=splitpoint;
             UpperIntervalType new_lower=splitpoint+(bounds-apply(function,slice))/apply(derivative,subdomain);
             lower=intersection(lower,new_lower);
         }
-        if(upper.width().raw()>threshold) {
+        if(not definitely(upper.is_empty()) && upper.width().raw()>threshold) {
             splitpoint=upper.midpoint();
             slice[variable]=splitpoint;
             UpperIntervalType new_upper=splitpoint+(bounds-apply(function,slice))/apply(derivative,subdomain);
             upper=intersection(upper,new_upper);
         }
+
+        Bool const lower_empty=definitely(lower.is_empty());
+        Bool const upper_empty=definitely(upper.is_empty());
+        if(lower_empty && upper_empty) {
+            domain[variable]=UpperIntervalType::empty_interval();
+            return true;
+        }
+        if(lower_empty) {
+            subdomain[variable]=upper;
+            break;
+        }
+        if(upper_empty) {
+            subdomain[variable]=lower;
+            break;
+        }
+
         subdomain[variable]=UpperIntervalType(lower.lower_bound(),upper.upper_bound());
         if(not (lower.width().raw()>threshold && upper.width().raw()>threshold)) {
             break;

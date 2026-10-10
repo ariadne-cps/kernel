@@ -925,6 +925,23 @@ Vector<FloatDPBounds> singleton_bounds(Vector<FloatDPUpperInterval> const& x) {
     return r;
 }
 
+Differential<FloatDPBounds> singleton_bounds(Differential<FloatDPUpperInterval> const& x) {
+    Differential<FloatDPBounds> r(x.argument_size(),x.degree(),FloatDPBounds(dp));
+    for(auto iter=x.begin(); iter!=x.end(); ++iter) {
+        r.expansion().append(iter->index(),cast_singleton(iter->coefficient()));
+    }
+    return r;
+}
+
+Differential<FloatDPUpperInterval> upper_interval_differential(Differential<FloatDPBounds> const& x) {
+    Differential<FloatDPUpperInterval> r(
+        x.argument_size(),x.degree(),make_interval(FloatDPBounds(dp)));
+    for(auto iter=x.begin(); iter!=x.end(); ++iter) {
+        r.expansion().append(iter->index(),make_interval(iter->coefficient()));
+    }
+    return r;
+}
+
 } // namespace
 
 FloatDPUpperInterval evaluate_range(ValidatedScalarMultivariateFunction const& f, const Vector<FloatDPUpperInterval>& x) {
@@ -940,8 +957,20 @@ Vector<FloatDPUpperInterval> evaluate_range(ValidatedVectorMultivariateFunction 
 
 Vector<Differential<FloatDPUpperInterval>> derivative_range(ValidatedVectorMultivariateFunction const& f,
                                                             const Vector<Differential<FloatDPUpperInterval>>& x) {
-    return static_cast<Vector<Differential<FloatDPUpperInterval>>>(
-        f(reinterpret_cast<Vector<Differential<FloatDPBounds>>const&>(x)));
+    if(x.size()==0u) { return Vector<Differential<FloatDPUpperInterval>>(); }
+
+    Vector<Differential<FloatDPBounds>> bx(x.size(),singleton_bounds(x[0]));
+    for(SizeType i=0; i!=x.size(); ++i) { bx[i]=singleton_bounds(x[i]); }
+
+    auto by=f(bx);
+    if(by.size()==0u) { return Vector<Differential<FloatDPUpperInterval>>(); }
+
+    Vector<Differential<FloatDPUpperInterval>> r(
+        by.size(),upper_interval_differential(by[0]));
+    for(SizeType i=0; i!=by.size(); ++i) {
+        r[i]=upper_interval_differential(by[i]);
+    }
+    return r;
 }
 
 Covector<FloatDPUpperInterval> gradient_range(ValidatedScalarMultivariateFunction const& f,
