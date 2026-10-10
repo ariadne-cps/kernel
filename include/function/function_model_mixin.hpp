@@ -76,6 +76,18 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
     typedef typename Interface::ErrorType ErrorType;
     typedef typename Interface::NormType NormType;
     typedef typename Interface::RangeType RangeType;
+
+    using ScalarFunctionMixin<FM,P,ARG>::argument_size;
+    using ScalarFunctionMixin<FM,P,ARG>::result_size;
+    using ScalarFunctionMixin<FM,P,ARG>::_repr;
+    using ScalarFunctionMixin<FM,P,ARG>::_clone;
+    using ScalarFunctionMixin<FM,P,ARG>::_call;
+    using ScalarFunctionMixin<FM,P,ARG>::_derivative;
+
+    using ElementaryAlgebraMixin<FM,CanonicalNumericType<P,PR,PRE>>::_apply;
+    using ElementaryAlgebraMixin<FM,CanonicalNumericType<P,PR,PRE>>::_rapply;
+    using ElementaryAlgebraMixin<FM,Number<P>>::_apply;
+    using ElementaryAlgebraMixin<FM,Number<P>>::_rapply;
   public:
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _concrete_clone() const override {
         return new FM(static_cast<const FM&>(*this)); }
@@ -179,6 +191,13 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
     typedef typename Interface::ErrorType ErrorType;
     typedef typename Interface::NormType NormType;
     typedef typename Interface::RangeType RangeType;
+
+    using VectorFunctionMixin<FM,P,ARG>::argument_size;
+    using VectorFunctionMixin<FM,P,ARG>::result_size;
+    using VectorFunctionMixin<FM,P,ARG>::_repr;
+    using VectorFunctionMixin<FM,P,ARG>::_clone;
+    using VectorFunctionMixin<FM,P,ARG>::_call;
+    using VectorFunctionMixin<FM,P,ARG>::_derivative;
 
     typedef typename Element<FM>::Type ScalarMultivariateFunctionType;
   public:

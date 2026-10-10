@@ -116,7 +116,7 @@ class FunctionMixin<F,ApproximateTag,SIG>
     virtual Result<TaylorModel<ApproximateTag,FloatMP>> _call(const Argument<TaylorModel<ApproximateTag,FloatMP>>& x) const override;
     virtual Result<Formula<ApproximateNumber>> _call(const Argument<Formula<ApproximateNumber>>& x) const override;
     virtual Result<ElementaryAlgebra<ApproximateNumber>> _call(const Argument<ElementaryAlgebra<ApproximateNumber>>& x) const override;
-  private:
+  protected:
     virtual OutputStream& _write(OutputStream& os) const override { return this->_write_base(os); }
     virtual OutputStream& _repr(OutputStream& os) const override { return this->_repr_base(os); }
 };
@@ -163,7 +163,7 @@ class FunctionMixin<F,ValidatedTag,SIG>
 
     virtual Result<ValidatedScalarMultivariateFunction> _call(const Argument<ValidatedScalarMultivariateFunction>& x) const override;
 
-  private:
+  protected:
     virtual OutputStream& _write(OutputStream& os) const override { return this->_write_base(os); }
     virtual OutputStream& _repr(OutputStream& os) const override { return this->_repr_base(os); }
 };
@@ -214,7 +214,7 @@ class FunctionMixin<F,EffectiveTag,SIG>
     virtual Result<Formula<Real>> _call(const Argument<Formula<Real>>& x) const override;
     virtual Result<ElementaryAlgebra<EffectiveNumber>> _call(const Argument<ElementaryAlgebra<EffectiveNumber>>& x) const override;
     virtual Result<Formula<EffectiveNumber>> _call(const Argument<Formula<EffectiveNumber>>& x) const override;
-  private:
+  protected:
     virtual OutputStream& _write(OutputStream& os) const override { return this->_write_base(os); }
     virtual OutputStream& _repr(OutputStream& os) const override { return this->_repr_base(os); }
 };
