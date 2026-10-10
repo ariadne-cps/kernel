@@ -224,7 +224,10 @@ class SubPavingHandle
 
     Void mince(Nat fineness) { this->_ptr->mince(fineness); }
     Void recombine() { this->_ptr->recombine(); }
-    friend OutputStream& operator<<(OutputStream& os, const SubPavingHandle& self) { return os << *self._ptr; }
+  private:
+    OutputStream& _write(OutputStream& os) const { return this->_ptr->_write(os); }
+  public:
+    friend OutputStream& operator<<(OutputStream& os, const SubPavingHandle& self) { return self._write(os); }
 };
 
 inline SubPavingHandle SubPavingInterface::branch(Bool left_or_right) const { return this->_branch(left_or_right); }
