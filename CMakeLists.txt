@@ -76,13 +76,6 @@ setup_project_library(
         KERNEL_IO_SRC
         KERNEL_SYMBOLIC_SRC
         KERNEL_SOLVING_SRC
-        ALGEBRA_SRC
-        INTERVAL_SRC
-        NUMERIC_SRC
-        FOUNDATION_SRC
-        THREADING_SRC
-        LOGGING_SRC
-        UTILITY_SRC
     LINK_LIBRARIES kernel
 )
 
