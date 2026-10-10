@@ -8,6 +8,7 @@ on:
 
 env:
   BUILD_TYPE: Release
+  SCCACHE_GHA_ENABLED: "true"
 
 jobs:
   build:
@@ -29,6 +30,9 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: "3.13"
+
+    - name: Enable compiler cache
+      uses: mozilla-actions/sccache-action@v0.0.11
 
     - name: Install Python Test Dependencies
       run: python -m pip install pytest
@@ -56,7 +60,7 @@ jobs:
 
     - name: Configure CMake
       working-directory: ${{ runner.workspace }}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -G Ninja -DWARNINGS_AS_ERRORS=ON -DPYTHON_ENFORCE_TESTS=ON
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -G Ninja -DWARNINGS_AS_ERRORS=ON -DPYTHON_ENFORCE_TESTS=ON -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
     - name: Build
       working-directory: ${{ runner.workspace }}/build
@@ -80,7 +84,7 @@ jobs:
     - name: Check C++ Kernel Tutorial
       working-directory: ${{ runner.workspace }}/tutorial_kernel
       run: |
-        cmake -S . -B build -DCMAKE_PREFIX_PATH=${{ runner.workspace }}/install -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -G Ninja
+        cmake -S . -B build -DCMAKE_PREFIX_PATH=${{ runner.workspace }}/install -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
         cmake --build build --parallel $($NPROC)
         export LD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${LD_LIBRARY_PATH:-}
         export DYLD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${DYLD_LIBRARY_PATH:-}
