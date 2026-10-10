@@ -554,13 +554,13 @@ class GridTreePaving
 
     //! \brief Return a new dynamically-allocated copy of the %GridTreeSet.
     //! In this case, all the data is copied.
-    GridTreePaving* clone() const;
+    GridTreePaving* clone() const override;
 
     //!@}
 
     //! \brief Destructor, removes all the dynamically allocated data, any
     //! GridTreeSubset referencing this %GridTreeSet becomes invalid.
-    virtual ~GridTreePaving();
+    ~GridTreePaving() override;
 
     //! Explicit overrides resolve the shared SubPavingInterface virtual base.
     SizeType size() const override { return GridTreeSubpaving::size(); }
@@ -592,10 +592,10 @@ class GridTreePaving
     Void clear( );
 
     //! \brief Adjoin (make inplace union with) a single cell.
-    Void adjoin( const GridCell& theCell );
+    Void adjoin( const GridCell& theCell ) override;
 
     //! \brief Remove a single cell.
-    Void remove( const GridCell& theCell );
+    Void remove( const GridCell& theCell ) override;
 
     //! \brief Adjoin (make inplace union with) another grid paving set.
     Void adjoin( const GridTreeSubpaving& theOtherSubPaving );
@@ -607,11 +607,11 @@ class GridTreePaving
     Void remove( const GridTreeSubpaving& theOtherSubPaving );
 
     //! \brief Adjoin (make inplace union with) an abstract paving set.
-    Void adjoin( const SubPavingInterface& theOtherSubPaving );
+    Void adjoin( const SubPavingInterface& theOtherSubPaving ) override;
     //! \brief Restrict to (make inplace intersection with) an abstract paving set.
-    Void restrict( const SubPavingInterface& theOtherSubPaving );
+    Void restrict( const SubPavingInterface& theOtherSubPaving ) override;
     //! \brief Remove cells from  an abstract paving set.
-    Void remove( const SubPavingInterface& theOtherSubPaving );
+    Void remove( const SubPavingInterface& theOtherSubPaving ) override;
 
     //! \brief Restrict to cells rooted to the primary cell with the extent (at most) \a theExtent.
     Void restrict_to_extent( const Nat theExtent );
@@ -620,7 +620,7 @@ class GridTreePaving
     //! is in the original space coordinates. We compute the over approximation as the
     //! smallest primary cell on the Grid, such that it contains \a theBoxType (after it's
     //! mapping on \a theGrid )
-    GridCell smallest_enclosing_primary_cell(const UpperBoxType& theBoxType) const;
+    GridCell smallest_enclosing_primary_cell(const UpperBoxType& theBoxType) const override;
     //!@}
 
     //!@{
@@ -667,8 +667,8 @@ class GridTreePaving
     //!   4. Iterates through the enabled leaf nodes of the paving (all the nodes are initially enabled)
     //!   5. Disables the cells that are disjoint with the \a theSet
     Void adjoin_outer_approximation( const ValidatedEuclideanCompactSetInterface& theSet, const Nat numSubdivInDim );
-    Void adjoin_outer_approximation( const EffectiveEuclideanCompactSetInterface& theSet, const Nat numSubdivInDim );
-    Void adjoin_outer_approximation( const UpperBoxType& theBoxType, const Nat numSubdivInDim );
+    Void adjoin_outer_approximation( const EffectiveEuclideanCompactSetInterface& theSet, const Nat numSubdivInDim ) override;
+    Void adjoin_outer_approximation( const UpperBoxType& theBoxType, const Nat numSubdivInDim ) override;
 
     //! \brief Adjoin a lower approximation to a given set, computing to the given extent and resolution:
     //! \a numSubdivInDim -- defines, how many subdivisions in each dimension from the level of the
@@ -692,7 +692,7 @@ class GridTreePaving
     //! \a numSubdivInDim -- defines, how many subdivisions in each dimension from the level of the
     //! zero cell we should make to get the proper cells for outer approximating \a theSet.
     //! An inner approximation comprises all cells that are sub-cells of the given set.
-    Void adjoin_inner_approximation( const EffectiveEuclideanOpenSetInterface& theSet, const Nat heightInDim, const Nat numSubdivInDim );
+    Void adjoin_inner_approximation( const EffectiveEuclideanOpenSetInterface& theSet, const Nat heightInDim, const Nat numSubdivInDim ) override;
 
     //! \brief Adjoin an inner approximation to a given set restricted to the given bounding box,
     //! computing to the given resolution: \a numSubdivInDim -- defines, how many subdivisions in each
@@ -706,7 +706,7 @@ class GridTreePaving
     //! dimension from the level of the zero cell we should make to get the proper cells for outer
     //! approximating \a theSet. An inner approximation comprises all cells that are sub-cells of
     //! the given set.
-    Void adjoin_inner_approximation( const EffectiveEuclideanSetInterface& theSet, const Nat numSubdivInDim );
+    Void adjoin_inner_approximation( const EffectiveEuclideanSetInterface& theSet, const Nat numSubdivInDim ) override;
 
     Void adjoin_inner_approximation( const LowerBoxType& theBoxType, const Nat numSubdivInDim );
     //!@}
