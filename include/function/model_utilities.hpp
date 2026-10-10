@@ -50,32 +50,6 @@ template<class F> inline Void acc_err(F const& ml, F const& u, F& e) {
     e=add(rounded,e,hlf(add(rounded,ml,u)));
 }
 
-template<class F, class PRE> Ball<F,RawFloatType<PRE>> add(F const& x1, F const& x2, PRE pre) {
-    F mx1=-x1;
-    F::set_rounding_to_nearest();
-    F r(x1.raw() + x2.raw());
-    F::set_rounding_upward();
-    F u=x1.raw()+x2.raw();
-    F ml=mx1.raw()-x2.raw();
-    Error<RawFloatType<PRE>> e(pre);
-    e += max(u-r,ml+r);
-    return Ball(r,e);
-}
-
-template<class F, class PRE> Ball<F,RawFloatType<PRE>> mul(F const& x1, F const& x2, PRE pre) {
-    F mx1=-x1;
-    F::set_rounding_to_nearest();
-    F r(x1.raw() * x2.raw());
-    F::set_rounding_upward();
-    F u=x1.raw()*x2.raw();
-    F ml=mx1.raw()*x2.raw();
-    Error<RawFloatType<PRE>> e(pre);
-    e += max(u-r,ml+r);
-    return Ball(r,e);
-}
-
-
-
 template<class F> F add_err(F const& x1, F const& x2, Error<F>& e) {
     F mx1=-x1;
     F::set_rounding_to_nearest();
@@ -147,17 +121,6 @@ template<class F> UpperInterval<F> sub_err(UpperInterval<F> const& x1, Nat n2, E
 
 template<class F> Approximation<F> sub_err(Approximation<F> const& x1, Approximation<F> const& x2, UnknownError<F>&) {
     return sub(x1,x2);
-}
-
-template<class F> F mul_no_err(F const& x1, F const& x2) {
-    F::set_rounding_to_nearest();
-    F r(x1.raw() * x2.raw());
-    F::set_rounding_upward();
-    return r;
-}
-
-template<class F> Approximation<F> mul_no_err(Approximation<F> const& x1, Approximation<F> const& x2) {
-    return x1*x2;
 }
 
 template<class F> F mul_err(F const& x1, F const& x2, Error<F>& e) {
