@@ -57,10 +57,14 @@ namespace Ariadne {
 // members required by the exported patch vtables. Instantiating the whole class
 // also materializes unrelated virtuals and triggers premature instantiation.
 #define ARIADNE_INSTANTIATE_SCALAR_FUNCTION_MIXIN_CALL(F, ...) \
-    template auto FunctionMixin<F,ValidatedTag,RealScalar(RealVector)>:: \
+    template auto FunctionMixin< \
+        F,ValidatedTag,RealScalar(RealVector), \
+        ScalarFunctionModelInterface<ValidatedTag,RealVector,typename F::PrecisionType,typename F::ErrorPrecisionType>>:: \
     _call(Vector<__VA_ARGS__> const&) const -> Scalar<__VA_ARGS__>;
 #define ARIADNE_INSTANTIATE_VECTOR_FUNCTION_MIXIN_CALL(F, ...) \
-    template auto FunctionMixin<F,ValidatedTag,RealVector(RealVector)>:: \
+    template auto FunctionMixin< \
+        F,ValidatedTag,RealVector(RealVector), \
+        VectorFunctionModelInterface<ValidatedTag,RealVector,typename F::PrecisionType,typename F::ErrorPrecisionType>>:: \
     _call(Vector<__VA_ARGS__> const&) const -> Vector<__VA_ARGS__>;
 
 #define ARIADNE_INSTANTIATE_VALIDATED_FUNCTION_MIXIN_CALLS(M) \
