@@ -51,8 +51,8 @@ foreach(target
     KERNEL_FUNCTION_SRC
     KERNEL_GEOMETRY_SRC
     KERNEL_IO_SRC
-    KERNEL_SYMBOLIC_SRC
     KERNEL_SOLVING_SRC
+    KERNEL_SYMBOLIC_SRC
 )
     target_link_libraries(${target} PRIVATE kernel)
 endforeach()
@@ -63,8 +63,8 @@ ariadne_register_public_headers(
         "${PROJECT_SOURCE_DIR}/include/function"
         "${PROJECT_SOURCE_DIR}/include/geometry"
         "${PROJECT_SOURCE_DIR}/include/io"
-        "${PROJECT_SOURCE_DIR}/include/symbolic"
         "${PROJECT_SOURCE_DIR}/include/solving"
+        "${PROJECT_SOURCE_DIR}/include/symbolic"
     FILES "${PROJECT_SOURCE_DIR}/include/ariadne-kernel.hpp"
 )
 
@@ -87,8 +87,8 @@ setup_standalone_project_tests(
         function
         geometry
         io
-        symbolic
         solving
+        symbolic
     SOURCES
         "${PROJECT_SOURCE_DIR}/include"
         "${PROJECT_SOURCE_DIR}/src"
