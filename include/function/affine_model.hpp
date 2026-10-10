@@ -74,11 +74,7 @@ class AffineModel<ApproximateTag,F>
     explicit AffineModel(const CoefficientType& c, const Covector<CoefficientType>& g) : _c(c), _g(g) { }
     explicit AffineModel(CoefficientType c, InitializerList<CoefficientType> g) : _c(c), _g(g) { }
 
-    explicit AffineModel(const Affine<Approximation<F>>& affine);
-    explicit AffineModel(const Affine<ApproximateNumber>& affine, PrecisionType precision);
 
-    AffineModel(const BoxDomainType& domain, const ApproximateScalarMultivariateFunction& function, PrecisionType precision);
-    AffineModel(const TaylorModel<ApproximateTag,F>&);
 
     AffineModel<ApproximateTag,F>& operator=(const CoefficientType& c) {
         this->_c=c; for(SizeType i=0; i!=this->_g.size(); ++i) { this->_g[i]=0.0; } return *this; }
@@ -146,7 +142,6 @@ class AffineModel<ValidatedTag,F>
     explicit AffineModel(CoefficientType c, InitializerList<CoefficientType> g) : _c(c), _g(g), _e(0u,c.precision()) { }
 
     explicit AffineModel(const Affine<FloatBounds<PR>>& affine);
-    explicit AffineModel(const Affine<ValidatedNumber>& affine, PrecisionType precision);
 
     AffineModel(const TaylorModel<ValidatedTag,F>&);
 

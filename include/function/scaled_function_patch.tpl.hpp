@@ -695,11 +695,6 @@ template<class M> auto VectorScaledFunctionPatch<M>::expansions() const -> Vecto
 template<class M> auto VectorScaledFunctionPatch<M>::values() const -> Vector<ValueType> const
 {
     return elementwise([&](auto x){return x.value();},this->models());
-    Vector<ValueType> e(this->result_size(),this->precision());
-    for(SizeType i=0; i!=this->result_size(); ++i) {
-        e[i]=this->models()[i].value();
-    }
-    return e;
 }
 
 template<class M> auto VectorScaledFunctionPatch<M>::errors() const -> Vector<ErrorType> const
