@@ -182,12 +182,12 @@ struct SumMultiIndex {
 };
 
 
+inline Bool operator<(const MultiIndex& a1, const MultiIndex& a2) {
+    return reverse_lexicographic_less(a1,a2); }
+
 namespace {
 
 static const ExactDouble MACHINE_EPSILON(2.2204460492503131e-16);
-
-Bool operator<(const MultiIndex& a1, const MultiIndex& a2) {
-    return reverse_lexicographic_less(a1,a2); }
 
 
 inline Interval<FloatDPUpperBound> const& convert_interval(Interval<FloatDPUpperBound> const& ivl, DoublePrecision) {
