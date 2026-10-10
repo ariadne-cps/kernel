@@ -23,6 +23,8 @@
  */
 
 
+#include "numeric/rounding.hpp"
+
 namespace Ariadne {
 
 namespace {
@@ -52,9 +54,10 @@ template<class F> inline Void acc_err(F const& ml, F const& u, F& e) {
 
 template<class F> F add_err(F const& x1, F const& x2, Error<F>& e) {
     F mx1=-x1;
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F r(add(rounded,x1,x2));
-    F::set_rounding_upward();
+    rounding.set(up);
     F u=add(rounded,x1,x2);
     F ml=sub(rounded,mx1,x2);
     acc_err(ml,u,e.raw());
@@ -67,9 +70,10 @@ template<class F> F add_err(F const& x, ValidatedApproximation<F> const& c, Erro
     F const& cm=c.middle_raw();
     F const& cu=c.upper_raw();
     F& re=e.raw();
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F rv=add(rounded,xv,cm);
-    F::set_rounding_upward();
+    rounding.set(up);
     F u=add(rounded,xv,cu);
     F ml=add(rounded,(-xv),cl);
     acc_err(ml,u,re);
@@ -98,9 +102,10 @@ template<class F> Approximation<F> add_err(Approximation<F> const& x1, Approxima
 
 template<class F> F sub_err(F const& x1, F const& x2, Error<F>& e) {
     F mx1=-x1;
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F r(sub(rounded,x1.raw(),x2.raw()));
-    F::set_rounding_upward();
+    rounding.set(up);
     F u=sub(rounded,x1.raw(),x2.raw());
     F ml=add(rounded,mx1.raw(),x2.raw());
     acc_err(ml,u,e.raw());
@@ -125,9 +130,10 @@ template<class F> Approximation<F> sub_err(Approximation<F> const& x1, Approxima
 
 template<class F> F mul_err(F const& x1, F const& x2, Error<F>& e) {
     F mx1=-x1;
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F r(mul(rounded,x1,x2));
-    F::set_rounding_upward();
+    rounding.set(up);
     F u=mul(rounded,x1,x2);
     F ml=mul(rounded,mx1,x2);
     acc_err(ml,u,e.raw());
@@ -140,9 +146,10 @@ template<class F> F mul_err(F const& x, ValidatedApproximation<F> const& c, Erro
     F const& cm=c.middle_raw();
     F const& cl=c.lower_raw();
     F& re=e.raw();
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F rv=mul(rounded,xv,cm);
-    F::set_rounding_upward();
+    rounding.set(up);
     if(xv>=0) {
         F mcl=-cl;
         F u=mul(rounded,xv,cu);
@@ -195,9 +202,10 @@ template<class F> Approximation<F> mul_err(Approximation<F> const& x1, Nat n2, U
 
 template<class F> F div_err(F const& x1, F const& x2, Error<F>& e) {
     F mx1=-x1;
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F r(div(rounded,x1.raw(),x2.raw()));
-    F::set_rounding_upward();
+    rounding.set(up);
     F u=div(rounded,x1.raw(),x2.raw());
     F ml=div(rounded,mx1.raw(),x2.raw());
     acc_err(ml,u,e.raw());
@@ -240,9 +248,10 @@ template<class F> F fma_err(F const& x, F const& y, F z, Error<F>& e) {
     F const& yv=y.raw();
     F const& zv=z.raw();
     F& re=e.raw();
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F rv=fma(rounded,xv,yv,zv);
-    F::set_rounding_upward();
+    rounding.set(up);
     F myv=-yv;
     F mzv=-zv;
     F u=fma(rounded,xv,yv,zv);
@@ -258,9 +267,10 @@ template<class F> F fma_err(ValidatedApproximation<F> const& c, F const& x, F y,
     F const& cl=c.lower_raw();
     F const& yv=y.raw();
     F& re=e.raw();
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F rv=fma(rounded,xv,cm,yv);
-    F::set_rounding_upward();
+    rounding.set(up);
     F u,ml;
     if(xv>=0) {
         F mcl=-cl;
@@ -299,10 +309,11 @@ template<class F> Approximation<F> fma_err(Approximation<F> const& x, Approximat
 
 // Returns an approximation to a1*b2+a2*b2, adding error to e
 template<class F> F lin_err(F const& a1, F const& b1, F const& a2, F const& b2, Error<F>& e) {
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     Rounded<F> rr=cast_rounded(a1)*cast_rounded(b2)+cast_rounded(b1)*cast_rounded(a2);
     F r=rr.raw();
-    F::set_rounding_upward();
+    rounding.set(up);
     F mb1=-b1;
     F mb2=-b2;
     Rounded<F> u=cast_rounded(a1)*cast_rounded(b2)+cast_rounded(b1)*cast_rounded(a2);

@@ -363,9 +363,10 @@ template<ARawFloat F> Rounded<F> cast_rounded(F const& x) { return Rounded<F>(x)
 
 template<class F> F add_err(F const& x1, F const& x2, Error<F>& e) {
     Rounded<F> mx1=-x1;
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     Rounded<F> r(cast_rounded(x1) + cast_rounded(x2));
-    F::set_rounding_upward();
+    rounding.set(up);
     Rounded<F> u=cast_rounded(x1)+cast_rounded(x2);
     Rounded<F> ml=mx1-cast_rounded(x2);
     Rounded<F> re(e.raw());
@@ -380,9 +381,10 @@ template<class F> F add_err(F const& x, ValidatedApproximation<F> const& c, Erro
     Rounded<F> const& cm=c.middle_raw();
     Rounded<F> const& cu=c.upper_raw();
     Rounded<F> re(e.raw());
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     Rounded<F> rv=xv+cm;
-    F::set_rounding_upward();
+    rounding.set(up);
     Rounded<F> u=xv+cu;
     Rounded<F> ml=(-xv)-cl;
     re += hlf(u+ml);
@@ -412,9 +414,10 @@ template<class F> Approximation<F> add_err(Approximation<F> const& x1, Approxima
 
 template<class F> F sub_err(F const& x1, F const& x2, Error<F>& e) {
     Rounded<F> mx1=-x1;
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F r(cast_rounded(x1) - cast_rounded(x2));
-    F::set_rounding_upward();
+    rounding.set(up);
     Rounded<F> u=cast_rounded(x1)-cast_rounded(x2);
     Rounded<F> ml=mx1+cast_rounded(x2);
     Rounded<F> re(e.raw());
@@ -441,9 +444,10 @@ template<class F> Approximation<F> sub_err(Approximation<F> const& x1, Approxima
 
 template<class F> F mul_err(F const& x1, F const& x2, Error<F>& e) {
     Rounded<F> mx1=-x1;
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F r(cast_rounded(x1) * cast_rounded(x2));
-    F::set_rounding_upward();
+    rounding.set(up);
     Rounded<F> u=cast_rounded(x1) * cast_rounded(x2);
     Rounded<F> ml=mx1*cast_rounded(x2);
     Rounded<F> re(e.raw());
@@ -458,9 +462,10 @@ template<class F> F mul_err(F const& x, ValidatedApproximation<F> const& c, Erro
     Rounded<F> const& cm=c.middle_raw();
     Rounded<F> const& cl=c.lower_raw();
     Rounded<F> re(e.raw());
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     Rounded<F> rv=xv*cm;
-    F::set_rounding_upward();
+    rounding.set(up);
     if(xv.raw()>=0) {
         Rounded<F> mcl=-cl;
         Rounded<F> u=xv*cu;
@@ -514,9 +519,10 @@ template<class F> Approximation<F> mul_err(Approximation<F> const& x1, Nat n2, U
 
 template<class F> F div_err(F const& x1, F const& x2, Error<F>& e) {
     Rounded<F> mx1=-x1;
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     F r(cast_rounded(x1) / cast_rounded(x2));
-    F::set_rounding_upward();
+    rounding.set(up);
     Rounded<F> u=cast_rounded(x1)/cast_rounded(x2);
     Rounded<F> ml=mx1/x2;
     Rounded<F> re(e.raw());
@@ -562,9 +568,10 @@ template<class F> F fma_err(F const& x, F const& y, F z, Error<F>& e) {
     Rounded<F> const& yv=y.raw();
     Rounded<F>const& zv=z.raw();
     Rounded<F> re(e.raw());
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     Rounded<F> rv=xv*yv+zv;
-    F::set_rounding_upward();
+    rounding.set(up);
     Rounded<F> myv=-yv;
     Rounded<F> u=xv*yv+zv;
     Rounded<F> ml=xv*myv-zv;
@@ -580,9 +587,10 @@ template<class F> F fma_err(ValidatedApproximation<F> const& c, F const& x, F y,
     Rounded<F> const& cl=c.lower_raw();
     Rounded<F> const& yv=y.raw();
     Rounded<F> re(e.raw());
-    F::set_rounding_to_nearest();
+    RoundingSession<F> rounding;
+    rounding.set(near);
     Rounded<F> rv=xv*cm+yv;
-    F::set_rounding_upward();
+    rounding.set(up);
     Rounded<F> u,ml;
     if(xv>=0) {
         Rounded<F> mcl=-cl;
@@ -988,7 +996,8 @@ template<class P, class F> inline Void _ifma(TaylorModel<P,F>& r, const TaylorMo
                 collision_flags.reserve(product_pairs);
                 collision_priors.reserve(product_pairs);
 
-                CoefficientType::set_rounding_to_nearest();
+                RoundingSession<CoefficientType> rounding;
+                rounding.set(near);
                 SizeType xi=0u;
                 for(auto xiter=x.begin(); xiter!=x.end(); ++xiter,++xi) {
                     UniformConstReference<CoefficientType> xv=xiter->coefficient();
@@ -1013,7 +1022,7 @@ template<class P, class F> inline Void _ifma(TaylorModel<P,F>& r, const TaylorMo
                     }
                 }
 
-                CoefficientType::set_rounding_upward();
+                rounding.set(up);
                 SizeType pair_index=0u;
                 SizeType collision_index=0u;
                 xi=0u;
