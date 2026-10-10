@@ -630,7 +630,7 @@ class ComposedFunction
             if constexpr (Same<T,RealScalar>) {
                 return compose(this->_f.derivative(IndexZero()),this->_g)*this->_g.derivative(j);
             } else {
-                Function<P,R(AS...)> r=this->_f.create_zero();
+                ScalarFunction<P,AS...> r=ScalarFunction<P,AS...>::zero(this->_g.domain());
                 for (SizeType k=0; k!=this->_g.result_size(); ++k) {
                     r=r+compose(this->_f.derivative(k),this->_g)*this->_g[k].derivative(j);
                 }

@@ -240,7 +240,7 @@ template<class X> Void propagate(UnivariateSecondDifferential<X>& r, Acos op, Un
 template<class X> Void propagate(X& r, BinaryElementaryOperator eop, X const& x1, X const& x2) { eop.accept([&](auto op){r=op(x1,x2);}); }
 template<class X> Void propagate(X& r, UnaryElementaryOperator eop, X const& x) { eop.accept([&](auto op){propagate(r,op,x);}); }
 template<class X, class N> Void propagate(X& r, GradedElementaryOperator eop, X const& x, N n) { eop.accept([&](auto op){r=op(x,n);}); }
-template<class Y, class X>
+template<class Y, class X> requires (not Same<Y,UnivariateSecondDifferential<X>>)
 Void propagate(UnivariateSecondDifferential<X>& r, BinaryElementaryOperator eop, Y const& y1, UnivariateSecondDifferential<X> const& x2) {
     switch(eop.code()) {
         case OperatorCode::ADD: r=Add()(y1,x2); return;
