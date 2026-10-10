@@ -673,11 +673,11 @@ template<class V, class OP> inline Void _sparse_apply(OP const& op_err, V& r, co
     while(xiter!=x.end() && yiter!=y.end()) {
         if(xiter->index()<yiter->index()) {
             auto xv=xiter->coefficient();
-            r._append(xiter->index(),op_err(xv,zero,e));
+            r._append(xiter->index(),op_err(xv,Zero{},e));
             ++xiter;
         } else if(yiter->index()<xiter->index()) {
             auto yv=yiter->coefficient();
-            r._append(yiter->index(),op_err(zero,yv,e));
+            r._append(yiter->index(),op_err(Zero{},yv,e));
             ++yiter;
         } else {
             auto xv=xiter->coefficient();
@@ -688,12 +688,12 @@ template<class V, class OP> inline Void _sparse_apply(OP const& op_err, V& r, co
     }
     while(xiter!=x.end()) {
         auto xv=xiter->coefficient();
-        r._append(xiter->index(),op_err(xv,zero,e));
+        r._append(xiter->index(),op_err(xv,Zero{},e));
         ++xiter;
     }
     while(yiter!=y.end()) {
         auto yv=yiter->coefficient();
-        r._append(yiter->index(),op_err(zero,yv,e));
+        r._append(yiter->index(),op_err(Zero{},yv,e));
         ++yiter;
     }
     r.error()+=e;
@@ -703,8 +703,8 @@ template<class X> X const& add(X const& x, Zero) { return x; }
 template<class X> X const& add(Zero, X const& x) { return x; }
 template<class X> X const& sub(X const& x, Zero) { return x; }
 template<class X> X sub(Zero, X const& x) { return neg(x); }
-template<class X> Zero mul(X const&, Zero) { return zero; }
-template<class X> Zero mul(Zero, X const&) { return zero; }
+template<class X> Zero mul(X const&, Zero) { return Zero{}; }
+template<class X> Zero mul(Zero, X const&) { return Zero{}; }
 
 
 struct NegErr {
@@ -722,8 +722,8 @@ struct SubErr {
 };
 struct MulErr {
     template<class VX, class VY, class E> inline decltype(auto) operator() (VX const& xv, VY const& yv, E& e) const { return mul_err(xv,yv,e); }
-    template<class V, class E> inline Zero operator() (V const&, Zero, E&) const { return zero; }
-    template<class V, class E> inline Zero operator() (Zero, V const&, E&) const { return zero; }
+    template<class V, class E> inline Zero operator() (V const&, Zero, E&) const { return Zero{}; }
+    template<class V, class E> inline Zero operator() (Zero, V const&, E&) const { return Zero{}; }
 };
 struct FmaErr {
     template<class C, class VX, class VY, class E> inline decltype(auto) operator() (C const& c, VX const& xv, VY const& yv, E& e) const { return fma_err(c,xv,yv,e); }
