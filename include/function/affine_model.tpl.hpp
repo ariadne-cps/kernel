@@ -231,7 +231,8 @@ template<class F> AffineModel<ValidatedTag,F>::AffineModel(const Affine<NumericT
     for(SizeType j=0; j!=affine.argument_size(); ++j) {
         affine_model[j] = affine[j].value();
     }
-    F::set_rounding_upward();
+    RoundingSession<F> rounding;
+    rounding.set(up);
     F e(affine_model.error().precision());
     for(SizeType j=0; j!=affine.argument_size(); ++j) {
         e = add(rounded,e,max(sub(rounded,affine.gradient(j).upper().raw(),affine_model.gradient(j)),
@@ -240,7 +241,6 @@ template<class F> AffineModel<ValidatedTag,F>::AffineModel(const Affine<NumericT
     e = add(rounded,e,max(sub(rounded,affine.value().upper().raw(),affine_model.value()),
                           sub(rounded,affine_model.value(),affine.value().lower().raw())));
     affine_model.set_error(ErrorType(e));
-    F::set_rounding_to_nearest();
 }
 
 template<class F> AffineModel<ValidatedTag,F>::AffineModel(const TaylorModel<ValidatedTag,F>& taylor_model)
