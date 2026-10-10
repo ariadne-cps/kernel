@@ -148,13 +148,13 @@ template<class P, class F> struct AlgebraOperations<TaylorModel<P,F>>
     static TaylorModel<P,F> apply(Add,TaylorModel<P,F> const& tm1, TaylorModel<P,F> const& tm2);
     static TaylorModel<P,F> apply(Sub,TaylorModel<P,F> const& tm1, TaylorModel<P,F> const& tm2);
     static TaylorModel<P,F> apply(Mul,TaylorModel<P,F> const& tm1, TaylorModel<P,F> const& tm2);
-    static TaylorModel<P,F> apply(Min,TaylorModel<P,F> const& tm1, TaylorModel<P,F> const& tm2) requires Same<P,ValidatedTag>;
-    static TaylorModel<P,F> apply(Max,TaylorModel<P,F> const& tm1, TaylorModel<P,F> const& tm2) requires Same<P,ValidatedTag>;
-    static TaylorModel<P,F> apply(Max,TaylorModel<P,F> const& tm, X const& c) requires Same<P,ValidatedTag>;
-    static TaylorModel<P,F> apply(Min,TaylorModel<P,F> const& tm, X const& c) requires Same<P,ValidatedTag>;
-    static TaylorModel<P,F> apply(Max,X const& c, TaylorModel<P,F> const& tm) requires Same<P,ValidatedTag>;
-    static TaylorModel<P,F> apply(Min,X const& c, TaylorModel<P,F> const& tm) requires Same<P,ValidatedTag>;
-    static TaylorModel<P,F> apply(Abs,TaylorModel<P,F> const& tm) requires Same<P,ValidatedTag>;
+    static TaylorModel<P,F> apply(Min,TaylorModel<P,F> const& tm1, TaylorModel<P,F> const& tm2);
+    static TaylorModel<P,F> apply(Max,TaylorModel<P,F> const& tm1, TaylorModel<P,F> const& tm2);
+    static TaylorModel<P,F> apply(Max,TaylorModel<P,F> const& tm, X const& c);
+    static TaylorModel<P,F> apply(Min,TaylorModel<P,F> const& tm, X const& c);
+    static TaylorModel<P,F> apply(Max,X const& c, TaylorModel<P,F> const& tm);
+    static TaylorModel<P,F> apply(Min,X const& c, TaylorModel<P,F> const& tm);
+    static TaylorModel<P,F> apply(Abs,TaylorModel<P,F> const& tm);
     static TaylorModel<P,F> apply(Tanh,TaylorModel<P,F> const& tm);
 };
 
@@ -307,17 +307,17 @@ class TaylorModel
     friend Bool same(const TaylorModel<P,F>& tm1, const TaylorModel<P,F>& tm2) {
         return same(tm1._expansion, tm2._expansion) && same(tm1._error, tm2._error); }
 
-    decltype(auto) operator<(const TaylorModel<P,F>& sd) const requires Same<P,ValidatedTag> {
+    decltype(auto) operator<(const TaylorModel<P,F>& sd) const {
         return (sd-*this)>0; }
     //! \brief Comparison with another Taylor model.
-    decltype(auto) operator>(const TaylorModel<P,F>& sd) const requires Same<P,ValidatedTag> {
+    decltype(auto) operator>(const TaylorModel<P,F>& sd) const {
         return (*this-sd)>0; }
 
     //! \brief Comparison with a scalar.
-    decltype(auto) operator<(Int c) const requires Same<P,ValidatedTag> {
+    decltype(auto) operator<(Int c) const {
         return this->range().upper_bound()<c; }
     //! \brief Comparison with a scalar.
-    decltype(auto) operator>(Int c) const requires Same<P,ValidatedTag> {
+    decltype(auto) operator>(Int c) const {
         return this->range().lower_bound()>c; }
     //!@}
 
@@ -396,9 +396,9 @@ class TaylorModel
     //! \brief The domain of the quantity, always given by \f$[-1,1]^{\mathrm{as}}\f$.
     UnitBox domain() const;
     //! \brief The codomain of the quantity.
-    IntervalDomainType codomain() const requires Same<P,ValidatedTag>;
+    IntervalDomainType codomain() const;
     //! \brief An over-approximation to the range of the quantity.
-    RangeType range() const requires Same<P,ValidatedTag>;
+    RangeType range() const;
 
     //! \brief Evaluate the quantity over the interval of points \a x.
     friend ArithmeticType<CoefficientType,ApproximateNumericType> evaluate(const TaylorModel<P,F>& f, const Vector<ApproximateNumericType>& x) {
