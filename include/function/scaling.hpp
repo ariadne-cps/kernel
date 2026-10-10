@@ -63,6 +63,12 @@ inline Dyadic rad(IntervalDomainType const& ivl) {
     return hlf(sub( Dyadic(ivl.upper_bound()), Dyadic(ivl.lower_bound()) ));
 }
 
+inline Interval<FloatDP> convert_interval(Interval<FloatDP> const& ivl, DoublePrecision) {
+    return ivl; }
+
+inline Interval<FloatMP> convert_interval(Interval<FloatDP> const& ivl, MultiplePrecision pr) {
+    return Interval<FloatMP>(FloatMP(ivl.lower_bound().raw(),pr),FloatMP(ivl.upper_bound().raw(),pr)); }
+
 template<class T> inline
 T scale(T x, const IntervalDomainType& cd) {
     return std::move(x)*rad(cd)+med(cd);
