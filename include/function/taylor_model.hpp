@@ -308,17 +308,25 @@ class TaylorModel
         return same(tm1._expansion, tm2._expansion) && same(tm1._error, tm2._error); }
 
     decltype(auto) operator<(const TaylorModel<P,F>& sd) const {
-        return (sd-*this)>0; }
+        if constexpr(Same<P,ValidatedTag>) { return (sd-*this)>0; }
+        else { ARIADNE_ASSERT_MSG(false,"Comparison only available for a Validated TaylorModel."); }
+    }
     //! \brief Comparison with another Taylor model.
     decltype(auto) operator>(const TaylorModel<P,F>& sd) const {
-        return (*this-sd)>0; }
+        if constexpr(Same<P,ValidatedTag>) { return (*this-sd)>0; }
+        else { ARIADNE_ASSERT_MSG(false,"Comparison only available for a Validated TaylorModel."); }
+    }
 
     //! \brief Comparison with a scalar.
     decltype(auto) operator<(Int c) const {
-        return this->range().upper_bound()<c; }
+        if constexpr(Same<P,ValidatedTag>) { return this->range().upper_bound()<c; }
+        else { ARIADNE_ASSERT_MSG(false,"Comparison only available for a Validated TaylorModel."); }
+    }
     //! \brief Comparison with a scalar.
     decltype(auto) operator>(Int c) const {
-        return this->range().lower_bound()>c; }
+        if constexpr(Same<P,ValidatedTag>) { return this->range().lower_bound()>c; }
+        else { ARIADNE_ASSERT_MSG(false,"Comparison only available for a Validated TaylorModel."); }
+    }
     //!@}
 
     //! \name Data access

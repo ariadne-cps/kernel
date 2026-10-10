@@ -568,7 +568,7 @@ class EmbeddedFunction
     typedef typename SignatureTraits<SIG>::ResultSizeType ResultSizeType;
 
     EmbeddedFunction(ElementSizeType<D1> as1, const Function<P,RES(ARG2)>& f2, ElementSizeType<D3> as3)
-        : _dom1((as1)), _f2(f2), _dom3(as3) { ARIADNE_NOT_IMPLEMENTED; }
+        : EmbeddedFunction(D1(as1),f2,D3(as3)) { }
     EmbeddedFunction(D1 dom1, const Function<P,RES(ARG2)>& f2, D3 dom3)
         : _dom1(dom1), _f2(f2), _dom3(dom3) { }
     DomainType domain() const { return product(_dom1,_f2.domain(),_dom3); }
@@ -579,8 +579,16 @@ class EmbeddedFunction
         Vector<X> px=project(x,Range(_dom1.dimension(),_dom1.dimension()+_f2.argument_size()));
         return _f2.evaluate(px); }
     template<class I> inline decltype(auto) operator[](I i) const { return EmbeddedFunction<P,D1,D2,D3,RealDomain>(_dom1,_f2[i],_dom3); }
-    friend EmbeddedFunction<P,D1,D2,D3,C> derivative(EmbeddedFunction<P,D1,D2,D3,C> const&, ArgumentSizeType) {
-        ARIADNE_NOT_IMPLEMENTED; }
+    friend EmbeddedFunction<P,D1,D2,D3,C> derivative(EmbeddedFunction<P,D1,D2,D3,C> const& f, ArgumentSizeType k) {
+        ARIADNE_ASSERT(k<f.argument_size());
+        const SizeType n1=f._dom1.dimension();
+        const SizeType n2=f._f2.argument_size();
+        if(k<n1 || k>=n1+n2) {
+            Function<P,RES(ARG2)> z(f._f2.result_size(),f._f2.domain());
+            return EmbeddedFunction<P,D1,D2,D3,C>(f._dom1,z,f._dom3);
+        }
+        return EmbeddedFunction<P,D1,D2,D3,C>(f._dom1,f._f2.derivative(k-n1),f._dom3);
+    }
     friend OutputStream& operator<<(OutputStream& os, EmbeddedFunction<P,D1,D2,D3,C> const& f) {
         return os << "EmbeddedFunction( dom1="<<f._dom1<<", f2="<<f._f2<<", dom3="<<f._dom3<<" )"; }
   private:
