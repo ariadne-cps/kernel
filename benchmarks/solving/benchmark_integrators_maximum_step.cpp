@@ -148,7 +148,7 @@ MaximumStepResult benchmark_pair(
         const NamedIntegrator& named_integrator,
         const BenchmarkCase& benchmark_case)
 {
-    LOGGING_PRINTLN_AT(2,
+    LOGGING_PRINTLN_AT(3,
         "Maximum-step search: integrator="<<named_integrator.key
         <<", function="<<benchmark_case.name)
 
@@ -210,7 +210,7 @@ MaximumStepResult benchmark_pair(
         }
     }
 
-    LOGGING_PRINTLN_AT(2,
+    LOGGING_PRINTLN_AT(3,
         "Maximum-step bracket: integrator="<<named_integrator.key
         <<", function="<<benchmark_case.name
         <<", lower="<<lower
