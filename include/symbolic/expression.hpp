@@ -349,7 +349,7 @@ class OperationExpressionWriter {
     template<class T> OutputStream& _write(OutputStream& os, Expression<T> const& e) const;
     template<class T> OutputStream& _write(OutputStream& os, Expression<Vector<T>> const& ve) const;
   public:
-    template<class T> WritableTemporary<T,OperationExpressionWriter> operator() (Expression<T> const& e) const {
+    template<class T> WritableTemporary<Expression<T>,OperationExpressionWriter> operator() (Expression<T> const& e) const {
         return WritableTemporary(*this,e); }
     template<class T> WritableTemporary<Expression<Vector<T>>,OperationExpressionWriter> operator() (Expression<Vector<T>> const& ve) const {
         return WritableTemporary(*this,ve); }

@@ -349,8 +349,6 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(boolean_constant.arguments().size(),0u);
         ARIADNE_TEST_EQUALS(boolean_not.arguments().size(),1u);
         ARIADNE_TEST_EQUALS(boolean_binary.arguments().size(),2u);
-        ARIADNE_TEST_EQUALS((string_variable==String("mapped")).arguments().size(),1u);
-        ARIADNE_TEST_EQUALS((integer_from_variable<IntegerExpression(integer_other)).arguments().size(),2u);
 
         std::ostringstream boolean_operation_stream;
         boolean_operation_stream << OperationExpressionWriter()(boolean_binary);
@@ -411,6 +409,7 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(StringExpression::variable(Identifier("string")));
         ARIADNE_TEST_ASSERT(not to_string(string_from_variable).empty());
         ARIADNE_TEST_EQUALS(string_constant.arguments().size(),0u);
+        ARIADNE_TEST_EQUALS((string_variable==String("mapped")).arguments().size(),1u);
 
         std::ostringstream string_operation_stream;
         string_operation_stream << OperationExpressionWriter()(string_from_variable);
@@ -438,6 +437,7 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(integer_binary.arg1().var(),Identifier("integer"));
         ARIADNE_TEST_EQUALS(integer_binary.arg2().var(),Identifier("integer_other"));
         ARIADNE_TEST_ASSERT(not to_string(integer_binary).empty());
+        ARIADNE_TEST_EQUALS((integer_from_variable<IntegerExpression(integer_other)).arguments().size(),2u);
         ARIADNE_TEST_EQUALS(integer_constant.arguments().size(),0u);
         ARIADNE_TEST_EQUALS(integer_negative.arguments().size(),1u);
         ARIADNE_TEST_EQUALS(integer_binary.arguments().size(),2u);
