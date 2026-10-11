@@ -425,6 +425,7 @@ class TestExpression {
 
         IntegerValuation integer_valuation;
         integer_valuation.set(integer_variable,Integer(9));
+        integer_valuation.set(integer_other,Integer(10));
         ARIADNE_TEST_EQUALS(evaluate(integer_from_variable,integer_valuation),Integer(9));
         ARIADNE_TEST_EXECUTE(evaluate(integer_from_variable<IntegerExpression(integer_other),integer_valuation));
 
