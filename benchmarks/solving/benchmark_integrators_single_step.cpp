@@ -1,10 +1,13 @@
 #include <chrono>
 #include <cmath>
 #include <iomanip>
-#include <iostream>
-#include <limits>
+#include <sstream>
+#include <string>
 #include <utility>
+#include <vector>
 
+#include "io/command_line_interface.hpp"
+#include "logging/logging.hpp"
 #include "integrator_benchmark.hpp"
 
 using namespace Ariadne;
@@ -24,8 +27,52 @@ struct Measurement {
     FlowStepModelType flow;
 };
 
+struct BenchmarkResult {
+    std::string integrator;
+    std::string function;
+    Nat repetitions;
+    double time_us_per_step;
+    decltype(std::declval<FlowStepModelType>().error()) remainder;
+    decltype(std::declval<FlowStepModelType>().errors()) component_remainders;
+};
+
 StepSizeType benchmark_step() {
     return 0.03125_x;
+}
+
+Bool is_integrator_selection(const std::string& value) {
+    return value=="all"
+        || value=="taylor-picard"
+        || value=="graded-taylor-picard"
+        || value=="taylor-series"
+        || value=="taylor-series-bounder"
+        || value=="graded-taylor-series"
+        || value=="preconditioned-graded-taylor-series";
+}
+
+std::string acquire_integrator_selection(
+        Int argc,
+        const char* argv[],
+        List<String>& cli_arguments)
+{
+    std::string selection="all";
+    Bool selection_found=false;
+
+    cli_arguments.append(String(argv[0]));
+    for(Int i=1; i!=argc; ++i) {
+        const std::string argument(argv[i]);
+        if(is_integrator_selection(argument)) {
+            if(selection_found) {
+                throw std::runtime_error(
+                    "Integrator selection specified more than once.");
+            }
+            selection=argument;
+            selection_found=true;
+        } else {
+            cli_arguments.append(String(argv[i]));
+        }
+    }
+    return selection;
 }
 
 Measurement measure(
@@ -61,14 +108,18 @@ Nat determine_repetitions(
 {
     Duration minimum_elapsed=Duration::max();
 
+    LOGGING_PRINTLN_AT(1,
+        "Calibrating repetitions with step="<<step
+        <<", minimum measurement time="
+        <<std::chrono::duration<double,std::milli>(
+            minimum_total_measurement_time).count()
+        <<" ms")
+
     for(const auto& named_integrator : integrators) {
         for(const auto& benchmark_case : cases) {
-            std::cerr
-                << "[repetition-calibration] integrator="
-                << named_integrator.key
-                << " function=" << benchmark_case.name
-                << " START"
-                << std::endl;
+            LOGGING_PRINTLN_AT(2,
+                "Calibration start: integrator="<<named_integrator.key
+                <<", function="<<benchmark_case.name)
 
             const auto measurement=measure(
                 *named_integrator.integrator,
@@ -76,15 +127,20 @@ Nat determine_repetitions(
                 step,
                 1u);
 
-            std::cerr
-                << "[repetition-calibration] integrator="
-                << named_integrator.key
-                << " function=" << benchmark_case.name
-                << " elapsed_ms="
-                << std::chrono::duration<double,std::milli>(
-                    measurement.elapsed).count()
-                << " remainder=" << measurement.flow.error()
-                << std::endl;
+            const double elapsed_ms=
+                std::chrono::duration<double,std::milli>(
+                    measurement.elapsed).count();
+
+            LOGGING_PRINTLN_AT(1,
+                "Calibration: integrator="<<named_integrator.key
+                <<", function="<<benchmark_case.name
+                <<", elapsed="<<elapsed_ms<<" ms")
+
+            LOGGING_PRINTLN_AT(2,
+                "Calibration remainder: integrator="<<named_integrator.key
+                <<", function="<<benchmark_case.name
+                <<", remainder="<<measurement.flow.error()
+                <<", components="<<measurement.flow.errors())
 
             if(measurement.elapsed<minimum_elapsed) {
                 minimum_elapsed=measurement.elapsed;
@@ -93,6 +149,10 @@ Nat determine_repetitions(
     }
 
     if(minimum_elapsed<=Duration::zero()) {
+        LOGGING_PRINTLN_AT(1,
+            "Calibration selected maximum repetitions="
+            <<maximum_repetitions
+            <<" because the minimum measured duration was non-positive")
         return maximum_repetitions;
     }
 
@@ -107,29 +167,32 @@ Nat determine_repetitions(
     if(repetitions>maximum_repetitions) {
         repetitions=maximum_repetitions;
     }
+
+    LOGGING_PRINTLN_AT(1,
+        "Calibration selected repetitions="<<repetitions)
+
     return repetitions;
 }
 
-void run_benchmarks(
+std::vector<BenchmarkResult> run_benchmarks(
         const std::vector<NamedIntegrator>& integrators,
         const std::vector<BenchmarkCase>& cases,
         const StepSizeType& step,
         Nat repetitions)
 {
-    std::cout
-        << "# step=" << step << "\n"
-        << "# benchmark_step_maximum_error=" << benchmark_step_maximum_error << "\n"
-        << "# repetitions=" << repetitions << "\n"
-        << "integrator\tfunction\trepetitions\ttime_us_per_step"
-        << "\tremainder\tcomponent_remainders\n";
+    std::vector<BenchmarkResult> results;
+    results.reserve(integrators.size()*cases.size());
+
+    LOGGING_PRINTLN_AT(1,
+        "Running benchmark with step="<<step
+        <<", step maximum error="<<benchmark_step_maximum_error
+        <<", repetitions="<<repetitions)
 
     for(const auto& named_integrator : integrators) {
         for(const auto& benchmark_case : cases) {
-            std::cerr
-                << "[benchmark] integrator=" << named_integrator.key
-                << " function=" << benchmark_case.name
-                << " START"
-                << std::endl;
+            LOGGING_PRINTLN_AT(2,
+                "Benchmark start: integrator="<<named_integrator.key
+                <<", function="<<benchmark_case.name)
 
             const auto measurement=measure(
                 *named_integrator.integrator,
@@ -143,51 +206,92 @@ void run_benchmarks(
                 / static_cast<double>(repetitions);
 
             if(!(time_us_per_step>0.0) || !std::isfinite(time_us_per_step)) {
-                std::cerr
-                    << "Invalid timing for integrator "
-                    << named_integrator.name
-                    << " and function "
-                    << benchmark_case.name
-                    << ": " << time_us_per_step << " us\n";
-                std::exit(2);
+                LOGGING_PRINTLN(
+                    "Invalid timing for integrator "<<named_integrator.name
+                    <<" and function "<<benchmark_case.name
+                    <<": "<<time_us_per_step<<" us")
+                throw std::runtime_error("Invalid benchmark timing.");
             }
 
-            std::cout
-                << named_integrator.key << "\t"
-                << benchmark_case.name << "\t"
-                << repetitions << "\t"
-                << std::fixed << std::setprecision(6)
-                << time_us_per_step << "\t"
-                << measurement.flow.error() << "\t"
-                << measurement.flow.errors()
-                << "\n";
+            LOGGING_PRINTLN_AT(1,
+                "Benchmark result: integrator="<<named_integrator.key
+                <<", function="<<benchmark_case.name
+                <<", time="<<time_us_per_step<<" us/step"
+                <<", remainder="<<measurement.flow.error())
 
-            std::cerr
-                << "[benchmark] integrator=" << named_integrator.key
-                << " function=" << benchmark_case.name
-                << " OK time_us_per_step=" << time_us_per_step
-                << " remainder=" << measurement.flow.error()
-                << std::endl;
+            LOGGING_PRINTLN_AT(2,
+                "Benchmark component remainders: integrator="
+                <<named_integrator.key
+                <<", function="<<benchmark_case.name
+                <<", components="<<measurement.flow.errors())
+
+            results.push_back({
+                named_integrator.key,
+                benchmark_case.name,
+                repetitions,
+                time_us_per_step,
+                measurement.flow.error(),
+                measurement.flow.errors()
+            });
         }
     }
+
+    return results;
+}
+
+void print_results(
+        const StepSizeType& step,
+        Nat repetitions,
+        const std::vector<BenchmarkResult>& results)
+{
+    std::ostringstream table;
+    table
+        <<"Single-step integrator benchmark\n"
+        <<"step="<<step
+        <<", step_maximum_error="<<benchmark_step_maximum_error
+        <<", repetitions="<<repetitions<<"\n"
+        <<"integrator\tfunction\trepetitions\ttime_us_per_step"
+        <<"\tremainder\tcomponent_remainders\n";
+
+    table<<std::fixed<<std::setprecision(6);
+    for(const auto& result : results) {
+        table
+            <<result.integrator<<"\t"
+            <<result.function<<"\t"
+            <<result.repetitions<<"\t"
+            <<result.time_us_per_step<<"\t"
+            <<result.remainder<<"\t"
+            <<result.component_remainders
+            <<"\n";
+    }
+
+    LOGGING_PRINTLN(table.str())
 }
 
 } // namespace
 
 Int main(Int argc, const char* argv[]) {
-    const std::string selection=(argc>1 ? argv[1] : "all");
-    if(argc>2) {
-        std::cerr
-            << "Usage: benchmark_integrators_single_step "
-            << "[all|integrator-key]\n";
-        return 1;
+    Logger::instance().configuration().set_verbosity(1u);
+
+    List<String> cli_arguments;
+    const std::string selection=
+        acquire_integrator_selection(argc,argv,cli_arguments);
+
+    if(not CommandLineInterface::instance().acquire(cli_arguments)) {
+        return -1;
     }
 
+    LOGGING_PRINTLN_AT(1,
+        "Integrator selection="<<selection)
+
     const auto cases=make_cases();
-    const auto integrators=select_integrators(selection,benchmark_step_maximum_error);
+    const auto integrators=select_integrators(
+        selection,benchmark_step_maximum_error);
     const StepSizeType step=benchmark_step();
     const Nat repetitions=determine_repetitions(integrators,cases,step);
+    const auto results=run_benchmarks(
+        integrators,cases,step,repetitions);
 
-    run_benchmarks(integrators,cases,step,repetitions);
+    print_results(step,repetitions,results);
     return 0;
 }
