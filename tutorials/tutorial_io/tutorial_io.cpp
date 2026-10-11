@@ -20,9 +20,9 @@ void show(const std::string& label, const T& value) {
 ValidatedConstrainedImageSet make_demo_set() {
     auto u = EffectiveScalarMultivariateFunction::coordinates(3);
     EffectiveVectorMultivariateFunction map({
-        1.25_x * u[0] + 0.35_x * u[2],
-        u[1] + 0.20_x * u[0] * u[0],
-        u[2] - 0.30_x * u[0]
+        1.25_dec * u[0] + 0.35_dec * u[2],
+        u[1] + 0.20_dec * u[0] * u[0],
+        u[2] - 0.30_dec * u[0]
     });
     return ValidatedConstrainedImageSet(ExactBoxType::unit_box(3), map);
 }

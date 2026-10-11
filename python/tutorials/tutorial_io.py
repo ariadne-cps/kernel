@@ -11,14 +11,31 @@ def show(label, value):
     print(f"{label}: {value}")
 
 
+def real_box(bounds):
+    # Construct Real values from decimal literals, never through FloatDP.
+    # This follows the non-deprecated Real(Decimal) construction path.
+    return RealBox([
+        RealInterval(Real(Decimal(lower)), Real(Decimal(upper)))
+        for lower, upper in bounds
+    ])
+
+
 def make_demo_set():
     u0 = EffectiveScalarMultivariateFunction.coordinate(3, 0)
     u1 = EffectiveScalarMultivariateFunction.coordinate(3, 1)
     u2 = EffectiveScalarMultivariateFunction.coordinate(3, 2)
+
+    # Mathematical constants are represented exactly as rationals and then
+    # lifted to EffectiveNumber.  Python float is intentionally avoided.
+    five_quarters = EffectiveNumber(Rational("5/4"))
+    seven_twentieths = EffectiveNumber(Rational("7/20"))
+    one_fifth = EffectiveNumber(Rational("1/5"))
+    three_tenths = EffectiveNumber(Rational("3/10"))
+
     mapping = EffectiveVectorMultivariateFunction([
-        1.25 * u0 + 0.35 * u2,
-        u1 + 0.20 * u0 * u0,
-        u2 - 0.30 * u0,
+        u0 * five_quarters + u2 * seven_twentieths,
+        u1 + (u0 * u0) * one_fifth,
+        u2 - u0 * three_tenths,
     ])
     domain = FloatDPExactBox([
         {exact(-1): exact(1)},
@@ -56,14 +73,14 @@ def tutorial_io():
     ])
     figure = Figure(viewport, Projection2d(2, 0, 1))
 
-    region_a = RealBox(BoxDomainType([
-        {exact(-1.8): exact(0.2)},
-        {exact(-1.0): exact(0.7)},
-    ]))
-    region_b = RealBox(BoxDomainType([
-        {exact(-0.4): exact(1.7)},
-        {exact(-0.2): exact(1.4)},
-    ]))
+    region_a = real_box([
+        ("-1.8", "0.2"),
+        ("-1.0", "0.7"),
+    ])
+    region_b = real_box([
+        ("-0.4", "1.7"),
+        ("-0.2", "1.4"),
+    ])
 
     figure.set_fill_colour(0.20, 0.60, 0.90)
     figure.set_fill_opacity(0.45)
@@ -151,10 +168,10 @@ def tutorial_io():
 
     labelled_region = LabelledRealBox(
         RealSpace([x, y]),
-        RealBox(BoxDomainType([
-            {exact(-1.25): exact(0.75)},
-            {exact(-0.75): exact(1.0)},
-        ])),
+        real_box([
+            ("-1.25", "0.75"),
+            ("-0.75", "1.0"),
+        ]),
     )
 
     labelled.properties().set_fill_colour(0.30, 0.70, 0.40)
