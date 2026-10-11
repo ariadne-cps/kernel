@@ -112,15 +112,17 @@ template<class T> SizeType Space<T>::operator[](const typename Space<T>::Variabl
 template<class T> SizeType Space<T>::operator[](const Identifier& n) const {
     return this->index(n); }
 template<class T> SizeType Space<T>::index(const typename Space<T>::VariableType& v) const {
-    for(SizeType i=0; i!=_variables.size(); ++i) {
-        if(v.name()==_variables[i]) { return i; } }
-    ARIADNE_PRECONDITION_MSG(false,"Variable "<<v<<" is not in the Space "<<*this);
-    return _variables.size(); }
+    SizeType i=0;
+    for(; i!=_variables.size(); ++i) {
+        if(v.name()==_variables[i]) { break; } }
+    ARIADNE_PRECONDITION_MSG(i!=_variables.size(),"Variable "<<v<<" is not in the Space "<<*this);
+    return i; }
 template<class T> SizeType Space<T>::index(const Identifier& n) const {
-    for(SizeType i=0; i!=_variables.size(); ++i) {
-        if(n==_variables[i]) { return i; } }
-    ARIADNE_PRECONDITION_MSG(false,"Variable named "<<n<<" is not in the Space "<<*this);
-    return _variables.size(); }
+    SizeType i=0;
+    for(; i!=_variables.size(); ++i) {
+        if(n==_variables[i]) { break; } }
+    ARIADNE_PRECONDITION_MSG(i!=_variables.size(),"Variable named "<<n<<" is not in the Space "<<*this);
+    return i; }
 template<class T> Space<T>& Space<T>::insert(const typename Space<T>::VariableType& v) {
     for(SizeType i=0; i!=_variables.size(); ++i) {
         if(_variables[i]==v.name()) { return *this; } }
