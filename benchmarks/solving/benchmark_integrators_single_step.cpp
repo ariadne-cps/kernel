@@ -1,6 +1,7 @@
 #include <chrono>
 #include <cmath>
 #include <iomanip>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -26,6 +27,25 @@ struct Measurement {
     Duration elapsed;
     FlowStepModelType flow;
 };
+
+FlowStepModelType run_integrator_step(
+        const IntegratorInterface& integrator,
+        const BenchmarkCase& benchmark_case,
+        const StepSizeType& step)
+{
+    std::optional<FlowStepModelType> flow;
+    try {
+        LOGGING_RUN_AT(2,
+            flow=integrator.flow_step(
+                benchmark_case.vector_field,
+                benchmark_case.domain,
+                step))
+    } catch(...) {
+        Logger::instance().decrease_level(2);
+        throw;
+    }
+    return std::move(flow.value());
+}
 
 struct BenchmarkResult {
     std::string integrator;
@@ -81,16 +101,16 @@ Measurement measure(
         const StepSizeType& step,
         Nat repetitions)
 {
-    FlowStepModelType flow=integrator.flow_step(
-        benchmark_case.vector_field,
-        benchmark_case.domain,
+    FlowStepModelType flow=run_integrator_step(
+        integrator,
+        benchmark_case,
         step);
 
     const auto start=Clock::now();
     for(Nat i=0u; i!=repetitions; ++i) {
-        flow=integrator.flow_step(
-            benchmark_case.vector_field,
-            benchmark_case.domain,
+        flow=run_integrator_step(
+            integrator,
+            benchmark_case,
             step);
     }
     const auto stop=Clock::now();

@@ -30,6 +30,25 @@ struct MaximumStepResult {
     std::string display;
 };
 
+FlowStepModelType run_integrator_step(
+        const IntegratorInterface& integrator,
+        const BenchmarkCase& benchmark_case,
+        const StepSizeType& step)
+{
+    std::optional<FlowStepModelType> flow;
+    try {
+        LOGGING_RUN_AT(2,
+            flow=integrator.flow_step(
+                benchmark_case.vector_field,
+                benchmark_case.domain,
+                step))
+    } catch(...) {
+        Logger::instance().decrease_level(2);
+        throw;
+    }
+    return std::move(flow.value());
+}
+
 Bool is_integrator_selection(const std::string& value) {
     return value=="all"
         || value=="taylor-picard"
@@ -77,9 +96,9 @@ Trial try_step(
 
     const auto start=Clock::now();
     try {
-        auto flow=named_integrator.integrator->flow_step(
-            benchmark_case.vector_field,
-            benchmark_case.domain,
+        auto flow=run_integrator_step(
+            *named_integrator.integrator,
+            benchmark_case,
             step);
 
         const double elapsed_ms=
