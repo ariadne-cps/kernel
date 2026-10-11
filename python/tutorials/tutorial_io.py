@@ -56,14 +56,14 @@ def tutorial_io():
     ])
     figure = Figure(viewport, Projection2d(2, 0, 1))
 
-    region_a = RealBox([
-        (-1.8, 0.2),
-        (-1.0, 0.7),
-    ])
-    region_b = RealBox([
-        (-0.4, 1.7),
-        (-0.2, 1.4),
-    ])
+    region_a = RealBox(BoxDomainType([
+        {exact(-1.8): exact(0.2)},
+        {exact(-1.0): exact(0.7)},
+    ]))
+    region_b = RealBox(BoxDomainType([
+        {exact(-0.4): exact(1.7)},
+        {exact(-0.2): exact(1.4)},
+    ]))
 
     figure.set_fill_colour(0.20, 0.60, 0.90)
     figure.set_fill_opacity(0.45)
@@ -151,10 +151,10 @@ def tutorial_io():
 
     labelled_region = LabelledRealBox(
         RealSpace([x, y]),
-        RealBox([
-            (-1.25, 0.75),
-            (-0.75, 1.0),
-        ]),
+        RealBox(BoxDomainType([
+            {exact(-1.25): exact(0.75)},
+            {exact(-0.75): exact(1.0)},
+        ])),
     )
 
     labelled.properties().set_fill_colour(0.30, 0.70, 0.40)
