@@ -233,7 +233,6 @@ OutputStream& operator<<(OutputStream& os, const RealExpressionBoundedConstraint
     for(List<ContinuousPredicate>::ConstIterator iter=eset._constraints.begin(); iter!=eset._constraints.end(); ++iter) {
         os << (iter==eset._constraints.begin()?"":",") << *iter; }
     return os << "]";
-    return os << eset._bounds << eset._constraints;
 }
 
 RealExpressionBoundedConstraintSet intersection(RealVariablesBox const& bx, RealExpressionConstraintSet const& cs) {

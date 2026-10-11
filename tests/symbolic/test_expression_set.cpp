@@ -186,7 +186,8 @@ class TestExpressionSet {
 
         List<RealVariableInterval> duplicate_bounds={0.1_dec<=y<=0.5_dec,-1<=y<=1};
         ARIADNE_TEST_FAIL((void)RealExpressionBoundedConstraintSet(duplicate_bounds));
-        ARIADNE_TEST_FAIL((void)RealExpressionBoundedConstraintSet(duplicate_bounds,constraints_list));
+        List<ContinuousPredicate> duplicate_compatible_constraints={y>=0};
+        ARIADNE_TEST_FAIL((void)RealExpressionBoundedConstraintSet(duplicate_bounds,duplicate_compatible_constraints));
         ARIADNE_TEST_FAIL(RealExpressionBoundedConstraintSet(RealVariablesBox({0.1_dec<=x<=0.5_dec,-2.3_dec<=u<=1}),unbounded_set));
         ARIADNE_TEST_EXECUTE(intersection(RealVariablesBox({0.1_dec<=z<=0.5_dec,-2.3_dec<=y<=1}),unbounded_set));
         ARIADNE_TEST_EXECUTE(make_set(RealSpace({y,z}),RealVariablesBox({0.1_dec<=z<=0.5_dec,-2.3_dec<=y<=1}),unbounded_set));
