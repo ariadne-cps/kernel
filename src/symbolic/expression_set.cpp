@@ -148,7 +148,7 @@ RealExpressionConstraintSet::RealExpressionConstraintSet(const List<ContinuousPr
 }
 
 ConstraintSet RealExpressionConstraintSet::euclidean_set(const RealSpace& space) const {
-    ARIADNE_ASSERT( subset(this->variables(), Set<RealVariable>(space.variables())) );
+    ARIADNE_PRECONDITION( subset(this->variables(), Set<RealVariable>(space.variables())) );
     const RealExpressionConstraintSet& set = *this;
     List<EffectiveConstraint> constraints;
     for(SizeType i=0; i!=set.constraints().size(); ++i) {
@@ -181,13 +181,13 @@ RealExpressionBoundedConstraintSet::RealExpressionBoundedConstraintSet(const Ini
 RealExpressionBoundedConstraintSet::RealExpressionBoundedConstraintSet(const List<RealVariableInterval>& bounds)
     : _bounds(make_key_value_map(bounds)), _constraints()
 {
-    ARIADNE_ASSERT(unique_keys(bounds));
+    ARIADNE_PRECONDITION(unique_keys(bounds));
 }
 
 RealExpressionBoundedConstraintSet::RealExpressionBoundedConstraintSet(const List<RealVariableInterval>& bounds, const List<ContinuousPredicate>& constraints)
     : RealExpressionBoundedConstraintSet(make_key_value_map(bounds),constraints)
 {
-    ARIADNE_ASSERT(unique_keys(bounds));
+    ARIADNE_PRECONDITION(unique_keys(bounds));
 }
 
 RealExpressionBoundedConstraintSet::RealExpressionBoundedConstraintSet(const Map<RealVariable,RealInterval>& bounds)
@@ -198,7 +198,7 @@ RealExpressionBoundedConstraintSet::RealExpressionBoundedConstraintSet(const Map
 RealExpressionBoundedConstraintSet::RealExpressionBoundedConstraintSet(const Map<RealVariable,RealInterval>& bounds, const List<ContinuousPredicate>& constraints)
     : _bounds(bounds), _constraints(constraints)
 {
-    ARIADNE_ASSERT( subset(arguments(constraints),Ariadne::variables(_bounds)) );
+    ARIADNE_PRECONDITION( subset(arguments(constraints),Ariadne::variables(_bounds)) );
 }
 
 RealExpressionBoundedConstraintSet::RealExpressionBoundedConstraintSet(const RealVariablesBox& box)
@@ -214,7 +214,7 @@ RealExpressionBoundedConstraintSet::RealExpressionBoundedConstraintSet(const Rea
 }
 
 BoundedConstraintSet RealExpressionBoundedConstraintSet::euclidean_set(const RealSpace& space) const {
-    ARIADNE_ASSERT( this->variables() == make_set(space.variables()) );
+    ARIADNE_PRECONDITION( this->variables() == make_set(space.variables()) );
     const RealExpressionBoundedConstraintSet& set = *this;
     RealBox domain=RealVariablesBox(set.bounds()).euclidean_set(space);
     List<EffectiveConstraint> constraints;

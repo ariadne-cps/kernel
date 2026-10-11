@@ -158,6 +158,35 @@ class TestExpressionSet {
         RealExpressionConstraintSet unbounded_set({y>=0,z+y<=2,sqr(z)+sqr(y)>=0});
         ARIADNE_TEST_PRINT(unbounded_set);
         RealVariable u("u");
+
+        List<RealVariableInterval> bounds_list={0.1_dec<=y<=0.5_dec,-2.3_dec<=z<=1};
+        List<ContinuousPredicate> constraints_list={y>=0,z+y<=2};
+        ARIADNE_TEST_EQUALS(variables(bounds_list).size(),2u);
+
+        RealExpressionBoundedConstraintSet from_initializer({0.1_dec<=y<=0.5_dec,-2.3_dec<=z<=1});
+        ARIADNE_TEST_EQUALS(from_initializer.variables().size(),2u);
+
+        RealExpressionBoundedConstraintSet from_initializer_constraints(
+            {0.1_dec<=y<=0.5_dec,-2.3_dec<=z<=1},{y>=0,z+y<=2});
+        ARIADNE_TEST_EQUALS(from_initializer_constraints.constraints().size(),2u);
+
+        RealExpressionBoundedConstraintSet from_list(bounds_list);
+        ARIADNE_TEST_EQUALS(from_list.bounds().size(),2u);
+
+        RealExpressionBoundedConstraintSet from_list_constraints(bounds_list,constraints_list);
+        ARIADNE_TEST_EQUALS(from_list_constraints.constraints().size(),2u);
+
+        Map<RealVariable,RealInterval> bounds_map=RealVariablesBox(bounds_list).bounds();
+        RealExpressionBoundedConstraintSet from_map(bounds_map);
+        ARIADNE_TEST_EQUALS(from_map.variables().size(),2u);
+
+        RealVariablesBox bounds_box(bounds_list);
+        RealExpressionBoundedConstraintSet from_box(bounds_box);
+        ARIADNE_TEST_EQUALS(from_box.variables().size(),2u);
+
+        List<RealVariableInterval> duplicate_bounds={0.1_dec<=y<=0.5_dec,-1<=y<=1};
+        ARIADNE_TEST_FAIL((void)RealExpressionBoundedConstraintSet(duplicate_bounds));
+        ARIADNE_TEST_FAIL((void)RealExpressionBoundedConstraintSet(duplicate_bounds,constraints_list));
         ARIADNE_TEST_FAIL(RealExpressionBoundedConstraintSet(RealVariablesBox({0.1_dec<=x<=0.5_dec,-2.3_dec<=u<=1}),unbounded_set));
         ARIADNE_TEST_EXECUTE(intersection(RealVariablesBox({0.1_dec<=z<=0.5_dec,-2.3_dec<=y<=1}),unbounded_set));
         ARIADNE_TEST_EXECUTE(make_set(RealSpace({y,z}),RealVariablesBox({0.1_dec<=z<=0.5_dec,-2.3_dec<=y<=1}),unbounded_set));
