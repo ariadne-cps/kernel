@@ -507,6 +507,7 @@ Void export_sets(pybind11::module& module, pybind11::class_<RealVariable>& real_
     module.def("make_set", (ConstraintSet(*)(RealSpace const&, RealExpressionConstraintSet const&)) &make_set);
     module.def("make_set", (BoundedConstraintSet(*)(RealSpace const&, RealExpressionBoundedConstraintSet const&)) &make_set);
     module.def("make_set", (BoundedConstraintSet(*)(RealSpace const&, RealVariablesBox const&, RealExpressionConstraintSet const&)) &make_set);
+    module.def("approximate_euclidean_set", &approximate_euclidean_set);
 
     pybind11::implicitly_convertible<Pair<Real,Real>,RealInterval>();
     pybind11::implicitly_convertible<std::map<RealVariable,RealInterval>,RealVariablesBox>();
