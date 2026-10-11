@@ -74,6 +74,30 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(state.val(),String("active"));
     }
 
+    Void test_templates() {
+        Get get;
+        ARIADNE_TEST_EQUALS(get.kind(),OperatorKind::COORDINATE);
+
+        Vector<Int> values={3,5};
+        ARIADNE_TEST_EQUALS(get(values,1u),Int(5));
+
+        Vec vec;
+        ARIADNE_TEST_EQUALS(vec.code(),OperatorCode::VEC);
+        ARIADNE_TEST_EQUALS(vec.kind(),OperatorKind::NULLARY);
+        ARIADNE_TEST_ASSERT(not to_string(vec).empty());
+
+        Symbolic<Add,Int,Int> binary(Add(),Int(1),Int(2));
+        ARIADNE_TEST_ASSERT(not to_string(binary).empty());
+
+        Symbolic<Get,Vector<Int>,SizeType> getter(Get(),values,1u);
+        ARIADNE_TEST_EQUALS(getter.op().code(),OperatorCode::GET);
+        ARIADNE_TEST_EQUALS(getter.arg().size(),2u);
+        ARIADNE_TEST_EQUALS(getter.arg1().size(),2u);
+        ARIADNE_TEST_EQUALS(getter.arg2(),1u);
+        ARIADNE_TEST_EQUALS(getter.vec().size(),2u);
+        ARIADNE_TEST_EQUALS(getter.ind(),1u);
+    }
+
     Void test_expression() {
         auto writer=RealExpression::default_writer();
         RealExpression::set_default_writer(writer);
@@ -531,6 +555,7 @@ class TestExpression {
     Void test() {
         ARIADNE_TEST_CALL(test_variables());
         ARIADNE_TEST_CALL(test_constants());
+        ARIADNE_TEST_CALL(test_templates());
         ARIADNE_TEST_CALL(test_expression());
         ARIADNE_TEST_CALL(test_write());
         ARIADNE_TEST_CALL(test_assignment());
