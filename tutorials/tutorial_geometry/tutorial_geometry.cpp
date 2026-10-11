@@ -118,8 +118,8 @@ int main() {
     // nonlinear function.  Unlike a plain bounding box, the representation
     // keeps the parameter dependence, so later algorithms can subdivide,
     // propagate constraints and build validated approximations.
-    auto u = EffectiveScalarMultivariateFunction::coordinates(2);
-    EffectiveVectorMultivariateFunction parametrisation({
+    auto u = ValidatedScalarMultivariateFunction::coordinates(2);
+    ValidatedVectorMultivariateFunction parametrisation({
         u[0] + u[1],
         u[0] * u[1]
     });
@@ -136,8 +136,8 @@ int main() {
     // Space constraints are automatically composed with the parametrisation.
     image_set.new_parameter_constraint(u[0] + u[1] <= 1.25_x);
 
-    auto x = EffectiveScalarMultivariateFunction::coordinates(2);
-    EffectiveConstraint state_constraint = x[0] - x[1] <= 1.5_x;
+    auto x = ValidatedScalarMultivariateFunction::coordinates(2);
+    ValidatedExactConstraint state_constraint = x[0] - x[1] <= 1.5_x;
     image_set.new_space_constraint(state_constraint);
 
     show("constrained image set", image_set);

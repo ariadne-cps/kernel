@@ -95,9 +95,9 @@ def tutorial_geometry():
 
     section("Validated parametrised sets: dependence plus constraints")
 
-    u0 = EffectiveScalarMultivariateFunction.coordinate(2, 0)
-    u1 = EffectiveScalarMultivariateFunction.coordinate(2, 1)
-    parametrisation = EffectiveVectorMultivariateFunction([
+    u0 = ValidatedScalarMultivariateFunction.coordinate(2, 0)
+    u1 = ValidatedScalarMultivariateFunction.coordinate(2, 1)
+    parametrisation = ValidatedVectorMultivariateFunction([
         u0 + u1,
         u0 * u1,
     ])
@@ -113,13 +113,11 @@ def tutorial_geometry():
     show("number of parameters", image_set.number_of_parameters())
     show("initial bounding box", image_set.bounding_box())
 
-    image_set.new_parameter_constraint(
-        ValidatedConstraint(u0 + u1 <= 1.25)
-    )
+    image_set.new_parameter_constraint(u0 + u1 <= 1.25)
 
-    x0 = EffectiveScalarMultivariateFunction.coordinate(2, 0)
-    x1 = EffectiveScalarMultivariateFunction.coordinate(2, 1)
-    state_constraint = ValidatedConstraint(x0 - x1 <= 1.5)
+    x0 = ValidatedScalarMultivariateFunction.coordinate(2, 0)
+    x1 = ValidatedScalarMultivariateFunction.coordinate(2, 1)
+    state_constraint = x0 - x1 <= 1.5
     image_set.new_space_constraint(state_constraint)
 
     show("constrained image set", image_set)
