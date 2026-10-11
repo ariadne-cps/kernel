@@ -50,9 +50,9 @@ def tutorial_io():
 
     section("Layering a two-dimensional figure")
 
-    viewport = FloatDPApproximateBox([
-        (-2.5, 2.5),
-        (-2.0, 2.0),
+    viewport = FloatDPExactBox([
+        {exact(-2.5): exact(2.5)},
+        {exact(-2.0): exact(2.0)},
     ])
     figure = Figure(viewport, Projection2d(2, 0, 1))
 
@@ -96,10 +96,10 @@ def tutorial_io():
     section("Projecting higher-dimensional sets")
 
     set3d = make_demo_set()
-    viewport3d = FloatDPApproximateBox([
-        (-2.0, 2.0),
-        (-2.0, 2.0),
-        (-2.0, 2.0),
+    viewport3d = FloatDPExactBox([
+        {exact(-2.0): exact(2.0)},
+        {exact(-2.0): exact(2.0)},
+        {exact(-2.0): exact(2.0)},
     ])
 
     xy = Figure(viewport3d, Projection2d(3, 0, 1))
