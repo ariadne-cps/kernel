@@ -28,6 +28,7 @@
 #include "utility/stlio.hpp"
 #include "numeric/numeric.hpp"
 #include "symbolic/expression.hpp"
+#include "symbolic/templates.tpl.hpp"
 #include "symbolic/expression.tpl.hpp"
 #include "symbolic/assignment.hpp"
 #include "symbolic/valuation.hpp"
