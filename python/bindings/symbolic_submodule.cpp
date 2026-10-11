@@ -267,7 +267,7 @@ pybind11::class_<RealVariable> export_variables(pybind11::module& module)
 Void export_valuations(pybind11::module& module)
 {
     pybind11::class_<RealValuation> real_valuation_class(module,"RealValuation");
-    real_valuation_class.def(pybind11::init<RealValuation>());
+    real_valuation_class.def(pybind11::init<>());
     real_valuation_class.def(pybind11::init<std::map<RealVariable,Real>>());
     real_valuation_class.def(pybind11::init<Array<Real>,Space<Real>>());
     //Valuation(const List<Assignment<Variable<T>,X> >& la);
