@@ -31,7 +31,7 @@
 
 #include <map>
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "function/declarations.hpp"
 #include "utility/array.hpp"
 #include "utility/pointer.hpp"

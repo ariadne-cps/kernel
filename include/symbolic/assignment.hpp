@@ -34,7 +34,7 @@
 #include <string>
 
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "utility/pointer.hpp"
 #include "utility/container.hpp"
 #include "utility/stlio.hpp"

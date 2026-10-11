@@ -30,7 +30,7 @@
 #include "function/formula.hpp"
 #include "function/taylor_model.hpp"
 
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 using namespace Ariadne;
 using namespace std;

@@ -25,7 +25,7 @@
 #include "function/functional.hpp"
 #include "io/drawer.hpp"
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "geometry/function_set.hpp"
 #include "geometry/affine_set.hpp"
 #include "geometry/grid_paving.hpp"

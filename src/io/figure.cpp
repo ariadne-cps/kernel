@@ -24,7 +24,7 @@
 
 #include "utility/standard.hpp"
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "utility/stlio.hpp"
 #include "numeric/numeric.hpp"
 #include "function/function.hpp"

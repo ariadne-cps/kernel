@@ -34,7 +34,7 @@
 #include <iostream>
 #include "function/function_interface.hpp"
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "utility/pointer.hpp"
 
 #include "algebra/vector.hpp"

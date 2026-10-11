@@ -26,7 +26,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "utility/exceptions.hpp"
 #include "utility/stlio.hpp"
 #include "function/projection.hpp"

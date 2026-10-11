@@ -33,7 +33,7 @@
 #include "function/formula.hpp"
 #include "function/formula.tpl.hpp"
 
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 #include "function/function.hpp"
 

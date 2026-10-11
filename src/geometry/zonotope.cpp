@@ -28,7 +28,7 @@
 #include <vector>
 #include <algorithm>
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "utility/array.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"

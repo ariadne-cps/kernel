@@ -34,7 +34,7 @@
 
 #include "geometry/polyhedron.hpp"
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "utility/exceptions.hpp"
 
 #include "numeric/numeric.hpp"

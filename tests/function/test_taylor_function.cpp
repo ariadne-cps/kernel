@@ -42,7 +42,7 @@
 #include "function/formula.hpp"
 #include "function/symbolic_function.hpp"
 
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 using namespace std;
 using namespace Ariadne;

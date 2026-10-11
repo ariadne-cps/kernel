@@ -28,7 +28,7 @@
 #include <string>
 #include "utility/stlio.hpp"
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "foundation/logical.hpp"
 #include "numeric/numeric.hpp"
 
@@ -37,7 +37,7 @@
 #include "geometry/grid_paving.hpp"
 #include "geometry/set_interface.hpp"
 
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 using namespace Ariadne;
 using namespace std;

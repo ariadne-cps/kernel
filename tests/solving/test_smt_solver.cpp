@@ -27,7 +27,7 @@
 #include "solving/smt_solver.hpp"
 #include "threading/thread_manager.hpp"
 
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 using namespace Ariadne;
 

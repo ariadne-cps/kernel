@@ -57,7 +57,7 @@ inline Void restrict(FloatDPBounds& r, FloatDPBounds const& x) {
 #include "algebra/evaluate.hpp"
 #include "function/formula.hpp"
 
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 #include "algebra/covector.hpp"
 #include "function/function.hpp"

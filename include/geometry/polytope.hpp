@@ -37,7 +37,7 @@
 #include <cassert>
 #include <cstring>
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "geometry/point.hpp"
 
 #include "geometry/set_interface.hpp"

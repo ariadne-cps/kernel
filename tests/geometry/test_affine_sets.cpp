@@ -31,7 +31,7 @@
 #include "io/figure.hpp"
 #include "io/geometry2d.hpp"
 
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 using namespace Ariadne;
 using namespace std;

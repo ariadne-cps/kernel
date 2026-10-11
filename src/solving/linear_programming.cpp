@@ -31,7 +31,7 @@
 #include "function/affine.hpp"
 #include "solving/linear_programming.hpp"
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "logging/logging.hpp"
 
 

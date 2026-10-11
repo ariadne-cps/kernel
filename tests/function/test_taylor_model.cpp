@@ -33,7 +33,7 @@
 #include "function/function.hpp"
 #include "algebra/polynomial.hpp"
 
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 using std::cout; using std::cerr; using std::endl;
 using namespace Ariadne;

@@ -25,7 +25,7 @@
 #include "io/command_line_interface.hpp"
 #include "logging/logging.hpp"
 #include "threading/thread_manager.hpp"
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 
 using namespace Ariadne;

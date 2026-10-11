@@ -12,7 +12,7 @@
 
 #include "smt_barr3_full64.hpp"
 
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 using namespace Ariadne;
 

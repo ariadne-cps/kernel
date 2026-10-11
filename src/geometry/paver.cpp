@@ -25,7 +25,7 @@
 #include "function/functional.hpp"
 #include "geometry/paver.hpp"
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "logging/logging.hpp"
 #include "algebra/polynomial.hpp"
 #include "function/function.hpp"

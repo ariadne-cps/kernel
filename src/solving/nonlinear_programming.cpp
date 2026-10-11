@@ -29,7 +29,7 @@
 #include "function/functional.hpp"
 #include <limits>
 
-#include "utility/macros.hpp"
+#include "macro/general.hpp"
 #include "logging/logging.hpp"
 #include "utility/tuple.hpp"
 #include "foundation/logical.hpp"

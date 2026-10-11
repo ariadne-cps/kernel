@@ -32,7 +32,7 @@
 #include "io/figure.hpp"
 #include "logging/logging.hpp"
 
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 
 using namespace Ariadne;

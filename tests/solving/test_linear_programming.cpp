@@ -24,7 +24,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "utility/test.hpp"
+#include "macro/testing.hpp"
 
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
