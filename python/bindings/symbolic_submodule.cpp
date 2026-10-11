@@ -167,6 +167,7 @@ pybind11::class_<RealVariable> export_variables(pybind11::module& module)
     integer_next_variable_class.def("__lshift__", (PrimedIntegerAssignment(PrimedIntegerVariable::*)(const IntegerExpression&)const) &PrimedIntegerVariable::operator=);
     integer_next_variable_class.def("__str__", &__cstr__<PrimedIntegerVariable>);
     module.def("next", (PrimedIntegerVariable(*)(const IntegerVariable&)) &next);
+    module.def("prime", (PrimedIntegerVariable(*)(const IntegerVariable&)) &prime);
 
     pybind11::class_<RealVariable> real_variable_class(module,python_class_name<RealVariable>().c_str());
     real_variable_class.def(pybind11::init<StringType>());
@@ -208,6 +209,8 @@ pybind11::class_<RealVariable> export_variables(pybind11::module& module)
 
     pybind11::class_<RealVariables> real_variables_class(module,"RealVariables");
     real_variables_class.def(pybind11::init<StringType,SizeType>());
+    real_variables_class.def("size", [](RealVariables const& variables){ return variables.size(); });
+    real_variables_class.def("__len__", [](RealVariables const& variables){ return variables.size(); });
     real_variables_class.def("__getitem__", &__getitem__<RealVariables,SizeType,RealVariable>);
     real_variables_class.def("__str__", &__cstr__<RealVariables>);
 
@@ -224,6 +227,7 @@ pybind11::class_<RealVariable> export_variables(pybind11::module& module)
     real_next_variable_class.def("__lshift__", (PrimedRealAssignment(PrimedRealVariable::*)(const RealExpression&)const) &PrimedRealVariable::operator=);
     real_next_variable_class.def("__str__", &__cstr__<PrimedRealVariable>);
     module.def("next", (PrimedRealVariable(*)(const RealVariable&)) &next);
+    module.def("prime", (PrimedRealVariable(*)(const RealVariable&)) &prime);
 
     pybind11::class_<TimeVariable,pybind11::bases<RealVariable>> time_variable_class(module,"TimeVariable");
     time_variable_class.def(pybind11::init<>());
@@ -272,6 +276,8 @@ Void export_valuations(pybind11::module& module)
     real_valuation_class.def("get", &RealValuation::get);
     real_valuation_class.def("__getitem__", &RealValuation::get);
     real_valuation_class.def("__setitem__", &RealValuation::set);
+    real_valuation_class.def("size", [](RealValuation const& valuation){ return valuation.defined().size(); });
+    real_valuation_class.def("__len__", [](RealValuation const& valuation){ return valuation.defined().size(); });
     real_valuation_class.def("__repr__", &__cstr__<RealValuation>);
 
     template_<Valuation> valuation_template(module);
@@ -285,7 +291,14 @@ Void export_expressions(pybind11::module& module)
     real_space_class.def(pybind11::init<std::vector<RealVariable>>());
     real_space_class.def(pybind11::init<RealSpace>());
     real_space_class.def("dimension", &RealSpace::dimension);
+    real_space_class.def("size", &RealSpace::size);
+    real_space_class.def("__len__", &RealSpace::size);
     real_space_class.def("variable", &RealSpace::variable);
+    real_space_class.def("__getitem__", [](RealSpace const& space, SizeType i) {
+        if(i>=space.size()) { throw pybind11::index_error(); }
+        return space.variable(i);
+    });
+    real_space_class.def("contains", (Bool(RealSpace::*)(const RealVariable&)const) &RealSpace::contains);
     real_space_class.def("index", (SizeType(RealSpace::*)(const Identifier&)const) &RealSpace::index);
     real_space_class.def("index", (SizeType(RealSpace::*)(const RealVariable&)const) &RealSpace::index);
     real_space_class.def("__str__", &__cstr__<RealSpace>);
@@ -328,6 +341,13 @@ Void export_expressions(pybind11::module& module)
     real_expression_class.def(pybind11::init<Real>());
     real_expression_class.def(pybind11::init<RealVariable>());
     module.def("simplify", (RealExpression(*)(const RealExpression&)) &simplify);
+    module.def("count_nodes", (SizeType(*)(const RealExpression&)) &count_nodes);
+    module.def("count_distinct_nodes", (SizeType(*)(const RealExpression&)) &count_distinct_nodes);
+    module.def("count_distinct_node_pointers", (SizeType(*)(const RealExpression&)) &count_distinct_node_pointers);
+    module.def("identical", (Bool(*)(const RealExpression&,const RealExpression&)) &identical);
+    module.def("eliminate_common_subexpressions", [](RealExpression& expression) {
+        eliminate_common_subexpressions(expression);
+    });
 
     define_elementary_algebra<RealExpression,Real>(module,real_expression_class);
 
@@ -477,6 +497,10 @@ Void export_sets(pybind11::module& module, pybind11::class_<RealVariable>& real_
     real_variables_box_class.def(pybind11::init([](pybind11::dict dct){return RealVariablesBox(pybind11::cast<Map<RealVariable,RealInterval>>(dct));}));
     real_variables_box_class.def(pybind11::init<Map<RealVariable,RealInterval>>());
     real_variables_box_class.def(pybind11::init<List<RealVariableInterval>>());
+    real_variables_box_class.def("size", [](RealVariablesBox const& box){ return box.variables().size(); });
+    real_variables_box_class.def("__len__", [](RealVariablesBox const& box){ return box.variables().size(); });
+    real_variables_box_class.def("is_empty", &RealVariablesBox::is_empty);
+    real_variables_box_class.def("euclidean_set", &RealVariablesBox::euclidean_set);
     real_variables_box_class.def("__getitem__", &RealVariablesBox::operator[]);
     real_variables_box_class.def("__str__",&__cstr__<RealVariablesBox>);
     pybind11::implicitly_convertible<pybind11::dict,RealVariablesBox>();
@@ -492,11 +516,16 @@ Void export_sets(pybind11::module& module, pybind11::class_<RealVariable>& real_
 
     pybind11::class_<RealExpressionConstraintSet> real_expression_constraint_set_class(module,"RealExpressionConstraintSet");
     real_expression_constraint_set_class.def(pybind11::init<List<ContinuousPredicate>>());
+    real_expression_constraint_set_class.def("number_of_variables", [](RealExpressionConstraintSet const& set){ return set.variables().size(); });
+    real_expression_constraint_set_class.def("number_of_constraints", [](RealExpressionConstraintSet const& set){ return set.constraints().size(); });
+    real_expression_constraint_set_class.def("euclidean_set", &RealExpressionConstraintSet::euclidean_set);
     real_expression_constraint_set_class.def("__str__",&__cstr__<RealExpressionConstraintSet>);
 
     pybind11::class_<RealExpressionBoundedConstraintSet> real_expression_bounded_constraint_set_class(module,"RealExpressionBoundedConstraintSet");
     real_expression_bounded_constraint_set_class.def(pybind11::init<List<RealVariableInterval>,List<ContinuousPredicate>>());
     real_expression_bounded_constraint_set_class.def(pybind11::init<RealVariablesBox,RealExpressionConstraintSet>());
+    real_expression_bounded_constraint_set_class.def("number_of_variables", [](RealExpressionBoundedConstraintSet const& set){ return set.variables().size(); });
+    real_expression_bounded_constraint_set_class.def("number_of_constraints", [](RealExpressionBoundedConstraintSet const& set){ return set.constraints().size(); });
     real_expression_bounded_constraint_set_class.def("euclidean_set", (BoundedConstraintSet(RealExpressionBoundedConstraintSet::*)(RealSpace const&)) &RealExpressionBoundedConstraintSet::euclidean_set);
     real_expression_bounded_constraint_set_class.def("__str__",&__cstr__<RealExpressionBoundedConstraintSet>);
 
