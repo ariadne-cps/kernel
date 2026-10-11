@@ -45,15 +45,6 @@ using Neq = Unequal;
 template<class SIG> struct OperatorTypedef;
 template<class SIG> using OperatorType = typename OperatorTypedef<SIG>::Type;
 
-struct CatOp {
-    static constexpr OperatorCode code() { return OperatorCode::ADD; }
-    static constexpr OperatorKind kind() { return OperatorKind::BINARY; }
-    String operator()(String const& s1, String const& s2) const { return s1+s2; }
-    friend OutputStream& operator<<(OutputStream& os, CatOp) { return os << "cat"; }
-};
-inline String pos(String s) { return s; }
-
-
 template<> struct OperatorTypedef<String(String)> { typedef OperatorVariant<> Type; };
 
 template<> struct OperatorTypedef<Integer(Integer)> { typedef OperatorVariant<Nul,Pos,Neg,Sqr,Abs> Type; };
@@ -275,14 +266,6 @@ Expression<R> make_expression(OP op, const Expression<A1>& e1, Expression<A2> e2
 
 
 template<class A> A evaluate(const Expression<A>& e, const Map<Identifier,A>& x);
-
-inline Integer evaluate(const Expression<Integer>& e, const Map<Identifier,String>& x) {
-    return e.node_ref().accept([&x](auto en){return evaluate_as<Integer>(en,x);});
-}
-inline String evaluate(const Expression<String>& e, const Map<Identifier,Integer>& x) {
-    return e.node_ref().accept([&x](auto en){return evaluate_as<String>(en,x);});
-}
-
 
 template<class A> typename Logic<A>::Type evaluate(const Expression<typename Logic<A>::Type>& e, const Map<Identifier,A>& x) {
     typedef typename Logic<A>::Type R;

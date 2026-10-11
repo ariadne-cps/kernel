@@ -346,6 +346,15 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(boolean_binary.arg1().var(),Identifier("boolean"));
         ARIADNE_TEST_EQUALS(boolean_binary.arg2().var(),Identifier("boolean_other"));
         ARIADNE_TEST_ASSERT(not to_string(boolean_binary).empty());
+        ARIADNE_TEST_EQUALS(boolean_constant.arguments().size(),0u);
+        ARIADNE_TEST_EQUALS(boolean_not.arguments().size(),1u);
+        ARIADNE_TEST_EQUALS(boolean_binary.arguments().size(),2u);
+        ARIADNE_TEST_EQUALS((string_variable==String("mapped")).arguments().size(),1u);
+        ARIADNE_TEST_EQUALS((integer_from_variable<IntegerExpression(integer_other)).arguments().size(),2u);
+
+        std::ostringstream boolean_operation_stream;
+        boolean_operation_stream << OperationExpressionWriter()(boolean_binary);
+        ARIADNE_TEST_ASSERT(not boolean_operation_stream.str().empty());
 
         KleeneanVariable kleenean_variable("kleenean");
         KleeneanVariable kleenean_other("kleenean_other");
@@ -370,6 +379,18 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(kleenean_binary.arg1().var(),Identifier("kleenean"));
         ARIADNE_TEST_EQUALS(kleenean_binary.arg2().var(),Identifier("kleenean_other"));
         ARIADNE_TEST_ASSERT(not to_string(kleenean_binary).empty());
+        ARIADNE_TEST_EQUALS(kleenean_constant.arguments().size(),0u);
+        ARIADNE_TEST_EQUALS(kleenean_not.arguments().size(),1u);
+        ARIADNE_TEST_EQUALS(kleenean_binary.arguments().size(),2u);
+        ARIADNE_TEST_EQUALS(sgn(RealExpression(x)).arguments().size(),1u);
+        ARIADNE_TEST_ASSERT(identical(
+            KleeneanExpression::constant(Kleenean()),
+            KleeneanExpression::constant(Kleenean())));
+        ARIADNE_TEST_ASSERT(is_constant(kleenean_constant,Kleenean()));
+
+        std::ostringstream kleenean_operation_stream;
+        kleenean_operation_stream << OperationExpressionWriter()(kleenean_binary);
+        ARIADNE_TEST_ASSERT(not kleenean_operation_stream.str().empty());
 
         StringVariable string_variable("string");
         StringExpression string_default;
@@ -389,6 +410,11 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(StringExpression::constant(StringConstant(String("named"))));
         ARIADNE_TEST_EXECUTE(StringExpression::variable(Identifier("string")));
         ARIADNE_TEST_ASSERT(not to_string(string_from_variable).empty());
+        ARIADNE_TEST_EQUALS(string_constant.arguments().size(),0u);
+
+        std::ostringstream string_operation_stream;
+        string_operation_stream << OperationExpressionWriter()(string_from_variable);
+        ARIADNE_TEST_ASSERT(not string_operation_stream.str().empty());
 
         IntegerVariable integer_variable("integer");
         IntegerVariable integer_other("integer_other");
@@ -412,6 +438,13 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(integer_binary.arg1().var(),Identifier("integer"));
         ARIADNE_TEST_EQUALS(integer_binary.arg2().var(),Identifier("integer_other"));
         ARIADNE_TEST_ASSERT(not to_string(integer_binary).empty());
+        ARIADNE_TEST_EQUALS(integer_constant.arguments().size(),0u);
+        ARIADNE_TEST_EQUALS(integer_negative.arguments().size(),1u);
+        ARIADNE_TEST_EQUALS(integer_binary.arguments().size(),2u);
+
+        std::ostringstream integer_operation_stream;
+        integer_operation_stream << OperationExpressionWriter()(integer_binary);
+        ARIADNE_TEST_ASSERT(not integer_operation_stream.str().empty());
 
         RealExpression real_constant(Real(2));
         ARIADNE_TEST_EQUAL(real_constant.val(),Real(2));
@@ -424,6 +457,15 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(arguments(x+y).size(),2u);
         ARIADNE_TEST_ASSERT(is_variable(RealExpression(x),x));
         ARIADNE_TEST_ASSERT(not is_variable(RealExpression(y),x));
+        ARIADNE_TEST_ASSERT(not is_variable(RealExpression(2),x));
+        ARIADNE_TEST_ASSERT(is_constant(RealExpression(2),Real(2)));
+        ARIADNE_TEST_ASSERT(not is_constant(RealExpression(3),Real(2)));
+        ARIADNE_TEST_ASSERT(not is_constant(RealExpression(x),Real(2)));
+        ARIADNE_TEST_EQUALS(real_power.arguments().size(),1u);
+
+        RealVectorExpression real_vector_arguments({x,y});
+        ARIADNE_TEST_EQUALS(real_vector_arguments.arguments().size(),2u);
+        ARIADNE_TEST_EQUALS(real_vector_arguments[0].arguments().size(),2u);
 
         StringValuation string_valuation;
         string_valuation.set(string_variable,String("mapped"));
@@ -613,6 +655,19 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(before(x+y,y+x));
         ARIADNE_TEST_ASSERT(not before(x+y,x+x));
         ARIADNE_TEST_ASSERT(not before(log(x),rec(x)));
+
+        RealExpression named_a2=RealExpression::constant(RealConstant("a",Real(2)));
+        RealExpression named_a3=RealExpression::constant(RealConstant("a",Real(3)));
+        RealExpression named_b1=RealExpression::constant(RealConstant("b",Real(1)));
+        ARIADNE_TEST_ASSERT(before(named_a2,named_a3));
+        ARIADNE_TEST_ASSERT(before(named_a2,named_b1));
+        ARIADNE_TEST_ASSERT(before(sin(x),sin(y)));
+        ARIADNE_TEST_ASSERT(before(x+y,x+z));
+
+        RealVectorExpression getter_vector({x,y});
+        ARIADNE_TEST_ASSERT(before(getter_vector[0],getter_vector[1]));
+        RealVectorExpression other_getter_vector({x,z});
+        ARIADNE_TEST_EXECUTE(before(getter_vector[0],other_getter_vector[0]));
     }
 
     Void test_count_nodes() {
@@ -710,6 +765,14 @@ class TestExpression {
             make_formula(expressions,RealSpace({x,y,z}));
         ARIADNE_TEST_ASSERT(
             formulae[0].node_ptr()==formulae[1].node_ptr());
+
+        RealVectorExpression getter_vector({x,y});
+        Vector<RealExpression> getter_expressions({getter_vector[0],getter_vector[0]});
+        ARIADNE_TEST_ASSERT(
+            getter_expressions[0].node_raw_ptr()!=getter_expressions[1].node_raw_ptr());
+        eliminate_common_subexpressions(getter_expressions);
+        ARIADNE_TEST_ASSERT(
+            getter_expressions[0].node_raw_ptr()==getter_expressions[1].node_raw_ptr());
     }
 
     Void test_substitute() {
@@ -770,6 +833,9 @@ class TestExpression {
         Vector<RealExpression> expression_vector({x,y});
         ARIADNE_TEST_ASSERT(is_constant_in(expression_vector,{z}));
         ARIADNE_TEST_ASSERT(not is_constant_in(expression_vector,{y}));
+
+        ARIADNE_TEST_ASSERT(is_constant_in(vector_expression[0],{z}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(vector_expression[0],{x}));
     }
 
     Void test_is_additive_in() {
