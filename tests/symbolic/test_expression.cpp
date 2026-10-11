@@ -321,6 +321,124 @@ class TestExpression {
 
     }
 
+    Void test_scalar_expression_templates() {
+        CatOp cat;
+        ARIADNE_TEST_EQUALS(cat.code(),OperatorCode::ADD);
+        ARIADNE_TEST_EQUALS(cat.kind(),OperatorKind::BINARY);
+        ARIADNE_TEST_EQUALS(cat(String("a"),String("b")),String("ab"));
+        ARIADNE_TEST_EQUALS(to_string(cat),String("cat"));
+        ARIADNE_TEST_EQUALS(pos(String("identity")),String("identity"));
+
+        BooleanVariable boolean_variable("boolean");
+        BooleanVariable boolean_other("boolean_other");
+        BooleanExpression boolean_default;
+        BooleanExpression boolean_copy(boolean_default);
+        BooleanExpression boolean_constant(Constant<Boolean>(Boolean()));
+        BooleanExpression boolean_from_variable(boolean_variable);
+        ARIADNE_TEST_EXECUTE(boolean_default.val());
+        ARIADNE_TEST_EQUALS(boolean_from_variable.var(),Identifier("boolean"));
+        ARIADNE_TEST_EXECUTE(boolean_from_variable.op());
+        ARIADNE_TEST_EXECUTE(boolean_from_variable.code());
+        ARIADNE_TEST_EXECUTE(boolean_from_variable.kind());
+        ARIADNE_TEST_EQUALS(boolean_from_variable.arguments().size(),1u);
+        ARIADNE_TEST_EQUALS(arguments(boolean_from_variable).size(),1u);
+        ARIADNE_TEST_EXECUTE(BooleanExpression::constant(Boolean()));
+        ARIADNE_TEST_EXECUTE(BooleanExpression::constant(Constant<Boolean>(Boolean())));
+        ARIADNE_TEST_EXECUTE(BooleanExpression::variable(Identifier("boolean")));
+        BooleanExpression boolean_not=!boolean_from_variable;
+        BooleanExpression boolean_binary=boolean_from_variable&&BooleanExpression(boolean_other);
+        ARIADNE_TEST_EQUALS(boolean_not.arg().var(),Identifier("boolean"));
+        ARIADNE_TEST_EQUALS(boolean_binary.arg1().var(),Identifier("boolean"));
+        ARIADNE_TEST_EQUALS(boolean_binary.arg2().var(),Identifier("boolean_other"));
+        ARIADNE_TEST_ASSERT(not to_string(boolean_binary).empty());
+
+        KleeneanVariable kleenean_variable("kleenean");
+        KleeneanVariable kleenean_other("kleenean_other");
+        KleeneanExpression kleenean_default;
+        KleeneanExpression kleenean_copy(kleenean_default);
+        KleeneanExpression kleenean_constant(Constant<Kleenean>(Kleenean()));
+        KleeneanExpression kleenean_from_variable(kleenean_variable);
+        ARIADNE_TEST_EXECUTE(kleenean_default.val());
+        ARIADNE_TEST_EQUALS(kleenean_from_variable.var(),Identifier("kleenean"));
+        ARIADNE_TEST_EXECUTE(kleenean_from_variable.op());
+        ARIADNE_TEST_EXECUTE(kleenean_from_variable.code());
+        ARIADNE_TEST_EXECUTE(kleenean_from_variable.kind());
+        ARIADNE_TEST_EQUALS(kleenean_from_variable.arguments().size(),1u);
+        ARIADNE_TEST_EXECUTE(KleeneanExpression::constant(Kleenean()));
+        ARIADNE_TEST_EXECUTE(KleeneanExpression::constant(Constant<Kleenean>(Kleenean())));
+        ARIADNE_TEST_EXECUTE(KleeneanExpression::variable(Identifier("kleenean")));
+        KleeneanExpression kleenean_not=!kleenean_from_variable;
+        KleeneanExpression kleenean_binary=kleenean_from_variable&&KleeneanExpression(kleenean_other);
+        ARIADNE_TEST_EQUALS(kleenean_not.arg().var(),Identifier("kleenean"));
+        ARIADNE_TEST_EQUALS(kleenean_binary.arg1().var(),Identifier("kleenean"));
+        ARIADNE_TEST_EQUALS(kleenean_binary.arg2().var(),Identifier("kleenean_other"));
+        ARIADNE_TEST_ASSERT(same(Kleenean(),Kleenean()));
+        ARIADNE_TEST_ASSERT(not to_string(kleenean_binary).empty());
+
+        StringVariable string_variable("string");
+        StringExpression string_default;
+        StringExpression string_value(String("value"));
+        StringExpression string_copy(string_value);
+        StringExpression string_constant(StringConstant(String("named")));
+        StringExpression string_from_variable(string_variable);
+        ARIADNE_TEST_EQUALS(string_value.val(),String("value"));
+        ARIADNE_TEST_EQUALS(string_from_variable.var(),Identifier("string"));
+        ARIADNE_TEST_EXECUTE(string_from_variable.op());
+        ARIADNE_TEST_EXECUTE(string_from_variable.code());
+        ARIADNE_TEST_EXECUTE(string_from_variable.kind());
+        ARIADNE_TEST_EQUALS(string_from_variable.arguments().size(),1u);
+        ARIADNE_TEST_EXECUTE(StringExpression::constant(String("value")));
+        ARIADNE_TEST_EXECUTE(StringExpression::constant(StringConstant(String("named"))));
+        ARIADNE_TEST_EXECUTE(StringExpression::variable(Identifier("string")));
+        ARIADNE_TEST_ASSERT(not to_string(string_from_variable).empty());
+
+        IntegerVariable integer_variable("integer");
+        IntegerVariable integer_other("integer_other");
+        IntegerExpression integer_default;
+        IntegerExpression integer_copy(integer_default);
+        IntegerExpression integer_constant(IntegerConstant(Integer(7)));
+        IntegerExpression integer_from_variable(integer_variable);
+        ARIADNE_TEST_EQUALS(integer_constant.val(),Integer(7));
+        ARIADNE_TEST_EQUALS(integer_from_variable.var(),Identifier("integer"));
+        ARIADNE_TEST_EXECUTE(integer_from_variable.op());
+        ARIADNE_TEST_EXECUTE(integer_from_variable.code());
+        ARIADNE_TEST_EXECUTE(integer_from_variable.kind());
+        ARIADNE_TEST_EQUALS(integer_from_variable.arguments().size(),1u);
+        ARIADNE_TEST_EXECUTE(IntegerExpression::constant(Integer(7)));
+        ARIADNE_TEST_EXECUTE(IntegerExpression::constant(IntegerConstant(Integer(7))));
+        ARIADNE_TEST_EXECUTE(IntegerExpression::variable(Identifier("integer")));
+        IntegerExpression integer_negative=-integer_from_variable;
+        IntegerExpression integer_binary=integer_from_variable+IntegerExpression(integer_other);
+        ARIADNE_TEST_EQUALS(integer_negative.arg().var(),Identifier("integer"));
+        ARIADNE_TEST_EQUALS(integer_binary.arg1().var(),Identifier("integer"));
+        ARIADNE_TEST_EQUALS(integer_binary.arg2().var(),Identifier("integer_other"));
+        ARIADNE_TEST_ASSERT(not to_string(integer_binary).empty());
+
+        RealExpression real_constant(Real(2));
+        ARIADNE_TEST_EQUAL(real_constant.val(),Real(2));
+        RealExpression real_power=pow(x,3);
+        ARIADNE_TEST_EQUALS(real_power.num(),3);
+
+        StringValuation string_valuation;
+        string_valuation.set(string_variable,String("mapped"));
+        ARIADNE_TEST_EQUALS(evaluate(string_from_variable,string_valuation),String("mapped"));
+        ARIADNE_TEST_EXECUTE(evaluate(string_variable==String("mapped"),string_valuation));
+
+        IntegerValuation integer_valuation;
+        integer_valuation.set(integer_variable,Integer(9));
+        ARIADNE_TEST_EQUALS(evaluate(integer_from_variable,integer_valuation),Integer(9));
+        ARIADNE_TEST_EXECUTE(evaluate(integer_from_variable<IntegerExpression(integer_other),integer_valuation));
+
+        RealValuation real_valuation;
+        real_valuation.set(x,Real(2));
+        ARIADNE_TEST_EXECUTE(evaluate(x>=0,real_valuation));
+
+        Map<Identifier,String> string_map;
+        Map<Identifier,Integer> integer_map;
+        ARIADNE_TEST_EQUALS(evaluate(IntegerExpression(Integer(5)),string_map),Integer(5));
+        ARIADNE_TEST_EQUALS(evaluate(StringExpression(String("fixed")),integer_map),String("fixed"));
+    }
+
     Void test_expression() {
         auto writer=RealExpression::default_writer();
         RealExpression::set_default_writer(writer);
@@ -781,6 +899,7 @@ class TestExpression {
         ARIADNE_TEST_CALL(test_constants());
         ARIADNE_TEST_CALL(test_valuations());
         ARIADNE_TEST_CALL(test_templates());
+        ARIADNE_TEST_CALL(test_scalar_expression_templates());
         ARIADNE_TEST_CALL(test_expression());
         ARIADNE_TEST_CALL(test_write());
         ARIADNE_TEST_CALL(test_assignment());
