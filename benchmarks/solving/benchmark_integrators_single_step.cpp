@@ -107,12 +107,14 @@ Nat determine_repetitions(
         const StepSizeType& step)
 {
     Duration minimum_elapsed=Duration::max();
+    const double minimum_measurement_time_ms=
+        std::chrono::duration<double,std::milli>(
+            minimum_total_measurement_time).count();
 
     LOGGING_PRINTLN_AT(1,
         "Calibrating repetitions with step="<<step
         <<", minimum measurement time="
-        <<std::chrono::duration<double,std::milli>(
-            minimum_total_measurement_time).count()
+        <<minimum_measurement_time_ms
         <<" ms")
 
     for(const auto& named_integrator : integrators) {
