@@ -276,6 +276,8 @@ template Boolean evaluate(const Expression<Boolean>& e, const Valuation<Integer>
 template Kleenean evaluate(const Expression<Kleenean>& e, const Valuation<Real>& x);
 template RealVector evaluate(const Expression<RealVector>& e, const Valuation<Real>& x);
 
+template String evaluate(Expression<String> const&, Map<Identifier, String> const&);
+template Integer evaluate(Expression<Integer> const&, Map<Identifier, Integer> const&);
 template Real evaluate(Expression<Real> const&, Map<Identifier, Real> const&);
 template RealVector evaluate(Expression<RealVector> const&, Map<Identifier, Real> const&);
 
