@@ -40,7 +40,7 @@ int main() {
     std::cout << "\n=== Taylor function models ===\n";
 
     auto domain=BoxDomainType({{-1,+1},{-1,+1}});
-    SweeperDP sweeper=ThresholdSweeperDP(dp,1e-8);
+    SweeperDP sweeper(ThresholdSweeper<FloatDP>(dp,ApproximateDouble(1e-8)));
 
     auto tx=ValidatedScalarMultivariateTaylorFunctionModelDP::coordinate(domain,0,sweeper);
     auto ty=ValidatedScalarMultivariateTaylorFunctionModelDP::coordinate(domain,1,sweeper);
