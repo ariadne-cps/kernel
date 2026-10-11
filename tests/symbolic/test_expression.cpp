@@ -54,6 +54,9 @@ class TestExpression {
     }
 
     Void test_variables() {
+        Identifier empty_identifier;
+        ARIADNE_TEST_ASSERT(empty_identifier.empty());
+
         ARIADNE_TEST_CONSTRUCT(RealVariable,a,("a"));
         ARIADNE_TEST_ASSERT(a==RealVariable("a"));
         ARIADNE_TEST_ASSERT(a==RealVariable(a));
