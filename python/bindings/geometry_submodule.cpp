@@ -385,6 +385,20 @@ Void export_points(pybind11::module& module) {
     point_template.instantiate<FloatDPApproximation>();
 }
 
+Void export_geometry_vectors(pybind11::module& module) {
+    using RadiusType = Positive<FloatDPBounds>;
+    using RadiusVector = Vector<RadiusType>;
+
+    pybind11::class_<RadiusVector> radius_vector_class(module,"FloatDPPositiveBoundsVector");
+    radius_vector_class.def("size", &RadiusVector::size);
+    radius_vector_class.def("__len__", &RadiusVector::size);
+    radius_vector_class.def("__getitem__", [](RadiusVector const& v, SizeType i) {
+        if(i>=v.size()) { throw pybind11::index_error(); }
+        return v[i];
+    });
+    radius_vector_class.def("__str__", &__cstr__<RadiusVector>);
+}
+
 Void export_interval_function_operations(pybind11::module& module) {
     module.def("image",
         (UpperIntervalType(*)(UpperIntervalType const&, ValidatedScalarUnivariateFunction const&)) &_image_);
@@ -749,6 +763,7 @@ Void geometry_submodule(pybind11::module& module) {
     export_set_interface(module);
 
     export_points(module);
+    export_geometry_vectors(module);
     export_interval_function_operations(module);
     export_boxes(module);
 //    export_zonotope(module);
