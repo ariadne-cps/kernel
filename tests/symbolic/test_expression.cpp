@@ -23,6 +23,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include "utility/container.hpp"
 #include "utility/stlio.hpp"
 #include "numeric/numeric.hpp"
@@ -87,7 +88,9 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not to_string(vec).empty());
 
         Symbolic<Add,Int,Int> binary(Add(),Int(1),Int(2));
-        ARIADNE_TEST_ASSERT(not to_string(binary).empty());
+        std::ostringstream binary_stream;
+        binary_stream << binary;
+        ARIADNE_TEST_ASSERT(not binary_stream.str().empty());
 
         Symbolic<Get,Vector<Int>,SizeType> getter(Get(),values,1u);
         ARIADNE_TEST_EQUALS(getter.op().code(),OperatorCode::GET);
@@ -96,6 +99,16 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(getter.arg2(),1u);
         ARIADNE_TEST_EQUALS(getter.vec().size(),2u);
         ARIADNE_TEST_EQUALS(getter.ind(),1u);
+
+        RealVariables template_variables("template",2u);
+        RealVectorExpression vector_expression=template_variables;
+        RealExpression direct_component=get(vector_expression,1u);
+        using GetterNode=Symbolic<OperatorVariant<Get>,RealVectorExpression,SizeType>;
+        auto const* getter_node=std::get_if<GetterNode>(&direct_component.node_ref());
+        ARIADNE_TEST_ASSERT(getter_node!=nullptr);
+        ARIADNE_TEST_EQUALS(getter_node->op().code(),OperatorCode::GET);
+        ARIADNE_TEST_EQUALS(getter_node->vec().size(),2u);
+        ARIADNE_TEST_EQUALS(getter_node->ind(),1u);
     }
 
     Void test_expression() {
