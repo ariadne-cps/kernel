@@ -174,8 +174,14 @@ def tutorial_solving():
 
     q0 = EffectiveScalarMultivariateFunction.coordinate(2, 0)
     q1 = EffectiveScalarMultivariateFunction.coordinate(2, 1)
-    objective_function = sqr(q0) + sqr(q1)
-    equality_constraint = EffectiveVectorMultivariateFunction([
+    five_eighths = EffectiveNumber(Rational("5/8"))
+    three_eighths = EffectiveNumber(Rational("3/8"))
+
+    objective_function = (
+        sqr(q0 - five_eighths)
+        + sqr(q1 - three_eighths)
+    )
+    band_constraint = EffectiveVectorMultivariateFunction([
         q0 + q1,
     ])
     optimisation_domain = exact_box([
@@ -183,32 +189,30 @@ def tutorial_solving():
         (0, 1),
     ])
     optimisation_codomain = exact_box([
-        (1, 1),
+        (0.75, 1.25),
     ])
 
     optimiser = NonlinearInteriorPointOptimiser()
-    nonlinear_feasible = optimiser.feasible(
-        optimisation_domain,
-        equality_constraint,
-        optimisation_codomain,
-    )
+    # Feasibility as a separate task was already demonstrated with
+    # ConstraintSolver.  The current NonlinearInteriorPointOptimiser
+    # feasibility_step path is not implemented, so this section focuses on
+    # the supported minimisation workflow.
     optimum = optimiser.minimise(
         objective_function,
         optimisation_domain,
-        equality_constraint,
+        band_constraint,
         optimisation_codomain,
     )
 
-    show("nonlinear problem feasible", nonlinear_feasible)
     show("validated local optimum", optimum)
-    show("constraint at optimum", equality_constraint(optimum))
+    show("constraint at optimum", band_constraint(optimum))
 
     section("Choosing a solving tool")
     print("IntervalNewtonSolver: roots, fixed points and implicit functions.")
     print("ConstraintSolver: feasibility tests and interval-domain contraction.")
     print("TaylorPicardIntegrator: validated flow steps for ODEs.")
     print("FloatDPSimplexSolver: bounded linear programs with linear equalities.")
-    print("NonlinearInteriorPointOptimiser: constrained nonlinear feasibility and minimisation.")
+    print("NonlinearInteriorPointOptimiser: constrained nonlinear minimisation with interior-point barriers.")
 
 
 if __name__ == "__main__":

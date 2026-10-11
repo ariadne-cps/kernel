@@ -191,14 +191,20 @@ int main() {
 
     section("Nonlinear constrained optimisation");
 
-    // Minimise x^2+y^2 over [0,1]^2 subject to x+y=1.  The optimum is
-    // (1/2,1/2).  NonlinearInteriorPointOptimiser returns a validated box
-    // containing a feasible local optimum.
+    // Minimise the squared distance from the target (5/8,3/8) over
+    // [0,1]^2, while requiring x+y to stay in the non-degenerate band
+    // [3/4,5/4].  The target itself is feasible and lies in the interior of
+    // both the search domain and the constraint band, which is the natural
+    // use case for the barrier-based interior-point implementation.
+    //
+    // Feasibility as a separate task was already demonstrated above with
+    // ConstraintSolver.  NonlinearInteriorPointOptimiser::feasible() is not
+    // used here because its current feasibility_step path is not implemented.
     NonlinearInteriorPointOptimiser optimiser;
     auto q = EffectiveScalarMultivariateFunction::coordinates(2);
     EffectiveScalarMultivariateFunction objective_function =
-        sqr(q[0]) + sqr(q[1]);
-    EffectiveVectorMultivariateFunction equality_constraint({
+        sqr(q[0] - 0.625_x) + sqr(q[1] - 0.375_x);
+    EffectiveVectorMultivariateFunction band_constraint({
         q[0] + q[1]
     });
     ExactBoxType optimisation_domain({
@@ -206,25 +212,18 @@ int main() {
         {0.0_x, 1.0_x}
     });
     ExactBoxType optimisation_codomain({
-        {1.0_x, 1.0_x}
+        {0.75_x, 1.25_x}
     });
-
-    ValidatedKleenean nonlinear_feasible =
-        optimiser.feasible(
-            optimisation_domain,
-            equality_constraint,
-            optimisation_codomain);
 
     FloatDPBoundsVector optimum =
         optimiser.minimise(
             objective_function,
             optimisation_domain,
-            equality_constraint,
+            band_constraint,
             optimisation_codomain);
 
-    show("nonlinear problem feasible", nonlinear_feasible);
     show("validated local optimum", optimum);
-    show("constraint at optimum", equality_constraint(optimum));
+    show("constraint at optimum", band_constraint(optimum));
 
     section("Choosing a solving tool");
     cout
@@ -232,7 +231,7 @@ int main() {
         << "ConstraintSolver: feasibility tests and interval-domain contraction.\n"
         << "TaylorPicardIntegrator: validated flow steps for ODEs.\n"
         << "SimplexSolver: bounded linear programs with linear equalities.\n"
-        << "NonlinearInteriorPointOptimiser: constrained nonlinear feasibility and minimisation.\n";
+        << "NonlinearInteriorPointOptimiser: constrained nonlinear minimisation with interior-point barriers.\n";
 
     return 0;
 }
