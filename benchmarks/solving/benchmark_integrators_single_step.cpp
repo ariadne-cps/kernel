@@ -40,17 +40,17 @@ struct Measurement {
 
 ExactBoxType box2() {
     return ExactBoxType({
-        {-0.25_x,0.25_x},
-        {-0.25_x,0.25_x}
+        {-0.125_x,0.125_x},
+        {-0.125_x,0.125_x}
     });
 }
 
 ExactBoxType box4() {
     return ExactBoxType({
-        {-0.25_x,0.25_x},
-        {-0.25_x,0.25_x},
-        {-0.25_x,0.25_x},
-        {-0.25_x,0.25_x}
+        {-0.125_x,0.125_x},
+        {-0.125_x,0.125_x},
+        {-0.125_x,0.125_x},
+        {-0.125_x,0.125_x}
     });
 }
 
