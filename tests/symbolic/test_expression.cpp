@@ -35,6 +35,7 @@
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
 #include "function/taylor_model.hpp"
+#include "geometry/function_set.hpp"
 
 #include "algebra/matrix.tpl.hpp"
 
@@ -103,9 +104,34 @@ class TestExpression {
         RealVariables template_variables("template",2u);
         RealVectorExpression vector_expression=template_variables;
         RealExpression direct_component=get(vector_expression,1u);
-        ARIADNE_TEST_CONSTRUCT(RealExpression,functor_component,(Get()(vector_expression,1u)));
+
+        using GetMethod=RealExpression (Get::*)(RealVectorExpression const&,SizeType);
+        GetMethod get_method=&Get::operator()<RealVectorExpression,SizeType>;
+        RealExpression functor_component=(get.*get_method)(vector_expression,SizeType(1));
         ARIADNE_TEST_ASSERT(identical(functor_component,direct_component));
-        ARIADNE_TEST_EXECUTE(simplify(direct_component));
+
+        using GetterOperator=OperatorVariant<Get>;
+        using GetterNode=Symbolic<GetterOperator,RealVectorExpression,SizeType>;
+        GetterNode concrete_getter(GetterOperator(Get()),vector_expression,SizeType(1));
+
+        using GetterOpMethod=GetterOperator (GetterNode::*)() const;
+        using GetterVecMethod=RealVectorExpression (GetterNode::*)() const;
+        using GetterIndMethod=SizeType (GetterNode::*)() const;
+        GetterOpMethod getter_op_method=&GetterNode::op;
+        GetterVecMethod getter_vec_method=&GetterNode::vec;
+        GetterIndMethod getter_ind_method=&GetterNode::ind;
+
+        ARIADNE_TEST_EQUALS((concrete_getter.*getter_op_method)().code(),OperatorCode::GET);
+        ARIADNE_TEST_EQUALS((concrete_getter.*getter_vec_method)().size(),2u);
+        ARIADNE_TEST_EQUALS((concrete_getter.*getter_ind_method)(),SizeType(1));
+
+        BoundedConstraintSet bounded_set(RealBox({{-1,1}}));
+        ExactBoxType exact_box({ExactIntervalType(-1,1)});
+        Symbolic<Separated,BoundedConstraintSet,ExactBoxType> separated_symbolic(
+            Separated(),bounded_set,exact_box);
+        std::ostringstream separated_stream;
+        separated_stream << separated_symbolic;
+        ARIADNE_TEST_ASSERT(not separated_stream.str().empty());
     }
 
     Void test_expression() {
