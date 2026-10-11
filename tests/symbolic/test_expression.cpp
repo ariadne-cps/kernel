@@ -28,6 +28,7 @@
 #include "utility/stlio.hpp"
 #include "numeric/numeric.hpp"
 #include "symbolic/expression.hpp"
+#include "symbolic/expression.tpl.hpp"
 #include "symbolic/assignment.hpp"
 #include "symbolic/valuation.hpp"
 #include "symbolic/space.hpp"
@@ -322,6 +323,13 @@ class TestExpression {
     }
 
     Void test_scalar_expression_templates() {
+        CatOp cat;
+        ARIADNE_TEST_EQUALS(cat.code(),OperatorCode::ADD);
+        ARIADNE_TEST_EQUALS(cat.kind(),OperatorKind::BINARY);
+        ARIADNE_TEST_EQUALS(cat(String("a"),String("b")),String("ab"));
+        ARIADNE_TEST_EQUALS(to_string(cat),String("cat"));
+        ARIADNE_TEST_EQUALS(pos(String("identity")),String("identity"));
+
         BooleanVariable boolean_variable("boolean");
         BooleanVariable boolean_other("boolean_other");
         BooleanExpression boolean_default;
@@ -369,6 +377,7 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(kleenean_not.arg().var(),Identifier("kleenean"));
         ARIADNE_TEST_EQUALS(kleenean_binary.arg1().var(),Identifier("kleenean"));
         ARIADNE_TEST_EQUALS(kleenean_binary.arg2().var(),Identifier("kleenean_other"));
+        ARIADNE_TEST_ASSERT(same(Kleenean(),Kleenean()));
         ARIADNE_TEST_ASSERT(not to_string(kleenean_binary).empty());
 
         StringVariable string_variable("string");
@@ -436,11 +445,13 @@ class TestExpression {
         string_map[string_variable.name()]=String("mapped");
         ARIADNE_TEST_EQUALS(evaluate(string_from_variable,string_map),String("mapped"));
         ARIADNE_TEST_EQUALS(evaluate(StringExpression(String("fixed")),string_map),String("fixed"));
+        ARIADNE_TEST_EQUALS(evaluate(IntegerExpression(Integer(5)),string_map),Integer(5));
 
         Map<Identifier,Integer> integer_map;
         integer_map[integer_variable.name()]=Integer(9);
         ARIADNE_TEST_EQUALS(evaluate(integer_from_variable,integer_map),Integer(9));
         ARIADNE_TEST_EQUALS(evaluate(IntegerExpression(Integer(5)),integer_map),Integer(5));
+        ARIADNE_TEST_EQUALS(evaluate(StringExpression(String("fixed")),integer_map),String("fixed"));
     }
 
     Void test_expression() {
