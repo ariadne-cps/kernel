@@ -738,7 +738,7 @@ class TestExpression {
 
         RealVectorExpression vector_expression({x,y});
         RealVectorExpression vector_substitution=
-            substitute(vector_expression,x,RealExpression(2));
+            substitute(vector_expression,x,Real(2));
         ARIADNE_TEST_BINARY_PREDICATE(
             identical,simplify(vector_substitution[0]),RealExpression(2));
 
