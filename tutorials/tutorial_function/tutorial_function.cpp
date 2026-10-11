@@ -62,11 +62,11 @@ int main() {
     show("restriction(tf,subdomain)",restriction(tf,subdomain));
 
     auto outer_domain=tidentity.codomain();
-    auto outer_function=EffectiveScalarMultivariateFunction::coordinate(2,0);
+    auto polynomial_function=sqr(x0)+x1;
     auto outer_model=ValidatedScalarMultivariateTaylorFunctionModelDP(
-        outer_domain,outer_function,sweeper);
+        outer_domain,polynomial_function,sweeper);
 
-    show("compose(f,tidentity)",compose(f,tidentity));
+    show("compose(polynomial_function,tidentity)",compose(polynomial_function,tidentity));
     show("compose(outer_model,tidentity)",compose(outer_model,tidentity));
 
     auto coarse=tx+FloatDPBounds(-1,1,dp);
