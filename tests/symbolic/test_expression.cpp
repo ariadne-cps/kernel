@@ -415,8 +415,15 @@ class TestExpression {
 
         RealExpression real_constant(Real(2));
         ARIADNE_TEST_EQUAL(real_constant.val(),Real(2));
+        RealExpression real_named_constant=RealExpression::constant(RealConstant("two",Real(2)));
+        ARIADNE_TEST_EQUAL(real_named_constant.val(),Real(2));
+        RealExpression real_from_identifier=RealExpression::variable(Identifier("real_identifier"));
+        ARIADNE_TEST_EQUALS(real_from_identifier.var(),Identifier("real_identifier"));
         RealExpression real_power=pow(x,3);
         ARIADNE_TEST_EQUALS(real_power.num(),3);
+        ARIADNE_TEST_EQUALS(arguments(x+y).size(),2u);
+        ARIADNE_TEST_ASSERT(is_variable(RealExpression(x),x));
+        ARIADNE_TEST_ASSERT(not is_variable(RealExpression(y),x));
 
         StringValuation string_valuation;
         string_valuation.set(string_variable,String("mapped"));
@@ -586,6 +593,11 @@ class TestExpression {
         ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(sub(neg(zero),zero)),zero);
         ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(sub(x,x)),zero);
         ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(div(x,x)),one);
+
+        ContinuousPredicate predicate=(x>=0)&&(y<=1);
+        ARIADNE_TEST_EXECUTE(simplify(predicate));
+        RealVectorExpression vector_expression({x,y});
+        ARIADNE_TEST_EXECUTE(simplify(vector_expression));
     }
 
     Void test_ordering() {
@@ -710,6 +722,34 @@ class TestExpression {
         RealExpression substitution = substitute(expr,subs);
 
         ARIADNE_TEST_ASSERT(identical(substitution,-(u1+1)*x*y+2*pow(x+u1*x,2)));
+
+        ARIADNE_TEST_ASSERT(identical(
+            substitute(x+y,x,Real(2)),
+            RealExpression(2)+y));
+
+        ContinuousPredicate predicate=x>=y;
+        ARIADNE_TEST_EXECUTE(substitute(predicate,x,Real(2)));
+
+        KleeneanVariable logical_variable("logical");
+        KleeneanExpression logical_expression(logical_variable);
+        KleeneanExpression logical_substitution=
+            substitute(logical_expression,logical_variable,Kleenean());
+        ARIADNE_TEST_EXECUTE(logical_substitution.val());
+
+        RealVectorExpression vector_expression({x,y});
+        RealVectorExpression vector_substitution=
+            substitute(vector_expression,x,RealExpression(2));
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,simplify(vector_substitution[0]),RealExpression(2));
+
+        Vector<RealExpression> expression_vector({x+y,x});
+        List<Assignment<RealVariable,RealExpression>> x_substitution={{x,RealExpression(2)}};
+        Vector<RealExpression> substituted_vector=
+            substitute(expression_vector,x_substitution);
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,substituted_vector[1],RealExpression(2));
+
+        ARIADNE_TEST_EXECUTE(substitute(predicate,x_substitution));
     }
 
     Void test_is_constant_in() {
@@ -722,6 +762,14 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not is_constant_in((sin(2*c)-2*sin(c)*cos(c))*y,{y}));
         ARIADNE_TEST_ASSERT(not is_constant_in((sin(2*x)-2*sin(x)*cos(x))*y,{y}));
         ARIADNE_TEST_ASSERT(is_constant_in(simplify(0*y),{y}));
+
+        RealVectorExpression vector_expression({x,y});
+        ARIADNE_TEST_ASSERT(is_constant_in(vector_expression,{z}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(vector_expression,{x}));
+
+        Vector<RealExpression> expression_vector({x,y});
+        ARIADNE_TEST_ASSERT(is_constant_in(expression_vector,{z}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(expression_vector,{y}));
     }
 
     Void test_is_additive_in() {
