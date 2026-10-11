@@ -2,6 +2,9 @@
 #include <iomanip>
 #include <iostream>
 #include <optional>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "integrator_benchmark.hpp"
 
@@ -20,6 +23,10 @@ struct Trial {
     Bool accepted;
     double elapsed_ms;
     std::optional<FlowStepModelType> flow;
+};
+
+struct MaximumStepResult {
+    std::string display;
 };
 
 Trial try_step(
@@ -83,7 +90,7 @@ Trial try_step(
     };
 }
 
-void benchmark_pair(
+MaximumStepResult benchmark_pair(
         const NamedIntegrator& named_integrator,
         const BenchmarkCase& benchmark_case)
 {
@@ -107,11 +114,9 @@ void benchmark_pair(
         }
 
         if(upper_trial.accepted) {
-            std::cout
-                << named_integrator.key << "\t"
-                << benchmark_case.name << "\t"
-                << ">=" << lower << "\n";
-            return;
+            std::ostringstream stream;
+            stream << ">=" << lower;
+            return {stream.str()};
         }
     } else {
         for(Nat i=0u; i!=maximum_halvings; ++i) {
@@ -125,11 +130,9 @@ void benchmark_pair(
         }
 
         if(lower==0.0_x) {
-            std::cout
-                << named_integrator.key << "\t"
-                << benchmark_case.name << "\t"
-                << "<" << upper << "\n";
-            return;
+            std::ostringstream stream;
+            stream << "<" << upper;
+            return {stream.str()};
         }
     }
 
@@ -143,11 +146,46 @@ void benchmark_pair(
         }
     }
 
+    std::cerr
+        << "[maximum-step] integrator=" << named_integrator.key
+        << " function=" << benchmark_case.name
+        << " bracket=[" << lower << "," << upper << ")"
+        << std::endl;
+
+    std::ostringstream stream;
+    stream << lower;
+    return {stream.str()};
+}
+
+void print_table(
+        const std::vector<NamedIntegrator>& integrators,
+        const std::vector<BenchmarkCase>& cases,
+        const std::vector<std::vector<MaximumStepResult>>& results)
+{
     std::cout
-        << named_integrator.key << "\t"
-        << benchmark_case.name << "\t"
-        << lower << "\t"
-        << upper << "\n";
+        << "# benchmark_step_maximum_error="
+        << benchmark_step_maximum_error << "\n"
+        << "# table values are largest accepted steps found; "
+        << ">= means no failing upper bound was found; "
+        << "< means no accepted step was found\n";
+
+    std::cout << "function";
+    for(const auto& named_integrator : integrators) {
+        std::cout << "\t" << named_integrator.key;
+    }
+    std::cout << "\n";
+
+    for(SizeType case_index=0u; case_index!=cases.size(); ++case_index) {
+        std::cout << cases[case_index].name;
+        for(SizeType integrator_index=0u;
+                integrator_index!=integrators.size();
+                ++integrator_index) {
+            std::cout
+                << "\t"
+                << results[case_index][integrator_index].display;
+        }
+        std::cout << "\n";
+    }
 }
 
 } // namespace
@@ -162,18 +200,23 @@ Int main(Int argc, const char* argv[]) {
     }
 
     const auto cases=make_cases();
-    const auto integrators=select_integrators(selection,benchmark_step_maximum_error);
+    const auto integrators=select_integrators(
+        selection,benchmark_step_maximum_error);
 
-    std::cout
-        << "# benchmark_step_maximum_error=" << benchmark_step_maximum_error << "\n"
-        << "# refinement_iterations=" << refinement_iterations << "\n"
-        << "integrator\tfunction\tmaximum_step_lower\tmaximum_step_upper\n";
+    std::vector<std::vector<MaximumStepResult>> results(
+        cases.size(),
+        std::vector<MaximumStepResult>(integrators.size()));
 
-    for(const auto& named_integrator : integrators) {
-        for(const auto& benchmark_case : cases) {
-            benchmark_pair(named_integrator,benchmark_case);
+    for(SizeType integrator_index=0u;
+            integrator_index!=integrators.size();
+            ++integrator_index) {
+        for(SizeType case_index=0u; case_index!=cases.size(); ++case_index) {
+            results[case_index][integrator_index]=benchmark_pair(
+                integrators[integrator_index],
+                cases[case_index]);
         }
     }
 
+    print_table(integrators,cases,results);
     return 0;
 }
