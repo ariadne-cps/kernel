@@ -104,7 +104,7 @@ class TestExpression {
         RealVectorExpression vector_expression=template_variables;
         RealExpression direct_component=get(vector_expression,1u);
         using GetterNode=Symbolic<OperatorVariant<Get>,RealVectorExpression,SizeType>;
-        auto const* getter_node=std::get_if<GetterNode>(&direct_component.node_ref());
+        auto const* getter_node=std::get_if<GetterNode>(&direct_component.node_ref().base());
         ARIADNE_TEST_ASSERT(getter_node!=nullptr);
         ARIADNE_TEST_EQUALS(getter_node->op().code(),OperatorCode::GET);
         ARIADNE_TEST_EQUALS(getter_node->vec().size(),2u);
