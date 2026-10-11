@@ -189,21 +189,58 @@ std::vector<NamedIntegrator> select_integrators(const std::string& selection) {
 }
 
 Bool accepts_step(
-        const IntegratorInterface& integrator,
+        const NamedIntegrator& named_integrator,
         const BenchmarkCase& benchmark_case,
         const StepSizeType& step)
 {
+    std::cerr
+        << "[step-calibration] integrator=" << named_integrator.key
+        << " function=" << benchmark_case.name
+        << " step=" << step
+        << " START"
+        << std::endl;
+
+    const auto start=Clock::now();
+
     try {
-        integrator.flow_step(
+        const auto flow=named_integrator.integrator->flow_step(
             benchmark_case.vector_field,
             benchmark_case.domain,
             step);
+        const auto elapsed=Clock::now()-start;
+
+        std::cerr
+            << "[step-calibration] integrator=" << named_integrator.key
+            << " function=" << benchmark_case.name
+            << " step=" << step
+            << " OK elapsed_ms="
+            << std::chrono::duration<double,std::milli>(elapsed).count()
+            << " remainder=" << flow.error()
+            << std::endl;
         return true;
-    } catch(const FlowTimeStepException&) {
+    } catch(const FlowTimeStepException& exception) {
+        std::cerr
+            << "[step-calibration] integrator=" << named_integrator.key
+            << " function=" << benchmark_case.name
+            << " step=" << step
+            << " FAIL FlowTimeStepException: " << exception.what()
+            << std::endl;
         return false;
-    } catch(const IncompleteFlowException&) {
+    } catch(const IncompleteFlowException& exception) {
+        std::cerr
+            << "[step-calibration] integrator=" << named_integrator.key
+            << " function=" << benchmark_case.name
+            << " step=" << step
+            << " FAIL IncompleteFlowException: " << exception.what()
+            << std::endl;
         return false;
-    } catch(const FlowBoundsException&) {
+    } catch(const FlowBoundsException& exception) {
+        std::cerr
+            << "[step-calibration] integrator=" << named_integrator.key
+            << " function=" << benchmark_case.name
+            << " step=" << step
+            << " FAIL FlowBoundsException: " << exception.what()
+            << std::endl;
         return false;
     }
 }
@@ -215,12 +252,17 @@ StepSizeType determine_step(
     StepSizeType step=0.03125_x;
 
     for(Nat attempt=0u; attempt!=16u; ++attempt) {
+        std::cerr
+            << "[step-calibration] attempt=" << attempt
+            << " candidate_step=" << step
+            << std::endl;
+
         Bool accepted=true;
 
         for(const auto& named_integrator : integrators) {
             for(const auto& benchmark_case : cases) {
                 if(!accepts_step(
-                        *named_integrator.integrator,
+                        named_integrator,
                         benchmark_case,
                         step)) {
                     accepted=false;
@@ -229,9 +271,16 @@ StepSizeType determine_step(
         }
 
         if(accepted) {
+            std::cerr
+                << "[step-calibration] selected_step=" << step
+                << std::endl;
             return step;
         }
+
         step=hlf(step);
+        std::cerr
+            << "[step-calibration] retry_with_step=" << step
+            << std::endl;
     }
 
     throw std::runtime_error(
@@ -271,15 +320,42 @@ Nat determine_repetitions(
 {
     Nat repetitions=1u;
     while(true) {
+        std::cerr
+            << "[repetition-calibration] repetitions=" << repetitions
+            << " START"
+            << std::endl;
+
         Bool all_sufficient=true;
 
         for(const auto& named_integrator : integrators) {
             for(const auto& benchmark_case : cases) {
+                std::cerr
+                    << "[repetition-calibration] integrator="
+                    << named_integrator.key
+                    << " function=" << benchmark_case.name
+                    << " repetitions=" << repetitions
+                    << " START"
+                    << std::endl;
+
                 const auto measurement=measure(
                     *named_integrator.integrator,
                     benchmark_case,
                     step,
                     repetitions);
+
+                const double elapsed_ms=
+                    std::chrono::duration<double,std::milli>(
+                        measurement.elapsed).count();
+
+                std::cerr
+                    << "[repetition-calibration] integrator="
+                    << named_integrator.key
+                    << " function=" << benchmark_case.name
+                    << " repetitions=" << repetitions
+                    << " OK elapsed_ms=" << elapsed_ms
+                    << " remainder=" << measurement.flow.error()
+                    << std::endl;
+
                 if(measurement.elapsed<minimum_total_measurement_time) {
                     all_sufficient=false;
                 }
@@ -287,9 +363,18 @@ Nat determine_repetitions(
         }
 
         if(all_sufficient || repetitions>=maximum_repetitions) {
+            std::cerr
+                << "[repetition-calibration] selected_repetitions="
+                << repetitions
+                << " all_sufficient=" << all_sufficient
+                << std::endl;
             return repetitions;
         }
-        repetitions*=2u;
+
+        const Nat doubled=repetitions*2u;
+        repetitions=(doubled>maximum_repetitions
+            ? maximum_repetitions
+            : doubled);
     }
 }
 
@@ -323,6 +408,14 @@ void run_benchmarks(
 {
     for(const auto& named_integrator : integrators) {
         for(const auto& benchmark_case : cases) {
+            std::cerr
+                << "[benchmark] integrator=" << named_integrator.key
+                << " function=" << benchmark_case.name
+                << " repetitions=" << repetitions
+                << " step=" << step
+                << " START"
+                << std::endl;
+
             const auto measurement=measure(
                 *named_integrator.integrator,
                 benchmark_case,
@@ -345,6 +438,13 @@ void run_benchmarks(
                     << " us\n";
                 std::exit(2);
             }
+
+            std::cerr
+                << "[benchmark] integrator=" << named_integrator.key
+                << " function=" << benchmark_case.name
+                << " OK time_us_per_step=" << time_us_per_step
+                << " remainder=" << measurement.flow.error()
+                << std::endl;
 
             std::cout
                 << named_integrator.key << "\t"
@@ -371,13 +471,24 @@ Int main(Int argc, const char* argv[]) {
         return 1;
     }
 
+    std::cerr << "[setup] constructing benchmark cases" << std::endl;
     const auto cases=make_cases();
+
+    std::cerr << "[setup] constructing integrators selection="
+              << selection << std::endl;
     const auto integrators=select_integrators(selection);
+
+    std::cerr << "[setup] calibrating common step" << std::endl;
     const StepSizeType step=determine_step(integrators,cases);
+
+    std::cerr << "[setup] calibrating common repetitions" << std::endl;
     const Nat repetitions=determine_repetitions(integrators,cases,step);
 
+    std::cerr << "[setup] running final benchmark matrix" << std::endl;
     print_configuration(integrators,step,repetitions);
     run_benchmarks(integrators,cases,step,repetitions);
+
+    std::cerr << "[setup] benchmark complete" << std::endl;
 
     return 0;
 }
