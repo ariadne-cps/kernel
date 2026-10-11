@@ -26,7 +26,6 @@ int main() {
     // IntervalNewtonSolver here as the representative implementation: the
     // tutorial is about the solving workflow, not comparing algorithms.
     IntervalNewtonSolver solver(1e-10, 16);
-    show("solver", solver);
     show("maximum error", solver.maximum_error());
     show("maximum number of steps", solver.maximum_number_of_steps());
 
@@ -141,7 +140,6 @@ int main() {
     integrator.set_maximum_temporal_order(16);
     integrator.set_step_maximum_error(1e-8);
 
-    show("integrator", integrator);
     show("minimum temporal order", integrator.minimum_temporal_order());
     show("maximum temporal order", integrator.maximum_temporal_order());
     show("step maximum error", integrator.step_maximum_error());
