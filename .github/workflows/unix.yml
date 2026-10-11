@@ -78,17 +78,17 @@ jobs:
       working-directory: ${{ runner.workspace }}/build
       run: cmake --install . --prefix ${{ runner.workspace }}/install
 
-    - name: Prepare C++ Kernel Tutorial
-      run: cmake -E copy_directory $GITHUB_WORKSPACE/tutorials/tutorial_kernel ${{ runner.workspace }}/tutorial_kernel
+    - name: Prepare C++ Function Tutorial
+      run: cmake -E copy_directory $GITHUB_WORKSPACE/tutorials/tutorial_function ${{ runner.workspace }}/tutorial_function
 
-    - name: Check C++ Kernel Tutorial
-      working-directory: ${{ runner.workspace }}/tutorial_kernel
+    - name: Check C++ Function Tutorial
+      working-directory: ${{ runner.workspace }}/tutorial_function
       run: |
         cmake -S . -B build -DCMAKE_PREFIX_PATH=${{ runner.workspace }}/install -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
         cmake --build build --parallel $($NPROC)
         export LD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${LD_LIBRARY_PATH:-}
         export DYLD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${DYLD_LIBRARY_PATH:-}
-        ./build/tutorial_kernel
+        ./build/tutorial_function
 
     - name: Check Python Kernel Tutorial
       working-directory: ${{ github.workspace }}/python/tutorials
