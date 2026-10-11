@@ -1,7 +1,6 @@
 #include <chrono>
 #include <cmath>
 #include <iomanip>
-#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -33,18 +32,18 @@ FlowStepModelType run_integrator_step(
         const BenchmarkCase& benchmark_case,
         const StepSizeType& step)
 {
-    std::optional<FlowStepModelType> flow;
+    Logger::instance().increase_level(3);
     try {
-        LOGGING_RUN_AT(3,
-            flow=integrator.flow_step(
-                benchmark_case.vector_field,
-                benchmark_case.domain,
-                step))
+        FlowStepModelType flow=integrator.flow_step(
+            benchmark_case.vector_field,
+            benchmark_case.domain,
+            step);
+        Logger::instance().decrease_level(3);
+        return flow;
     } catch(...) {
         Logger::instance().decrease_level(3);
         throw;
     }
-    return std::move(flow.value());
 }
 
 struct BenchmarkResult {
