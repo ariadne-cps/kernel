@@ -103,12 +103,9 @@ class TestExpression {
         RealVariables template_variables("template",2u);
         RealVectorExpression vector_expression=template_variables;
         RealExpression direct_component=get(vector_expression,1u);
-        using GetterNode=Symbolic<OperatorVariant<Get>,RealVectorExpression,SizeType>;
-        auto const* getter_node=std::get_if<GetterNode>(&direct_component.node_ref().base());
-        ARIADNE_TEST_ASSERT(getter_node!=nullptr);
-        ARIADNE_TEST_EQUALS(getter_node->op().code(),OperatorCode::GET);
-        ARIADNE_TEST_EQUALS(getter_node->vec().size(),2u);
-        ARIADNE_TEST_EQUALS(getter_node->ind(),1u);
+        ARIADNE_TEST_CONSTRUCT(RealExpression,functor_component,(Get()(vector_expression,1u)));
+        ARIADNE_TEST_ASSERT(identical(functor_component,direct_component));
+        ARIADNE_TEST_EXECUTE(simplify(direct_component));
     }
 
     Void test_expression() {
