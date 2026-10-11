@@ -37,13 +37,13 @@ FlowStepModelType run_integrator_step(
 {
     std::optional<FlowStepModelType> flow;
     try {
-        LOGGING_RUN_AT(2,
+        LOGGING_RUN_AT(3,
             flow=integrator.flow_step(
                 benchmark_case.vector_field,
                 benchmark_case.domain,
                 step))
     } catch(...) {
-        Logger::instance().decrease_level(2);
+        Logger::instance().decrease_level(3);
         throw;
     }
     return std::move(flow.value());
@@ -89,7 +89,7 @@ Trial try_step(
         const BenchmarkCase& benchmark_case,
         const StepSizeType& step)
 {
-    LOGGING_PRINTLN_AT(2,
+    LOGGING_PRINTLN_AT(3,
         "Trial start: integrator="<<named_integrator.key
         <<", function="<<benchmark_case.name
         <<", step="<<step)
@@ -106,7 +106,7 @@ Trial try_step(
                 Clock::now()-start).count();
         const auto remainder=flow.error();
 
-        LOGGING_PRINTLN_AT(2,
+        LOGGING_PRINTLN_AT(3,
             "Trial accepted: integrator="<<named_integrator.key
             <<", function="<<benchmark_case.name
             <<", step="<<step
@@ -115,21 +115,21 @@ Trial try_step(
 
         return {true,elapsed_ms,std::move(flow)};
     } catch(const FlowTimeStepException& exception) {
-        LOGGING_PRINTLN_AT(2,
+        LOGGING_PRINTLN_AT(3,
             "Trial rejected: integrator="<<named_integrator.key
             <<", function="<<benchmark_case.name
             <<", step="<<step
             <<", reason=FlowTimeStepException"
             <<", message="<<exception.what())
     } catch(const IncompleteFlowException& exception) {
-        LOGGING_PRINTLN_AT(2,
+        LOGGING_PRINTLN_AT(3,
             "Trial rejected: integrator="<<named_integrator.key
             <<", function="<<benchmark_case.name
             <<", step="<<step
             <<", reason=IncompleteFlowException"
             <<", message="<<exception.what())
     } catch(const FlowBoundsException& exception) {
-        LOGGING_PRINTLN_AT(2,
+        LOGGING_PRINTLN_AT(3,
             "Trial rejected: integrator="<<named_integrator.key
             <<", function="<<benchmark_case.name
             <<", step="<<step
@@ -148,7 +148,7 @@ MaximumStepResult benchmark_pair(
         const NamedIntegrator& named_integrator,
         const BenchmarkCase& benchmark_case)
 {
-    LOGGING_PRINTLN_AT(1,
+    LOGGING_PRINTLN_AT(2,
         "Maximum-step search: integrator="<<named_integrator.key
         <<", function="<<benchmark_case.name)
 
@@ -176,7 +176,7 @@ MaximumStepResult benchmark_pair(
             std::ostringstream stream;
             stream << ">=" << lower;
 
-            LOGGING_PRINTLN_AT(1,
+            LOGGING_PRINTLN_AT(2,
                 "Maximum-step search completed: integrator="
                 <<named_integrator.key
                 <<", function="<<benchmark_case.name
@@ -200,7 +200,7 @@ MaximumStepResult benchmark_pair(
             std::ostringstream stream;
             stream << "<" << upper;
 
-            LOGGING_PRINTLN_AT(1,
+            LOGGING_PRINTLN_AT(2,
                 "Maximum-step search completed: integrator="
                 <<named_integrator.key
                 <<", function="<<benchmark_case.name
@@ -210,7 +210,7 @@ MaximumStepResult benchmark_pair(
         }
     }
 
-    LOGGING_PRINTLN_AT(1,
+    LOGGING_PRINTLN_AT(2,
         "Maximum-step bracket: integrator="<<named_integrator.key
         <<", function="<<benchmark_case.name
         <<", lower="<<lower
@@ -227,7 +227,7 @@ MaximumStepResult benchmark_pair(
         }
     }
 
-    LOGGING_PRINTLN_AT(1,
+    LOGGING_PRINTLN_AT(2,
         "Maximum-step search completed: integrator="
         <<named_integrator.key
         <<", function="<<benchmark_case.name
@@ -286,7 +286,7 @@ Int main(Int argc, const char* argv[]) {
         return -1;
     }
 
-    LOGGING_PRINTLN_AT(1,
+    LOGGING_PRINTLN_AT(2,
         "Integrator selection="<<selection
         <<", step maximum error="<<benchmark_step_maximum_error)
 
@@ -301,6 +301,9 @@ Int main(Int argc, const char* argv[]) {
     for(SizeType integrator_index=0u;
             integrator_index!=integrators.size();
             ++integrator_index) {
+        LOGGING_PRINTLN_AT(1,
+            "Integrator="<<integrators[integrator_index].key)
+
         for(SizeType case_index=0u;
                 case_index!=cases.size();
                 ++case_index) {

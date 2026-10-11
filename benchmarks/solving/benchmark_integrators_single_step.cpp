@@ -35,13 +35,13 @@ FlowStepModelType run_integrator_step(
 {
     std::optional<FlowStepModelType> flow;
     try {
-        LOGGING_RUN_AT(2,
+        LOGGING_RUN_AT(3,
             flow=integrator.flow_step(
                 benchmark_case.vector_field,
                 benchmark_case.domain,
                 step))
     } catch(...) {
-        Logger::instance().decrease_level(2);
+        Logger::instance().decrease_level(3);
         throw;
     }
     return std::move(flow.value());
@@ -131,7 +131,7 @@ Nat determine_repetitions(
         std::chrono::duration<double,std::milli>(
             minimum_total_measurement_time).count();
 
-    LOGGING_PRINTLN_AT(1,
+    LOGGING_PRINTLN_AT(2,
         "Calibrating repetitions with step="<<step
         <<", minimum measurement time="
         <<minimum_measurement_time_ms
@@ -139,7 +139,7 @@ Nat determine_repetitions(
 
     for(const auto& named_integrator : integrators) {
         for(const auto& benchmark_case : cases) {
-            LOGGING_PRINTLN_AT(2,
+            LOGGING_PRINTLN_AT(3,
                 "Calibration start: integrator="<<named_integrator.key
                 <<", function="<<benchmark_case.name)
 
@@ -153,12 +153,12 @@ Nat determine_repetitions(
                 std::chrono::duration<double,std::milli>(
                     measurement.elapsed).count();
 
-            LOGGING_PRINTLN_AT(1,
+            LOGGING_PRINTLN_AT(2,
                 "Calibration: integrator="<<named_integrator.key
                 <<", function="<<benchmark_case.name
                 <<", elapsed="<<elapsed_ms<<" ms")
 
-            LOGGING_PRINTLN_AT(2,
+            LOGGING_PRINTLN_AT(3,
                 "Calibration remainder: integrator="<<named_integrator.key
                 <<", function="<<benchmark_case.name
                 <<", remainder="<<measurement.flow.error()
@@ -171,7 +171,7 @@ Nat determine_repetitions(
     }
 
     if(minimum_elapsed<=Duration::zero()) {
-        LOGGING_PRINTLN_AT(1,
+        LOGGING_PRINTLN_AT(2,
             "Calibration selected maximum repetitions="
             <<maximum_repetitions
             <<" because the minimum measured duration was non-positive")
@@ -190,7 +190,7 @@ Nat determine_repetitions(
         repetitions=maximum_repetitions;
     }
 
-    LOGGING_PRINTLN_AT(1,
+    LOGGING_PRINTLN_AT(2,
         "Calibration selected repetitions="<<repetitions)
 
     return repetitions;
@@ -205,14 +205,17 @@ std::vector<BenchmarkResult> run_benchmarks(
     std::vector<BenchmarkResult> results;
     results.reserve(integrators.size()*cases.size());
 
-    LOGGING_PRINTLN_AT(1,
+    LOGGING_PRINTLN_AT(2,
         "Running benchmark with step="<<step
         <<", step maximum error="<<benchmark_step_maximum_error
         <<", repetitions="<<repetitions)
 
     for(const auto& named_integrator : integrators) {
+        LOGGING_PRINTLN_AT(1,
+            "Integrator="<<named_integrator.key)
+
         for(const auto& benchmark_case : cases) {
-            LOGGING_PRINTLN_AT(2,
+            LOGGING_PRINTLN_AT(3,
                 "Benchmark start: integrator="<<named_integrator.key
                 <<", function="<<benchmark_case.name)
 
@@ -235,13 +238,13 @@ std::vector<BenchmarkResult> run_benchmarks(
                 throw std::runtime_error("Invalid benchmark timing.");
             }
 
-            LOGGING_PRINTLN_AT(1,
+            LOGGING_PRINTLN_AT(2,
                 "Benchmark result: integrator="<<named_integrator.key
                 <<", function="<<benchmark_case.name
                 <<", time="<<time_us_per_step<<" us/step"
                 <<", remainder="<<measurement.flow.error())
 
-            LOGGING_PRINTLN_AT(2,
+            LOGGING_PRINTLN_AT(3,
                 "Benchmark component remainders: integrator="
                 <<named_integrator.key
                 <<", function="<<benchmark_case.name
@@ -303,7 +306,7 @@ Int main(Int argc, const char* argv[]) {
         return -1;
     }
 
-    LOGGING_PRINTLN_AT(1,
+    LOGGING_PRINTLN_AT(2,
         "Integrator selection="<<selection)
 
     const auto cases=make_cases();
