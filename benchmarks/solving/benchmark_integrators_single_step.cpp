@@ -24,7 +24,6 @@ struct BenchmarkCase {
     std::string name;
     ValidatedVectorMultivariateFunction vector_field;
     ExactBoxType domain;
-    StepSizeType step;
 };
 
 struct NamedIntegrator {
@@ -40,17 +39,17 @@ struct Measurement {
 
 ExactBoxType box2() {
     return ExactBoxType({
-        {-0.0625_x,0.0625_x},
-        {-0.0625_x,0.0625_x}
+        {-0.25_x,0.25_x},
+        {-0.25_x,0.25_x}
     });
 }
 
 ExactBoxType box4() {
     return ExactBoxType({
-        {-0.0625_x,0.0625_x},
-        {-0.0625_x,0.0625_x},
-        {-0.0625_x,0.0625_x},
-        {-0.0625_x,0.0625_x}
+        {-0.25_x,0.25_x},
+        {-0.25_x,0.25_x},
+        {-0.25_x,0.25_x},
+        {-0.25_x,0.25_x}
     });
 }
 
@@ -60,7 +59,7 @@ BenchmarkCase make_affine_2d() {
         1+x[0]-2*x[1],
         -1+3*x[0]+x[1]
     });
-    return {"affine_2d",f,box2(),0.03125_x};
+    return {"affine_2d",f,box2()};
 }
 
 BenchmarkCase make_polynomial_low_order_2d() {
@@ -69,7 +68,7 @@ BenchmarkCase make_polynomial_low_order_2d() {
         x[0]+x[1]+x[0]*x[1],
         x[0]-x[1]+sqr(x[0])-sqr(x[1])
     });
-    return {"polynomial_low_order_2d",f,box2(),0.03125_x};
+    return {"polynomial_low_order_2d",f,box2()};
 }
 
 BenchmarkCase make_polynomial_high_order_2d() {
@@ -78,7 +77,7 @@ BenchmarkCase make_polynomial_high_order_2d() {
         x[1]+pow(x[0],3u)-pow(x[0],5u)+pow(x[0],3u)*pow(x[1],4u),
         -x[0]+pow(x[1],3u)+pow(x[0],4u)*pow(x[1],3u)-pow(x[1],7u)
     });
-    return {"polynomial_high_order_2d",f,box2(),0.03125_x};
+    return {"polynomial_high_order_2d",f,box2()};
 }
 
 BenchmarkCase make_polynomial_high_order_4d() {
@@ -89,7 +88,7 @@ BenchmarkCase make_polynomial_high_order_4d() {
         x[3]+pow(x[0],2u)*pow(x[2],3u)+pow(x[1],7u),
         -x[2]+pow(x[0],3u)*pow(x[3],3u)+pow(x[2],5u)*x[1]
     });
-    return {"polynomial_high_order_4d",f,box4(),0.03125_x};
+    return {"polynomial_high_order_4d",f,box4()};
 }
 
 BenchmarkCase make_transcendental_2d() {
@@ -98,7 +97,7 @@ BenchmarkCase make_transcendental_2d() {
         sin(x[0])+exp(x[1])-1,
         cos(x[1])+x[0]*x[1]-1
     });
-    return {"transcendental_2d",f,box2(),0.03125_x};
+    return {"transcendental_2d",f,box2()};
 }
 
 BenchmarkCase make_transcendental_4d() {
@@ -109,7 +108,7 @@ BenchmarkCase make_transcendental_4d() {
         exp(x[2])-1+x[1]*x[3],
         sin(x[3])+cos(x[0])+x[2]-1
     });
-    return {"transcendental_4d",f,box4(),0.03125_x};
+    return {"transcendental_4d",f,box4()};
 }
 
 std::vector<BenchmarkCase> make_cases() {
@@ -189,22 +188,73 @@ std::vector<NamedIntegrator> select_integrators(const std::string& selection) {
     std::exit(1);
 }
 
+Bool accepts_step(
+        const IntegratorInterface& integrator,
+        const BenchmarkCase& benchmark_case,
+        const StepSizeType& step)
+{
+    try {
+        integrator.flow_step(
+            benchmark_case.vector_field,
+            benchmark_case.domain,
+            step);
+        return true;
+    } catch(const FlowTimeStepException&) {
+        return false;
+    } catch(const IncompleteFlowException&) {
+        return false;
+    } catch(const FlowBoundsException&) {
+        return false;
+    }
+}
+
+StepSizeType determine_step(
+        const std::vector<NamedIntegrator>& integrators,
+        const std::vector<BenchmarkCase>& cases)
+{
+    StepSizeType step=0.03125_x;
+
+    for(Nat attempt=0u; attempt!=16u; ++attempt) {
+        Bool accepted=true;
+
+        for(const auto& named_integrator : integrators) {
+            for(const auto& benchmark_case : cases) {
+                if(!accepts_step(
+                        *named_integrator.integrator,
+                        benchmark_case,
+                        step)) {
+                    accepted=false;
+                }
+            }
+        }
+
+        if(accepted) {
+            return step;
+        }
+        step=hlf(step);
+    }
+
+    throw std::runtime_error(
+        "Unable to determine a common flow step for all benchmark cases.");
+}
+
 Measurement measure(
         const IntegratorInterface& integrator,
         const BenchmarkCase& benchmark_case,
+        const StepSizeType& step,
         Nat repetitions)
 {
     FlowStepModelType flow=integrator.flow_step(
         benchmark_case.vector_field,
         benchmark_case.domain,
-        benchmark_case.step);
+        step);
 
     const auto start=Clock::now();
     for(Nat i=0u; i!=repetitions; ++i) {
         flow=integrator.flow_step(
             benchmark_case.vector_field,
             benchmark_case.domain,
-            benchmark_case.step);
+            step);
     }
     const auto stop=Clock::now();
 
@@ -216,7 +266,8 @@ Measurement measure(
 
 Nat determine_repetitions(
         const std::vector<NamedIntegrator>& integrators,
-        const std::vector<BenchmarkCase>& cases)
+        const std::vector<BenchmarkCase>& cases,
+        const StepSizeType& step)
 {
     Nat repetitions=1u;
     while(true) {
@@ -227,6 +278,7 @@ Nat determine_repetitions(
                 const auto measurement=measure(
                     *named_integrator.integrator,
                     benchmark_case,
+                    step,
                     repetitions);
                 if(measurement.elapsed<minimum_total_measurement_time) {
                     all_sufficient=false;
@@ -243,8 +295,10 @@ Nat determine_repetitions(
 
 void print_configuration(
         const std::vector<NamedIntegrator>& integrators,
+        const StepSizeType& step,
         Nat repetitions)
 {
+    std::cout << "# step=" << step << "\n";
     std::cout << "# repetitions=" << repetitions << "\n";
     std::cout << "# minimum_calibration_time_ms="
               << std::chrono::duration<double,std::milli>(
@@ -264,6 +318,7 @@ void print_configuration(
 void run_benchmarks(
         const std::vector<NamedIntegrator>& integrators,
         const std::vector<BenchmarkCase>& cases,
+        const StepSizeType& step,
         Nat repetitions)
 {
     for(const auto& named_integrator : integrators) {
@@ -271,6 +326,7 @@ void run_benchmarks(
             const auto measurement=measure(
                 *named_integrator.integrator,
                 benchmark_case,
+                step,
                 repetitions);
 
             const double time_us_per_step=
@@ -317,10 +373,11 @@ Int main(Int argc, const char* argv[]) {
 
     const auto cases=make_cases();
     const auto integrators=select_integrators(selection);
-    const Nat repetitions=determine_repetitions(integrators,cases);
+    const StepSizeType step=determine_step(integrators,cases);
+    const Nat repetitions=determine_repetitions(integrators,cases,step);
 
-    print_configuration(integrators,repetitions);
-    run_benchmarks(integrators,cases,repetitions);
+    print_configuration(integrators,step,repetitions);
+    run_benchmarks(integrators,cases,step,repetitions);
 
     return 0;
 }
