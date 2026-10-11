@@ -79,6 +79,36 @@ class TestExpressionSet {
     }
 
     Void test_variables_box() const {
+        Real real_upper(2);
+        auto real_upper_interval = real_upper >= x;
+        ARIADNE_TEST_ASSERT(real_upper_interval.variable()==x);
+        ARIADNE_TEST_EQUAL(real_upper_interval.upper_bound(),real_upper);
+
+        Real real_value(1);
+        auto variable_equal_real = x == real_value;
+        auto real_equal_variable = real_value == x;
+        ARIADNE_TEST_ASSERT(variable_equal_real.variable()==x);
+        ARIADNE_TEST_EQUAL(variable_equal_real.lower_bound(),real_value);
+        ARIADNE_TEST_EQUAL(variable_equal_real.upper_bound(),real_value);
+        ARIADNE_TEST_ASSERT(real_equal_variable.variable()==x);
+        ARIADNE_TEST_EQUAL(real_equal_variable.lower_bound(),real_value);
+        ARIADNE_TEST_EQUAL(real_equal_variable.upper_bound(),real_value);
+
+        FloatDP float_lower(0,dp);
+        auto float_lower_interval = float_lower <= x;
+        ARIADNE_TEST_ASSERT(float_lower_interval.variable()==x);
+        ARIADNE_TEST_EQUAL(float_lower_interval.lower_bound(),float_lower);
+
+        Dyadic dyadic_lower(1);
+        auto dyadic_lower_interval = dyadic_lower <= x;
+        ARIADNE_TEST_ASSERT(dyadic_lower_interval.variable()==x);
+        ARIADNE_TEST_EQUAL(dyadic_lower_interval.lower_bound(),dyadic_lower);
+
+        double double_lower=0.25;
+        auto double_lower_interval = double_lower <= x;
+        ARIADNE_TEST_ASSERT(double_lower_interval.variable()==x);
+        ARIADNE_TEST_EQUAL(double_lower_interval.lower_bound(),double_lower);
+
         RealVariablesBox bx1 = {0<=x<=1.2_dec};
         ARIADNE_TEST_ASSERT(not bx1.is_empty());
         ARIADNE_TEST_PRINT(bx1);
