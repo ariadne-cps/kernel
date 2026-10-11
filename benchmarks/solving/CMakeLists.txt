@@ -1,6 +1,7 @@
 set(SOLVING_BENCHMARKS
     benchmark_constraint_propagation
     benchmark_constraint_shaving
+    benchmark_integrators_single_step
     benchmark_smt_interval_newton
 )
 foreach(BENCHMARK ${SOLVING_BENCHMARKS})
