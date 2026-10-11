@@ -130,6 +130,70 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(kleenean_variable.name()==Identifier("predicate"));
     }
 
+    Void test_space() {
+        RealSpace empty_space;
+        ARIADNE_TEST_EQUALS(empty_space.size(),0u);
+
+        List<RealVariable> variables_list={x,y};
+        List<Identifier> names={Identifier("x"),Identifier("y")};
+        RealSpace from_variables(variables_list);
+        RealSpace from_names(names);
+        RealSpace from_initializer({x,y});
+
+        ARIADNE_TEST_ASSERT(from_variables==from_names);
+        ARIADNE_TEST_ASSERT(not (from_variables!=from_names));
+        ARIADNE_TEST_ASSERT(from_variables==from_initializer);
+        RealSpace different({x,z});
+        ARIADNE_TEST_ASSERT(from_variables!=different);
+        ARIADNE_TEST_ASSERT(not (from_variables==different));
+
+        auto name_indices=from_variables.indices_from_names();
+        auto variable_indices=from_variables.indices();
+        ARIADNE_TEST_EQUALS(name_indices[Identifier("x")],0u);
+        ARIADNE_TEST_EQUALS(name_indices[Identifier("y")],1u);
+        ARIADNE_TEST_EQUALS(variable_indices[x],0u);
+        ARIADNE_TEST_EQUALS(variable_indices[y],1u);
+
+        ARIADNE_TEST_ASSERT(from_variables.contains(x));
+        ARIADNE_TEST_ASSERT(not from_variables.contains(z));
+        Set<RealVariable> present;
+        present.insert(x);
+        present.insert(y);
+        Set<RealVariable> missing=present;
+        missing.insert(z);
+        ARIADNE_TEST_ASSERT(from_variables.contains(present));
+        ARIADNE_TEST_ASSERT(not from_variables.contains(missing));
+
+        ARIADNE_TEST_EQUALS(from_variables[x],0u);
+        ARIADNE_TEST_EQUALS(from_variables[Identifier("y")],1u);
+        ARIADNE_TEST_EQUALS(from_variables.index(x),0u);
+        ARIADNE_TEST_EQUALS(from_variables.index(Identifier("y")),1u);
+        ARIADNE_TEST_FAIL((void)from_variables.index(z));
+        ARIADNE_TEST_FAIL((void)from_variables.index(Identifier("z")));
+
+        RealSpace inserted({x});
+        inserted.insert(x);
+        ARIADNE_TEST_EQUALS(inserted.size(),1u);
+        inserted.insert(y);
+        ARIADNE_TEST_EQUALS(inserted.size(),2u);
+
+        RealSpace adjoined({x});
+        adjoined.adjoin(RealSpace({x,y,z}));
+        ARIADNE_TEST_EQUALS(adjoined.size(),3u);
+        ARIADNE_TEST_ASSERT(adjoined.contains(z));
+
+        RealSpace append_space({x});
+        append_space.append(y);
+        ARIADNE_TEST_EQUALS(append_space.size(),2u);
+        ARIADNE_TEST_FAIL((void)append_space.append(y));
+        ARIADNE_TEST_FAIL((void)RealSpace({x,x}));
+
+        ARIADNE_TEST_EQUALS(dimension(from_variables),2u);
+        ARIADNE_TEST_ASSERT(real_space(names)==from_variables);
+        ARIADNE_TEST_ASSERT(variable_names(variables_list)==names);
+        ARIADNE_TEST_ASSERT(variable_names(from_variables)==names);
+    }
+
     Void test_constants() {
         StringConstant state(String("active"));
         ARIADNE_TEST_EQUALS(state.name(),Identifier("active"));
@@ -713,6 +777,7 @@ class TestExpression {
 
     Void test() {
         ARIADNE_TEST_CALL(test_variables());
+        ARIADNE_TEST_CALL(test_space());
         ARIADNE_TEST_CALL(test_constants());
         ARIADNE_TEST_CALL(test_valuations());
         ARIADNE_TEST_CALL(test_templates());

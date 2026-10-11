@@ -87,15 +87,13 @@ template<class T> List<typename Space<T>::VariableType> Space<T>::variables() co
 template<class T> Map<Identifier,SizeType> Space<T>::indices_from_names() const {
     Map<Identifier,SizeType> indices;
     for(SizeType i=0; i!=this->_variables.size(); ++i) {
-        ARIADNE_ASSERT_MSG(!indices.has_key(_variables[i]),"Repeated variable "<<_variables[i]<<" in space "<<_variables)
-            indices.insert(this->_variables[i],i);
+        indices.insert(this->_variables[i],i);
     }
     return indices;
 }
 template<class T> Map<typename Space<T>::VariableType,SizeType> Space<T>::indices() const {
     Map<VariableType,SizeType> indices;
     for(SizeType i=0; i!=this->_variables.size(); ++i) {
-        ARIADNE_ASSERT_MSG(!indices.has_key(VariableType(_variables[i])),"Repeated variable "<<_variables[i]<<" in space "<<_variables)
         indices.insert(VariableType(this->_variables[i]),i);
     }
     return indices;
@@ -116,12 +114,12 @@ template<class T> SizeType Space<T>::operator[](const Identifier& n) const {
 template<class T> SizeType Space<T>::index(const typename Space<T>::VariableType& v) const {
     for(SizeType i=0; i!=_variables.size(); ++i) {
         if(v.name()==_variables[i]) { return i; } }
-    ARIADNE_ASSERT_MSG(false,"Variable "<<v<<" is not in the Space "<<*this);
+    ARIADNE_PRECONDITION_MSG(false,"Variable "<<v<<" is not in the Space "<<*this);
     return _variables.size(); }
 template<class T> SizeType Space<T>::index(const Identifier& n) const {
     for(SizeType i=0; i!=_variables.size(); ++i) {
         if(n==_variables[i]) { return i; } }
-    ARIADNE_ASSERT_MSG(false,"Variable named "<<n<<" is not in the Space "<<*this);
+    ARIADNE_PRECONDITION_MSG(false,"Variable named "<<n<<" is not in the Space "<<*this);
     return _variables.size(); }
 template<class T> Space<T>& Space<T>::insert(const typename Space<T>::VariableType& v) {
     for(SizeType i=0; i!=_variables.size(); ++i) {
@@ -135,7 +133,7 @@ template<class T> Space<T>& Space<T>::adjoin(const Space<T>& spc) {
 
 template<class T> Space<T>& Space<T>::append(const VariableType& v) {
     for(SizeType i=0; i!=_variables.size(); ++i) {
-        ARIADNE_ASSERT_MSG(_variables[i]!=v.name(),"Variable "<<v<<" is already a variable of the StateSpace "<<*this);
+        ARIADNE_PRECONDITION_MSG(_variables[i]!=v.name(),"Variable "<<v<<" is already a variable of the StateSpace "<<*this);
     }
     _variables.push_back(v.name()); return *this;
 }
