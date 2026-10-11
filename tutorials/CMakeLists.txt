@@ -1,2 +1,1 @@
 add_custom_target(tutorials)
-add_subdirectory(demonstrations)
