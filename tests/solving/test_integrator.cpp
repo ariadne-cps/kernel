@@ -315,6 +315,32 @@ class TestIntegrator
 
 };
 
+Void test_taylor_series_step_maximum_error() {
+    auto x=ValidatedScalarMultivariateFunction::coordinates(2);
+    ValidatedVectorMultivariateFunction f({
+        x[1]+pow(x[0],3u)-pow(x[0],5u)+pow(x[0],3u)*pow(x[1],4u),
+        -x[0]+pow(x[1],3u)+pow(x[0],4u)*pow(x[1],3u)-pow(x[1],7u)
+    });
+    ExactBoxType domain={
+        {-0.25_x,0.25_x},
+        {-0.25_x,0.25_x}
+    };
+    StepSizeType h=0.03125_x;
+
+    TaylorSeriesIntegrator strict_integrator(step_maximum_error=1e-8,order=8);
+    ARIADNE_TEST_ASSERT(strict_integrator.has_step_maximum_error());
+    ARIADNE_TEST_THROWS(
+        strict_integrator.flow_step(f,domain,h),
+        FlowTimeStepException);
+
+    TaylorSeriesIntegrator loose_integrator(step_maximum_error=1e-2,order=8);
+    ARIADNE_TEST_CONSTRUCT(
+        FlowStepModelType,
+        flow,
+        (loose_integrator.flow_step(f,domain,h)));
+    ARIADNE_TEST_COMPARE(flow.error(),<,1e-2_pr);
+}
+
 Int main(Int argc, const char* argv[]) {
     if (not CommandLineInterface::instance().acquire(argc,argv)) return -1;
 
@@ -331,6 +357,7 @@ Int main(Int argc, const char* argv[]) {
 
     TaylorSeriesIntegrator taylor_series_integrator(sweeper, lipschitz_tolerance=0.5_x, order=6);
     ARIADNE_TEST_CLASS("TaylorSeriesIntegrator",TestIntegrator(taylor_series_integrator))
+    ARIADNE_TEST_CALL(test_taylor_series_step_maximum_error());
 
     TaylorSeriesBounderIntegrator taylor_series_bounder_integrator(
             step_maximum_error=1e-6,sweeper,lipschitz_tolerance=0.5_x,order=6);

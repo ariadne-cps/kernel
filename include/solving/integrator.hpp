@@ -326,17 +326,33 @@ private:
 class TaylorSeriesIntegrator
     : public BoundedIntegratorBase
 {
+    ExactDouble _step_maximum_error;
+    Bool _has_step_maximum_error;
     Sweeper<FloatDP> _sweeper;
     DegreeType _order;
   public:
-    //! \brief Constructor.
+    //! \brief Constructor with a maximum permissible single-step error.
     TaylorSeriesIntegrator(StepMaximumError err, Order order);
-    //! \brief Constructor.
+    //! \brief Constructor with explicit accuracy-control components.
+    TaylorSeriesIntegrator(StepMaximumError err, Sweeper<FloatDP> const& sweeper, LipschitzTolerance lip, Order order);
+    //! \brief Constructor without a maximum single-step error.
     TaylorSeriesIntegrator(Sweeper<FloatDP> const& sweeper, LipschitzTolerance lip, Order order);
 
     //! \brief The order of the method in space and time.
     DegreeType order() const { return this->_order; }
     Void set_order(DegreeType n) { this->_order=n; }
+    //! \brief Whether a maximum single-step error is configured.
+    Bool has_step_maximum_error() const { return this->_has_step_maximum_error; }
+    //! \brief The maximum permissible error of a single step.
+    ExactDouble step_maximum_error() const {
+        ARIADNE_ASSERT(this->has_step_maximum_error());
+        return this->_step_maximum_error;
+    }
+    //! \brief Set the maximum permissible error of a single step.
+    Void set_step_maximum_error(ApproximateDouble e) {
+        this->_step_maximum_error=cast_exact(e);
+        this->_has_step_maximum_error=true;
+    }
     //! \brief  Set the sweep threshold of the Taylor model.
     Sweeper<FloatDP> const& sweeper() const { return this->_sweeper; }
     Void set_sweeper(Sweeper<FloatDP> const& sweeper) {

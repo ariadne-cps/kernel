@@ -535,11 +535,15 @@ Bool operator<(const MultiIndex& a1, const MultiIndex& a2);
 static const TwoExp SWEEP_THRESHOLD_RATIO=TwoExp(-10);
 
 TaylorSeriesIntegrator::TaylorSeriesIntegrator(Sweeper<FloatDP> const& sweeper, LipschitzTolerance lip, Order ord)
-    : BoundedIntegratorBase(sweeper, lip), _sweeper(sweeper), _order(ord)
+    : BoundedIntegratorBase(sweeper, lip), _step_maximum_error(0), _has_step_maximum_error(false), _sweeper(sweeper), _order(ord)
+{ }
+
+TaylorSeriesIntegrator::TaylorSeriesIntegrator(StepMaximumError err, Sweeper<FloatDP> const& sweeper, LipschitzTolerance lip, Order ord)
+    : BoundedIntegratorBase(sweeper, lip), _step_maximum_error(cast_exact(err.value())), _has_step_maximum_error(true), _sweeper(sweeper), _order(ord)
 { }
 
 TaylorSeriesIntegrator::TaylorSeriesIntegrator(StepMaximumError err, Order ord)
-    : TaylorSeriesIntegrator(ThresholdSweeper<FloatDP>(DP(),err.value()*SWEEP_THRESHOLD_RATIO),DEFAULT_LIPSCHITZ_TOLERANCE,ord)
+    : TaylorSeriesIntegrator(err,ThresholdSweeper<FloatDP>(DP(),err.value()*SWEEP_THRESHOLD_RATIO),DEFAULT_LIPSCHITZ_TOLERANCE,ord)
 { }
 
 
@@ -548,7 +552,7 @@ GradedTaylorSeriesIntegrator::GradedTaylorSeriesIntegrator(StepMaximumError err)
 { }
 
 TaylorSeriesBounderIntegrator::TaylorSeriesBounderIntegrator(StepMaximumError err, Sweeper<FloatDP> const& swp, LipschitzTolerance lip, Order ord)
-    : TaylorSeriesIntegrator(swp,lip,ord), _step_maximum_error(cast_exact(err.value()))
+    : TaylorSeriesIntegrator(err,swp,lip,ord), _step_maximum_error(cast_exact(err.value()))
 { }
 
 TaylorSeriesBounderIntegrator::TaylorSeriesBounderIntegrator(StepMaximumError err, Order ord)
@@ -1641,13 +1645,22 @@ TaylorSeriesIntegrator::flow_step(const ValidatedVectorMultivariateFunction& f, 
 {
     ExactIntervalType domt(rngt);
     FlowStepModelType tphi=Ariadne::series_flow_step(f,domx,domt,doma,bndx,this->order(),this->sweeper());
+    if(this->has_step_maximum_error() && possibly(tphi.error()>this->step_maximum_error())) {
+        ARIADNE_THROW(FlowTimeStepException,"TaylorSeriesIntegrator::flow_step",
+                      "Integration of "<<f<<" over "<<domx<<" for time interval "<<domt
+                      <<" has error "<<tphi.error()
+                      <<", which exceeds maximum single-step error "<<this->step_maximum_error());
+    }
     return tphi;
 }
 
 Void TaylorSeriesIntegrator::_write(OutputStream& os) const {
     os << "TaylorSeriesIntegrator"
-       << "( function_factory = " << this->function_factory()
-       << ", sweeper = " << this->sweeper()
+       << "( function_factory = " << this->function_factory();
+    if(this->has_step_maximum_error()) {
+        os << ", step_maximum_error = " << this->step_maximum_error();
+    }
+    os << ", sweeper = " << this->sweeper()
        << ", order = " << this->order()
        << " )";
 }

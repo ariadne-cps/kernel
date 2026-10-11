@@ -162,9 +162,11 @@ Void export_integrators(pybind11::module& module)
 
     pybind11::class_<TaylorSeriesIntegrator,IntegratorInterface> taylor_series_integrator_class(module,"TaylorSeriesIntegrator");
     taylor_series_integrator_class.def(pybind11::init<ApproximateDouble,Nat>());
-    taylor_series_integrator_class.def(pybind11::init<ApproximateDouble,Nat>());
     taylor_series_integrator_class.def("order",&TaylorSeriesIntegrator::order);
+    taylor_series_integrator_class.def("has_step_maximum_error",&TaylorSeriesIntegrator::has_step_maximum_error);
+    taylor_series_integrator_class.def("step_maximum_error",&TaylorSeriesIntegrator::step_maximum_error);
     taylor_series_integrator_class.def("set_order",&TaylorSeriesIntegrator::set_order);
+    taylor_series_integrator_class.def("set_step_maximum_error",&TaylorSeriesIntegrator::set_step_maximum_error);
 
     pybind11::class_<GradedTaylorSeriesIntegrator,IntegratorInterface> graded_taylor_series_integrator_class(module,"GradedTaylorSeriesIntegrator");
     graded_taylor_series_integrator_class.def(pybind11::init<ApproximateDouble>());
