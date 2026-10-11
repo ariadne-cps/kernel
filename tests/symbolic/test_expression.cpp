@@ -71,6 +71,9 @@ class TestExpression {
     }
 
     Void test_expression() {
+        auto writer=RealExpression::default_writer();
+        RealExpression::set_default_writer(writer);
+
         // Regression test for constructing Expression from 0 without being an ambiguous nullptr;
         ARIADNE_TEST_CONSTRUCT(IntegerExpression,ze,(0));
         ARIADNE_TEST_CONSTRUCT(RealExpression,re,(0));
@@ -445,6 +448,8 @@ class TestExpression {
         ARIADNE_TEST_EQUALS((vce+evv).size(),vce.size());
         RealVectorExpression vee=Vector<RealExpression>({xs[0],xs[1],xs[2]});
         RealVectorExpression vex=xs;
+        ARIADNE_TEST_ASSERT(vex.node_ptr().operator->()==vex.node_raw_ptr());
+        ARIADNE_TEST_ASSERT(vex.node_raw_ptr()==&vex.node_ref());
         RealVectorExpression vyce({cs[0],y,cs[2]});
         RealValuation val({xs[0]=7, xs[1]=11, xs[2]=13});
         RealVector vec({val[xs[0]], val[xs[1]], val[xs[2]]});
