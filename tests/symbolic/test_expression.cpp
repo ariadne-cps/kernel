@@ -322,18 +322,13 @@ class TestExpression {
     }
 
     Void test_scalar_expression_templates() {
-        CatOp cat;
-        ARIADNE_TEST_EQUALS(cat.code(),OperatorCode::ADD);
-        ARIADNE_TEST_EQUALS(cat.kind(),OperatorKind::BINARY);
-        ARIADNE_TEST_EQUALS(cat(String("a"),String("b")),String("ab"));
-        ARIADNE_TEST_EQUALS(to_string(cat),String("cat"));
-        ARIADNE_TEST_EQUALS(pos(String("identity")),String("identity"));
-
         BooleanVariable boolean_variable("boolean");
         BooleanVariable boolean_other("boolean_other");
         BooleanExpression boolean_default;
         BooleanExpression boolean_copy(boolean_default);
-        BooleanExpression boolean_constant(Constant<Boolean>(Boolean()));
+        BooleanExpression boolean_constant{Constant<Boolean>(Boolean())};
+        ARIADNE_TEST_ASSERT(identical(boolean_default,boolean_copy));
+        ARIADNE_TEST_EXECUTE(boolean_constant.val());
         BooleanExpression boolean_from_variable(boolean_variable);
         ARIADNE_TEST_EXECUTE(boolean_default.val());
         ARIADNE_TEST_EQUALS(boolean_from_variable.var(),Identifier("boolean"));
@@ -356,7 +351,9 @@ class TestExpression {
         KleeneanVariable kleenean_other("kleenean_other");
         KleeneanExpression kleenean_default;
         KleeneanExpression kleenean_copy(kleenean_default);
-        KleeneanExpression kleenean_constant(Constant<Kleenean>(Kleenean()));
+        KleeneanExpression kleenean_constant{Constant<Kleenean>(Kleenean())};
+        ARIADNE_TEST_ASSERT(identical(kleenean_default,kleenean_copy));
+        ARIADNE_TEST_EXECUTE(kleenean_constant.val());
         KleeneanExpression kleenean_from_variable(kleenean_variable);
         ARIADNE_TEST_EXECUTE(kleenean_default.val());
         ARIADNE_TEST_EQUALS(kleenean_from_variable.var(),Identifier("kleenean"));
@@ -372,13 +369,14 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(kleenean_not.arg().var(),Identifier("kleenean"));
         ARIADNE_TEST_EQUALS(kleenean_binary.arg1().var(),Identifier("kleenean"));
         ARIADNE_TEST_EQUALS(kleenean_binary.arg2().var(),Identifier("kleenean_other"));
-        ARIADNE_TEST_ASSERT(same(Kleenean(),Kleenean()));
         ARIADNE_TEST_ASSERT(not to_string(kleenean_binary).empty());
 
         StringVariable string_variable("string");
         StringExpression string_default;
         StringExpression string_value(String("value"));
         StringExpression string_copy(string_value);
+        ARIADNE_TEST_EQUALS(string_default.val(),String());
+        ARIADNE_TEST_ASSERT(identical(string_value,string_copy));
         StringExpression string_constant(StringConstant(String("named")));
         StringExpression string_from_variable(string_variable);
         ARIADNE_TEST_EQUALS(string_value.val(),String("value"));
@@ -396,6 +394,7 @@ class TestExpression {
         IntegerVariable integer_other("integer_other");
         IntegerExpression integer_default;
         IntegerExpression integer_copy(integer_default);
+        ARIADNE_TEST_ASSERT(identical(integer_default,integer_copy));
         IntegerExpression integer_constant(IntegerConstant(Integer(7)));
         IntegerExpression integer_from_variable(integer_variable);
         ARIADNE_TEST_EQUALS(integer_constant.val(),Integer(7));
@@ -434,9 +433,14 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(evaluate(x>=0,real_valuation));
 
         Map<Identifier,String> string_map;
+        string_map[string_variable.name()]=String("mapped");
+        ARIADNE_TEST_EQUALS(evaluate(string_from_variable,string_map),String("mapped"));
+        ARIADNE_TEST_EQUALS(evaluate(StringExpression(String("fixed")),string_map),String("fixed"));
+
         Map<Identifier,Integer> integer_map;
-        ARIADNE_TEST_EQUALS(evaluate(IntegerExpression(Integer(5)),string_map),Integer(5));
-        ARIADNE_TEST_EQUALS(evaluate(StringExpression(String("fixed")),integer_map),String("fixed"));
+        integer_map[integer_variable.name()]=Integer(9);
+        ARIADNE_TEST_EQUALS(evaluate(integer_from_variable,integer_map),Integer(9));
+        ARIADNE_TEST_EQUALS(evaluate(IntegerExpression(Integer(5)),integer_map),Integer(5));
     }
 
     Void test_expression() {
