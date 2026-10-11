@@ -98,12 +98,12 @@ jobs:
         $env:PATH = "${{ runner.workspace }}\install\bin;C:\vcpkg\installed\x64-windows-release\bin;$env:PATH"
         & ".\build\tutorial_function.exe"
 
-    - name: Check Python Kernel Tutorial
+    - name: Check Python Function Tutorial
       shell: pwsh
       working-directory: ${{ github.workspace }}/python/tutorials
       run: |
         $env:PYTHONPATH = "${{ runner.workspace }}\build\python"
-        python function_demonstration.py
+        python tutorial_function.py
 
     - name: Verify Final Installation
       working-directory: ${{ runner.workspace }}/build

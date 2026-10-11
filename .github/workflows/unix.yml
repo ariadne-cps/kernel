@@ -90,11 +90,11 @@ jobs:
         export DYLD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${DYLD_LIBRARY_PATH:-}
         ./build/tutorial_function
 
-    - name: Check Python Kernel Tutorial
+    - name: Check Python Function Tutorial
       working-directory: ${{ github.workspace }}/python/tutorials
       env:
         PYTHONPATH: ${{ runner.workspace }}/build/python
-      run: python function_demonstration.py
+      run: python tutorial_function.py
 
     - name: Verify Final Installation
       working-directory: ${{ runner.workspace }}/build
