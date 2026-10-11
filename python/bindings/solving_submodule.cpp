@@ -101,6 +101,12 @@ Void export_solvers(pybind11::module& module)
 {
     typedef SolverInterface::ValidatedNumericType ValidatedNumericType;
     pybind11::class_<SolverInterface,SolverWrapper> solver_interface_class(module,"SolverInterface");
+    solver_interface_class.def("maximum_error", &SolverInterface::maximum_error);
+    solver_interface_class.def("set_maximum_error", &SolverInterface::set_maximum_error);
+    solver_interface_class.def("maximum_number_of_steps", &SolverInterface::maximum_number_of_steps);
+    solver_interface_class.def("set_maximum_number_of_steps", &SolverInterface::set_maximum_number_of_steps);
+    solver_interface_class.def("zero", &SolverInterface::zero);
+    solver_interface_class.def("fixed_point", &SolverInterface::fixed_point);
     solver_interface_class.def("solve", (Vector<ValidatedNumericType>(SolverInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&)const) &SolverInterface::solve);
     solver_interface_class.def("implicit",(ValidatedVectorMultivariateFunctionPatch(SolverInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&,const ExactBoxType&)const) &SolverInterface::implicit);
     solver_interface_class.def("implicit",(ValidatedScalarMultivariateFunctionPatch(SolverInterface::*)(const ValidatedScalarMultivariateFunction&,const ExactBoxType&,const ExactIntervalType&)const) &SolverInterface::implicit);

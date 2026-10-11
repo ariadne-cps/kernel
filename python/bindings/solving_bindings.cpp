@@ -85,9 +85,9 @@ Void export_optimiser_interface(pybind11::module& module)
     optimiser_interface_class.def("is_feasible_point", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPVector)const) &OptimiserInterface::is_feasible_point);
     optimiser_interface_class.def("validate_feasibility", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType)const) &OptimiserInterface::validate_feasibility);
     optimiser_interface_class.def("validate_feasibility", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType,ExactVectorType)const) &OptimiserInterface::validate_feasibility);
-    optimiser_interface_class.def("validate_infeasibility", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType,ExactVectorType)const) &OptimiserInterface::validate_feasibility);
-    optimiser_interface_class.def("validate_infeasibility", (ValidatedKleenean(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPBoundsVector)const) &OptimiserInterface::contains_feasible_point);
-    optimiser_interface_class.def("is_infeasibility_certificate", (ValidatedKleenean(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPBoundsVector)const) &OptimiserInterface::contains_feasible_point);
+    optimiser_interface_class.def("validate_infeasibility", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType,ExactVectorType)const) &OptimiserInterface::validate_infeasibility);
+    optimiser_interface_class.def("contains_feasible_point", (ValidatedKleenean(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPBoundsVector)const) &OptimiserInterface::contains_feasible_point);
+    optimiser_interface_class.def("is_infeasibility_certificate", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType)const) &OptimiserInterface::is_infeasibility_certificate);
     //NOTE: Not in C++ API
     //optimiser_interface_class.def("__str__", &__cstr__<OptimiserInterface>);
 }
@@ -115,6 +115,13 @@ Void export_constraint_solver(pybind11::module& module)
 {
     pybind11::class_<ConstraintSolver> constraint_solver_class(module,"ConstraintSolver");
     constraint_solver_class.def(pybind11::init<>());
+    constraint_solver_class.def("feasible", (Pair<ValidatedKleenean,ConstraintSolver::ExactPointType>(ConstraintSolver::*)(const ExactBoxType&,const ValidatedVectorMultivariateFunction&,const ExactBoxType&)const) &ConstraintSolver::feasible);
+    constraint_solver_class.def("check_feasibility", &ConstraintSolver::check_feasibility);
+    constraint_solver_class.def("reduce_box", [](ConstraintSolver const& solver, ExactBoxType const& domain, ValidatedVectorMultivariateFunction const& function, ExactBoxType const& codomain) {
+        UpperBoxType reduced(domain);
+        Bool empty = solver.reduce(reduced,function,codomain);
+        return pybind11::make_tuple(empty,reduced);
+    });
     constraint_solver_class.def("hull_reduce", (Bool(ConstraintSolver::*)(UpperBoxType&,const ValidatedScalarMultivariateFunction&,const ExactIntervalType&)const) &ConstraintSolver::hull_reduce);
     constraint_solver_class.def("box_reduce", (Bool(ConstraintSolver::*)(UpperBoxType&,const ValidatedScalarMultivariateFunction&,const ExactIntervalType&,SizeType)const) &ConstraintSolver::box_reduce);
     constraint_solver_class.def("monotone_reduce", (Bool(ConstraintSolver::*)(UpperBoxType&,const ValidatedScalarMultivariateFunction&,const ExactIntervalType&,SizeType)const) &ConstraintSolver::monotone_reduce);
@@ -135,6 +142,7 @@ Void export_simplex_solver(pybind11::module& module)
     simplex_solver_class.def("lpstep",(Bool(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&,Array<Slackness>& ,SizeArray&,Matrix<XX>&,Vector<XX>&)const) &SimplexSolver<X>::lpstep);
 
 
+    simplex_solver_class.def("minimise",(Vector<XX>(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&)const) &SimplexSolver<X>::minimise);
     simplex_solver_class.def("feasible",(ValidatedKleenean(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&)const) &SimplexSolver<X>::feasible);
 
     simplex_solver_class.def("verify_feasibility",(ValidatedKleenean(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&,const Array<Slackness>&)const) &SimplexSolver<X>::verify_feasibility);
