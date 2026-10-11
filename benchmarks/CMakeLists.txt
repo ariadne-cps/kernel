@@ -1,2 +1,6 @@
+add_executable(benchmark_integrators_single_step benchmark_integrators_single_step.cpp)
+target_link_libraries(benchmark_integrators_single_step PRIVATE ariadne-kernel kernel)
+add_dependencies(benchmarks benchmark_integrators_single_step)
+
 add_subdirectory(function)
 add_subdirectory(solving)
