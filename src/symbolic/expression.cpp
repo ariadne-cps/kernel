@@ -291,6 +291,7 @@ template Expression<Kleenean> substitute(const Expression<Kleenean>& e, const Va
 template Expression<Kleenean> substitute(const Expression<Kleenean>& e, const Variable<Real>& v, const Real& c);
 template Expression<Real> substitute(const Expression<Real>& e, const Variable<Real>& v, const Real& c);
 template Expression<Real> substitute(const Expression<Real>& e, const Variable<Real>& v, const Expression<Real>& c);
+template Expression<Vector<Real>> substitute(const Expression<Vector<Real>>& e, const Variable<Real>& v, const Real& c);
 template Expression<Vector<Real>> substitute(const Expression<Vector<Real>>& e, const Variable<Real>& v, const Expression<Real>& c);
 template Expression<Real> substitute(const Expression<Real>& e, const List< Assignment< Variable<Real>, Expression<Real> > >& c);
 template Vector<Expression<Real>> substitute(const Vector<Expression<Real>>& e, const List< Assignment< Variable<Real>, Expression<Real> > >& c);
