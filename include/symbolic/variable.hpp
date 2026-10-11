@@ -184,8 +184,8 @@ enum class VariableCategory : char { SIMPLE, DOTTED, PRIMED };
 inline OutputStream& operator<<(OutputStream& os, VariableCategory const& cat) {
     switch(cat) {
         case VariableCategory::SIMPLE: os << "SIMPLE"; break;
-        case VariableCategory::PRIMED: os << "DOTTED"; break;
-        case VariableCategory::DOTTED: os << "PRIMED"; break;
+        case VariableCategory::PRIMED: os << "PRIMED"; break;
+        case VariableCategory::DOTTED: os << "DOTTED"; break;
         default:
             ARIADNE_FAIL_MSG("Unhandled VariableCategory for output streaming");
     }

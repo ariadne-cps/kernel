@@ -66,6 +66,58 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(a==RealVariable("a"));
         ARIADNE_TEST_ASSERT(a==RealVariable(a));
         ARIADNE_TEST_ASSERT(a!=RealVariable("b"));
+
+        Variable<Boolean> boolean_variable("flag");
+        Variable<Kleenean> kleenean_variable("predicate");
+        ARIADNE_TEST_ASSERT(variable_type<Boolean>()==VariableType::BOOLEAN);
+        ARIADNE_TEST_ASSERT(variable_type<Kleenean>()==VariableType::KLEENEAN);
+        ARIADNE_TEST_ASSERT(variable_type<String>()==VariableType::STRING);
+        ARIADNE_TEST_ASSERT(variable_type<Integer>()==VariableType::INTEGER);
+        ARIADNE_TEST_ASSERT(variable_type<Real>()==VariableType::REAL);
+        ARIADNE_TEST_ASSERT(variable_type<RealVector>()==VariableType::REAL_VECTOR);
+        ARIADNE_TEST_ASSERT(variable_type<RealMatrix>()==VariableType::REAL_MATRIX);
+
+        ARIADNE_TEST_EQUALS(class_name(VariableType::BOOLEAN),String("Boolean"));
+        ARIADNE_TEST_EQUALS(class_name(VariableType::KLEENEAN),String("Kleenean"));
+        ARIADNE_TEST_EQUALS(class_name(VariableType::ENUMERATED),String("Enumerated"));
+        ARIADNE_TEST_EQUALS(class_name(VariableType::STRING),String("String"));
+        ARIADNE_TEST_EQUALS(class_name(VariableType::INTEGER),String("Integer"));
+        ARIADNE_TEST_EQUALS(class_name(VariableType::REAL),String("Real"));
+        ARIADNE_TEST_EQUALS(class_name(VariableType::REAL_VECTOR),String("RealVector"));
+        ARIADNE_TEST_EQUALS(class_name(VariableType::REAL_MATRIX),String("RealMatrix"));
+
+        RealVariable real_same_name("same");
+        Variable<Boolean> boolean_same_name("same");
+        RealVariable real_a("a");
+        RealVariable real_b("b");
+        UntypedVariable const& untyped_real=real_same_name;
+        UntypedVariable const& untyped_boolean=boolean_same_name;
+        ARIADNE_TEST_ASSERT(untyped_real!=untyped_boolean);
+        ARIADNE_TEST_ASSERT(static_cast<UntypedVariable const&>(real_a)<static_cast<UntypedVariable const&>(real_b));
+        ARIADNE_TEST_ASSERT(untyped_boolean<untyped_real);
+
+        ARIADNE_TEST_EQUALS(to_string(VariableCategory::SIMPLE),String("SIMPLE"));
+        ARIADNE_TEST_EQUALS(to_string(VariableCategory::PRIMED),String("PRIMED"));
+        ARIADNE_TEST_EQUALS(to_string(VariableCategory::DOTTED),String("DOTTED"));
+        ARIADNE_TEST_EQUALS(to_string(let(x)),String("x"));
+        ARIADNE_TEST_EQUALS(to_string(prime(x)),String("prime(x)"));
+        ARIADNE_TEST_EQUALS(to_string(dot(x)),String("dot(x)"));
+
+        List<RealVariable> variables={x,y,z};
+        auto set_variables=set(variables);
+        auto next_variables=next(variables);
+        auto dotted_variables=dot(variables);
+        ARIADNE_TEST_EQUALS(set_variables._lhs.size(),3u);
+        ARIADNE_TEST_EQUALS(next_variables._lhs.size(),3u);
+        ARIADNE_TEST_EQUALS(dotted_variables._lhs.size(),3u);
+
+        auto set_initializer=set(InitializerList<RealVariable>{x,y});
+        auto next_initializer=next(InitializerList<RealVariable>{x,y});
+        ARIADNE_TEST_EQUALS(set_initializer._lhs.size(),2u);
+        ARIADNE_TEST_EQUALS(next_initializer._lhs.size(),2u);
+
+        ARIADNE_TEST_ASSERT(boolean_variable.name()==Identifier("flag"));
+        ARIADNE_TEST_ASSERT(kleenean_variable.name()==Identifier("predicate"));
     }
 
     Void test_constants() {
