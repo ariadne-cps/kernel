@@ -23,6 +23,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include "utility/container.hpp"
 #include "utility/stlio.hpp"
 #include "numeric/numeric.hpp"
@@ -52,6 +53,7 @@ class TestExpressionSet {
     Void test() {
         ARIADNE_TEST_CALL(test_labelled_set());
         ARIADNE_TEST_CALL(test_variables_point());
+        ARIADNE_TEST_CALL(test_template_streaming());
         ARIADNE_TEST_CALL(test_variables_box());
         ARIADNE_TEST_CALL(test_real_expression_constraint_set());
         ARIADNE_TEST_CALL(test_real_expression_bounded_constraint_set());
@@ -76,6 +78,16 @@ class TestExpressionSet {
 
         auto labelled_set = LabelledSet<RealPoint>(p);
         ARIADNE_TEST_EQUALS(labelled_set.dimension(),2);
+    }
+
+    Void test_template_streaming() const {
+        BoundedConstraintSet bounded_set(RealBox({{-1,1}}));
+        ExactBoxType exact_box({ExactIntervalType(-1,1)});
+        Symbolic<Separated,BoundedConstraintSet,ExactBoxType> separated_symbolic(
+            Separated(),bounded_set,exact_box);
+        std::ostringstream separated_stream;
+        separated_stream << separated_symbolic;
+        ARIADNE_TEST_ASSERT(not separated_stream.str().empty());
     }
 
     Void test_variables_box() const {

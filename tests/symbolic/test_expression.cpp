@@ -35,7 +35,6 @@
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
 #include "function/taylor_model.hpp"
-#include "geometry/function_set.hpp"
 
 #include "algebra/matrix.tpl.hpp"
 
@@ -125,13 +124,6 @@ class TestExpression {
         ARIADNE_TEST_EQUALS((concrete_getter.*getter_vec_method)().size(),2u);
         ARIADNE_TEST_EQUALS((concrete_getter.*getter_ind_method)(),SizeType(1));
 
-        BoundedConstraintSet bounded_set(RealBox({{-1,1}}));
-        ExactBoxType exact_box({ExactIntervalType(-1,1)});
-        Symbolic<Separated,BoundedConstraintSet,ExactBoxType> separated_symbolic(
-            Separated(),bounded_set,exact_box);
-        std::ostringstream separated_stream;
-        separated_stream << separated_symbolic;
-        ARIADNE_TEST_ASSERT(not separated_stream.str().empty());
     }
 
     Void test_expression() {
