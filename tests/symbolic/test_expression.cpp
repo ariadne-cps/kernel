@@ -85,6 +85,7 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(class_name(VariableType::REAL),String("Real"));
         ARIADNE_TEST_EQUALS(class_name(VariableType::REAL_VECTOR),String("RealVector"));
         ARIADNE_TEST_EQUALS(class_name(VariableType::REAL_MATRIX),String("RealMatrix"));
+        ARIADNE_TEST_FAIL((void)class_name(static_cast<VariableType>(127)));
 
         RealVariable real_same_name("same");
         Variable<Boolean> boolean_same_name("same");
@@ -99,6 +100,15 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(to_string(VariableCategory::SIMPLE),String("SIMPLE"));
         ARIADNE_TEST_EQUALS(to_string(VariableCategory::PRIMED),String("PRIMED"));
         ARIADNE_TEST_EQUALS(to_string(VariableCategory::DOTTED),String("DOTTED"));
+        ARIADNE_TEST_FAIL((void)to_string(static_cast<VariableCategory>(127)));
+
+        class InvalidExtendedVariable : public ExtendedUntypedVariable {
+          public:
+            InvalidExtendedVariable()
+                : ExtendedUntypedVariable("invalid",VariableType::REAL,static_cast<VariableCategory>(127)) { }
+        };
+        ARIADNE_TEST_FAIL((void)to_string(InvalidExtendedVariable()));
+
         ARIADNE_TEST_EQUALS(to_string(let(x)),String("x"));
         ARIADNE_TEST_EQUALS(to_string(prime(x)),String("prime(x)"));
         ARIADNE_TEST_EQUALS(to_string(dot(x)),String("dot(x)"));
