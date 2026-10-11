@@ -65,10 +65,10 @@ def tutorial_solving():
         y * y - a,
     ])
     parameter_domain = exact_box([
-        (0.81, 1.21),
+        (0.75, 1.25),
     ])
     solution_range = exact_box([
-        (0.8, 1.2),
+        (0.75, 1.25),
     ])
 
     implicit_solution = solver.implicit(
@@ -96,8 +96,8 @@ def tutorial_solving():
         (0, 2),
     ])
     constraint_codomain = exact_box([
-        (0.9, 1.1),
-        (-0.2, 0.2),
+        (0.875, 1.125),
+        (-0.25, 0.25),
     ])
 
     constraint_solver = ConstraintSolver()

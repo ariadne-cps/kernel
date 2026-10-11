@@ -77,10 +77,10 @@ int main() {
         z[1] * z[1] - z[0]
     });
     ExactBoxType parameter_domain({
-        {0.81_x, 1.21_x}
+        {0.75_x, 1.25_x}
     });
     ExactBoxType solution_range({
-        {0.8_x, 1.2_x}
+        {0.75_x, 1.25_x}
     });
 
     ValidatedVectorMultivariateFunctionPatch implicit_solution =
@@ -108,8 +108,8 @@ int main() {
         {0.0_x, 2.0_x}
     });
     ExactBoxType constraint_codomain({
-        {0.9_x, 1.1_x},
-        {-0.2_x, 0.2_x}
+        {0.875_x, 1.125_x},
+        {-0.25_x, 0.25_x}
     });
 
     auto feasibility =
