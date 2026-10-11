@@ -365,11 +365,6 @@ template<class P, class SIG> Void export_function(pybind11::module& module) {
         function_class.def("__le__", &__le__<EffectiveScalarMultivariateFunction,EffectiveNumber,Return<EffectiveConstraint>>);
         function_class.def("__ge__", &__ge__<EffectiveScalarMultivariateFunction,EffectiveNumber,Return<EffectiveConstraint>>);
     }
-    if constexpr (Same<P,ValidatedTag> and Same<SIG,RealScalar(RealVector)>) {
-        function_class.def("__eq__", &__eq__<ValidatedScalarMultivariateFunction,ValidatedNumber,Return<ValidatedConstraint>>);
-        function_class.def("__le__", &__le__<ValidatedScalarMultivariateFunction,ValidatedNumber,Return<ValidatedConstraint>>);
-        function_class.def("__ge__", &__ge__<ValidatedScalarMultivariateFunction,ValidatedNumber,Return<ValidatedConstraint>>);
-    }
 
 }
 
