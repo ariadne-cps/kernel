@@ -628,6 +628,11 @@ Void export_curve(pybind11::module& module)
     interpolated_curve_class.def(pybind11::init<InterpolatedCurve>());
     interpolated_curve_class.def(pybind11::init<FloatDP,FloatDPPoint>());
     interpolated_curve_class.def("insert", (Void(InterpolatedCurve::*)(const FloatDP&, const Point<FloatDPApproximation>&)) &InterpolatedCurve::insert);
+    interpolated_curve_class.def("insert", [](InterpolatedCurve& c, const FloatDP& s, const FloatDPPoint& pt) { c.insert(s,Point<FloatDPApproximation>(pt)); });
+    interpolated_curve_class.def("size", &InterpolatedCurve::size);
+    interpolated_curve_class.def("dimension", &InterpolatedCurve::dimension);
+    interpolated_curve_class.def("bounding_box", &InterpolatedCurve::bounding_box);
+    interpolated_curve_class.def("__len__", &InterpolatedCurve::size);
     interpolated_curve_class.def("__iter__", [](InterpolatedCurve const& c){return pybind11::make_iterator(c.begin(),c.end());});
     interpolated_curve_class.def("__str__", &__cstr__<InterpolatedCurve>);
 
@@ -666,16 +671,38 @@ Void export_constraint_set(pybind11::module& module)
     pybind11::class_<ConstraintSet,pybind11::bases<EffectiveEuclideanRegularSetInterface,EffectiveEuclideanOpenSetInterface> >
         constraint_set_class(module,"ConstraintSet", pybind11::multiple_inheritance());
     constraint_set_class.def(pybind11::init<ConstraintSet>());
+    constraint_set_class.def(pybind11::init<EffectiveVectorMultivariateFunction,RealBox>());
     constraint_set_class.def(pybind11::init< List<EffectiveConstraint> >());
     constraint_set_class.def("dimension", &ConstraintSet::dimension);
+    constraint_set_class.def("codomain", &ConstraintSet::codomain);
+    constraint_set_class.def("constraint_function", &ConstraintSet::constraint_function);
+    constraint_set_class.def("constraint_bounds", &ConstraintSet::constraint_bounds);
+    constraint_set_class.def("number_of_constraints", &ConstraintSet::number_of_constraints);
+    constraint_set_class.def("constraint", &ConstraintSet::constraint);
+    constraint_set_class.def("separated", (LowerKleenean(ConstraintSet::*)(const ExactBoxType&)const) &ConstraintSet::separated);
+    constraint_set_class.def("overlaps", (LowerKleenean(ConstraintSet::*)(const ExactBoxType&)const) &ConstraintSet::overlaps);
+    constraint_set_class.def("covers", (LowerKleenean(ConstraintSet::*)(const ExactBoxType&)const) &ConstraintSet::covers);
     constraint_set_class.def("__str__", &__cstr__<ConstraintSet>);
 
 //    pybind11::class_<BoundedConstraintSet,pybind11::bases<DrawableWrapper> >
     pybind11::class_<BoundedConstraintSet,pybind11::bases<EffectiveEuclideanRegularSetInterface,EffectiveEuclideanLocatedSetInterface,Drawable2dInterface> >
         bounded_constraint_set_class(module,"BoundedConstraintSet", pybind11::multiple_inheritance());
     bounded_constraint_set_class.def(pybind11::init<BoundedConstraintSet>());
+    bounded_constraint_set_class.def(pybind11::init<RealBox>());
+    bounded_constraint_set_class.def(pybind11::init<RealBox,EffectiveVectorMultivariateFunction,RealBox>());
     bounded_constraint_set_class.def(pybind11::init< RealBox, List<EffectiveConstraint> >());
     bounded_constraint_set_class.def("dimension", &BoundedConstraintSet::dimension);
+    bounded_constraint_set_class.def("domain", &BoundedConstraintSet::domain);
+    bounded_constraint_set_class.def("codomain", &BoundedConstraintSet::codomain);
+    bounded_constraint_set_class.def("constraint_function", &BoundedConstraintSet::constraint_function);
+    bounded_constraint_set_class.def("constraint_bounds", &BoundedConstraintSet::constraint_bounds);
+    bounded_constraint_set_class.def("number_of_constraints", &BoundedConstraintSet::number_of_constraints);
+    bounded_constraint_set_class.def("constraint", &BoundedConstraintSet::constraint);
+    bounded_constraint_set_class.def("bounding_box", &BoundedConstraintSet::bounding_box);
+    bounded_constraint_set_class.def("separated", (LowerKleenean(BoundedConstraintSet::*)(const ExactBoxType&)const) &BoundedConstraintSet::separated);
+    bounded_constraint_set_class.def("overlaps", (LowerKleenean(BoundedConstraintSet::*)(const ExactBoxType&)const) &BoundedConstraintSet::overlaps);
+    bounded_constraint_set_class.def("covers", (LowerKleenean(BoundedConstraintSet::*)(const ExactBoxType&)const) &BoundedConstraintSet::covers);
+    bounded_constraint_set_class.def("inside", (LowerKleenean(BoundedConstraintSet::*)(const ExactBoxType&)const) &BoundedConstraintSet::inside);
     bounded_constraint_set_class.def("__str__", &__cstr__<BoundedConstraintSet>);
 
     module.def("intersection", (ConstraintSet(*)(ConstraintSet const&,ConstraintSet const&)) &_intersection_);
@@ -703,7 +730,22 @@ Void export_constrained_image_set(pybind11::module& module)
     constrained_image_set_class.def(pybind11::init<BoundedConstraintSet>());
     constrained_image_set_class.def(pybind11::init<RealBox,EffectiveVectorMultivariateFunction>());
     constrained_image_set_class.def(pybind11::init<RealBox,EffectiveVectorMultivariateFunction,List<EffectiveConstraint> >());
+    constrained_image_set_class.def("domain", &ConstrainedImageSet::domain);
+    constrained_image_set_class.def("function", &ConstrainedImageSet::function);
+    constrained_image_set_class.def("constraint_function", &ConstrainedImageSet::constraint_function);
+    constrained_image_set_class.def("constraint_bounds", &ConstrainedImageSet::constraint_bounds);
+    constrained_image_set_class.def("constraint", &ConstrainedImageSet::constraint);
+    constrained_image_set_class.def("number_of_parameters", &ConstrainedImageSet::number_of_parameters);
+    constrained_image_set_class.def("number_of_constraints", &ConstrainedImageSet::number_of_constraints);
+    constrained_image_set_class.def("apply", &ConstrainedImageSet::apply);
+    constrained_image_set_class.def("new_space_constraint", &ConstrainedImageSet::new_space_constraint);
+    constrained_image_set_class.def("new_parameter_constraint", &ConstrainedImageSet::new_parameter_constraint);
     constrained_image_set_class.def("dimension", &ConstrainedImageSet::dimension);
+    constrained_image_set_class.def("bounding_box", &ConstrainedImageSet::bounding_box);
+    constrained_image_set_class.def("affine_over_approximation", &ConstrainedImageSet::affine_over_approximation);
+    constrained_image_set_class.def("inside", (LowerKleenean(ConstrainedImageSet::*)(const ExactBoxType&)const) &ConstrainedImageSet::inside);
+    constrained_image_set_class.def("separated", (LowerKleenean(ConstrainedImageSet::*)(const ExactBoxType&)const) &ConstrainedImageSet::separated);
+    constrained_image_set_class.def("overlaps", (LowerKleenean(ConstrainedImageSet::*)(const ExactBoxType&)const) &ConstrainedImageSet::overlaps);
     constrained_image_set_class.def("split", (Pair<ConstrainedImageSet,ConstrainedImageSet>(ConstrainedImageSet::*)(SizeType)const) &ConstrainedImageSet::split);
     constrained_image_set_class.def("split", (Pair<ConstrainedImageSet,ConstrainedImageSet>(ConstrainedImageSet::*)()const) &ConstrainedImageSet::split);
 //    	constrained_image_set_class.def("affine_over_approximation", &ValidatedConstrainedImageSet::affine_over_approximation);
@@ -719,13 +761,21 @@ Void export_constrained_image_set(pybind11::module& module)
     validated_constrained_image_set_class.def(pybind11::init<ExactBoxType,ValidatedVectorMultivariateFunction,List<ValidatedConstraint> >());
     validated_constrained_image_set_class.def(pybind11::init<ExactBoxType,ValidatedVectorMultivariateFunctionModelDP>());
     validated_constrained_image_set_class.def("domain", &ValidatedConstrainedImageSet::domain);
+    validated_constrained_image_set_class.def("reduced_domain", &ValidatedConstrainedImageSet::reduced_domain);
     validated_constrained_image_set_class.def("function", &ValidatedConstrainedImageSet::function);
+    validated_constrained_image_set_class.def("constraints", &ValidatedConstrainedImageSet::constraints);
     validated_constrained_image_set_class.def("constraint", &ValidatedConstrainedImageSet::constraint);
+    validated_constrained_image_set_class.def("constraint_function", &ValidatedConstrainedImageSet::constraint_function);
+    validated_constrained_image_set_class.def("constraint_bounds", &ValidatedConstrainedImageSet::constraint_bounds);
     validated_constrained_image_set_class.def("number_of_parameters", &ValidatedConstrainedImageSet::number_of_parameters);
     validated_constrained_image_set_class.def("number_of_constraints", &ValidatedConstrainedImageSet::number_of_constraints);
     validated_constrained_image_set_class.def("apply", &ValidatedConstrainedImageSet::apply);
     validated_constrained_image_set_class.def("new_space_constraint", (Void(ValidatedConstrainedImageSet::*)(const ValidatedConstraint&))&ValidatedConstrainedImageSet::new_space_constraint);
     validated_constrained_image_set_class.def("new_parameter_constraint", (Void(ValidatedConstrainedImageSet::*)(const ValidatedConstraint&))&ValidatedConstrainedImageSet::new_parameter_constraint);
+    validated_constrained_image_set_class.def("reduce", &ValidatedConstrainedImageSet::reduce);
+    validated_constrained_image_set_class.def("restriction", &ValidatedConstrainedImageSet::restriction);
+    validated_constrained_image_set_class.def("is_empty", &ValidatedConstrainedImageSet::is_empty);
+    validated_constrained_image_set_class.def("satisfies", &ValidatedConstrainedImageSet::satisfies);
     validated_constrained_image_set_class.def("outer_approximation", &ValidatedConstrainedImageSet::outer_approximation);
     validated_constrained_image_set_class.def("affine_approximation", &ValidatedConstrainedImageSet::affine_approximation);
     validated_constrained_image_set_class.def("affine_over_approximation", &ValidatedConstrainedImageSet::affine_over_approximation);
