@@ -148,6 +148,10 @@ Void draw(Figure& fig, const Drawable2d3dInterface& shape) {
     fig.draw(shape);
 }
 
+Void draw(Figure& fig, const RealBox& box) {
+    fig.draw(box);
+}
+
 Void draw(Figure& fig, FloatDPApproximateBox const& box) {
     fig.draw(box);
 }

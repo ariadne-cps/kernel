@@ -242,6 +242,7 @@ class Figure
 
 
 Void draw(Figure& fig, const ApproximateBoxType& box);
+Void draw(Figure& fig, const RealBox& box);
 inline Figure& operator<<(Figure& fig, const ApproximateBoxType& box) { fig.draw(box); return fig; }
 
 inline Figure& operator<<(Figure& g, const LineStyle& ls) { g.properties().set_line_style(ls); return g; }
