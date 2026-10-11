@@ -167,7 +167,7 @@ pybind11::class_<RealVariable> export_variables(pybind11::module& module)
     integer_next_variable_class.def("__lshift__", (PrimedIntegerAssignment(PrimedIntegerVariable::*)(const IntegerExpression&)const) &PrimedIntegerVariable::operator=);
     integer_next_variable_class.def("__str__", &__cstr__<PrimedIntegerVariable>);
     module.def("next", (PrimedIntegerVariable(*)(const IntegerVariable&)) &next);
-    module.def("prime", (PrimedIntegerVariable(*)(const IntegerVariable&)) &prime);
+    module.def("prime", [](const IntegerVariable& variable) { return next(variable); });
 
     pybind11::class_<RealVariable> real_variable_class(module,python_class_name<RealVariable>().c_str());
     real_variable_class.def(pybind11::init<StringType>());
@@ -227,7 +227,7 @@ pybind11::class_<RealVariable> export_variables(pybind11::module& module)
     real_next_variable_class.def("__lshift__", (PrimedRealAssignment(PrimedRealVariable::*)(const RealExpression&)const) &PrimedRealVariable::operator=);
     real_next_variable_class.def("__str__", &__cstr__<PrimedRealVariable>);
     module.def("next", (PrimedRealVariable(*)(const RealVariable&)) &next);
-    module.def("prime", (PrimedRealVariable(*)(const RealVariable&)) &prime);
+    module.def("prime", [](const RealVariable& variable) { return next(variable); });
 
     pybind11::class_<TimeVariable,pybind11::bases<RealVariable>> time_variable_class(module,"TimeVariable");
     time_variable_class.def(pybind11::init<>());
