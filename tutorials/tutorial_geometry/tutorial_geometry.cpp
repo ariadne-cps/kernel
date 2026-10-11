@@ -134,10 +134,10 @@ int main() {
 
     // Constraints may live either in parameter space or in the image space.
     // Space constraints are automatically composed with the parametrisation.
-    image_set.new_parameter_constraint(u[0] + u[1] <= 1.25_x);
+    image_set.new_parameter_constraint(u[0] + u[1] <= ExactNumber(1.25_x));
 
     auto x = ValidatedScalarMultivariateFunction::coordinates(2);
-    ValidatedExactConstraint state_constraint = x[0] - x[1] <= 1.5_x;
+    ValidatedExactConstraint state_constraint = x[0] - x[1] <= ExactNumber(1.5_x);
     image_set.new_space_constraint(state_constraint);
 
     show("constrained image set", image_set);
