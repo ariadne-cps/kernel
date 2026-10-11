@@ -1,290 +1,31 @@
 #include <chrono>
 #include <cmath>
-#include <cstdlib>
 #include <iomanip>
 #include <iostream>
-#include <memory>
-#include <string>
+#include <limits>
 #include <utility>
-#include <vector>
 
-#include "ariadne-kernel.hpp"
+#include "integrator_benchmark.hpp"
 
 using namespace Ariadne;
+using namespace IntegratorBenchmark;
 
 namespace {
 
 using Clock = std::chrono::steady_clock;
 using Duration = std::chrono::nanoseconds;
 
-constexpr auto minimum_total_measurement_time = std::chrono::milliseconds(1);
-constexpr Nat maximum_repetitions = 1024u;
-
-struct BenchmarkCase {
-    std::string name;
-    ValidatedVectorMultivariateFunction vector_field;
-    ExactBoxType domain;
-};
-
-struct NamedIntegrator {
-    std::string key;
-    std::string name;
-    std::unique_ptr<IntegratorInterface> integrator;
-};
+constexpr auto minimum_total_measurement_time=std::chrono::milliseconds(1);
+constexpr Nat maximum_repetitions=1024u;
+constexpr double step_maximum_error=1e-2;
 
 struct Measurement {
     Duration elapsed;
     FlowStepModelType flow;
 };
 
-ExactBoxType box2() {
-    return ExactBoxType({
-        {-0.25_x,0.25_x},
-        {-0.25_x,0.25_x}
-    });
-}
-
-ExactBoxType box4() {
-    return ExactBoxType({
-        {-0.25_x,0.25_x},
-        {-0.25_x,0.25_x},
-        {-0.25_x,0.25_x},
-        {-0.25_x,0.25_x}
-    });
-}
-
-BenchmarkCase make_affine_2d() {
-    auto x=ValidatedScalarMultivariateFunction::coordinates(2);
-    ValidatedVectorMultivariateFunction f({
-        1+x[0]-2*x[1],
-        -1+3*x[0]+x[1]
-    });
-    return {"affine_2d",f,box2()};
-}
-
-BenchmarkCase make_polynomial_low_order_2d() {
-    auto x=ValidatedScalarMultivariateFunction::coordinates(2);
-    ValidatedVectorMultivariateFunction f({
-        x[0]+x[1]+x[0]*x[1],
-        x[0]-x[1]+sqr(x[0])-sqr(x[1])
-    });
-    return {"polynomial_low_order_2d",f,box2()};
-}
-
-BenchmarkCase make_polynomial_high_order_2d() {
-    auto x=ValidatedScalarMultivariateFunction::coordinates(2);
-    ValidatedVectorMultivariateFunction f({
-        x[1]+pow(x[0],3u)-pow(x[0],5u)+pow(x[0],3u)*pow(x[1],4u),
-        -x[0]+pow(x[1],3u)+pow(x[0],4u)*pow(x[1],3u)-pow(x[1],7u)
-    });
-    return {"polynomial_high_order_2d",f,box2()};
-}
-
-BenchmarkCase make_polynomial_high_order_4d() {
-    auto x=ValidatedScalarMultivariateFunction::coordinates(4);
-    ValidatedVectorMultivariateFunction f({
-        x[1]+pow(x[0],5u)*x[2]+x[0]*x[1]*x[2]*x[3],
-        -x[0]+pow(x[1],4u)*pow(x[3],2u)+pow(x[2],6u),
-        x[3]+pow(x[0],2u)*pow(x[2],3u)+pow(x[1],7u),
-        -x[2]+pow(x[0],3u)*pow(x[3],3u)+pow(x[2],5u)*x[1]
-    });
-    return {"polynomial_high_order_4d",f,box4()};
-}
-
-BenchmarkCase make_transcendental_2d() {
-    auto x=ValidatedScalarMultivariateFunction::coordinates(2);
-    ValidatedVectorMultivariateFunction f({
-        sin(x[0])+exp(x[1])-1,
-        cos(x[1])+x[0]*x[1]-1
-    });
-    return {"transcendental_2d",f,box2()};
-}
-
-BenchmarkCase make_transcendental_4d() {
-    auto x=ValidatedScalarMultivariateFunction::coordinates(4);
-    ValidatedVectorMultivariateFunction f({
-        sin(x[0])+exp(x[1])-1,
-        cos(x[1])+sin(x[2])+x[0]*x[3]-1,
-        exp(x[2])-1+x[1]*x[3],
-        sin(x[3])+cos(x[0])+x[2]-1
-    });
-    return {"transcendental_4d",f,box4()};
-}
-
-std::vector<BenchmarkCase> make_cases() {
-    std::vector<BenchmarkCase> cases;
-    cases.push_back(make_affine_2d());
-    cases.push_back(make_polynomial_low_order_2d());
-    cases.push_back(make_polynomial_high_order_2d());
-    cases.push_back(make_polynomial_high_order_4d());
-    cases.push_back(make_transcendental_2d());
-    cases.push_back(make_transcendental_4d());
-    return cases;
-}
-
-std::vector<NamedIntegrator> make_all_integrators() {
-    constexpr double error=1e-8;
-    constexpr DegreeType order_value=8;
-
-    std::vector<NamedIntegrator> integrators;
-    integrators.push_back({
-        "taylor-picard",
-        "TaylorPicardIntegrator",
-        std::make_unique<TaylorPicardIntegrator>(StepMaximumError(error))
-    });
-    integrators.push_back({
-        "graded-taylor-picard",
-        "GradedTaylorPicardIntegrator",
-        std::make_unique<GradedTaylorPicardIntegrator>(
-            StepMaximumError(error),Order(order_value))
-    });
-    integrators.push_back({
-        "taylor-series",
-        "TaylorSeriesIntegrator",
-        std::make_unique<TaylorSeriesIntegrator>(
-            StepMaximumError(error),Order(order_value))
-    });
-    integrators.push_back({
-        "taylor-series-bounder",
-        "TaylorSeriesBounderIntegrator",
-        std::make_unique<TaylorSeriesBounderIntegrator>(
-            StepMaximumError(error),Order(order_value))
-    });
-    integrators.push_back({
-        "graded-taylor-series",
-        "GradedTaylorSeriesIntegrator",
-        std::make_unique<GradedTaylorSeriesIntegrator>(
-            StepMaximumError(error))
-    });
-    integrators.push_back({
-        "preconditioned-graded-taylor-series",
-        "PreconditionedGradedTaylorSeriesIntegrator",
-        std::make_unique<PreconditionedGradedTaylorSeriesIntegrator>(
-            StepMaximumError(error))
-    });
-    return integrators;
-}
-
-std::vector<NamedIntegrator> select_integrators(const std::string& selection) {
-    auto all=make_all_integrators();
-    if(selection=="all") {
-        return all;
-    }
-
-    std::vector<NamedIntegrator> selected;
-    for(auto& named_integrator : all) {
-        if(named_integrator.key==selection) {
-            selected.push_back(std::move(named_integrator));
-            return selected;
-        }
-    }
-
-    std::cerr << "Unknown integrator '" << selection << "'.\n";
-    std::cerr << "Available integrators:\n";
-    std::cerr << "  all\n";
-    for(const auto& named_integrator : all) {
-        std::cerr << "  " << named_integrator.key << "\n";
-    }
-    std::exit(1);
-}
-
-Bool accepts_step(
-        const NamedIntegrator& named_integrator,
-        const BenchmarkCase& benchmark_case,
-        const StepSizeType& step)
-{
-    std::cerr
-        << "[step-calibration] integrator=" << named_integrator.key
-        << " function=" << benchmark_case.name
-        << " step=" << step
-        << " START"
-        << std::endl;
-
-    const auto start=Clock::now();
-
-    try {
-        const auto flow=named_integrator.integrator->flow_step(
-            benchmark_case.vector_field,
-            benchmark_case.domain,
-            step);
-        const auto elapsed=Clock::now()-start;
-
-        std::cerr
-            << "[step-calibration] integrator=" << named_integrator.key
-            << " function=" << benchmark_case.name
-            << " step=" << step
-            << " OK elapsed_ms="
-            << std::chrono::duration<double,std::milli>(elapsed).count()
-            << " remainder=" << flow.error()
-            << std::endl;
-        return true;
-    } catch(const FlowTimeStepException& exception) {
-        std::cerr
-            << "[step-calibration] integrator=" << named_integrator.key
-            << " function=" << benchmark_case.name
-            << " step=" << step
-            << " FAIL FlowTimeStepException: " << exception.what()
-            << std::endl;
-        return false;
-    } catch(const IncompleteFlowException& exception) {
-        std::cerr
-            << "[step-calibration] integrator=" << named_integrator.key
-            << " function=" << benchmark_case.name
-            << " step=" << step
-            << " FAIL IncompleteFlowException: " << exception.what()
-            << std::endl;
-        return false;
-    } catch(const FlowBoundsException& exception) {
-        std::cerr
-            << "[step-calibration] integrator=" << named_integrator.key
-            << " function=" << benchmark_case.name
-            << " step=" << step
-            << " FAIL FlowBoundsException: " << exception.what()
-            << std::endl;
-        return false;
-    }
-}
-
-StepSizeType determine_step(
-        const std::vector<NamedIntegrator>& integrators,
-        const std::vector<BenchmarkCase>& cases)
-{
-    StepSizeType step=0.03125_x;
-
-    for(Nat attempt=0u; attempt!=16u; ++attempt) {
-        std::cerr
-            << "[step-calibration] attempt=" << attempt
-            << " candidate_step=" << step
-            << std::endl;
-
-        Bool accepted=true;
-
-        for(const auto& named_integrator : integrators) {
-            for(const auto& benchmark_case : cases) {
-                if(!accepts_step(
-                        named_integrator,
-                        benchmark_case,
-                        step)) {
-                    accepted=false;
-                }
-            }
-        }
-
-        if(accepted) {
-            std::cerr
-                << "[step-calibration] selected_step=" << step
-                << std::endl;
-            return step;
-        }
-
-        step=hlf(step);
-        std::cerr
-            << "[step-calibration] retry_with_step=" << step
-            << std::endl;
-    }
-
-    throw std::runtime_error(
-        "Unable to determine a common flow step for all benchmark cases.");
+StepSizeType benchmark_step() {
+    return 0.03125_x;
 }
 
 Measurement measure(
@@ -318,86 +59,55 @@ Nat determine_repetitions(
         const std::vector<BenchmarkCase>& cases,
         const StepSizeType& step)
 {
-    Nat repetitions=1u;
-    while(true) {
-        std::cerr
-            << "[repetition-calibration] repetitions=" << repetitions
-            << " START"
-            << std::endl;
-
-        Bool all_sufficient=true;
-
-        for(const auto& named_integrator : integrators) {
-            for(const auto& benchmark_case : cases) {
-                std::cerr
-                    << "[repetition-calibration] integrator="
-                    << named_integrator.key
-                    << " function=" << benchmark_case.name
-                    << " repetitions=" << repetitions
-                    << " START"
-                    << std::endl;
-
-                const auto measurement=measure(
-                    *named_integrator.integrator,
-                    benchmark_case,
-                    step,
-                    repetitions);
-
-                const double elapsed_ms=
-                    std::chrono::duration<double,std::milli>(
-                        measurement.elapsed).count();
-
-                std::cerr
-                    << "[repetition-calibration] integrator="
-                    << named_integrator.key
-                    << " function=" << benchmark_case.name
-                    << " repetitions=" << repetitions
-                    << " OK elapsed_ms=" << elapsed_ms
-                    << " remainder=" << measurement.flow.error()
-                    << std::endl;
-
-                if(measurement.elapsed<minimum_total_measurement_time) {
-                    all_sufficient=false;
-                }
-            }
-        }
-
-        if(all_sufficient || repetitions>=maximum_repetitions) {
-            std::cerr
-                << "[repetition-calibration] selected_repetitions="
-                << repetitions
-                << " all_sufficient=" << all_sufficient
-                << std::endl;
-            return repetitions;
-        }
-
-        const Nat doubled=repetitions*2u;
-        repetitions=(doubled>maximum_repetitions
-            ? maximum_repetitions
-            : doubled);
-    }
-}
-
-void print_configuration(
-        const std::vector<NamedIntegrator>& integrators,
-        const StepSizeType& step,
-        Nat repetitions)
-{
-    std::cout << "# step=" << step << "\n";
-    std::cout << "# repetitions=" << repetitions << "\n";
-    std::cout << "# minimum_calibration_time_ms="
-              << std::chrono::duration<double,std::milli>(
-                     minimum_total_measurement_time).count()
-              << "\n";
+    Duration minimum_elapsed=Duration::max();
 
     for(const auto& named_integrator : integrators) {
-        std::cout << "# " << named_integrator.key
-                  << "=" << *named_integrator.integrator << "\n";
+        for(const auto& benchmark_case : cases) {
+            std::cerr
+                << "[repetition-calibration] integrator="
+                << named_integrator.key
+                << " function=" << benchmark_case.name
+                << " START"
+                << std::endl;
+
+            const auto measurement=measure(
+                *named_integrator.integrator,
+                benchmark_case,
+                step,
+                1u);
+
+            std::cerr
+                << "[repetition-calibration] integrator="
+                << named_integrator.key
+                << " function=" << benchmark_case.name
+                << " elapsed_ms="
+                << std::chrono::duration<double,std::milli>(
+                    measurement.elapsed).count()
+                << " remainder=" << measurement.flow.error()
+                << std::endl;
+
+            if(measurement.elapsed<minimum_elapsed) {
+                minimum_elapsed=measurement.elapsed;
+            }
+        }
     }
 
-    std::cout
-        << "integrator\tfunction\trepetitions\ttime_us_per_step"
-        << "\tremainder\tcomponent_remainders\n";
+    if(minimum_elapsed<=Duration::zero()) {
+        return maximum_repetitions;
+    }
+
+    const double required=
+        std::chrono::duration<double>(minimum_total_measurement_time).count()
+        / std::chrono::duration<double>(minimum_elapsed).count();
+
+    Nat repetitions=static_cast<Nat>(std::ceil(required));
+    if(repetitions<1u) {
+        repetitions=1u;
+    }
+    if(repetitions>maximum_repetitions) {
+        repetitions=maximum_repetitions;
+    }
+    return repetitions;
 }
 
 void run_benchmarks(
@@ -406,13 +116,18 @@ void run_benchmarks(
         const StepSizeType& step,
         Nat repetitions)
 {
+    std::cout
+        << "# step=" << step << "\n"
+        << "# step_maximum_error=" << step_maximum_error << "\n"
+        << "# repetitions=" << repetitions << "\n"
+        << "integrator\tfunction\trepetitions\ttime_us_per_step"
+        << "\tremainder\tcomponent_remainders\n";
+
     for(const auto& named_integrator : integrators) {
         for(const auto& benchmark_case : cases) {
             std::cerr
                 << "[benchmark] integrator=" << named_integrator.key
                 << " function=" << benchmark_case.name
-                << " repetitions=" << repetitions
-                << " step=" << step
                 << " START"
                 << std::endl;
 
@@ -433,18 +148,9 @@ void run_benchmarks(
                     << named_integrator.name
                     << " and function "
                     << benchmark_case.name
-                    << ": "
-                    << time_us_per_step
-                    << " us\n";
+                    << ": " << time_us_per_step << " us\n";
                 std::exit(2);
             }
-
-            std::cerr
-                << "[benchmark] integrator=" << named_integrator.key
-                << " function=" << benchmark_case.name
-                << " OK time_us_per_step=" << time_us_per_step
-                << " remainder=" << measurement.flow.error()
-                << std::endl;
 
             std::cout
                 << named_integrator.key << "\t"
@@ -455,6 +161,13 @@ void run_benchmarks(
                 << measurement.flow.error() << "\t"
                 << measurement.flow.errors()
                 << "\n";
+
+            std::cerr
+                << "[benchmark] integrator=" << named_integrator.key
+                << " function=" << benchmark_case.name
+                << " OK time_us_per_step=" << time_us_per_step
+                << " remainder=" << measurement.flow.error()
+                << std::endl;
         }
     }
 }
@@ -463,7 +176,6 @@ void run_benchmarks(
 
 Int main(Int argc, const char* argv[]) {
     const std::string selection=(argc>1 ? argv[1] : "all");
-
     if(argc>2) {
         std::cerr
             << "Usage: benchmark_integrators_single_step "
@@ -471,24 +183,11 @@ Int main(Int argc, const char* argv[]) {
         return 1;
     }
 
-    std::cerr << "[setup] constructing benchmark cases" << std::endl;
     const auto cases=make_cases();
-
-    std::cerr << "[setup] constructing integrators selection="
-              << selection << std::endl;
-    const auto integrators=select_integrators(selection);
-
-    std::cerr << "[setup] calibrating common step" << std::endl;
-    const StepSizeType step=determine_step(integrators,cases);
-
-    std::cerr << "[setup] calibrating common repetitions" << std::endl;
+    const auto integrators=select_integrators(selection,step_maximum_error);
+    const StepSizeType step=benchmark_step();
     const Nat repetitions=determine_repetitions(integrators,cases,step);
 
-    std::cerr << "[setup] running final benchmark matrix" << std::endl;
-    print_configuration(integrators,step,repetitions);
     run_benchmarks(integrators,cases,step,repetitions);
-
-    std::cerr << "[setup] benchmark complete" << std::endl;
-
     return 0;
 }
