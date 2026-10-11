@@ -34,6 +34,7 @@
 #include "geometry/point.hpp"
 #include "geometry/box.hpp"
 #include "symbolic/space.hpp"
+#include "symbolic/expression_set.hpp"
 #include "function/function.hpp"
 
 using namespace Ariadne;
@@ -50,6 +51,14 @@ Void export_colour(pybind11::module& module)
 {
     pybind11::class_<Colour> colour_class(module,"Colour");
     colour_class.def(pybind11::init<double,double,double>());
+    colour_class.def(pybind11::init<double,double,double,double>());
+    colour_class.def_readonly("name", &Colour::name);
+    colour_class.def_readonly("red", &Colour::red);
+    colour_class.def_readonly("green", &Colour::green);
+    colour_class.def_readonly("blue", &Colour::blue);
+    colour_class.def_readonly("opacity", &Colour::opacity);
+    colour_class.def("__str__", &__cstr__<Colour>);
+    colour_class.def("__repr__", &__cstr__<Colour>);
 
     module.attr("transparent") = transparent;
     module.attr("white") = white;
@@ -96,9 +105,22 @@ Void export_figure(pybind11::module& module)
     figure_class.def("set_line_style", (Figure&(Figure::*)(Bool)) &Figure::set_line_style, reference_internal);
     figure_class.def("set_line_width", (Figure&(Figure::*)(double)) &Figure::set_line_width, reference_internal);
     figure_class.def("set_line_colour", (Figure&(Figure::*)(double,double,double)) &Figure::set_line_colour, reference_internal);
+    figure_class.def("set_line_colour", (Figure&(Figure::*)(Colour)) &Figure::set_line_colour, reference_internal);
     figure_class.def("set_fill_style", (Figure&(Figure::*)(Bool)) &Figure::set_fill_style, reference_internal);
     figure_class.def("set_fill_colour", (Figure&(Figure::*)(double,double,double)) &Figure::set_fill_colour, reference_internal);
+    figure_class.def("set_fill_colour", (Figure&(Figure::*)(Colour)) &Figure::set_fill_colour, reference_internal);
     figure_class.def("set_fill_opacity", (Figure&(Figure::*)(double)) &Figure::set_fill_opacity, reference_internal);
+    figure_class.def("get_bounding_box", &Figure::get_bounding_box);
+    figure_class.def("get_2d_projection_map", &Figure::get_2d_projection_map);
+    figure_class.def("get_line_style", &Figure::get_line_style);
+    figure_class.def("get_line_width", &Figure::get_line_width);
+    figure_class.def("get_dot_radius", &Figure::get_dot_radius);
+    figure_class.def("get_line_colour", &Figure::get_line_colour);
+    figure_class.def("get_fill_style", &Figure::get_fill_style);
+    figure_class.def("get_fill_opacity", &Figure::get_fill_opacity);
+    figure_class.def("get_fill_colour", &Figure::get_fill_colour);
+    figure_class.def("properties",(GraphicsProperties&(Figure::*)())&Figure::properties, reference_internal);
+    figure_class.def("set_animated", &Figure::set_animated, reference_internal);
     figure_class.def("draw",(Figure&(Figure::*)(const Drawable2dInterface&))&Figure::draw, reference_internal);
     figure_class.def("draw",(Figure&(Figure::*)(const RealBox&))&Figure::draw, reference_internal);
     figure_class.def("draw",(Figure&(Figure::*)(const ApproximateBoxType&))&Figure::draw, reference_internal);
@@ -123,11 +145,30 @@ Void export_graphics_properties(pybind11::module& module)
     graphics_properties_class.def("set_fill_colour", (GraphicsProperties&(GraphicsProperties::*)(double,double,double)) &GraphicsProperties::set_fill_colour, reference_internal);
     graphics_properties_class.def("set_fill_colour", (GraphicsProperties&(GraphicsProperties::*)(Colour)) &GraphicsProperties::set_fill_colour, reference_internal);
     graphics_properties_class.def("set_fill_opacity", (GraphicsProperties&(GraphicsProperties::*)(double)) &GraphicsProperties::set_fill_opacity, reference_internal);
+    graphics_properties_class.def("set_animated", &GraphicsProperties::set_animated, reference_internal);
+    graphics_properties_class.def_readwrite("dot_radius", &GraphicsProperties::dot_radius);
+    graphics_properties_class.def_readwrite("line_style", &GraphicsProperties::line_style);
+    graphics_properties_class.def_readwrite("line_width", &GraphicsProperties::line_width);
+    graphics_properties_class.def_readwrite("line_colour", &GraphicsProperties::line_colour);
+    graphics_properties_class.def_readwrite("fill_style", &GraphicsProperties::fill_style);
+    graphics_properties_class.def_readwrite("fill_colour", &GraphicsProperties::fill_colour);
+    graphics_properties_class.def_readwrite("is_projected", &GraphicsProperties::is_projected);
+    graphics_properties_class.def_readwrite("is_3d", &GraphicsProperties::is_3d);
+    graphics_properties_class.def_readwrite("is_animated", &GraphicsProperties::is_animated);
+    graphics_properties_class.def("__str__", &__cstr__<GraphicsProperties>);
+    graphics_properties_class.def("__repr__", &__cstr__<GraphicsProperties>);
 }
 
 Void export_labelled_figure(pybind11::module& module)
 {
     static constexpr auto reference_internal = pybind11::return_value_policy::reference_internal;
+
+    using LabelledRealBox = LabelledBox<RealInterval>;
+    pybind11::class_<LabelledRealBox> labelled_real_box_class(module,"LabelledRealBox");
+    labelled_real_box_class.def(pybind11::init<RealSpace,RealBox>());
+    labelled_real_box_class.def("dimension", &LabelledRealBox::dimension);
+    labelled_real_box_class.def("__str__", &__cstr__<LabelledRealBox>);
+    labelled_real_box_class.def("__repr__", &__cstr__<LabelledRealBox>);
 
     pybind11::class_<LabelledFigure> labelled_figure_class(module,"LabelledFigure");
     labelled_figure_class.def(pybind11::init<Axes2d>());
@@ -136,7 +177,12 @@ Void export_labelled_figure(pybind11::module& module)
     labelled_figure_class.def("properties",(GraphicsProperties&(LabelledFigure::*)())&LabelledFigure::properties, reference_internal);
 
     labelled_figure_class.def("draw",(LabelledFigure&(LabelledFigure::*)(const LabelledDrawable2dInterface&))&LabelledFigure::draw, reference_internal);
+    labelled_figure_class.def("draw", [](LabelledFigure& fig, LabelledRealBox const& box) -> LabelledFigure& {
+        LabelledDrawableWrapper<RealBox> wrapper(box);
+        return fig.draw(wrapper);
+    }, reference_internal);
     labelled_figure_class.def("clear",&LabelledFigure::clear, reference_internal);
+    labelled_figure_class.def("set_animated", &LabelledFigure::set_animated, reference_internal);
     labelled_figure_class.def("write",(Void(LabelledFigure::*)(const Char*)const)&LabelledFigure::write);
     labelled_figure_class.def("write",(Void(LabelledFigure::*)(const Char*,Nat,Nat)const)&LabelledFigure::write);
 }
@@ -156,6 +202,8 @@ Void export_backend(pybind11::module& module) {
 
 Void export_drawer(pybind11::module& module) {
     pybind11::class_<Drawer> drawer_class(module,"Drawer");
+    drawer_class.def("__str__", &__cstr__<Drawer>);
+    drawer_class.def("__repr__", &__cstr__<Drawer>);
 
     pybind11::class_<AffineDrawer> affine_drawer_class(module,"AffineDrawer");
     affine_drawer_class.def(pybind11::init<Nat>());
@@ -179,6 +227,8 @@ Void export_graphics_manager(pybind11::module& module)
 
     pybind11::class_<GraphicsManager> graphics_manager_class(module,"GraphicsManager");
     graphics_manager_class.def_static("instance", &GraphicsManager::instance, reference);
+    graphics_manager_class.def("backend", &GraphicsManager::backend, reference);
+    graphics_manager_class.def("drawer", &GraphicsManager::drawer, reference);
     graphics_manager_class.def("set_backend", &GraphicsManager::set_backend);
     graphics_manager_class.def("set_drawer", &GraphicsManager::set_drawer);
 }

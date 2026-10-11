@@ -129,6 +129,26 @@ jobs:
         $env:PYTHONPATH = "${{ runner.workspace }}\build\python"
         python tutorial_geometry.py
 
+    - name: Prepare C++ IO Tutorial
+      shell: pwsh
+      run: cmake -E copy_directory "$env:GITHUB_WORKSPACE/tutorials/tutorial_io" "${{ runner.workspace }}/tutorial_io"
+
+    - name: Check C++ IO Tutorial
+      shell: pwsh
+      working-directory: ${{ runner.workspace }}/tutorial_io
+      run: |
+        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ runner.workspace }}/install" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DX_VCPKG_APPLOCAL_DEPS_SERIALIZED=ON -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        cmake --build build --parallel
+        $env:PATH = "${{ runner.workspace }}\install\bin;C:\vcpkg\installed\x64-windows-release\bin;$env:PATH"
+        & ".\build\tutorial_io.exe"
+
+    - name: Check Python IO Tutorial
+      shell: pwsh
+      working-directory: ${{ github.workspace }}/python/tutorials
+      run: |
+        $env:PYTHONPATH = "${{ runner.workspace }}\build\python"
+        python tutorial_io.py
+
     - name: Verify Final Installation
       working-directory: ${{ runner.workspace }}/build
       run: cmake --install . --prefix "${{ runner.workspace }}/verify-install"
