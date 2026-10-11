@@ -17,7 +17,7 @@ using Duration = std::chrono::nanoseconds;
 
 constexpr auto minimum_total_measurement_time=std::chrono::milliseconds(1);
 constexpr Nat maximum_repetitions=1024u;
-constexpr double benchmark_step_maximum_error=1e-2;
+constexpr double benchmark_step_maximum_error=1e-5;
 
 struct Measurement {
     Duration elapsed;
