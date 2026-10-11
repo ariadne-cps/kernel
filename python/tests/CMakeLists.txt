@@ -16,7 +16,7 @@ else()
 endif()
 
 if(PYTHON_TESTS)
-    foreach(TESTNAME function calculus geometry solvers symbolic)
+    foreach(TESTNAME function geometry io solving symbolic)
         add_custom_target(
             test_python_${TESTNAME}
             COMMAND "${Python3_EXECUTABLE}" -m pytest "${CMAKE_CURRENT_SOURCE_DIR}/test_${TESTNAME}.py"
@@ -30,7 +30,7 @@ if(PYTHON_TESTS)
         set_property(TEST test_python_${TESTNAME} PROPERTY
             ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:pyariadne>"
         )
-        set_property(TEST test_python_${TESTNAME} PROPERTY LABELS "python")
+        set_property(TEST test_python_${TESTNAME} PROPERTY LABELS "python;${TESTNAME}")
         add_dependencies(test_python_${TESTNAME} pyariadne)
     endforeach()
     add_dependencies(tests pyariadne)
