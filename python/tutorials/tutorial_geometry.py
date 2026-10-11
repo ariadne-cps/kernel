@@ -24,7 +24,7 @@ def tutorial_geometry():
         {exact(-0.75): exact(1.25)},
         {exact(-0.5): exact(1.0)},
     ])
-    sample = FloatDPPoint([FloatDP(0.5, dp), FloatDP(0.25, dp)])
+    sample = FloatDPPoint([FloatDP(exact(0.5), dp), FloatDP(exact(0.25), dp)])
 
     show("workspace", workspace)
     show("observation", observation)
