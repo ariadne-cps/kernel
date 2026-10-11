@@ -25,6 +25,7 @@
 #include "function/functional.hpp"
 #include <iostream>
 #include <iomanip>
+#include <memory>
 
 #include "utility/macros.hpp"
 #include "utility/exceptions.hpp"
@@ -1189,8 +1190,10 @@ Bool GridTreeSubpaving::intersects(const SubPavingInterface& paving) const {
 }
 
 GridTreeSubpaving* GridTreeSubpaving::clone( ) const {
-    // Return a GridTreeSet to ensure that memory is copied.
-    return new GridTreePaving(this->grid(),this->_pRootTreeNode);
+    std::unique_ptr<GridTreePaving> result(
+        new GridTreePaving(this->grid(),this->_theGridCell.root_extent(),new BinaryTreeNode(false)));
+    result->_pRootTreeNode->add_enabled(this->_pRootTreeNode,this->_theGridCell.word());
+    return result.release();
 }
 
 

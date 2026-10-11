@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include "geometry/paving_interface.hpp"
 #include "geometry/grid_paving.hpp"
 #include "function/function.hpp"
@@ -46,6 +47,7 @@ class TestPaving
     Void test_constructors() const;
     Void test_iterator() const;
     Void test_branch() const;
+    Void test_clone() const;
     Void test_geometry() const;
     Void test_approximation() const;
 };
@@ -54,6 +56,7 @@ Void TestPaving::test() const {
     ARIADNE_TEST_CALL(test_constructors());
     ARIADNE_TEST_CALL(test_iterator());
     ARIADNE_TEST_CALL(test_branch());
+    ARIADNE_TEST_CALL(test_clone());
     ARIADNE_TEST_CALL(test_geometry());
     ARIADNE_TEST_CALL(test_approximation());
 }
@@ -150,6 +153,44 @@ Void TestPaving::test_branch() const {
     ARIADNE_TEST_ASSERT(branch1.begin()->word()==word3);
     ARIADNE_TEST_ASSERT((++branch1.begin())->word()==word4);
 }
+
+Void TestPaving::test_clone() const {
+    Grid grid(2);
+    BinaryWord word1("0001");
+    BinaryWord word2("0010");
+    BinaryWord word3("1100");
+    std::unique_ptr<PavingHandle> cloned_branch;
+
+    {
+        GridTreePaving grid_set(grid);
+        PavingInterface& paving = grid_set;
+        paving.adjoin(GridCell(grid,0,word1));
+        paving.adjoin(GridCell(grid,0,word2));
+        paving.adjoin(GridCell(grid,0,word3));
+
+        GridTreeSubpaving branch0 =
+            static_cast<GridTreeSubpaving const&>(grid_set).branch(0);
+        ARIADNE_TEST_EQUALS(branch0.size(),2);
+
+        cloned_branch = std::make_unique<PavingHandle>(branch0);
+        const PavingInterface& cloned_paving = *cloned_branch;
+        const SubPavingInterface& original_interface = branch0;
+        const SubPavingInterface& cloned_interface = cloned_paving;
+
+        ARIADNE_TEST_EQUALS(cloned_branch->size(),2);
+        ARIADNE_TEST_ASSERT(subset(original_interface,cloned_interface));
+        ARIADNE_TEST_ASSERT(subset(cloned_interface,original_interface));
+    }
+
+    ARIADNE_TEST_EQUALS(cloned_branch->size(),2);
+    PavingHandle::ConstIterator iter=cloned_branch->begin();
+    ARIADNE_TEST_EQUAL(*iter,GridCell(grid,0,word1));
+    ++iter;
+    ARIADNE_TEST_EQUAL(*iter,GridCell(grid,0,word2));
+    ++iter;
+    ARIADNE_TEST_EQUALS(iter,cloned_branch->end());
+}
+
 
 Void TestPaving::test_geometry() const {
     Grid grid(2);
