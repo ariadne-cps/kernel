@@ -59,6 +59,17 @@ inline BenchmarkCase make_polynomial_low_order_2d() {
     return {"polynomial_low_order_2d",f,box2()};
 }
 
+inline BenchmarkCase make_polynomial_low_order_4d() {
+    auto x=ValidatedScalarMultivariateFunction::coordinates(4);
+    ValidatedVectorMultivariateFunction f({
+        x[0]+x[1]+x[2]*x[3],
+        x[0]-x[1]+x[2]+x[0]*x[3],
+        x[1]-x[2]+x[3]+x[0]*x[2],
+        -x[0]+x[2]-x[3]+x[1]*x[3]
+    });
+    return {"polynomial_low_order_4d",f,box4()};
+}
+
 inline BenchmarkCase make_polynomial_high_order_2d() {
     auto x=ValidatedScalarMultivariateFunction::coordinates(2);
     ValidatedVectorMultivariateFunction f({
@@ -103,6 +114,7 @@ inline std::vector<BenchmarkCase> make_cases() {
     std::vector<BenchmarkCase> cases;
     cases.push_back(make_affine_2d());
     cases.push_back(make_polynomial_low_order_2d());
+    cases.push_back(make_polynomial_low_order_4d());
     cases.push_back(make_polynomial_high_order_2d());
     cases.push_back(make_polynomial_high_order_4d());
     cases.push_back(make_transcendental_2d());
