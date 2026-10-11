@@ -75,6 +75,75 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(state.val(),String("active"));
     }
 
+    Void test_valuations() {
+        Variable<String> mode("mode");
+        Variable<String> state("state");
+        Variable<Integer> count("count");
+        Variable<Integer> level("level");
+
+        Map<Identifier,String> string_values;
+        string_values.insert(mode.name(),String("idle"));
+        string_values.insert(state.name(),String("ready"));
+
+        Map<Identifier,Integer> integer_values;
+        integer_values.insert(count.name(),Integer(1));
+        integer_values.insert(level.name(),Integer(2));
+
+        DiscreteValuation empty_valuation;
+        DiscreteValuation string_valuation(string_values);
+        DiscreteValuation integer_valuation(integer_values);
+        DiscreteValuation valuation(string_values,integer_values);
+
+        ARIADNE_TEST_EQUALS(valuation[mode],String("idle"));
+        ARIADNE_TEST_EQUALS(valuation[count],Integer(1));
+        ARIADNE_TEST_EQUALS(valuation.string_values().size(),2u);
+        ARIADNE_TEST_EQUALS(valuation.integer_values().size(),2u);
+
+        StringValuation direct_string_valuation(string_values);
+        IntegerValuation direct_integer_valuation(integer_values);
+
+        std::ostringstream string_stream;
+        string_stream << direct_string_valuation;
+        ARIADNE_TEST_ASSERT(not string_stream.str().empty());
+
+        std::ostringstream integer_stream;
+        integer_stream << direct_integer_valuation;
+        ARIADNE_TEST_ASSERT(not integer_stream.str().empty());
+
+        std::ostringstream discrete_stream;
+        discrete_stream << valuation;
+        ARIADNE_TEST_ASSERT(not discrete_stream.str().empty());
+
+        ARIADNE_TEST_ASSERT(direct_string_valuation==StringValuation(string_values));
+
+        Map<Identifier,String> different_string_values=string_values;
+        different_string_values[mode.name()]=String("busy");
+        ARIADNE_TEST_ASSERT(not (direct_string_valuation==StringValuation(different_string_values)));
+
+        Map<Identifier,String> lower_key_string_values;
+        lower_key_string_values.insert(Identifier("a"),String("same"));
+        Map<Identifier,String> upper_key_string_values;
+        upper_key_string_values.insert(Identifier("b"),String("same"));
+        ARIADNE_TEST_FAIL(StringValuation(lower_key_string_values)==StringValuation(upper_key_string_values));
+        ARIADNE_TEST_FAIL(StringValuation(upper_key_string_values)==StringValuation(lower_key_string_values));
+
+        DiscreteValuation equal_valuation(string_values,integer_values);
+        ARIADNE_TEST_ASSERT(valuation==equal_valuation);
+
+        DiscreteValuation different_string_valuation(different_string_values,integer_values);
+        ARIADNE_TEST_ASSERT(not (valuation==different_string_valuation));
+
+        Map<Identifier,Integer> different_integer_values=integer_values;
+        different_integer_values[count.name()]=Integer(3);
+        DiscreteValuation different_integer_valuation(string_values,different_integer_values);
+        ARIADNE_TEST_ASSERT(not (valuation==different_integer_valuation));
+
+        ARIADNE_TEST_ASSERT(empty_valuation.string_values().empty());
+        ARIADNE_TEST_ASSERT(empty_valuation.integer_values().empty());
+        ARIADNE_TEST_ASSERT(string_valuation.integer_values().empty());
+        ARIADNE_TEST_ASSERT(integer_valuation.string_values().empty());
+    }
+
     Void test_templates() {
         Get get;
         ARIADNE_TEST_EQUALS(get.kind(),OperatorKind::COORDINATE);
@@ -583,6 +652,7 @@ class TestExpression {
     Void test() {
         ARIADNE_TEST_CALL(test_variables());
         ARIADNE_TEST_CALL(test_constants());
+        ARIADNE_TEST_CALL(test_valuations());
         ARIADNE_TEST_CALL(test_templates());
         ARIADNE_TEST_CALL(test_expression());
         ARIADNE_TEST_CALL(test_write());
