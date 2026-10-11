@@ -17,7 +17,7 @@ using Duration = std::chrono::nanoseconds;
 
 constexpr auto minimum_total_measurement_time=std::chrono::milliseconds(1);
 constexpr Nat maximum_repetitions=1024u;
-constexpr double step_maximum_error=1e-2;
+constexpr double benchmark_step_maximum_error=1e-2;
 
 struct Measurement {
     Duration elapsed;
@@ -118,7 +118,7 @@ void run_benchmarks(
 {
     std::cout
         << "# step=" << step << "\n"
-        << "# step_maximum_error=" << step_maximum_error << "\n"
+        << "# benchmark_step_maximum_error=" << benchmark_step_maximum_error << "\n"
         << "# repetitions=" << repetitions << "\n"
         << "integrator\tfunction\trepetitions\ttime_us_per_step"
         << "\tremainder\tcomponent_remainders\n";
@@ -184,7 +184,7 @@ Int main(Int argc, const char* argv[]) {
     }
 
     const auto cases=make_cases();
-    const auto integrators=select_integrators(selection,step_maximum_error);
+    const auto integrators=select_integrators(selection,benchmark_step_maximum_error);
     const StepSizeType step=benchmark_step();
     const Nat repetitions=determine_repetitions(integrators,cases,step);
 

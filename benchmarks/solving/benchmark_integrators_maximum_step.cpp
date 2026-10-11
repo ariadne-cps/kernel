@@ -12,7 +12,7 @@ namespace {
 
 using Clock=std::chrono::steady_clock;
 
-constexpr double step_maximum_error=1e-8;
+constexpr double benchmark_step_maximum_error=1e-8;
 constexpr Nat maximum_halvings=20u;
 constexpr Nat refinement_iterations=6u;
 
@@ -162,10 +162,10 @@ Int main(Int argc, const char* argv[]) {
     }
 
     const auto cases=make_cases();
-    const auto integrators=select_integrators(selection,step_maximum_error);
+    const auto integrators=select_integrators(selection,benchmark_step_maximum_error);
 
     std::cout
-        << "# step_maximum_error=" << step_maximum_error << "\n"
+        << "# benchmark_step_maximum_error=" << benchmark_step_maximum_error << "\n"
         << "# refinement_iterations=" << refinement_iterations << "\n"
         << "integrator\tfunction\tmaximum_step_lower\tmaximum_step_upper\n";
 
