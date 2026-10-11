@@ -96,6 +96,24 @@ jobs:
         PYTHONPATH: ${{ runner.workspace }}/build/python
       run: python tutorial_function.py
 
+    - name: Prepare C++ Geometry Tutorial
+      run: cmake -E copy_directory $GITHUB_WORKSPACE/tutorials/tutorial_geometry ${{ runner.workspace }}/tutorial_geometry
+
+    - name: Check C++ Geometry Tutorial
+      working-directory: ${{ runner.workspace }}/tutorial_geometry
+      run: |
+        cmake -S . -B build -DCMAKE_PREFIX_PATH=${{ runner.workspace }}/install -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        cmake --build build --parallel $($NPROC)
+        export LD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${LD_LIBRARY_PATH:-}
+        export DYLD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${DYLD_LIBRARY_PATH:-}
+        ./build/tutorial_geometry
+
+    - name: Check Python Geometry Tutorial
+      working-directory: ${{ github.workspace }}/python/tutorials
+      env:
+        PYTHONPATH: ${{ runner.workspace }}/build/python
+      run: python tutorial_geometry.py
+
     - name: Verify Final Installation
       working-directory: ${{ runner.workspace }}/build
       run: cmake --install . --prefix ${{ runner.workspace }}/verify-install

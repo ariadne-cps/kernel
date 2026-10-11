@@ -366,6 +366,9 @@ template<class PT> Void export_point(pybind11::module& module, std::string name=
         point_class.def(pybind11::init<Nat,PR>());
     }
     point_class.def("__getitem__", &__getitem__<PT,Int,X>);
+    point_class.def("dimension", &PT::dimension);
+    point_class.def("centre", &PT::centre);
+    point_class.def("bounding_box", &PT::bounding_box);
     point_class.def("__str__", &__cstr__<PT>);
 }
 
@@ -446,6 +449,8 @@ template<class BX> Void export_box(pybind11::module& module, std::string name=py
     box_class.def("radius", (typename BX::RadiusType(BX::*)()const) &BX::radius);
     box_class.def("radii", (Vector<typename BX::RadiusType>(BX::*)()const) &BX::radii);
     box_class.def("widths", (Vector<typename BX::RadiusType>(BX::*)()const) &BX::widths);
+    box_class.def("semiperimeter", (typename BX::RadiusType(BX::*)()const) &BX::semiperimeter);
+    box_class.def("bounding_box", (BX(BX::*)()const) &BX::bounding_box);
     box_class.def("measure", (typename BX::MeasureType(BX::*)()const) &BX::measure);
     box_class.def("volume", (typename BX::MeasureType(BX::*)()const) &BX::volume);
     box_class.def("separated", (SeparatedType(BX::*)(const BX&)const) &BX::separated);
