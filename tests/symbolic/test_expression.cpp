@@ -63,6 +63,13 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(a!=RealVariable("b"));
     }
 
+    Void test_constants() {
+        StringConstant state(String("active"));
+        ARIADNE_TEST_EQUALS(state.name(),Identifier("active"));
+        ARIADNE_TEST_EQUALS(state.value(),String("active"));
+        ARIADNE_TEST_EQUALS(state.val(),String("active"));
+    }
+
     Void test_expression() {
         // Regression test for constructing Expression from 0 without being an ambiguous nullptr;
         ARIADNE_TEST_CONSTRUCT(IntegerExpression,ze,(0));
@@ -514,6 +521,7 @@ class TestExpression {
 
     Void test() {
         ARIADNE_TEST_CALL(test_variables());
+        ARIADNE_TEST_CALL(test_constants());
         ARIADNE_TEST_CALL(test_expression());
         ARIADNE_TEST_CALL(test_write());
         ARIADNE_TEST_CALL(test_assignment());
