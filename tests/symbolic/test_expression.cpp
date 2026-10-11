@@ -124,8 +124,8 @@ class TestExpression {
         lower_key_string_values.insert(Identifier("a"),String("same"));
         Map<Identifier,String> upper_key_string_values;
         upper_key_string_values.insert(Identifier("b"),String("same"));
-        ARIADNE_TEST_FAIL(StringValuation(lower_key_string_values)==StringValuation(upper_key_string_values));
-        ARIADNE_TEST_FAIL(StringValuation(upper_key_string_values)==StringValuation(lower_key_string_values));
+        ARIADNE_TEST_FAIL((void)(StringValuation(lower_key_string_values)==StringValuation(upper_key_string_values)));
+        ARIADNE_TEST_FAIL((void)(StringValuation(upper_key_string_values)==StringValuation(lower_key_string_values)));
 
         DiscreteValuation equal_valuation(string_values,integer_values);
         ARIADNE_TEST_ASSERT(valuation==equal_valuation);
