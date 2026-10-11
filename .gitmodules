@@ -1,9 +1,9 @@
-[submodule "submodules/configuration"]
-	path = submodules/configuration
+[submodule "ss/configuration"]
+	path = ss/configuration
 	url = https://github.com/ariadne-cps/configuration
-[submodule "submodules/algebra"]
-	path = submodules/algebra
+[submodule "ss/algebra"]
+	path = ss/algebra
 	url = https://github.com/ariadne-cps/algebra
-[submodule "submodules/threading"]
-	path = submodules/threading
+[submodule "ss/threading"]
+	path = ss/threading
 	url = https://github.com/ariadne-cps/threading

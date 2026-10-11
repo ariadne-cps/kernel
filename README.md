@@ -26,9 +26,9 @@ The umbrella header is `include/ariadne-kernel.hpp`.
 
 The repository has three Git submodules:
 
-- `submodules/configuration`
-- `submodules/algebra`
-- `submodules/threading`
+- `ss/configuration`
+- `ss/algebra`
+- `ss/threading`
 
 CMake verifies that the direct Configuration revisions agree and that the Utility revision reached through Algebra matches the Utility revision reached through Threading.
 
