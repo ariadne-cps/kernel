@@ -120,6 +120,10 @@ class TestExpression {
         ARIADNE_TEST_CONSTRUCT(List<RealAssignment>,la,(let({x,y,z})={zero,x,e}));
         ARIADNE_TEST_CONSTRUCT(List<PrimedRealAssignment>,lpa,(prime({x,y,z})={zero,x,e}));
         ARIADNE_TEST_CONSTRUCT(List<DottedRealAssignment>,lda,(dot({x,y,z})={zero,x,e}));
+
+        FloatDPApproximation approximate_value(1.0_x,dp);
+        Assignment<RealVariable,FloatDPApproximation> approximate_assignment(x,approximate_value);
+        ARIADNE_TEST_ASSERT(&approximate_assignment.right_hand_side()==&approximate_assignment.rhs);
     }
 
     Void test_evaluate() {
