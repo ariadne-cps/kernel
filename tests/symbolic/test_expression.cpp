@@ -626,6 +626,9 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(is_affine_in(literal_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(unary_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(binary_vector,{x,y}));
+        RealVectorExpression nonlinear_vector=sqr(literal_vector);
+        ARIADNE_TEST_ASSERT(not is_affine_in(nonlinear_vector+constant_vector,{x,y}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(constant_vector+nonlinear_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(scaled_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(divided_vector,{x,y}));
 
@@ -844,6 +847,12 @@ class TestExpression {
         RealExpression named_constant_other_name=RealExpression::constant(RealConstant("b",Real(2)));
         ARIADNE_TEST_ASSERT(not identical(named_constant_a,named_constant_same_name));
         ARIADNE_TEST_ASSERT(not identical(named_constant_a,named_constant_other_name));
+
+        KleeneanExpression kleenean_named_true_a(Constant<Kleenean>(Identifier("ka"),Kleenean(true)));
+        KleeneanExpression kleenean_named_false_a(Constant<Kleenean>(Identifier("ka"),Kleenean(false)));
+        KleeneanExpression kleenean_named_true_b(Constant<Kleenean>(Identifier("kb"),Kleenean(true)));
+        ARIADNE_TEST_ASSERT(not identical(kleenean_named_true_a,kleenean_named_false_a));
+        ARIADNE_TEST_ASSERT(not identical(kleenean_named_true_a,kleenean_named_true_b));
     }
 
     Void test_derivative() {
