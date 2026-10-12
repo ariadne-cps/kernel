@@ -94,6 +94,11 @@ class TestFormula
             BinaryElementaryOperator(Mul::code()),EffectiveNumber(2),x);
         ARIADNE_TEST_ASSERT(identical(scalar.arg(),x));
         ARIADNE_TEST_ASSERT(same(scalar.cnst(),EffectiveNumber(2)));
+        ScalarFormulaNode<EffectiveNumber> scalar_node(
+            BinaryElementaryOperator(Mul::code()),EffectiveNumber(2),x);
+        ARIADNE_TEST_EQUALS(scalar_node.op().code(),Mul::code());
+        ARIADNE_TEST_ASSERT(same(scalar_node.cnst(),EffectiveNumber(2)));
+        ARIADNE_TEST_ASSERT(identical(scalar_node.arg(),x));
 
         EffectiveFormula binary=x+y;
         ARIADNE_TEST_ASSERT(identical(binary.arg1(),x));
