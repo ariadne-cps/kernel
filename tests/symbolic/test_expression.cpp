@@ -798,6 +798,29 @@ class TestExpression {
         ARIADNE_TEST_PRINT(derivative(expr2,x));
         ARIADNE_TEST_PRINT(simplify(derivative(expr2,x)));
         ARIADNE_TEST_ASSERT(identical(simplify(derivative(expr2,x)),3*sqr(x)));
+
+        ARIADNE_TEST_EXECUTE(derivative(RealExpression(3),x));
+        ARIADNE_TEST_EXECUTE(derivative(pos(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(neg(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(sqr(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(hlf(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(rec(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(sqrt(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(exp(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(log(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(sin(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(cos(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(tan(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(asin(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(acos(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(atan(RealExpression(x)),x));
+        ARIADNE_TEST_EXECUTE(derivative(RealExpression(x)+RealExpression(y),x));
+        ARIADNE_TEST_EXECUTE(derivative(RealExpression(x)-RealExpression(y),x));
+        ARIADNE_TEST_EXECUTE(derivative(RealExpression(x)*RealExpression(y),x));
+        ARIADNE_TEST_EXECUTE(derivative(RealExpression(x)/RealExpression(y),x));
+        ARIADNE_TEST_FAIL((void)derivative(abs(RealExpression(x)),x));
+        ARIADNE_TEST_FAIL((void)derivative(max(RealExpression(x),RealExpression(y)),x));
+        ARIADNE_TEST_FAIL((void)derivative(min(RealExpression(x),RealExpression(y)),x));
     }
 
     Void test_simplify() {
@@ -817,6 +840,31 @@ class TestExpression {
         ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(sub(neg(zero),zero)),zero);
         ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(sub(x,x)),zero);
         ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(div(x,x)),one);
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(x+zero),RealExpression(x));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(zero+x),RealExpression(x));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(x-zero),RealExpression(x));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(zero-x),-RealExpression(x));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(x*one),RealExpression(x));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(one*x),RealExpression(x));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(x*zero),zero);
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(zero*x),zero);
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(x/one),RealExpression(x));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(one/x),rec(RealExpression(x)));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pow(x,-1)),rec(RealExpression(x)));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pow(x,0)),one);
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pow(x,1)),RealExpression(x));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pow(x,2)),sqr(RealExpression(x)));
+        ARIADNE_TEST_EXECUTE(simplify(pow(x,4)));
+
+        KleeneanVariable p("p"), q("q");
+        KleeneanExpression pe(p), qe(q);
+        ARIADNE_TEST_EXECUTE(simplify(KleeneanExpression(false)&&pe));
+        ARIADNE_TEST_EXECUTE(simplify(KleeneanExpression(true)&&pe));
+        ARIADNE_TEST_EXECUTE(simplify(KleeneanExpression(true)||pe));
+        ARIADNE_TEST_EXECUTE(simplify(KleeneanExpression(false)||pe));
+        ARIADNE_TEST_EXECUTE(simplify(!( !pe )));
+        ARIADNE_TEST_EXECUTE(simplify(pe&&qe));
+        ARIADNE_TEST_EXECUTE(simplify(pe||qe));
 
         ContinuousPredicate predicate=(x>=0)&&(y<=1);
         ARIADNE_TEST_EXECUTE(simplify(predicate));
@@ -1116,6 +1164,18 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not is_polynomial_in(x/y,{x,y}))
         ARIADNE_TEST_ASSERT(is_polynomial_in({x,sqr(y)},{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in({x/y,sqr(y)},{x,y}))
+        ARIADNE_TEST_ASSERT(is_polynomial_in(pos(x),{x}))
+        ARIADNE_TEST_ASSERT(is_polynomial_in(x+y,{x,y}))
+        ARIADNE_TEST_ASSERT(is_polynomial_in(x-y,{x,y}))
+        ARIADNE_TEST_ASSERT(is_polynomial_in(x*y,{x,y}))
+        ARIADNE_TEST_ASSERT(is_polynomial_in(max(RealExpression(1),RealExpression(2)),{x}))
+        ARIADNE_TEST_ASSERT(is_polynomial_in(min(RealExpression(1),RealExpression(2)),{x}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(max(x,RealExpression(2)),{x}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(min(RealExpression(2),x),{x}))
+        ARIADNE_TEST_ASSERT(is_polynomial_in(pow(x,0),{x}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(pow(x,-1),{x}))
+        RealVectorExpression polynomial_vector({x,sqr(y)});
+        ARIADNE_TEST_ASSERT(is_polynomial_in(polynomial_vector[0],{x,y}))
     }
 
     Void test_vector_expression()
