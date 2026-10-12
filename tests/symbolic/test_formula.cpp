@@ -197,6 +197,9 @@ class TestFormula
         Vector<EffectiveNumber> evaluated=evaluate(Vector<EffectiveFormula>({x+y,two}),values);
         ARIADNE_TEST_ASSERT(same(evaluated[0],EffectiveNumber(5)));
         ARIADNE_TEST_ASSERT(same(evaluated[1],EffectiveNumber(2)));
+        Vector<EffectiveFormula> formulae({two});
+        Vector<EffectiveNumber> empty_values;
+        ARIADNE_TEST_THROWS(evaluate(formulae,empty_values),std::runtime_error);
     }
 
     Void test_is_constant_in() {
