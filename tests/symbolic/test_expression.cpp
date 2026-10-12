@@ -961,6 +961,47 @@ class TestExpression {
         ARIADNE_TEST_SAME(simplify(((vex-vce)*y)[0]),(xs[0]-cs[0])*y)
         ARIADNE_TEST_SAME(simplify(((vex-vce)/y)[0]),(xs[0]-cs[0])/y)
 
+        ARIADNE_TEST_EXECUTE(vexs.op());
+        RealVectorExpression unary_vector=neg(vex);
+        RealVectorExpression binary_vector=vce+evv;
+        RealVectorExpression left_scaled_vector=y*vex;
+        RealVectorExpression right_scaled_vector=vex*y;
+        RealVectorExpression divided_vector=vex/y;
+        ARIADNE_TEST_EQUALS(unary_vector.size(),vex.size());
+        ARIADNE_TEST_EQUALS(left_scaled_vector.size(),vex.size());
+        ARIADNE_TEST_EQUALS(right_scaled_vector.size(),vex.size());
+        ARIADNE_TEST_EQUALS(divided_vector.size(),vex.size());
+
+        ARIADNE_TEST_ASSERT(is_constant_in(vce[0],{x}));
+        ARIADNE_TEST_ASSERT(is_constant_in(evv[0],{x}));
+        ARIADNE_TEST_ASSERT(is_constant_in(unary_vector[0],{z}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(unary_vector[0],{xs[0]}));
+        ARIADNE_TEST_ASSERT(is_constant_in(binary_vector[0],{z}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(binary_vector[0],{vv[0]}));
+        ARIADNE_TEST_ASSERT(is_constant_in(left_scaled_vector[0],{z}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(left_scaled_vector[0],{y}));
+        ARIADNE_TEST_ASSERT(is_constant_in(right_scaled_vector[0],{z}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(right_scaled_vector[0],{xs[0]}));
+
+        ARIADNE_TEST_SAME(simplify(evv[0]),vv[0]);
+        ARIADNE_TEST_SAME(simplify(unary_vector[0]),-xs[0]);
+
+        RealVectorExpression node_vector=
+            neg(vce+evv)+y*vex+vex/y;
+        RealExpression node_getter=node_vector[0];
+        ARIADNE_TEST_ASSERT(count_nodes(node_getter)>1u);
+        ARIADNE_TEST_ASSERT(count_distinct_nodes(node_getter)>1u);
+        ARIADNE_TEST_ASSERT(count_distinct_node_pointers(node_getter)>1u);
+
+        Constant<RealVector> same_name_short(Identifier("vector_constant"),RealVector({1,2}));
+        Constant<RealVector> same_name_long(Identifier("vector_constant"),RealVector({1,2,3}));
+        Constant<RealVector> same_name_greater(Identifier("vector_constant"),RealVector({1,3}));
+        RealVectorExpression short_constant(same_name_short);
+        RealVectorExpression long_constant(same_name_long);
+        RealVectorExpression greater_constant(same_name_greater);
+        ARIADNE_TEST_EXECUTE(before(short_constant[0],long_constant[0]));
+        ARIADNE_TEST_EXECUTE(before(short_constant[0],greater_constant[0]));
+
     }
 
     Void test_function()
