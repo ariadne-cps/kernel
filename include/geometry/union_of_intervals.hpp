@@ -197,20 +197,23 @@ template<class U> Void UnionOfIntervals<U>::_sort() {
 }
 
 template<class U> Void UnionOfIntervals<U>::_combine() {
-    ConstIterator start=begin();
-    Iterator curr=_data.begin();
-    ConstIterator next=curr;
-    while (next!=end()) {
-        *curr=*next;
-        ++next;
-        while (next!=end() && next->lower_bound()<=curr->upper_bound()) {
-            curr->set_upper_bound(max(curr->upper_bound(),next->upper_bound()));
-            ++next;
-        }
-        ++curr;
+    if (_data.empty()) {
+        return;
     }
 
-    _data.resize(static_cast<SizeType>(curr-start));
+    SizeType curr=0;
+    for (SizeType next=1; next<_data.size(); ++next) {
+        if (_data[next].lower_bound()<=_data[curr].upper_bound()) {
+            _data[curr].set_upper_bound(max(_data[curr].upper_bound(),_data[next].upper_bound()));
+        } else {
+            ++curr;
+            if (curr!=next) {
+                _data[curr]=_data[next];
+            }
+        }
+    }
+
+    _data.resize(curr+1);
 }
 
 } // namespace Ariadne

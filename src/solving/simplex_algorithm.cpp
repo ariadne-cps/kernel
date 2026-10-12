@@ -718,11 +718,11 @@ compute_rt(const Vector<X>& xl, const Vector<X>& xu, const Array<Slackness>& vt,
         if( decide(d[k]*ds<-CUTOFF_THRESHOLD && x[j]>=xl[j] && xl[j] != -inf) ) {
             tk=(xl[j]-x[j])/(ds*d[k]);
             //if( r==n || tk<t || (tk==t && p[k]<p[r]) ) { t=tk; r=k; }
-            if( decide(tk<t || (tk==t && p[k]<p[r])) ) { t=tk; r=k; }
+            if( r==n || decide(tk<t || (tk==t && p[k]<p[r])) ) { t=tk; r=k; }
         } else if( decide(d[k]*ds>CUTOFF_THRESHOLD && x[j]<=xu[j] && xu[j] != inf) ) {
             tk=(xu[j]-x[j])/(ds*d[k]);
             //if( r==n || tk<t || (tk==t && p[k]<p[r])) { t=tk; r=k; }
-            if( decide(tk<t || (tk==t && p[k]<p[r])) ) { t=tk; r=k; }
+            if( r==n || decide(tk<t || (tk==t && p[k]<p[r])) ) { t=tk; r=k; }
         } else {
             tk=inf;
         }
