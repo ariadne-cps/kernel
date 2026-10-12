@@ -217,7 +217,7 @@ template<class F1, class F2, class J> inline auto _derivative_impl(Min, F1 const
     ARIADNE_THROW(std::runtime_error,"derivative(min(f1,f2))","Cannot take derivative of non-smooth function."); }
 
 template<class VF, class I, class J> inline auto _derivative_impl(Get const&, VF const& vf, I const& i, J j) -> decltype(vf[i]) {
-    return derivative(vf[i],j); }
+    return derivative(simplify(vf[i]),j); }
 
 template<class F, class N, class J> inline decltype(auto) _derivative_impl(Pow op, F const& f, N const& n, J j) {
     return op.derivative(f,derivative(f,j),n); }
