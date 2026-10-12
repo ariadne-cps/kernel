@@ -262,7 +262,7 @@ template<template<class> class E, class V, class I, class J> decltype(auto) deri
 } // namespace
 
 
-namespace {
+inline namespace SymbolicSimplifyDetail {
 
 template<class E> inline E _simpl(Add op, E const& e1, E const& e2) {
     if (is_constant(e1,0)) { return e2; }
@@ -349,7 +349,7 @@ template<class E, class SV> inline E simplify_variant(const SV& s) {
     return s.accept([](auto en){return _simplify_node<E>(en);});
 }
 
-} // namespace
+} // namespace SymbolicSimplifyDetail
 
 namespace {
 
