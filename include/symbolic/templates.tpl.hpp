@@ -389,13 +389,13 @@ template<class T> Bool identical(const Constant<T>& c1, const Constant<T>& c2) {
 template<class T> Bool identical(const Variable<T>& v1, const Variable<T>& v2) {
     return v1==v2; }
 template<class OP, class A> Bool identical(const Symbolic<OP,A>& s1, const Symbolic<OP,A>& s2) {
-    return s1._op.code()==s2._op.code() && identical(s1._arg,s2._arg); }
+    return identical(s1._arg,s2._arg); }
 template<class OP, class A1, class A2> Bool identical(const Symbolic<OP,A1,A2>& s1, const Symbolic<OP,A1,A2>& s2) {
-    return s1._op.code()==s2._op.code() && identical(s1._arg1,s2._arg1) && identical(s1._arg2,s2._arg2); }
+    return identical(s1._arg1,s2._arg1) && identical(s1._arg2,s2._arg2); }
 template<class OP, class A, class N> requires AGraded<OP> Bool identical(const Symbolic<OP,A,N>& s1, const Symbolic<OP,A,N>& s2) {
-    return s1._op.code()==s2._op.code() && identical(s1._arg,s2._arg) && s1._num==s2._num; }
+    return identical(s1._arg,s2._arg) && s1._num==s2._num; }
 template<class OP, class V, class I> requires AGetter<OP> Bool identical(const Symbolic<OP,V,I>& s1, const Symbolic<OP,V,I>& s2) {
-    return s1._op.code()==s2._op.code() && identical(s1._vec,s2._vec) && s1._ind==s2._ind; }
+    return identical(s1._vec,s2._vec) && s1._ind==s2._ind; }
 
 template<class E> Bool _identical_dispatch(const E& e1, const E& e2) { return identical(e1,e2); }
 template<class E1, class E2> Bool _identical_dispatch(const E1&, const E2&) { return false; }
@@ -420,7 +420,7 @@ struct IdenticalSymbolic {
     template<class OP, class A, template<class>class E> static Bool _identical(const Symbolic<OP,A,E<A>>& s1, const Symbolic<OP,A,E<A>>& s2) {
         return s1._op.code()==s2._op.code() && same(s1._cnst,s2._cnst) && identical(s1._arg,s2._arg); }
     template<class OP, class A> static Bool _identical(const Symbolic<OP,A,Int>& s1, const Symbolic<OP,A,Int>& s2) {
-        return s1._op.code()==s2._op.code() && identical(s1._arg,s2._arg) && s1._num==s2._num; }
+        return identical(s1._arg,s2._arg) && s1._num==s2._num; }
     //template<class S1, class S2> static Bool identical(const S1& s1, const S2& s2) {
      //   return false; }
 
