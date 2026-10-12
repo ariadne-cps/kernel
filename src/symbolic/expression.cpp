@@ -376,6 +376,15 @@ Bool is_affine_in(const Expression<Vector<Real>>& ve, const Set<Variable<Real>>&
     return ve.node_ref().accept([&spc](auto en){return is_affine_in(en,spc);});
 }
 
+namespace {
+Bool is_polynomial_in(
+        Symbolic<OperatorVariant<Get>,Expression<RealVector>,SizeType> const& s,
+        Set<Variable<Real>> const& spc) {
+    return Ariadne::is_polynomial_in(
+        simplify_component(s.vec(),s.ind()),spc);
+}
+}
+
 Bool is_polynomial_in(const Expression<Real>& e, const Set<Variable<Real>>& spc) {
     return e.node_ref().accept([&spc](auto en){return is_polynomial_in(en,spc);});
 }
