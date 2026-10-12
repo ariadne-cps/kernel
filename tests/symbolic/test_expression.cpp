@@ -481,9 +481,6 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(evaluate(integer_from_variable,integer_valuation),Integer(9));
         ARIADNE_TEST_EXECUTE(evaluate(integer_from_variable<IntegerExpression(integer_other),integer_valuation));
         ARIADNE_TEST_EXECUTE(evaluate(IntegerExpression(1)<IntegerExpression(2),string_valuation));
-        BooleanExpression string_constant_predicate=
-            substitute(string_variable==String("mapped"),string_variable,String("mapped"));
-        ARIADNE_TEST_EXECUTE(evaluate(string_constant_predicate,integer_valuation));
 
         RealValuation real_valuation;
         real_valuation.set(x,Real(2));

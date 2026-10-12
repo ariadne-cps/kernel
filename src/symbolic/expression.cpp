@@ -287,7 +287,6 @@ template Set<Identifier> arguments(const Expression<Kleenean>& e);
 template Set<Identifier> arguments(const Expression<Real>& e);
 
 
-template Expression<Boolean> substitute(const Expression<Boolean>& e, const Variable<String>& v, const String& c);
 template Expression<Kleenean> substitute(const Expression<Kleenean>& e, const Variable<Kleenean>& v, const Kleenean& c);
 template Expression<Kleenean> substitute(const Expression<Kleenean>& e, const Variable<Real>& v, const Real& c);
 template Expression<Real> substitute(const Expression<Real>& e, const Variable<Real>& v, const Real& c);
