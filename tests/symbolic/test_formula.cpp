@@ -62,6 +62,12 @@ class TestFormula
         ARIADNE_TEST_ASSERT(same(two.val(),EffectiveNumber(2)));
         ARIADNE_TEST_ASSERT(is_constant(x.create_zero(),EffectiveNumber(0)));
         ARIADNE_TEST_ASSERT(is_constant(x.create_constant(EffectiveNumber(3)),EffectiveNumber(3)));
+        EffectiveFormula right_scalar=AlgebraOperations<EffectiveFormula,EffectiveNumber>::apply(
+            BinaryElementaryOperator(Add::code()),x,EffectiveNumber(2));
+        EffectiveFormula left_scalar=AlgebraOperations<EffectiveFormula,EffectiveNumber>::apply(
+            BinaryElementaryOperator(Add::code()),EffectiveNumber(2),x);
+        ARIADNE_TEST_ASSERT(identical(right_scalar,x+two));
+        ARIADNE_TEST_ASSERT(identical(left_scalar,two+x));
         ARIADNE_TEST_EQUALS(default_formula.code(),Cnst::code());
         ARIADNE_TEST_EQUALS(x.kind(),OperatorKind::VARIABLE);
         ARIADNE_TEST_EQUALS(Nat(x.ind()),0u);
@@ -162,6 +168,19 @@ class TestFormula
         ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(sub(neg(z),z)),z);
         EffectiveFormula u(EffectiveFormula::coordinate(2));
         ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(derivative(-u*x*y+2*x,x.ind())),-u*y+2);
+        Vector<EffectiveFormula> simplified_vector=simplify(Vector<EffectiveFormula>({x+z,y*z+z}));
+        ARIADNE_TEST_ASSERT(identical(simplified_vector,Vector<EffectiveFormula>({x,y*0+0})));
+    }
+
+    Void test_evaluate() {
+        Vector<EffectiveNumber> values({EffectiveNumber(2),EffectiveNumber(3)});
+        ARIADNE_TEST_ASSERT(same(direct_evaluate(two,values),EffectiveNumber(2)));
+        EffectiveFormula scalar=EffectiveFormula::scalar(
+            BinaryElementaryOperator(Mul::code()),EffectiveNumber(2),x);
+        ARIADNE_TEST_ASSERT(same(cached_evaluate(scalar,values),EffectiveNumber(4)));
+        Vector<EffectiveNumber> evaluated=evaluate(Vector<EffectiveFormula>({x+y,two}),values);
+        ARIADNE_TEST_ASSERT(same(evaluated[0],EffectiveNumber(5)));
+        ARIADNE_TEST_ASSERT(same(evaluated[1],EffectiveNumber(2)));
     }
 
     Void test_is_constant_in() {
@@ -212,6 +231,7 @@ class TestFormula
         ARIADNE_TEST_CALL(test_identical());
         ARIADNE_TEST_CALL(test_substitute());
         ARIADNE_TEST_CALL(test_simplify());
+        ARIADNE_TEST_CALL(test_evaluate());
         ARIADNE_TEST_CALL(test_is_constant_in());
         ARIADNE_TEST_CALL(test_is_affine_in());
         ARIADNE_TEST_CALL(test_is_additive_in());
