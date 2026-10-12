@@ -449,6 +449,10 @@ class TestExpression {
         integer_operation_stream << OperationExpressionWriter()(integer_binary);
         ARIADNE_TEST_ASSERT(not integer_operation_stream.str().empty());
 
+        std::ostringstream integer_operator_stream;
+        integer_operator_stream << OperatorExpressionWriter()(integer_negative);
+        ARIADNE_TEST_ASSERT(not integer_operator_stream.str().empty());
+
         RealExpression real_constant(Real(2));
         ARIADNE_TEST_EQUAL(real_constant.val(),Real(2));
         RealExpression real_named_constant=RealExpression::constant(RealConstant("two",Real(2)));
@@ -480,11 +484,23 @@ class TestExpression {
         integer_valuation.set(integer_other,Integer(10));
         ARIADNE_TEST_EQUALS(evaluate(integer_from_variable,integer_valuation),Integer(9));
         ARIADNE_TEST_EXECUTE(evaluate(integer_from_variable<IntegerExpression(integer_other),integer_valuation));
+        ARIADNE_TEST_EXECUTE(evaluate(integer_negative,integer_valuation));
         ARIADNE_TEST_EXECUTE(evaluate(IntegerExpression(1)<IntegerExpression(2),string_valuation));
 
         RealValuation real_valuation;
         real_valuation.set(x,Real(2));
         ARIADNE_TEST_EXECUTE(evaluate(x>=0,real_valuation));
+        ARIADNE_TEST_EXECUTE(evaluate(sin(RealExpression(x)),real_valuation));
+        ARIADNE_TEST_EXECUTE(evaluate(pow(RealExpression(x),3),real_valuation));
+        ARIADNE_TEST_EXECUTE(evaluate(sgn(RealExpression(x)),real_valuation));
+
+        std::ostringstream real_operator_stream;
+        real_operator_stream << OperatorExpressionWriter()(sin(RealExpression(x)));
+        real_operator_stream << OperatorExpressionWriter()(pow(RealExpression(x),3));
+        RealVectorExpression operator_writer_vector({x,y});
+        real_operator_stream << OperatorExpressionWriter()(operator_writer_vector[0]);
+        real_operator_stream << OperatorExpressionWriter()(sgn(RealExpression(x)));
+        ARIADNE_TEST_ASSERT(not real_operator_stream.str().empty());
 
         Map<Identifier,String> string_map;
         string_map[string_variable.name()]=String("mapped");
@@ -790,6 +806,15 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(identical(pow(x,2),pow(x,2)));
         ARIADNE_TEST_ASSERT(not identical(x*y,y*x));
         ARIADNE_TEST_ASSERT(not identical(x+y,y+x));
+        ARIADNE_TEST_ASSERT(not identical(sin(RealExpression(x)),cos(RealExpression(x))));
+        ARIADNE_TEST_ASSERT(not identical(sin(RealExpression(x)),sin(RealExpression(y))));
+        ARIADNE_TEST_ASSERT(not identical(RealExpression(x)+RealExpression(y),RealExpression(x)-RealExpression(y)));
+        ARIADNE_TEST_ASSERT(not identical(pow(RealExpression(x),2),pow(RealExpression(y),2)));
+        ARIADNE_TEST_ASSERT(not identical(pow(RealExpression(x),2),pow(RealExpression(x),3)));
+        RealVectorExpression identical_vector({x,y});
+        RealVectorExpression different_identical_vector({x,z});
+        ARIADNE_TEST_ASSERT(not identical(identical_vector[0],different_identical_vector[0]));
+        ARIADNE_TEST_ASSERT(not identical(identical_vector[0],identical_vector[1]));
 
         ARIADNE_TEST_CONSTRUCT(RealExpression,e1,(sin(pow(x,2)+y)*(y/x+1)))
         ARIADNE_TEST_CONSTRUCT(RealExpression,e2,(sin(pow(x,2)+y)*(y/x+1)));
@@ -1041,7 +1066,7 @@ class TestExpression {
         Vector<RealExpression> canonical_cases({
             RealExpression(1),RealExpression(2),
             sin(shared_x),cos(shared_x),sin(shared_y),
-            shared_x+shared_y,shared_x+RealExpression(z),
+            shared_x+shared_y,shared_x-RealExpression(z),shared_x+RealExpression(z),
             pow(shared_x,2),pow(shared_x,3),pow(shared_y,2)});
         eliminate_common_subexpressions(canonical_cases);
     }
@@ -1179,6 +1204,14 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not is_affine_in(min(RealExpression(2),RealExpression(x)),{x}));
         ARIADNE_TEST_ASSERT(is_affine_in(pow(RealExpression(x),0),{x}));
         ARIADNE_TEST_ASSERT(is_affine_in(pow(RealExpression(x),1),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(RealExpression(y)+sqr(RealExpression(x)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(RealExpression(y)-sqr(RealExpression(x)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(sqr(RealExpression(x))*RealExpression(2),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(RealExpression(2)*sqr(RealExpression(x)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(sqr(RealExpression(x))/RealExpression(2),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(max(RealExpression(2),RealExpression(x)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(min(RealExpression(x),RealExpression(2)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(pow(sqr(RealExpression(x)),1),{x}));
     }
 
     Void test_is_polynomial_in() {
@@ -1222,6 +1255,13 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(is_polynomial_in(tanh(RealExpression(2)),{x}))
         ARIADNE_TEST_ASSERT(is_polynomial_in((x+y)*(x-y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(x/(x+y),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(RealExpression(y)+sin(RealExpression(x)),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(RealExpression(y)-sin(RealExpression(x)),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(RealExpression(y)*sin(RealExpression(x)),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(sin(RealExpression(x))/RealExpression(2),{x}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(max(RealExpression(2),RealExpression(x)),{x}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(min(RealExpression(x),RealExpression(2)),{x}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(pow(sin(RealExpression(x)),2),{x}))
         RealVectorExpression polynomial_vector({x,sqr(y)});
         ARIADNE_TEST_ASSERT(is_polynomial_in(polynomial_vector[0],{x,y}))
     }
