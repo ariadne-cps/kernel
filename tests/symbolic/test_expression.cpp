@@ -637,8 +637,9 @@ class TestExpression {
             evaluate(function_expression,source_valuation),Real(3));
 
         IntegerValuation integer_only_valuation;
-        ARIADNE_TEST_EXECUTE(evaluate(
-            StringExpression(String("left"))==StringExpression(String("left")),
+        StringVariable cross_type_string("cross_type_string");
+        ARIADNE_TEST_FAIL((void)evaluate(
+            cross_type_string==String("left"),
             integer_only_valuation));
 
         RealVectorExpression helper_vector({x,y});
