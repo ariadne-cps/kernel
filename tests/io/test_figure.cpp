@@ -21,6 +21,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include <sstream>
+
 #include "macro/testing.hpp"
 
 #include "function/function.hpp"
@@ -39,6 +41,7 @@ class TestGraphics {
   public:
     void test() {
         ARIADNE_TEST_CALL(test_point2d())
+        ARIADNE_TEST_CALL(test_geometry2d())
         ARIADNE_TEST_CALL(test_colour())
         ARIADNE_TEST_CALL(test_graphics_properties())
         ARIADNE_TEST_CALL(test_graphics_interface())
@@ -51,6 +54,67 @@ class TestGraphics {
 
     void test_point2d() {
         ARIADNE_TEST_PRINT(Point2d(1,1))
+    }
+
+    void test_geometry2d() {
+        Vector2d v1(1.0,2.0);
+        Vector2d v2(3.0,4.0);
+
+        Vector2d neg = -v1;
+        ARIADNE_TEST_EQUALS(neg.x,-1.0)
+        ARIADNE_TEST_EQUALS(neg.y,-2.0)
+
+        Vector2d sum = v1+v2;
+        ARIADNE_TEST_EQUALS(sum.x,4.0)
+        ARIADNE_TEST_EQUALS(sum.y,6.0)
+
+        Vector2d difference = v2-v1;
+        ARIADNE_TEST_EQUALS(difference.x,2.0)
+        ARIADNE_TEST_EQUALS(difference.y,2.0)
+
+        Vector2d scaled = 2.0*v1;
+        ARIADNE_TEST_EQUALS(scaled.x,2.0)
+        ARIADNE_TEST_EQUALS(scaled.y,4.0)
+
+        std::ostringstream vector_stream;
+        vector_stream << v1;
+        ARIADNE_TEST_EQUALS(vector_stream.str(),"[1,2]")
+
+        Point2d default_point;
+        default_point.x=0.0;
+        default_point.y=0.0;
+        ARIADNE_TEST_EQUALS(default_point.x,0.0)
+        ARIADNE_TEST_EQUALS(default_point.y,0.0)
+
+        Point2d point(1.0,2.0);
+        point[0]=3.0;
+        Point2d const& const_point=point;
+        ARIADNE_TEST_EQUALS(const_point[0],3.0)
+
+        Point2d equal_point(3.0,2.0);
+        Point2d different_y(3.0,4.0);
+        Point2d different_x(4.0,2.0);
+        ARIADNE_TEST_ASSERT(point==equal_point)
+        ARIADNE_TEST_ASSERT(!(point==different_y))
+        ARIADNE_TEST_ASSERT(!(point==different_x))
+
+        point-=Vector2d(1.0,1.0);
+        ARIADNE_TEST_EQUALS(point.x,2.0)
+        ARIADNE_TEST_EQUALS(point.y,1.0)
+
+        Box2d box;
+        box.xl=-1.0; box.xu=1.0; box.yl=-2.0; box.yu=2.0;
+        std::ostringstream box_stream;
+        box_stream << box;
+        ARIADNE_TEST_EQUALS(box_stream.str(),"[-1,1]x[-2,2]")
+
+        Polytope2d polytope(List<Point2d>{Point2d(0.0,0.0),Point2d(1.0,1.0)});
+        ARIADNE_TEST_EQUALS(polytope.number_of_vertices(),2u)
+        polytope.vertices()[0]=Point2d(2.0,3.0);
+        Polytope2d const& const_polytope=polytope;
+        ARIADNE_TEST_EQUALS(const_polytope.vertices().size(),2u)
+        ARIADNE_TEST_EQUALS(const_polytope.vertex(0).x,2.0)
+        ARIADNE_TEST_EQUALS(const_polytope.vertex(0).y,3.0)
     }
 
     void test_colour() {
