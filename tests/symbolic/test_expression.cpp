@@ -1030,6 +1030,8 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(before(greater_constant[0],short_constant[0]));
         Constant<RealVector> same_name_equal(Identifier("vector_constant"),RealVector({1,2}));
         RealVectorExpression equal_constant(same_name_equal);
+        ARIADNE_TEST_ASSERT(not before(short_constant,equal_constant));
+        ARIADNE_TEST_ASSERT(not before(equal_constant,short_constant));
         ARIADNE_TEST_EXECUTE(before(short_constant[0],equal_constant[0]));
         Constant<RealVector> different_name(Identifier("z_vector_constant"),RealVector({1,2}));
         RealVectorExpression different_name_constant(different_name);

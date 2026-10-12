@@ -270,9 +270,6 @@ template<class A> A evaluate(const Expression<A>& e, const Map<Identifier,A>& x)
 inline Integer evaluate(const Expression<Integer>& e, const Map<Identifier,String>& x) {
     return e.node_ref().accept([&x](auto en){return evaluate_as<Integer>(en,x);});
 }
-inline String evaluate(const Expression<String>& e, const Map<Identifier,Integer>& x) {
-    return e.node_ref().accept([&x](auto en){return evaluate_as<String>(en,x);});
-}
 
 template<class A> typename Logic<A>::Type evaluate(const Expression<typename Logic<A>::Type>& e, const Map<Identifier,A>& x) {
     typedef typename Logic<A>::Type R;

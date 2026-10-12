@@ -36,11 +36,18 @@
 #include "symbolic/space.hpp"
 #include "symbolic/valuation.hpp"
 
+namespace Ariadne {
+String evaluate(const Expression<String>& e, const Map<Identifier,Integer>& x);
+}
 
 #include "symbolic/templates.tpl.hpp"
 #include "expression.tpl.hpp"
 
 namespace Ariadne {
+
+String evaluate(const Expression<String>& e, const Map<Identifier,Integer>& x) {
+    return e.node_ref().accept([&x](auto en){return evaluate_as<String>(en,x);});
+}
 
 template<class T> Expression<T>::operator ElementaryAlgebra<Real>() const requires Same<T,Real> {
     return ElementaryAlgebra<Real>(new ElementaryAlgebraWrapper<Expression<Real>,Real>(*this));
