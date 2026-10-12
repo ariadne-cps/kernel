@@ -714,8 +714,20 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(to_string(sub(x,div(y,z))),"x-y/z");
         ARIADNE_TEST_EQUALS(to_string(sub(div(x,y),z)),"x/y-z");
         ARIADNE_TEST_EQUALS(to_string(max(x,sub(y,z))),"max(x,y-z)");
+        ARIADNE_TEST_EQUALS(to_string(min(x,sub(y,z))),"min(x,y-z)");
         ARIADNE_TEST_EQUALS(to_string(sub(x,max(y,z))),"x-max(y,z)");
         ARIADNE_TEST_EQUALS(to_string(tanh(x)),"tanh(x)");
+        ARIADNE_TEST_EXECUTE(to_string(neg(RealExpression(2))));
+        ARIADNE_TEST_EXECUTE(to_string(mul(div(x,y),z)));
+        ARIADNE_TEST_EXECUTE(to_string(div(add(x,y),mul(y,z))));
+        ARIADNE_TEST_EXECUTE(to_string(div(sub(x,y),div(y,z))));
+
+        std::ostringstream operation_writer_stream;
+        operation_writer_stream << OperationExpressionWriter()(sin(RealExpression(x)));
+        operation_writer_stream << OperationExpressionWriter()(pow(RealExpression(x),3));
+        RealVectorExpression writer_vector({x,y});
+        operation_writer_stream << OperationExpressionWriter()(writer_vector[0]);
+        ARIADNE_TEST_ASSERT(not operation_writer_stream.str().empty());
     }
 
     Void test_assignment() {
@@ -783,6 +795,21 @@ class TestExpression {
         ARIADNE_TEST_CONSTRUCT(RealExpression,e2,(sin(pow(x,2)+y)*(y/x+1)));
         ARIADNE_TEST_ASSERT(identical(e1,e1));
         ARIADNE_TEST_ASSERT(identical(e1,e2));
+
+        Constant<RealVector> vector_constant_a(Identifier("vc"),RealVector({1,2}));
+        Constant<RealVector> vector_constant_b(Identifier("vc"),RealVector({1,2}));
+        Constant<RealVector> vector_constant_c(Identifier("vc"),RealVector({1,3}));
+        Constant<RealVector> vector_constant_d(Identifier("vd"),RealVector({1,2}));
+        Constant<RealVector> vector_constant_short(Identifier("vc"),RealVector({1}));
+        RealVectorExpression vector_expression_a(vector_constant_a);
+        RealVectorExpression vector_expression_b(vector_constant_b);
+        RealVectorExpression vector_expression_c(vector_constant_c);
+        RealVectorExpression vector_expression_d(vector_constant_d);
+        RealVectorExpression vector_expression_short(vector_constant_short);
+        ARIADNE_TEST_ASSERT(identical(vector_expression_a,vector_expression_b));
+        ARIADNE_TEST_ASSERT(not identical(vector_expression_a,vector_expression_c));
+        ARIADNE_TEST_ASSERT(not identical(vector_expression_a,vector_expression_d));
+        ARIADNE_TEST_ASSERT(not identical(vector_expression_a,vector_expression_short));
     }
 
     Void test_derivative() {
@@ -1061,6 +1088,11 @@ class TestExpression {
             identical,substitute(RealExpression(y),x,Real(2)),RealExpression(y));
         ARIADNE_TEST_EXECUTE(substitute(vector_expression[0],x,Real(2)));
         ARIADNE_TEST_EXECUTE(substitute(predicate,logical_variable,Kleenean()));
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,substitute(RealExpression(3),x,Real(2)),RealExpression(3));
+        ARIADNE_TEST_EXECUTE(substitute(neg(RealExpression(x)),x,Real(2)));
+        ARIADNE_TEST_EXECUTE(substitute(pow(RealExpression(x),3),x,Real(2)));
+        ARIADNE_TEST_EXECUTE(substitute(RealExpression(2)*RealExpression(x),x,Real(3)));
     }
 
     Void test_is_constant_in() {
@@ -1084,6 +1116,10 @@ class TestExpression {
 
         ARIADNE_TEST_ASSERT(is_constant_in(vector_expression[0],{z}));
         ARIADNE_TEST_ASSERT(not is_constant_in(vector_expression[0],{x}));
+        ARIADNE_TEST_ASSERT(is_constant_in(RealExpression(3),{x}));
+        ARIADNE_TEST_ASSERT(is_constant_in(RealExpression(x),{y}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(RealExpression(x),{x}));
+        ARIADNE_TEST_ASSERT(is_constant_in(pow(RealExpression(x),0),{x}));
     }
 
     Void test_is_additive_in() {
@@ -1135,6 +1171,14 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not is_affine_in(x*x,{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(0*x*x,{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(x/y,{y}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(tanh(x),{x}));
+        ARIADNE_TEST_ASSERT(is_affine_in(tanh(RealExpression(2)),{x}));
+        ARIADNE_TEST_ASSERT(is_affine_in(max(RealExpression(1),RealExpression(2)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(max(RealExpression(x),RealExpression(2)),{x}));
+        ARIADNE_TEST_ASSERT(is_affine_in(min(RealExpression(1),RealExpression(2)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(min(RealExpression(2),RealExpression(x)),{x}));
+        ARIADNE_TEST_ASSERT(is_affine_in(pow(RealExpression(x),0),{x}));
+        ARIADNE_TEST_ASSERT(is_affine_in(pow(RealExpression(x),1),{x}));
     }
 
     Void test_is_polynomial_in() {
@@ -1174,6 +1218,10 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not is_polynomial_in(min(RealExpression(2),x),{x}))
         ARIADNE_TEST_ASSERT(is_polynomial_in(pow(x,0),{x}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(pow(x,-1),{x}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(tanh(x),{x}))
+        ARIADNE_TEST_ASSERT(is_polynomial_in(tanh(RealExpression(2)),{x}))
+        ARIADNE_TEST_ASSERT(is_polynomial_in((x+y)*(x-y),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(x/(x+y),{x,y}))
         RealVectorExpression polynomial_vector({x,sqr(y)});
         ARIADNE_TEST_ASSERT(is_polynomial_in(polynomial_vector[0],{x,y}))
     }
