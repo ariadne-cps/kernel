@@ -103,7 +103,9 @@ class TestFormula
         ARIADNE_TEST_ASSERT(not identical(pow(x,2),pow(x,3)));
         ARIADNE_TEST_ASSERT(not identical(pow(x,2),pow(y,2)));
         ARIADNE_TEST_ASSERT(not identical(sin(x),cos(x)));
+        ARIADNE_TEST_ASSERT(not identical(sin(x),sin(y)));
         ARIADNE_TEST_ASSERT(not identical(x+y,x-y));
+        ARIADNE_TEST_ASSERT(not identical(x+y,x+x));
         ARIADNE_TEST_ASSERT(not identical(x,two));
 
         EffectiveFormula scalar_add=EffectiveFormula::scalar(
