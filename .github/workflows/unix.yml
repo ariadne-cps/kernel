@@ -171,3 +171,37 @@ jobs:
     - name: Verify Final Installation
       working-directory: ${{ runner.workspace }}/build
       run: cmake --install . --prefix ${{ runner.workspace }}/verify-install
+
+  thread-sanitizer:
+    name: Ubuntu 24.04 Clang 16 [ThreadSanitizer]
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Enable compiler cache
+      uses: mozilla-actions/sccache-action@v0.0.11
+
+    - name: Set Up Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build pkg-config clang-16 libgmp-dev libmpfr-dev libcairo2-dev
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{ runner.workspace }}/build-tsan
+
+    - name: Configure CMake
+      working-directory: ${{ runner.workspace }}/build-tsan
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++-16 -G Ninja -DTHREAD_SANITIZER=ON -DBUILD_PYTHON_BINDINGS=OFF -DWARNINGS_AS_ERRORS=ON -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+
+    - name: Build
+      working-directory: ${{ runner.workspace }}/build-tsan
+      run: cmake --build . --parallel 2
+
+    - name: Test C++
+      working-directory: ${{ runner.workspace }}/build-tsan
+      env:
+        TSAN_OPTIONS: halt_on_error=1
+      run: ctest --output-on-failure
