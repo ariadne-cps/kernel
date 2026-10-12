@@ -155,6 +155,13 @@ Void TestFunction::test_scalar_function()
     ARIADNE_TEST_CONSTRUCT(Vector<FloatDPApproximation>,p,({2.0_approx,3.0_approx,5.0_approx}));
     ARIADNE_TEST_EQUAL(f(p),7.0_approx);
 
+    EffectiveFormula formula_x=EffectiveFormula::coordinate(0);
+    EffectiveFormula scalar_formula=EffectiveFormula::scalar(
+        BinaryElementaryOperator(Mul::code()),EffectiveNumber(2),formula_x);
+    EffectiveScalarMultivariateFunction scalar_formula_function(EuclideanDomain(1),scalar_formula);
+    Vector<FloatDPApproximation> scalar_formula_argument={3.0_approx};
+    ARIADNE_TEST_EQUAL(scalar_formula_function(scalar_formula_argument),6.0_approx);
+
     ARIADNE_TEST_PRINT(cos(f));
 
     EffectiveScalarMultivariateFunction df=f.derivative(1);
