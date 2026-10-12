@@ -519,10 +519,8 @@ template<class OP, class A, class N> requires AGraded<OP> inline Bool _before(Sy
         else { return s1.num() < s2.num(); }
     } else { return s1.op().code() < s2.op().code(); } }
 template<class OP, class V, class I> requires AGetter<OP> inline Bool _before(Symbolic<OP,V,I> const& s1, Symbolic<OP,V,I> const& s2) {
-    if (s1.op().code() == s2.op().code()) {
-        if (s1.ind() == s2.ind()) { return before(s1.vec(),s2.vec()); }
-        else { return s1.ind() < s2.ind(); }
-    } else { return s1.op().code() < s2.op().code(); } }
+    if (s1.ind() == s2.ind()) { return before(s1.vec(),s2.vec()); }
+    else { return s1.ind() < s2.ind(); } }
 template<class T> inline Bool _before(Vector<Expression<T>> const& ve1, Vector<Expression<T>> const& ve2) {
     return _vector_before(ve1,ve2); }
 
@@ -650,12 +648,8 @@ template<class T> class CommonSubroutineEliminator {
             ? e : make_expression<T>(s.op(),new_arg,s.num());
         return _intern(e,candidate);
     }
-    Expression<T> operator()(const Symbolic<OperatorVariant<Get>,Expression<RealVector>,SizeType>& s, const Expression<T>& e) {
-        auto new_vec=eliminate_common_vector_subexpressions(s.vec());
-        Expression<T> candidate=
-            new_vec.node_raw_ptr()==s.vec().node_raw_ptr()
-            ? e : make_expression<T>(s.op(),new_vec,s.ind());
-        return _intern(e,candidate);
+    Expression<T> operator()(const Symbolic<OperatorVariant<Get>,Expression<RealVector>,SizeType>&, const Expression<T>& e) {
+        return _intern(e,e);
     }
 };
 template<class T> Expression<T> CommonSubroutineEliminator<T>::eliminate_common_subexpressions(const Expression<T>& e) {
@@ -701,21 +695,33 @@ template<class T, class CMP, Bool distinct> class NodeCounter {
 };
 
 template<class T, class CMP, Bool distinct> auto NodeCounter<T,CMP,distinct>::count_nodes(Expression<T> const& e) -> SizeType {
-    auto iter=cache.find(e);
-    if (!distinct || iter==cache.end()) {
+    if constexpr (not distinct) {
         cache.insert(e);
         e.node_ref().accept(*this);
         count++;
+    } else {
+        auto iter=cache.find(e);
+        if (iter==cache.end()) {
+            cache.insert(e);
+            e.node_ref().accept(*this);
+            count++;
+        }
     }
     return count;
 }
 
 template<class T, class CMP, Bool distinct> auto NodeCounter<T,CMP,distinct>::count_nodes(Expression<Vector<T>> const& ve) -> SizeType {
-    auto iter=vcache.find(ve);
-    if (!distinct || iter==vcache.end()) {
+    if constexpr (not distinct) {
         vcache.insert(ve);
         ve.node_ref().accept(*this);
         count++;
+    } else {
+        auto iter=vcache.find(ve);
+        if (iter==vcache.end()) {
+            vcache.insert(ve);
+            ve.node_ref().accept(*this);
+            count++;
+        }
     }
     return count;
 }

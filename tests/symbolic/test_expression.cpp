@@ -385,6 +385,9 @@ class TestExpression {
             KleeneanExpression::constant(Kleenean()),
             KleeneanExpression::constant(Kleenean())));
         ARIADNE_TEST_ASSERT(is_constant(kleenean_constant,Kleenean()));
+        ContinuousPredicate same_op_predicate1=x>=0;
+        ContinuousPredicate same_op_predicate2=y>=0;
+        ARIADNE_TEST_ASSERT(not identical(same_op_predicate1,same_op_predicate2));
 
         std::ostringstream kleenean_operation_stream;
         kleenean_operation_stream << OperationExpressionWriter()(kleenean_binary);
@@ -477,6 +480,10 @@ class TestExpression {
         integer_valuation.set(integer_other,Integer(10));
         ARIADNE_TEST_EQUALS(evaluate(integer_from_variable,integer_valuation),Integer(9));
         ARIADNE_TEST_EXECUTE(evaluate(integer_from_variable<IntegerExpression(integer_other),integer_valuation));
+        ARIADNE_TEST_EXECUTE(evaluate(IntegerExpression(1)<IntegerExpression(2),string_valuation));
+        BooleanExpression string_constant_predicate=
+            substitute(string_variable==String("mapped"),string_variable,String("mapped"));
+        ARIADNE_TEST_EXECUTE(evaluate(string_constant_predicate,integer_valuation));
 
         RealValuation real_valuation;
         real_valuation.set(x,Real(2));
@@ -638,6 +645,7 @@ class TestExpression {
 
         ContinuousPredicate predicate=(x>=0)&&(y<=1);
         ARIADNE_TEST_EXECUTE(simplify(predicate));
+        ARIADNE_TEST_EXECUTE(simplify(sgn(RealExpression(x))));
         RealVectorExpression vector_expression({x,y});
         ARIADNE_TEST_EXECUTE(simplify(vector_expression));
     }
@@ -693,6 +701,8 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(count_distinct_nodes(pow(y,2)+y*y),4);
         ARIADNE_TEST_EQUALS(count_distinct_nodes(pow(x+cos(y),2)+cos(y)),6);
         ARIADNE_TEST_EQUALS(count_distinct_nodes(x+cos(x)+pow(cos(x),2)),5);
+        RealVectorExpression shared_vector({x,y});
+        ARIADNE_TEST_ASSERT(count_distinct_nodes(shared_vector[0]+shared_vector[1])>1u);
     }
 
     Void test_count_distinct_node_pointers() {
@@ -706,6 +716,8 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(count_distinct_node_pointers(pow(y,2)+y*y),6);
         ARIADNE_TEST_EQUALS(count_distinct_node_pointers(pow(x+cos(y),2)+cos(y)),8);
         ARIADNE_TEST_EQUALS(count_distinct_node_pointers(x+cos(x)+pow(cos(x),2)),8);
+        RealVectorExpression shared_vector({x,y});
+        ARIADNE_TEST_ASSERT(count_distinct_node_pointers(shared_vector[0]+shared_vector[1])>1u);
     }
 
     Void test_eliminate_common_subexpressions() {
@@ -773,6 +785,15 @@ class TestExpression {
         eliminate_common_subexpressions(getter_expressions);
         ARIADNE_TEST_ASSERT(
             getter_expressions[0].node_raw_ptr()==getter_expressions[1].node_raw_ptr());
+
+        RealExpression shared_x=x;
+        RealExpression shared_y=y;
+        Vector<RealExpression> canonical_cases({
+            RealExpression(1),RealExpression(2),
+            sin(shared_x),cos(shared_x),sin(shared_y),
+            shared_x+shared_y,shared_x+RealExpression(z),
+            pow(shared_x,2),pow(shared_x,3),pow(shared_y,2)});
+        eliminate_common_subexpressions(canonical_cases);
     }
 
     Void test_substitute() {
@@ -813,6 +834,10 @@ class TestExpression {
             identical,substituted_vector[1],RealExpression(2));
 
         ARIADNE_TEST_EXECUTE(substitute(predicate,x_substitution));
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,substitute(RealExpression(y),x,Real(2)),RealExpression(y));
+        ARIADNE_TEST_EXECUTE(substitute(vector_expression[0],x,Real(2)));
+        ARIADNE_TEST_EXECUTE(substitute(predicate,logical_variable,Kleenean()));
     }
 
     Void test_is_constant_in() {
@@ -982,6 +1007,9 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not is_constant_in(left_scaled_vector[0],{y}));
         ARIADNE_TEST_ASSERT(is_constant_in(right_scaled_vector[0],{z}));
         ARIADNE_TEST_ASSERT(not is_constant_in(right_scaled_vector[0],{xs[0]}));
+        ARIADNE_TEST_ASSERT(not is_constant_in((vex+vce)[0],{xs[0]}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(left_scaled_vector[0],{xs[0]}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(right_scaled_vector[0],{y}));
 
         ARIADNE_TEST_SAME(simplify(evv[0]),RealExpression(vv[0]));
         ARIADNE_TEST_SAME(simplify(unary_vector[0]),-xs[0]);
@@ -1000,7 +1028,26 @@ class TestExpression {
         RealVectorExpression long_constant(same_name_long);
         RealVectorExpression greater_constant(same_name_greater);
         ARIADNE_TEST_EXECUTE(before(short_constant[0],long_constant[0]));
+        ARIADNE_TEST_EXECUTE(before(long_constant[0],short_constant[0]));
         ARIADNE_TEST_EXECUTE(before(short_constant[0],greater_constant[0]));
+        Constant<RealVector> same_name_equal(Identifier("vector_constant"),RealVector({1,2}));
+        RealVectorExpression equal_constant(same_name_equal);
+        ARIADNE_TEST_EXECUTE(before(short_constant[0],equal_constant[0]));
+        Constant<RealVector> different_name(Identifier("z_vector_constant"),RealVector({1,2}));
+        RealVectorExpression different_name_constant(different_name);
+        ARIADNE_TEST_EXECUTE(before(short_constant[0],different_name_constant[0]));
+
+        RealVectorExpression vector_a({x,y});
+        RealVectorExpression vector_b({x,y});
+        RealVectorExpression vector_c({x,z});
+        RealVectorExpression vector_short({x});
+        ARIADNE_TEST_EXECUTE(before((vector_a+vce)[0],(vector_b+vce)[0]));
+        ARIADNE_TEST_EXECUTE(before((vector_a+vce)[0],(vector_c+vce)[0]));
+        ARIADNE_TEST_EXECUTE(before((vector_short+vector_short)[0],(vector_a+vector_a)[0]));
+        ARIADNE_TEST_EXECUTE(before((vector_a+vce)[0],(vector_a+evv)[0]));
+        ARIADNE_TEST_EXECUTE(before((vector_a+vce)[0],(evv+vce)[0]));
+        ARIADNE_TEST_EXECUTE(before((vector_a+vce)[0],(vector_a-vce)[0]));
+        ARIADNE_TEST_EXECUTE(before(pos(vector_a)[0],neg(vector_a)[0]));
 
     }
 
