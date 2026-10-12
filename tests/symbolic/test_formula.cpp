@@ -169,7 +169,7 @@ class TestFormula
         EffectiveFormula u(EffectiveFormula::coordinate(2));
         ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(derivative(-u*x*y+2*x,x.ind())),-u*y+2);
         Vector<EffectiveFormula> simplified_vector=simplify(Vector<EffectiveFormula>({x+z,y*z+z}));
-        ARIADNE_TEST_ASSERT(identical(simplified_vector,Vector<EffectiveFormula>({x,y*0+0})));
+        ARIADNE_TEST_ASSERT(identical(simplified_vector,Vector<EffectiveFormula>({x,z})));
     }
 
     Void test_evaluate() {
