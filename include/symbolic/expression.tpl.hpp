@@ -413,6 +413,14 @@ template<class T> Bool identical(const Expression<T>& e1, const Expression<T>& e
     return e1.node_ref().accept([&e2](auto e1n){return e2.node_ref().accept([&e1n](auto e2n){return _identical_dispatch(e1n,e2n);});});
 }
 
+template<class T> inline Bool identical(Vector<Expression<T>> v1, Vector<Expression<T>> v2) {
+    if (v1.size() != v2.size()) { return false; }
+    for (SizeType i=0; i!=v1.size(); ++i) {
+        if (not identical(v1[i],v2[i])) { return false; }
+    }
+    return true;
+}
+
 namespace {
 
 template<class X> inline Expression<X> _simplify(const Expression<X>& e) {
