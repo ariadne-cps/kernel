@@ -54,7 +54,7 @@ struct Point2d {
     double& operator[](SizeType i) { return (&x)[i]; } double const& operator[](SizeType i) const { return (&x)[i]; }
     template<class X, class Y> Point2d(const X& x_, const Y& y_) : x(numeric_cast<double>(x_)), y(numeric_cast<double>(y_)) { }
 };
-inline Bool operator==(Point2d& pt1, const Point2d& pt2) { return pt1.x==pt2.x && pt1.y==pt2.y; }
+inline Bool operator==(const Point2d& pt1, const Point2d& pt2) { return pt1.x==pt2.x && pt1.y==pt2.y; }
 inline Point2d& operator+=(Point2d& pt, const Vector2d& v) { pt.x+=v.x; pt.y+=v.y; return pt; }
 inline Point2d& operator-=(Point2d& pt, const Vector2d& v) { pt.x-=v.x; pt.y-=v.y; return pt; }
 inline OutputStream& operator<<(OutputStream& os, const Point2d& pt) {
