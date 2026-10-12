@@ -94,6 +94,11 @@ class TestNullGraphics {
         std::ostringstream oss;
         drawer._write(oss);
         ARIADNE_TEST_EQUALS(oss.str(), "NullDrawer()")
+
+        Drawer handle = NullDrawer();
+        std::ostringstream handle_oss;
+        handle_oss << handle;
+        ARIADNE_TEST_EQUALS(handle_oss.str(), "NullDrawer()")
     }
 };
 
