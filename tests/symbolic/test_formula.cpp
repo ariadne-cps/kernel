@@ -62,6 +62,17 @@ class TestFormula
         ARIADNE_TEST_ASSERT(same(two.val(),EffectiveNumber(2)));
         ARIADNE_TEST_ASSERT(is_constant(x.create_zero(),EffectiveNumber(0)));
         ARIADNE_TEST_ASSERT(is_constant(x.create_constant(EffectiveNumber(3)),EffectiveNumber(3)));
+        DoublePrecision pr;
+        ValidatedFormula validated_x=ValidatedFormula::coordinate(0);
+        FloatDPBounds bounds(1,pr);
+        ValidatedFormula add_bounds=validated_x+bounds;
+        ValidatedFormula sub_dyadic=validated_x-Dyadic(1);
+        ValidatedFormula mul_integer=validated_x*2;
+        ValidatedFormula div_dyadic=validated_x/Dyadic(2);
+        ARIADNE_TEST_EQUALS(add_bounds.code(),Add::code());
+        ARIADNE_TEST_EQUALS(sub_dyadic.code(),Sub::code());
+        ARIADNE_TEST_EQUALS(mul_integer.code(),Mul::code());
+        ARIADNE_TEST_EQUALS(div_dyadic.code(),Div::code());
         EffectiveFormula right_scalar=AlgebraOperations<EffectiveFormula,EffectiveNumber>::apply(
             BinaryElementaryOperator(Add::code()),x,EffectiveNumber(2));
         EffectiveFormula left_scalar=AlgebraOperations<EffectiveFormula,EffectiveNumber>::apply(
