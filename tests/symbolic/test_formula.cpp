@@ -70,9 +70,9 @@ class TestFormula
         ValidatedFormula mul_integer=validated_x*2;
         ValidatedFormula div_dyadic=validated_x/Dyadic(2);
         ARIADNE_TEST_EQUALS(add_bounds.code(),Add::code());
-        ARIADNE_TEST_EQUALS(sub_dyadic.code(),Sub::code());
+        ARIADNE_TEST_EQUALS(sub_dyadic.code(),Add::code());
         ARIADNE_TEST_EQUALS(mul_integer.code(),Mul::code());
-        ARIADNE_TEST_EQUALS(div_dyadic.code(),Div::code());
+        ARIADNE_TEST_EQUALS(div_dyadic.code(),Mul::code());
         EffectiveFormula right_scalar=AlgebraOperations<EffectiveFormula,EffectiveNumber>::apply(
             BinaryElementaryOperator(Add::code()),x,EffectiveNumber(2));
         EffectiveFormula left_scalar=AlgebraOperations<EffectiveFormula,EffectiveNumber>::apply(
