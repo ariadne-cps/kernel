@@ -31,7 +31,7 @@
 #include "symbolic/assignment.hpp"
 #include "symbolic/valuation.hpp"
 #include "symbolic/space.hpp"
-#include "function/formula.hpp"
+#include "symbolic/formula.hpp"
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
 #include "function/taylor_model.hpp"
