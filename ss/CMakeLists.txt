@@ -1,5 +1,5 @@
-if(NOT TARGET threading)
-    add_subdirectory(threading)
+if(NOT TARGET bdd)
+    add_subdirectory(bdd)
 endif()
 
 if(NOT TARGET algebra)

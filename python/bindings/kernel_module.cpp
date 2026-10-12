@@ -7,6 +7,7 @@ void algebra_submodule(pybind11::module& module);
 void linear_algebra_submodule(pybind11::module& module);
 void polynomial_submodule(pybind11::module& module);
 void differentiation_submodule(pybind11::module& module);
+void bdd_submodule(pybind11::module& module);
 
 void function_submodule(pybind11::module& module);
 void geometry_submodule(pybind11::module& module);
@@ -22,6 +23,7 @@ PYBIND11_MODULE(pyariadne, module) {
     linear_algebra_submodule(module);
     polynomial_submodule(module);
     differentiation_submodule(module);
+    bdd_submodule(module);
 
     function_submodule(module);
     geometry_submodule(module);

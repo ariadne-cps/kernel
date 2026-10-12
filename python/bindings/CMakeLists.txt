@@ -18,6 +18,7 @@ target_include_directories(pyariadne-kernel-submodule-obj PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${PYTHON_COMMON_SOURCE_DIR}/include"
     $<TARGET_PROPERTY:pyariadne-algebra,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:pyariadne-bdd,INTERFACE_INCLUDE_DIRECTORIES>
 )
 target_link_libraries(pyariadne-kernel-submodule-obj PRIVATE
     pyariadne-python-common
@@ -36,6 +37,7 @@ target_include_directories(pyariadne-kernel INTERFACE
 )
 target_link_libraries(pyariadne-kernel INTERFACE
     pyariadne-algebra
+    pyariadne-bdd
 )
 
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)

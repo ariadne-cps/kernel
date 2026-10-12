@@ -12,6 +12,9 @@ if(Python3_FOUND)
     if(NOT TARGET pyariadne-algebra)
         message(FATAL_ERROR "The Algebra Python binding target is required to build pyariadne-kernel.")
     endif()
+    if(NOT TARGET pyariadne-bdd)
+        message(FATAL_ERROR "The BDD Python binding target is required to build pyariadne-kernel.")
+    endif()
 
     if(NOT TARGET pybind11::module)
         get_target_property(PYTHON_COMMON_SOURCE_DIR pyariadne-python-common SOURCE_DIR)
@@ -35,6 +38,7 @@ if(Python3_FOUND)
             $<TARGET_OBJECTS:INTERVAL_SRC>
             $<TARGET_OBJECTS:NUMERIC_SRC>
             $<TARGET_OBJECTS:FOUNDATION_SRC>
+            $<TARGET_OBJECTS:BDD_SRC>
             $<TARGET_OBJECTS:THREADING_SRC>
             $<TARGET_OBJECTS:LOGGING_SRC>
             $<TARGET_OBJECTS:UTILITY_SRC>

@@ -6,7 +6,7 @@
 [![Coverage Status](https://github.com/ariadne-cps/kernel/actions/workflows/coverage.yml/badge.svg)](https://github.com/ariadne-cps/kernel/actions/workflows/coverage.yml)
 [![codecov](https://codecov.io/gh/ariadne-cps/kernel/branch/main/graph/badge.svg)](https://codecov.io/gh/ariadne-cps/kernel)
 
-Ariadne Kernel is the standalone C++20 kernel layer of Ariadne. It contains the Function, Geometry, IO, Symbolic and Solving modules and consumes the standalone Algebra and Threading repositories as direct dependencies.
+Ariadne Kernel is the standalone C++20 kernel layer of Ariadne. It contains the Function, Geometry, IO, Symbolic and Solving modules and consumes the standalone Algebra and BDD repositories as direct dependencies.
 
 ## Layout
 
@@ -28,9 +28,9 @@ The repository has three Git submodules:
 
 - `ss/configuration`
 - `ss/algebra`
-- `ss/threading`
+- `ss/bdd`
 
-CMake verifies that the direct Configuration revisions agree and that the Utility revision reached through Algebra matches the Utility revision reached through Threading.
+CMake verifies that the direct Configuration revisions agree and that the Utility revision reached through Algebra matches the Utility revision reached through BDD and Threading.
 
 Cairo is a required external dependency of Ariadne Kernel.
 

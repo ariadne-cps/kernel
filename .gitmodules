@@ -4,6 +4,6 @@
 [submodule "ss/algebra"]
 	path = ss/algebra
 	url = https://github.com/ariadne-cps/algebra
-[submodule "ss/threading"]
-	path = ss/threading
-	url = https://github.com/ariadne-cps/threading
+[submodule "ss/bdd"]
+	path = ss/bdd
+	url = https://github.com/ariadne-cps/bdd

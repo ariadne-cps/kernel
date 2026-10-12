@@ -22,12 +22,12 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
         REFERENCES
             "${PROJECT_SOURCE_DIR}|ss/configuration"
             "${PROJECT_SOURCE_DIR}/ss/algebra|ss/configuration"
-            "${PROJECT_SOURCE_DIR}/ss/threading|ss/configuration"
+            "${PROJECT_SOURCE_DIR}/ss/bdd|ss/configuration"
     )
     require_same_dependency_commit(Utility
         REFERENCES
             "${PROJECT_SOURCE_DIR}/ss/algebra/ss/interval/ss/numeric/ss/foundation|ss/utility"
-            "${PROJECT_SOURCE_DIR}/ss/threading|ss/utility"
+            "${PROJECT_SOURCE_DIR}/ss/bdd/ss/threading|ss/utility"
     )
 endif()
 
@@ -44,7 +44,7 @@ target_include_directories(kernel INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include/ariadne-kernel>
 )
-target_link_libraries(kernel INTERFACE algebra threading Cairo::Cairo)
+target_link_libraries(kernel INTERFACE algebra bdd Cairo::Cairo)
 
 
 add_subdirectory(src)
