@@ -514,10 +514,8 @@ template<class OP, class A1, class A2> Bool inline _before(Symbolic<OP,A1,A2> co
         else { return before(s1.arg1(),s2.arg1()); }
     } else { return s1.op().code() < s2.op().code(); } }
 template<class OP, class A, class N> requires AGraded<OP> inline Bool _before(Symbolic<OP,A,N> const& s1, Symbolic<OP,A,N> const& s2) {
-    if (s1.op().code() == s2.op().code()) {
-        if (s1.num() == s2.num()) { return before(s1.arg(),s2.arg()); }
-        else { return s1.num() < s2.num(); }
-    } else { return s1.op().code() < s2.op().code(); } }
+    if (s1.num() == s2.num()) { return before(s1.arg(),s2.arg()); }
+    else { return s1.num() < s2.num(); } }
 template<class OP, class V, class I> requires AGetter<OP> inline Bool _before(Symbolic<OP,V,I> const& s1, Symbolic<OP,V,I> const& s2) {
     if (s1.ind() == s2.ind()) { return before(s1.vec(),s2.vec()); }
     else { return s1.ind() < s2.ind(); } }
@@ -572,9 +570,6 @@ template<class OP, class A1, class A2> inline Bool _canonical_before(
 }
 template<class OP, class A, class N> requires AGraded<OP> inline Bool _canonical_before(
         Symbolic<OP,A,N> const& s1, Symbolic<OP,A,N> const& s2) {
-    if(s1.op().code()!=s2.op().code()) {
-        return s1.op().code()<s2.op().code();
-    }
     if(s1.num()!=s2.num()) { return s1.num()<s2.num(); }
     auto const* p1=s1.arg().node_raw_ptr();
     auto const* p2=s2.arg().node_raw_ptr();

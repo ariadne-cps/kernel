@@ -1027,6 +1027,7 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(before(short_constant[0],long_constant[0]));
         ARIADNE_TEST_EXECUTE(before(long_constant[0],short_constant[0]));
         ARIADNE_TEST_EXECUTE(before(short_constant[0],greater_constant[0]));
+        ARIADNE_TEST_EXECUTE(before(greater_constant[0],short_constant[0]));
         Constant<RealVector> same_name_equal(Identifier("vector_constant"),RealVector({1,2}));
         RealVectorExpression equal_constant(same_name_equal);
         ARIADNE_TEST_EXECUTE(before(short_constant[0],equal_constant[0]));
@@ -1038,6 +1039,7 @@ class TestExpression {
         RealVectorExpression vector_b({x,y});
         RealVectorExpression vector_c({x,z});
         RealVectorExpression vector_short({x});
+        ARIADNE_TEST_EXECUTE(before(vector_c[0],vector_a[0]));
         ARIADNE_TEST_EXECUTE(before((vector_a+vce)[0],(vector_b+vce)[0]));
         ARIADNE_TEST_EXECUTE(before((vector_a+vce)[0],(vector_c+vce)[0]));
         ARIADNE_TEST_EXECUTE(before((vector_short+vector_short)[0],(vector_a+vector_a)[0]));
