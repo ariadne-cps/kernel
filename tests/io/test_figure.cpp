@@ -27,6 +27,7 @@
 
 #include "function/function.hpp"
 #include "io/figure.hpp"
+#include "io/cairo.hpp"
 #include "io/drawer.hpp"
 #include "geometry/point.hpp"
 #include "geometry/box.hpp"
@@ -45,6 +46,7 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_colour())
         ARIADNE_TEST_CALL(test_graphics_properties())
         ARIADNE_TEST_CALL(test_graphics_interface())
+        ARIADNE_TEST_CALL(test_graphics_base())
         ARIADNE_TEST_CALL(test_construct_figure())
         ARIADNE_TEST_CALL(test_figure_projection())
         ARIADNE_TEST_CALL(test_construct_labelled_figure())
@@ -143,6 +145,12 @@ class TestGraphics {
         FigureInterface& figure_interface = figure;
         Drawable2dInterface const& drawable = shape;
         draw(figure_interface,drawable);
+    }
+
+    void test_graphics_base() {
+        CairoCanvas canvas(ImageSize2d(32u,32u));
+        List<Point2d> boundary{Point2d(0.0,0.0)};
+        canvas.fill_boundary(boundary);
     }
 
     void test_construct_figure() {
