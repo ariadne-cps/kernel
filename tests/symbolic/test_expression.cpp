@@ -626,7 +626,7 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(is_affine_in(literal_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(unary_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(binary_vector,{x,y}));
-        RealVectorExpression nonlinear_vector=sqr(literal_vector);
+        RealVectorExpression nonlinear_vector({sqr(RealExpression(x)),sqr(RealExpression(y))});
         ARIADNE_TEST_ASSERT(not is_affine_in(nonlinear_vector+constant_vector,{x,y}));
         ARIADNE_TEST_ASSERT(not is_affine_in(constant_vector+nonlinear_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(scaled_vector,{x,y}));
