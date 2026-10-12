@@ -62,6 +62,7 @@ template const Expression<Real>& Expression<Kleenean>::cmp1<Real>(Real*) const;
 template const Expression<Real>& Expression<Kleenean>::cmp2<Real>(Real*) const;
 
 template Bool before<Real>(Expression<Real> const& e1, Expression<Real> const& e2);
+template Bool before<RealVector>(Expression<RealVector> const& e1, Expression<RealVector> const& e2);
 template SizeType count_nodes<Real>(const Expression<Real>& e);
 template SizeType count_distinct_nodes<Real>(const Expression<Real>& e);
 template SizeType count_distinct_node_pointers<Real>(const Expression<Real>& e);
