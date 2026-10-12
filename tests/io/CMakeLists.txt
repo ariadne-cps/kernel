@@ -1,6 +1,7 @@
 set(UNIT_TESTS
     test_figure
     test_command_line_interface
+    test_null_graphics
 )
 foreach(TEST ${UNIT_TESTS})
     add_executable(${TEST} ${TEST}.cpp)
