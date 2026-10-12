@@ -1,6 +1,5 @@
 add_library(KERNEL_FUNCTION_SRC OBJECT
     affine.cpp
-    formula.cpp
     procedure.cpp
     function.cpp
     measurable_function.cpp

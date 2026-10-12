@@ -5,7 +5,6 @@
 
 #include "function/function.hpp"
 #include "function/procedure.hpp"
-#include "function/formula.hpp"
 #include "function/constraint.hpp"
 #include "function/function_model.hpp"
 #include "function/function_patch.hpp"
@@ -21,6 +20,7 @@
 #include "geometry/grid_paving.hpp"
 #include "geometry/affine_set.hpp"
 
+#include "symbolic/formula.hpp"
 #include "symbolic/variable.hpp"
 #include "symbolic/space.hpp"
 #include "symbolic/expression.hpp"

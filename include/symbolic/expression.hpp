@@ -46,6 +46,7 @@
 #include "numeric/number.decl.hpp"
 
 #include "numeric/operators.hpp"
+#include "symbolic/formula.decl.hpp"
 #include "symbolic/constant.hpp"
 #include "symbolic/variable.hpp"
 #include "symbolic/valuation.hpp"

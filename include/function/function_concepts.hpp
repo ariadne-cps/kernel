@@ -26,6 +26,8 @@
 #define ARIADNE_FUNCTION_CONCEPTS_HPP
 
 
+#include "symbolic/formula.decl.hpp"
+
 namespace Ariadne {
 
 template<class P, class F> class TaylorModel;

@@ -34,7 +34,7 @@
 #include "symbolic/space.hpp"
 #include "symbolic/valuation.hpp"
 
-#include "function/formula.hpp"
+#include "symbolic/formula.hpp"
 
 namespace Ariadne {
 

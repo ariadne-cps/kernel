@@ -25,6 +25,7 @@
 #ifndef ARIADNE_FUNCTION_MIXIN_HPP
 #define ARIADNE_FUNCTION_MIXIN_HPP
 
+#include "symbolic/formula.decl.hpp"
 #include "function/function_interface.hpp"
 
 // Adaptors for classes to conform to the Function interface.

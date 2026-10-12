@@ -33,6 +33,7 @@
 
 #include "foundation/representation.hpp"
 #include "function/declarations.hpp"
+#include "symbolic/formula.decl.hpp"
 #include "function/function.decl.hpp"
 #include "function/function_traits.hpp"
 

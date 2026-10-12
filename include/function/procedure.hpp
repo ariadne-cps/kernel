@@ -35,6 +35,7 @@
 #include "utility/container.hpp"
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
+#include "symbolic/formula.decl.hpp"
 #include "symbolic/templates.hpp"
 #include "function/function.decl.hpp"
 
@@ -44,7 +45,6 @@ namespace Ariadne {
 
 class MultiIndex;
 template<class I, class X> class Expansion;
-template<class Y> class Formula;
 template<class X> class Graded;
 
 template<class Y> class Procedure;

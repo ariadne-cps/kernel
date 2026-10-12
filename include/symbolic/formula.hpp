@@ -1,5 +1,5 @@
 /***************************************************************************
- *            function/formula.hpp
+ *            symbolic/formula.hpp
  *
  *  Copyright  2008-20  Pieter Collins
  *
@@ -22,7 +22,7 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file function/formula.hpp
+/*! \file symbolic/formula.hpp
  *  \brief Formulae over variables
  */
 
@@ -46,6 +46,7 @@
 #include "algebra/expansion.hpp"
 #include "algebra/operations.hpp"
 
+#include "symbolic/formula.decl.hpp"
 #include "symbolic/templates.hpp"
 #include "symbolic/constant.hpp"
 
@@ -55,7 +56,6 @@ namespace Ariadne {
 template<class A, class X >
 struct DispatchAlgebraOperations;
 
-template<class Y> class Formula;
 typedef Formula<ApproximateNumber> ApproximateFormula;
 typedef Formula<ValidatedNumber> ValidatedFormula;
 typedef Formula<EffectiveNumber> EffectiveFormula;
@@ -102,7 +102,7 @@ template<class Y> struct AlgebraOperations<Formula<Y>,Y> {
         return Formula<Y>::graded(op,f,n); }
 };
 
-//! \ingroup FunctionModule
+//! \ingroup SymbolicModule
 //! \brief A formula defining a real function.
 //!
 //! The Formula class is implemented as a directed acyclic graph, with
@@ -239,7 +239,7 @@ template<class X, class Y> X evaluate(const Formula<Y>& f, const Vector<X>& x);
 
 template<class X, class Y> Vector<X> evaluate(const Vector<Formula<Y>>& f, const Vector<X>& x);
 
-//! \ingroup FunctionModule
+//! \ingroup SymbolicModule
 //! \brief Convert a power-series expansion into a formula using a version of Horner's rule.
 //! See J. M. Pena and T. Sauer, "On the multivariate Horner scheme", SIAM J. Numer. Anal. 37(4) 1186-1197, 2000.
 //!

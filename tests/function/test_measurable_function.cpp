@@ -30,7 +30,7 @@
 #include <stdexcept>
 #include <fenv.h>
 #include "function/measurable_function.hpp"
-#include "function/formula.hpp"
+#include "symbolic/formula.hpp"
 #include "function/symbolic_function.hpp"
 #include "function/taylor_model.hpp"
 #include "algebra/algebra.hpp"

@@ -30,8 +30,8 @@
 #include <stdexcept>
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
-#include "function/formula.hpp"
-#include "function/formula.tpl.hpp"
+#include "symbolic/formula.hpp"
+#include "symbolic/formula.tpl.hpp"
 
 #include "macro/testing.hpp"
 

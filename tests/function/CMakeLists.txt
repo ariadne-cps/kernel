@@ -2,7 +2,6 @@ set(UNIT_TESTS
     test_function
     test_measurable_function
     test_multifunction
-    test_formula
     test_procedure
     test_taylor_function
     test_taylor_model

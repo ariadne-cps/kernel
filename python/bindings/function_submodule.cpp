@@ -38,7 +38,7 @@
 #include "algebra/expansion.inl.hpp"
 #include "algebra/multi_index.hpp"
 #include "algebra/differential.hpp"
-#include "function/formula.hpp"
+#include "symbolic/formula.hpp"
 #include "algebra/polynomial.hpp"
 #include "function/affine.hpp"
 #include "function/taylor_model.hpp"
