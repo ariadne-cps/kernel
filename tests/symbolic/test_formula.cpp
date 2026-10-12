@@ -101,6 +101,25 @@ class TestFormula
         ARIADNE_TEST_ASSERT(identical(cos(x),cos(x)));
         ARIADNE_TEST_ASSERT(identical(pow(x,2),pow(x,2)));
         ARIADNE_TEST_ASSERT(not identical(pow(x,2),pow(x,3)));
+        ARIADNE_TEST_ASSERT(not identical(pow(x,2),pow(y,2)));
+        ARIADNE_TEST_ASSERT(not identical(sin(x),cos(x)));
+        ARIADNE_TEST_ASSERT(not identical(x+y,x-y));
+        ARIADNE_TEST_ASSERT(not identical(x,two));
+
+        EffectiveFormula scalar_add=EffectiveFormula::scalar(
+            BinaryElementaryOperator(Add::code()),EffectiveNumber(2),x);
+        EffectiveFormula scalar_add_same=EffectiveFormula::scalar(
+            BinaryElementaryOperator(Add::code()),EffectiveNumber(2),x);
+        EffectiveFormula scalar_add_constant=EffectiveFormula::scalar(
+            BinaryElementaryOperator(Add::code()),EffectiveNumber(3),x);
+        EffectiveFormula scalar_add_argument=EffectiveFormula::scalar(
+            BinaryElementaryOperator(Add::code()),EffectiveNumber(2),y);
+        EffectiveFormula scalar_mul=EffectiveFormula::scalar(
+            BinaryElementaryOperator(Mul::code()),EffectiveNumber(2),x);
+        ARIADNE_TEST_ASSERT(identical(scalar_add,scalar_add_same));
+        ARIADNE_TEST_ASSERT(not identical(scalar_add,scalar_add_constant));
+        ARIADNE_TEST_ASSERT(not identical(scalar_add,scalar_add_argument));
+        ARIADNE_TEST_ASSERT(not identical(scalar_add,scalar_mul));
 
         Vector<EffectiveFormula> same_a({x,y});
         Vector<EffectiveFormula> same_b({x,y});
@@ -117,6 +136,8 @@ class TestFormula
         EffectiveFormula substituted = substitute(f,1,s);
         ARIADNE_TEST_PRINT(substituted);
         ARIADNE_TEST_ASSERT(identical(substituted,x+cos(pow(x,2))));
+        ARIADNE_TEST_ASSERT(identical(substitute(x,0,two),two));
+        ARIADNE_TEST_ASSERT(identical(substitute(x,1,two),x));
 
         Vector<EffectiveFormula> f_v({sqrt(pow(x,2)+pow(y,2)), atan(y/x)});
         List<Pair<Nat,EffectiveFormula>> s_v({{0,x+2},{1,y-1}});
