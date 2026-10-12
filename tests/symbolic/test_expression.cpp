@@ -825,7 +825,7 @@ class TestExpression {
         Constant<RealVector> vector_constant_b(Identifier("vc"),RealVector({1,2}));
         Constant<RealVector> vector_constant_c(Identifier("vc"),RealVector({1,3}));
         Constant<RealVector> vector_constant_d(Identifier("vd"),RealVector({1,2}));
-        Constant<RealVector> vector_constant_short(Identifier("vc"),RealVector({1}));
+        Constant<RealVector> vector_constant_short(Identifier("vc"),RealVector{1});
         RealVectorExpression vector_expression_a(vector_constant_a);
         RealVectorExpression vector_expression_b(vector_constant_b);
         RealVectorExpression vector_expression_c(vector_constant_c);
