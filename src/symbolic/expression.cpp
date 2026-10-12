@@ -45,6 +45,9 @@ String evaluate(const Expression<String>& e, const Map<Identifier,Integer>& x);
 
 namespace Ariadne {
 
+Expression<String>::Expression(const String& c)
+    : _root(new ExpressionNode<String>(Constant<String>(c))) { }
+
 String evaluate(const Expression<String>& e, const Map<Identifier,Integer>& x) {
     return e.node_ref().accept([&x](auto en){return evaluate_as<String>(en,x);});
 }
