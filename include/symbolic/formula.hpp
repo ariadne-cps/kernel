@@ -121,7 +121,6 @@ class Formula
   private:
     explicit Formula(const FormulaNode<Y>* fptr, PointerTag) : _root(fptr) { }
 //    explicit Formula(counted_pointer<const FormulaNode<Y>> fptr, PointerTag) : _root(fptr) { }
-    explicit Formula(SharedPointer<const FormulaNode<Y>> fptr, PointerTag) : _root(fptr) { }
   public:
     //! \brief Construct the constant expression with the default value of \a Y.
     Formula();
