@@ -563,7 +563,7 @@ class TestExpression {
         ARIADNE_TEST_BINARY_PREDICATE(
             identical,indicator(ContinuousPredicate(false),Sign::POSITIVE),RealExpression(-1));
         ARIADNE_TEST_BINARY_PREDICATE(
-            identical,indicator(ContinuousPredicate(Kleenean()),Sign::POSITIVE),RealExpression(0));
+            identical,indicator(ContinuousPredicate(Kleenean(indeterminate)),Sign::POSITIVE),RealExpression(0));
         KleeneanVariable indicator_variable("indicator_variable");
         ARIADNE_TEST_FAIL((void)indicator(ContinuousPredicate(indicator_variable),Sign::POSITIVE));
         ARIADNE_TEST_FAIL((void)indicator(RealExpression(x)==RealExpression(y),Sign::POSITIVE));
