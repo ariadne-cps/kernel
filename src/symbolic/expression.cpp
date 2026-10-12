@@ -474,9 +474,9 @@ Bool opposite(Expression<Kleenean> e1, Expression<Kleenean> e2) {
 
     if (e1cp && e2cp) {
         if (identical(e1cp->op(),e2cp->op())) {
-            return identical(e1.arg1(),e2.arg2()) && identical(e1.arg2(),e2.arg1());
+            return identical(e1cp->arg1(),e2cp->arg2()) && identical(e1cp->arg2(),e2cp->arg1());
         } else if (opposite(e1cp->op(),e2cp->op())) {
-            return identical(e1.arg1(),e2.arg1()) && identical(e1.arg2(),e2.arg2());
+            return identical(e1cp->arg1(),e2cp->arg1()) && identical(e1cp->arg2(),e2cp->arg2());
         }
     }
     return false;
