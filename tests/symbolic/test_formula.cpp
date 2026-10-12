@@ -60,7 +60,7 @@ class TestFormula
         EffectiveFormula default_formula;
         ARIADNE_TEST_ASSERT(is_constant(default_formula));
         ARIADNE_TEST_EQUALS(default_formula.code(),Cnst::code());
-        ARIADNE_TEST_EQUALS(x.kind(),OperatorKind::COORDINATE);
+        ARIADNE_TEST_EQUALS(x.kind(),OperatorKind::VARIABLE);
         ARIADNE_TEST_EQUALS(Nat(x.ind()),0u);
 
         EffectiveFormula unary=neg(x);
@@ -89,7 +89,7 @@ class TestFormula
 
         std::ostringstream univariate_stream;
         EffectiveFormula::_write_univariate(univariate_stream,Vector<EffectiveFormula>({x,x+two}));
-        ARIADNE_TEST_EQUALS(univariate_stream.str(),"[x,x+2]");
+        ARIADNE_TEST_EQUALS(univariate_stream.str(),"[x,x+2.]");
     }
 
     Void test_identical() {
