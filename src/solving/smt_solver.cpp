@@ -1605,6 +1605,9 @@ struct SmtParallelTask {
 
         {
             std::lock_guard<std::mutex> lock(state->mutex);
+            if(state->limit_reached.load()) {
+                return;
+            }
             if(state->statistics.boxes_processed>=
                     solver._configuration.box_processing_limit()) {
                 ++state->statistics.box_budget_exhaustions;

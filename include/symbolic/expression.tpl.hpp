@@ -174,7 +174,7 @@ template<class T> Expression<T>::Expression(const T& c) : Expression(Constant<T>
 template<class T> Expression<T>::Expression(const Constant<T>& c) : _root(new ExpressionNode<T>(c)) { }
 template<class T> Expression<T>::Expression(const Variable<T>& v) : _root(new ExpressionNode<T>(v)) { }
 
-template<> Expression<String>::Expression(const String& c): _root(new ExpressionNode<String>(Constant<String>(c))) { }
+template<> inline Expression<String>::Expression(const String& c): _root(new ExpressionNode<String>(Constant<String>(c))) { }
 
 template<class T> Expression<T> Expression<T>::constant(const T& c) {
     return Expression<T>(c); }
