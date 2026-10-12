@@ -811,6 +811,7 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not identical(sin(RealExpression(x)),cos(RealExpression(x))));
         ARIADNE_TEST_ASSERT(not identical(sin(RealExpression(x)),sin(RealExpression(y))));
         ARIADNE_TEST_ASSERT(not identical(RealExpression(x)+RealExpression(y),RealExpression(x)-RealExpression(y)));
+        ARIADNE_TEST_ASSERT(not identical(RealExpression(x)+RealExpression(y),RealExpression(x)+RealExpression(x)));
         ARIADNE_TEST_ASSERT(not identical(pow(RealExpression(x),2),pow(RealExpression(y),2)));
         ARIADNE_TEST_ASSERT(not identical(pow(RealExpression(x),2),pow(RealExpression(x),3)));
         RealVectorExpression identical_vector({x,y});
@@ -837,6 +838,12 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not identical(vector_expression_a,vector_expression_c));
         ARIADNE_TEST_ASSERT(not identical(vector_expression_a,vector_expression_d));
         ARIADNE_TEST_ASSERT(not identical(vector_expression_a,vector_expression_short));
+
+        RealExpression named_constant_a=RealExpression::constant(RealConstant("a",Real(2)));
+        RealExpression named_constant_same_name=RealExpression::constant(RealConstant("a",Real(3)));
+        RealExpression named_constant_other_name=RealExpression::constant(RealConstant("b",Real(2)));
+        ARIADNE_TEST_ASSERT(not identical(named_constant_a,named_constant_same_name));
+        ARIADNE_TEST_ASSERT(not identical(named_constant_a,named_constant_other_name));
     }
 
     Void test_derivative() {

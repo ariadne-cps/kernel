@@ -107,6 +107,10 @@ class TestFormula
         ARIADNE_TEST_ASSERT(not identical(x+y,x-y));
         ARIADNE_TEST_ASSERT(not identical(x+y,x+x));
         ARIADNE_TEST_ASSERT(not identical(x,two));
+        ARIADNE_TEST_ASSERT(not identical(two,x));
+        ARIADNE_TEST_ASSERT(not identical(sin(x),x));
+        ARIADNE_TEST_ASSERT(not identical(x+y,x));
+        ARIADNE_TEST_ASSERT(not identical(pow(x,2),x));
 
         EffectiveFormula scalar_add=EffectiveFormula::scalar(
             BinaryElementaryOperator(Add::code()),EffectiveNumber(2),x);
@@ -122,6 +126,7 @@ class TestFormula
         ARIADNE_TEST_ASSERT(not identical(scalar_add,scalar_add_constant));
         ARIADNE_TEST_ASSERT(not identical(scalar_add,scalar_add_argument));
         ARIADNE_TEST_ASSERT(not identical(scalar_add,scalar_mul));
+        ARIADNE_TEST_ASSERT(not identical(scalar_add,x));
 
         Vector<EffectiveFormula> same_a({x,y});
         Vector<EffectiveFormula> same_b({x,y});
