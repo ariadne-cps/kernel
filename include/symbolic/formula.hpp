@@ -246,6 +246,7 @@ template<class X, class Y> Vector<X> evaluate(const Vector<Formula<Y>>& f, const
 template<class X> Formula<X> formula(const Expansion<MultiIndex,X>& e);
 
 template<class Y> Formula<Y> substitute(const Formula<Y>& a, const Nat& i, const Formula<Y>& is);
+extern template Formula<EffectiveNumber> substitute(const Formula<EffectiveNumber>& a, const Nat& i, const Formula<EffectiveNumber>& is);
 
 template<class Y> Formula<Y> substitute(const Formula<Y>& a, const Nat& i, const Y& c) {
     return substitute(a,i,Formula<Y>::constant(c)); }
