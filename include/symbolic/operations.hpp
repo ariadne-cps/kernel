@@ -35,6 +35,7 @@
 
 #include "utility/typedefs.hpp"
 #include "numeric/concepts.hpp"
+#include "symbolic/formula.decl.hpp"
 
 namespace Ariadne {
 
@@ -47,7 +48,6 @@ template<class LHS,class RHS> class Assignment;
 
 template<class X> class Vector;
 template<class X> class Matrix;
-template<class X> class Formula;
 template<class X> class Algebra;
 
 using RealVector = Vector<Real>;

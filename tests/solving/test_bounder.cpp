@@ -27,7 +27,7 @@
 #include <sstream>
 #include <string>
 #include "solving/bounder.hpp"
-#include "function/formula.hpp"
+#include "symbolic/formula.hpp"
 #include "function/taylor_model.hpp"
 
 #include "macro/testing.hpp"

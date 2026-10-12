@@ -46,7 +46,7 @@
 #include "function/function_model_mixin.hpp"
 
 // FIXME: Added to prevent compilation error in Clang++-5.0. Should not be necessary.
-#include "function/formula.hpp"
+#include "symbolic/formula.hpp"
 
 namespace Ariadne {
 

@@ -28,8 +28,8 @@
 #include "numeric/operators.hpp"
 #include "algebra/algebra.hpp"
 #include "function/taylor_model.hpp"
-#include "function/formula.hpp"
-#include "function/formula.tpl.hpp"
+#include "symbolic/formula.hpp"
+#include "symbolic/formula.tpl.hpp"
 #include "function/function.hpp"
 
 #include "function/symbolic_function.hpp"

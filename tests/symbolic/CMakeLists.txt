@@ -1,6 +1,7 @@
 set(UNIT_TESTS
     test_expression
     test_expression_set
+    test_formula
 )
 foreach(TEST ${UNIT_TESTS})
     add_executable(${TEST} ${TEST}.cpp)

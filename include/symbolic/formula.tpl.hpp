@@ -175,7 +175,7 @@ template<class Y, class J> decltype(auto) derivative(IndexFormulaNode<Y> const& 
 
 
 
-//! \ingroup FunctionModule
+//! \ingroup SymbolicModule
 //! \brief Convert a power-series expansion into a formula using a version of Horner's rule.
 //! See J. M. Pena and T. Sauer, "On the multivariate Horner scheme", SIAM J. Numer. Anal. 37(4) 1186-1197, 2000.
 //!

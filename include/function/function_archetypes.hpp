@@ -26,6 +26,8 @@
 #define ARIADNE_FUNCTION_ARCHETYPES_HPP
 
 
+#include "symbolic/formula.decl.hpp"
+
 namespace Ariadne {
 
 template<class P, class SIG> class FunctionArchetype;

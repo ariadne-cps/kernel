@@ -47,7 +47,7 @@
 #include "algebra/differential.hpp"
 #include "algebra/algebra.hpp"
 #include "function/domain.hpp"
-#include "function/formula.hpp"
+#include "symbolic/formula.hpp"
 
 namespace Ariadne {
 

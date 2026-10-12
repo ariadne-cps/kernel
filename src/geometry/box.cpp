@@ -34,7 +34,7 @@
 #include "box.hpp"
 #include "box.tpl.hpp"
 
-#include "function/formula.hpp"
+#include "symbolic/formula.hpp"
 
 #include "algebra/algebra.hpp"
 

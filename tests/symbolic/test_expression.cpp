@@ -31,7 +31,7 @@
 #include "symbolic/assignment.hpp"
 #include "symbolic/valuation.hpp"
 #include "symbolic/space.hpp"
-#include "function/formula.hpp"
+#include "symbolic/formula.hpp"
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
 #include "function/taylor_model.hpp"
@@ -626,6 +626,9 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(is_affine_in(literal_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(unary_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(binary_vector,{x,y}));
+        RealVectorExpression nonlinear_vector({sqr(RealExpression(x)),sqr(RealExpression(y))});
+        ARIADNE_TEST_ASSERT(not is_affine_in(nonlinear_vector+constant_vector,{x,y}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(constant_vector+nonlinear_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(scaled_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(divided_vector,{x,y}));
 
@@ -725,7 +728,9 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(to_string(sub(sub(x,y),z)),"x-y-z");
         ARIADNE_TEST_EQUALS(to_string(add(mul(x,y),z)),"x*y+z");
         ARIADNE_TEST_EQUALS(to_string(mul(add(x,y),z)),"(x+y)*z");
+        ARIADNE_TEST_EQUALS(to_string(mul(sub(x,y),z)),"(x-y)*z");
         ARIADNE_TEST_EQUALS(to_string(div(x,div(y,z))),"x/(y/z)");
+        ARIADNE_TEST_EQUALS(to_string(div(x,sub(y,z))),"x/(y-z)");
         ARIADNE_TEST_EQUALS(to_string(div(div(x,y),z)),"x/y/z");
         ARIADNE_TEST_EQUALS(to_string(sub(x,div(y,z))),"x-y/z");
         ARIADNE_TEST_EQUALS(to_string(sub(div(x,y),z)),"x/y-z");
@@ -809,6 +814,7 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not identical(sin(RealExpression(x)),cos(RealExpression(x))));
         ARIADNE_TEST_ASSERT(not identical(sin(RealExpression(x)),sin(RealExpression(y))));
         ARIADNE_TEST_ASSERT(not identical(RealExpression(x)+RealExpression(y),RealExpression(x)-RealExpression(y)));
+        ARIADNE_TEST_ASSERT(not identical(RealExpression(x)+RealExpression(y),RealExpression(x)+RealExpression(x)));
         ARIADNE_TEST_ASSERT(not identical(pow(RealExpression(x),2),pow(RealExpression(y),2)));
         ARIADNE_TEST_ASSERT(not identical(pow(RealExpression(x),2),pow(RealExpression(x),3)));
         RealVectorExpression identical_vector({x,y});
@@ -825,7 +831,7 @@ class TestExpression {
         Constant<RealVector> vector_constant_b(Identifier("vc"),RealVector({1,2}));
         Constant<RealVector> vector_constant_c(Identifier("vc"),RealVector({1,3}));
         Constant<RealVector> vector_constant_d(Identifier("vd"),RealVector({1,2}));
-        Constant<RealVector> vector_constant_short(Identifier("vc"),RealVector({1}));
+        Constant<RealVector> vector_constant_short(Identifier("vc"),RealVector{1});
         RealVectorExpression vector_expression_a(vector_constant_a);
         RealVectorExpression vector_expression_b(vector_constant_b);
         RealVectorExpression vector_expression_c(vector_constant_c);
@@ -835,6 +841,18 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(not identical(vector_expression_a,vector_expression_c));
         ARIADNE_TEST_ASSERT(not identical(vector_expression_a,vector_expression_d));
         ARIADNE_TEST_ASSERT(not identical(vector_expression_a,vector_expression_short));
+
+        RealExpression named_constant_a=RealExpression::constant(RealConstant("a",Real(2)));
+        RealExpression named_constant_same_name=RealExpression::constant(RealConstant("a",Real(3)));
+        RealExpression named_constant_other_name=RealExpression::constant(RealConstant("b",Real(2)));
+        ARIADNE_TEST_ASSERT(not identical(named_constant_a,named_constant_same_name));
+        ARIADNE_TEST_ASSERT(not identical(named_constant_a,named_constant_other_name));
+
+        KleeneanExpression kleenean_named_true_a(Constant<Kleenean>(Identifier("ka"),Kleenean(true)));
+        KleeneanExpression kleenean_named_false_a(Constant<Kleenean>(Identifier("ka"),Kleenean(false)));
+        KleeneanExpression kleenean_named_true_b(Constant<Kleenean>(Identifier("kb"),Kleenean(true)));
+        ARIADNE_TEST_ASSERT(not identical(kleenean_named_true_a,kleenean_named_false_a));
+        ARIADNE_TEST_ASSERT(not identical(kleenean_named_true_a,kleenean_named_true_b));
     }
 
     Void test_derivative() {
@@ -914,6 +932,10 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(simplify(KleeneanExpression(true)&&pe));
         ARIADNE_TEST_EXECUTE(simplify(KleeneanExpression(true)||pe));
         ARIADNE_TEST_EXECUTE(simplify(KleeneanExpression(false)||pe));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pe&&KleeneanExpression(true)),pe);
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pe&&KleeneanExpression(false)),KleeneanExpression(false));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pe||KleeneanExpression(false)),pe);
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pe||KleeneanExpression(true)),KleeneanExpression(true));
         ARIADNE_TEST_EXECUTE(simplify(!( !pe )));
         ARIADNE_TEST_EXECUTE(simplify(pe&&qe));
         ARIADNE_TEST_EXECUTE(simplify(pe||qe));
@@ -1205,7 +1227,9 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(is_affine_in(pow(RealExpression(x),0),{x}));
         ARIADNE_TEST_ASSERT(is_affine_in(pow(RealExpression(x),1),{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(RealExpression(y)+sqr(RealExpression(x)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(sqr(RealExpression(x))+RealExpression(y),{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(RealExpression(y)-sqr(RealExpression(x)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(sqr(RealExpression(x))-RealExpression(y),{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(sqr(RealExpression(x))*RealExpression(2),{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(RealExpression(2)*sqr(RealExpression(x)),{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(sqr(RealExpression(x))/RealExpression(2),{x}));
@@ -1256,8 +1280,11 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(is_polynomial_in((x+y)*(x-y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(x/(x+y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(RealExpression(y)+sin(RealExpression(x)),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(sin(RealExpression(x))+RealExpression(y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(RealExpression(y)-sin(RealExpression(x)),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(sin(RealExpression(x))-RealExpression(y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(RealExpression(y)*sin(RealExpression(x)),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(sin(RealExpression(x))*RealExpression(y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(sin(RealExpression(x))/RealExpression(2),{x}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(max(RealExpression(2),RealExpression(x)),{x}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(min(RealExpression(x),RealExpression(2)),{x}))

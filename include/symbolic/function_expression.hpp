@@ -34,7 +34,7 @@
 #include "symbolic/space.hpp"
 
 #include "function/function.hpp"
-#include "function/formula.hpp"
+#include "symbolic/formula.hpp"
 #include "function/function_model.hpp"
 #include "function/taylor_function.hpp"
 
