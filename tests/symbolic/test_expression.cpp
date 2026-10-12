@@ -497,6 +497,88 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(evaluate(IntegerExpression(Integer(5)),integer_map),Integer(5));
     }
 
+    Void test_expression_cpp_coverage() {
+        BooleanVariable boolean_a("boolean_a"), boolean_b("boolean_b");
+        BooleanExpression boolean_ea(boolean_a), boolean_eb(boolean_b);
+        ARIADNE_TEST_EXECUTE(boolean_ea||boolean_eb);
+
+        StringVariable string_variable("source_string");
+        ARIADNE_TEST_EXECUTE(string_variable!=String("value"));
+
+        IntegerVariable integer_a("integer_a"), integer_b("integer_b");
+        IntegerExpression integer_ea(integer_a), integer_eb(integer_b);
+        ARIADNE_TEST_EXECUTE(+integer_ea);
+        ARIADNE_TEST_EXECUTE(-integer_ea);
+        ARIADNE_TEST_EXECUTE(integer_ea+integer_eb);
+        ARIADNE_TEST_EXECUTE(integer_ea-integer_eb);
+        ARIADNE_TEST_EXECUTE(integer_ea*integer_eb);
+        ARIADNE_TEST_EXECUTE(integer_ea==integer_eb);
+        ARIADNE_TEST_EXECUTE(integer_ea!=integer_eb);
+        ARIADNE_TEST_EXECUTE(integer_ea>=integer_eb);
+        ARIADNE_TEST_EXECUTE(integer_ea<=integer_eb);
+        ARIADNE_TEST_EXECUTE(integer_ea>integer_eb);
+        ARIADNE_TEST_EXECUTE(integer_ea<integer_eb);
+
+        IntegerExpression integer_accumulator(integer_a);
+        integer_accumulator+=integer_eb;
+        integer_accumulator-=integer_eb;
+        integer_accumulator*=integer_eb;
+
+        RealExpression real_accumulator(x);
+        real_accumulator+=RealExpression(y);
+        real_accumulator-=RealExpression(y);
+        real_accumulator*=RealExpression(y);
+        real_accumulator/=RealExpression(y);
+
+        ContinuousPredicate ge=RealExpression(x)>=RealExpression(y);
+        ContinuousPredicate reverse_ge=RealExpression(y)>=RealExpression(x);
+        ContinuousPredicate le=RealExpression(x)<=RealExpression(y);
+        ContinuousPredicate unrelated=RealExpression(x)>=RealExpression(z);
+        ARIADNE_TEST_ASSERT(opposite(ge,reverse_ge));
+        ARIADNE_TEST_ASSERT(opposite(ge,le));
+        ARIADNE_TEST_ASSERT(not opposite(ge,unrelated));
+        ARIADNE_TEST_ASSERT(not opposite(sgn(RealExpression(x)),ge));
+
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,indicator(ge,Sign::POSITIVE),RealExpression(x)-RealExpression(y));
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,indicator(ge,Sign::NEGATIVE),RealExpression(y)-RealExpression(x));
+        ARIADNE_TEST_EXECUTE(indicator(RealExpression(x)>RealExpression(y),Sign::POSITIVE));
+        ARIADNE_TEST_EXECUTE(indicator(RealExpression(x)<=RealExpression(y),Sign::POSITIVE));
+        ARIADNE_TEST_EXECUTE(indicator(RealExpression(x)<RealExpression(y),Sign::POSITIVE));
+        ARIADNE_TEST_EXECUTE(indicator(ge&&(RealExpression(y)>=RealExpression(z)),Sign::POSITIVE));
+        ARIADNE_TEST_EXECUTE(indicator(ge||(RealExpression(y)>=RealExpression(z)),Sign::POSITIVE));
+        ARIADNE_TEST_EXECUTE(indicator(!ge,Sign::POSITIVE));
+        ARIADNE_TEST_EXECUTE(indicator(sgn(RealExpression(x)),Sign::NEGATIVE));
+        ARIADNE_TEST_FAIL((void)indicator(RealExpression(x)==RealExpression(y),Sign::POSITIVE));
+        ARIADNE_TEST_FAIL((void)indicator(RealExpression(x)!=RealExpression(y),Sign::POSITIVE));
+
+        Vector<RealExpression> affine_vector({x,y});
+        Vector<RealExpression> nonaffine_vector({sqr(x),y});
+        ARIADNE_TEST_ASSERT(is_affine_in(affine_vector,{x,y}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(nonaffine_vector,{x,y}));
+
+        RealVector constant_values({1,2});
+        RealVectorExpression constant_vector(constant_values);
+        RealVariables vector_variables("affine",2u);
+        RealVectorExpression variable_list(vector_variables);
+        RealVectorVariable vector_variable("affine_vector",2u);
+        RealVectorExpression vector_variable_expression(vector_variable);
+        RealVectorExpression literal_vector({x,y});
+        RealVectorExpression unary_vector=neg(literal_vector);
+        RealVectorExpression binary_vector=literal_vector+constant_vector;
+        RealVectorExpression scaled_vector=RealExpression(2)*literal_vector;
+        RealVectorExpression divided_vector=literal_vector/RealExpression(2);
+        ARIADNE_TEST_EXECUTE(is_affine_in(constant_vector,{x,y}));
+        ARIADNE_TEST_EXECUTE(is_affine_in(variable_list,{vector_variables[0]}));
+        ARIADNE_TEST_EXECUTE(is_affine_in(vector_variable_expression,{vector_variable[0]}));
+        ARIADNE_TEST_EXECUTE(is_affine_in(literal_vector,{x,y}));
+        ARIADNE_TEST_EXECUTE(is_affine_in(unary_vector,{x,y}));
+        ARIADNE_TEST_EXECUTE(is_affine_in(binary_vector,{x,y}));
+        ARIADNE_TEST_EXECUTE(is_affine_in(scaled_vector,{x,y}));
+        ARIADNE_TEST_EXECUTE(is_affine_in(divided_vector,{x,y}));
+    }
+
     Void test_expression() {
         auto writer=RealExpression::default_writer();
         RealExpression::set_default_writer(writer);
@@ -1108,6 +1190,7 @@ class TestExpression {
         ARIADNE_TEST_CALL(test_valuations());
         ARIADNE_TEST_CALL(test_templates());
         ARIADNE_TEST_CALL(test_scalar_expression_templates());
+        ARIADNE_TEST_CALL(test_expression_cpp_coverage());
         ARIADNE_TEST_CALL(test_expression());
         ARIADNE_TEST_CALL(test_write());
         ARIADNE_TEST_CALL(test_assignment());

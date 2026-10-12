@@ -245,33 +245,6 @@ Expression<Real> Expression<RealVector>::get(SizeType i) const {
     return make_expression<Real>(OperatorType<Real(RealVector,SizeType)>(Get()),*this,i); }
 Set<UntypedVariable> Expression<RealVector>::arguments() const {
     return this->node_ref().accept([](auto s){return _arguments(s);}); }
-Expression<RealVector> nul(Expression<RealVector> e) {
-    return make_expression<RealVector>(Nul(),e); }
-Expression<RealVector> pos(Expression<RealVector> e) {
-    return make_expression<RealVector>(Pos(),e); }
-Expression<RealVector> neg(Expression<RealVector> e) {
-    return make_expression<RealVector>(Neg(),e); }
-Expression<RealVector> add(Expression<RealVector> e1, Expression<RealVector> e2) {
-    return make_expression<RealVector>(Add(),e1,e2); }
-Expression<RealVector> sub(Expression<RealVector> e1, Expression<RealVector> e2) {
-    return make_expression<RealVector>(Sub(),e1,e2); }
-Expression<RealVector> mul(Expression<Real> e1, Expression<RealVector> e2) {
-    return make_expression<RealVector>(Mul(),e1,e2); }
-Expression<RealVector> mul(Expression<RealVector> e1, Expression<Real> e2) {
-    return make_expression<RealVector>(Mul(),e1,e2); }
-Expression<RealVector> div(Expression<RealVector> e1, Expression<Real> e2) {
-    return make_expression<RealVector>(Div(),e1,e2); }
-Expression<RealVector> operator+(Expression<RealVector> e1, Expression<RealVector> e2) {
-    return make_expression<RealVector>(Add(),e1,e2); }
-Expression<RealVector> operator-(Expression<RealVector> e1, Expression<RealVector> e2) {
-    return make_expression<RealVector>(Sub(),e1,e2); }
-Expression<RealVector> operator*(Expression<Real> e1, Expression<RealVector> e2) {
-    return make_expression<RealVector>(Mul(),e1,e2); }
-Expression<RealVector> operator*(Expression<RealVector> e1, Expression<Real> e2) {
-    return make_expression<RealVector>(Mul(),e1,e2); }
-Expression<RealVector> operator/(Expression<RealVector> e1, Expression<Real> e2) {
-    return make_expression<RealVector>(Div(),e1,e2); }
-
 OutputStream& Expression<RealVector>::_write(OutputStream& os) const {
     auto writer=OperationExpressionWriter(); return os << writer(*this); }
 
