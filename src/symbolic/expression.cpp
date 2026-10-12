@@ -406,8 +406,8 @@ inline Bool _is_additive_in(RVcr, RVcr) { return true; }
 template<class OP> inline Bool _is_additive_in(Symbolic<OP,RE> const&, RVcr) { return false; }
 template<class OP> inline Bool _is_additive_in(Symbolic<OP,RE,RE> const& e, RVcr var) { return _is_additive_in_impl(e._op,e._arg1,e._arg2,var); }
 template<class OP> requires AGraded<OP> inline Bool _is_additive_in(Symbolic<OP,RE,Int> const&, RVcr) { return false; }
-template<class OP> requires AGetter<OP> inline Bool _is_additive_in(Symbolic<OP,Expression<RealVector>,SizeType> const&, RVcr) {
-    ARIADNE_NOT_IMPLEMENTED; }
+template<class OP> requires AGetter<OP> inline Bool _is_additive_in(Symbolic<OP,Expression<RealVector>,SizeType> const& s, RVcr var) {
+    return is_additive_in(simplify_component(s.vec(),s.ind()),var); }
 }
 
 Bool is_additive_in(const Expression<Real>& e, const Variable<Real>& var) {
@@ -423,7 +423,6 @@ Bool is_additive_in(const Vector<Expression<Real>>& ev, const Set<Variable<Real>
 
     for (auto v : spc) {
         Bool already_found = false;
-        Bool already_found_one = false;
         for (auto i : range(ev.size())) {
             const Expression<Real>& e = ev[i];
             auto der = simplify(derivative(e, v));
@@ -432,13 +431,7 @@ Bool is_additive_in(const Vector<Expression<Real>>& ev, const Set<Variable<Real>
                     return false;
                 } else {
                     already_found = true;
-                    if (is_additive_in(e,v)) {
-                        if (already_found_one) {
-                            return false;
-                        } else {
-                            already_found_one = true;
-                        }
-                    } else {
+                    if (not is_additive_in(e,v)) {
                         return false;
                     }
                 }
@@ -452,19 +445,18 @@ template<class T> Writer<Expression<T>> Expression<T>::_default_writer = Writer<
 
 namespace {
 
-template<class OP> constexpr Bool _identical(OP,OP) { return true; }
-template<class OP1, class OP2> constexpr Bool _identical(OP1,OP2) { return false; }
-
-constexpr Bool _opposite(Geq,Leq) { return true; }
-constexpr Bool _opposite(Leq,Geq) { return true; }
-constexpr Bool _opposite(Gtr,Less) { return true; }
-constexpr Bool _opposite(Less,Gtr) { return true; }
-template<class OP1, class OP2> constexpr Bool _opposite(OP1,OP2) { return false; }
-
 Bool opposite(BinaryComparisonOperator ops1, BinaryComparisonOperator ops2) {
-    return ops1.accept([&ops2](auto op1){return ops2.accept([&op1](auto op2){return _opposite(op1,op2);});}); }
+    OperatorCode c1=ops1.code();
+    OperatorCode c2=ops2.code();
+    if(c1==OperatorCode::GEQ) { return c2==OperatorCode::LEQ; }
+    if(c1==OperatorCode::LEQ) { return c2==OperatorCode::GEQ; }
+    if(c1==OperatorCode::GT) { return c2==OperatorCode::LT; }
+    if(c1==OperatorCode::LT) { return c2==OperatorCode::GT; }
+    return false;
+}
 Bool identical(BinaryComparisonOperator ops1, BinaryComparisonOperator ops2) {
-    return ops1.accept([&ops2](auto op1){return ops2.accept([&op1](auto op2){return _identical(op1,op2);});}); }
+    return ops1.code()==ops2.code();
+}
 }
 
 
@@ -565,11 +557,12 @@ Formula<Y> _convert_expression_node(
 
 template<class SPC>
 Formula<Y> _convert_expression_node(
-    const SymbolicType<Real(RealVector,SizeType)>&,
-    const SPC&,
-    FormulaSharingCache&)
+    const SymbolicType<Real(RealVector,SizeType)>& e,
+    const SPC& variable_indices,
+    FormulaSharingCache& sharing_cache)
 {
-    ARIADNE_NOT_IMPLEMENTED;
+    return _make_formula_preserving_sharing(
+        simplify_component(e.vec(),e.ind()),variable_indices,sharing_cache);
 }
 
 const Formula<EffectiveNumber>& _make_formula_preserving_sharing(

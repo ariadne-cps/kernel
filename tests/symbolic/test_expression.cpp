@@ -541,6 +541,10 @@ class TestExpression {
         ContinuousPredicate lt=RealExpression(x)<RealExpression(y);
         ARIADNE_TEST_ASSERT(opposite(gt,lt));
         ARIADNE_TEST_ASSERT(opposite(lt,gt));
+        ARIADNE_TEST_ASSERT(not opposite(ge,gt));
+        ARIADNE_TEST_ASSERT(not opposite(le,lt));
+        ARIADNE_TEST_ASSERT(not opposite(gt,ge));
+        ARIADNE_TEST_ASSERT(not opposite(lt,le));
         ARIADNE_TEST_ASSERT(not opposite(ge,unrelated));
         ARIADNE_TEST_ASSERT(not opposite(
             RealExpression(x)==RealExpression(y),
@@ -562,6 +566,8 @@ class TestExpression {
             identical,indicator(ContinuousPredicate(true),Sign::POSITIVE),RealExpression(1));
         ARIADNE_TEST_BINARY_PREDICATE(
             identical,indicator(ContinuousPredicate(false),Sign::POSITIVE),RealExpression(-1));
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,indicator(ContinuousPredicate(true),Sign::NEGATIVE),RealExpression(-1));
         ARIADNE_TEST_BINARY_PREDICATE(
             identical,indicator(ContinuousPredicate(Kleenean(indeterminate)),Sign::POSITIVE),RealExpression(0));
         KleeneanVariable indicator_variable("indicator_variable");
@@ -629,6 +635,30 @@ class TestExpression {
         RealValuation source_valuation({x=Real(2)});
         ARIADNE_TEST_EQUAL(
             evaluate(function_expression,source_valuation),Real(3));
+
+        IntegerValuation integer_only_valuation;
+        ARIADNE_TEST_EXECUTE(evaluate(
+            StringExpression(String("left"))==StringExpression(String("left")),
+            integer_only_valuation));
+
+        RealVectorExpression helper_vector({x,y});
+        RealVectorExpression helper_other({y,z});
+        ARIADNE_TEST_EXECUTE(nul(helper_vector));
+        ARIADNE_TEST_EXECUTE(add(helper_vector,helper_other));
+        ARIADNE_TEST_EXECUTE(sub(helper_vector,helper_other));
+        ARIADNE_TEST_EXECUTE(mul(RealExpression(2),helper_vector));
+        ARIADNE_TEST_EXECUTE(mul(helper_vector,RealExpression(2)));
+        ARIADNE_TEST_EXECUTE(div(helper_vector,RealExpression(2)));
+
+        ARIADNE_TEST_ASSERT(is_additive_in(helper_vector[0],x));
+        ARIADNE_TEST_EXECUTE(derivative(helper_vector[0],x));
+        ARIADNE_TEST_EXECUTE(make_formula(helper_vector[0],RealSpace({x,y})));
+
+        ARIADNE_TEST_ASSERT(not is_additive_in(RealExpression(x)+RealExpression(x),x));
+        ARIADNE_TEST_ASSERT(is_additive_in(RealExpression(y)+RealExpression(x),x));
+        ARIADNE_TEST_ASSERT(not is_additive_in(pow(RealExpression(x),2)+RealExpression(y),x));
+        ARIADNE_TEST_ASSERT(not is_additive_in(RealExpression(x)-RealExpression(x),x));
+        ARIADNE_TEST_ASSERT(not is_additive_in(pow(RealExpression(x),2)-RealExpression(y),x));
     }
 
     Void test_expression() {
