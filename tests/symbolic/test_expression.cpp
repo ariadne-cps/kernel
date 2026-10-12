@@ -550,6 +550,19 @@ class TestExpression {
             RealExpression(x)==RealExpression(y),
             RealExpression(x)!=RealExpression(y)));
         ARIADNE_TEST_ASSERT(not opposite(sgn(RealExpression(x)),ge));
+        ARIADNE_TEST_ASSERT(not opposite(ge,sgn(RealExpression(x))));
+
+        ContinuousPredicate same_op_first_match=
+            RealExpression(z)>=RealExpression(x);
+        ARIADNE_TEST_ASSERT(not opposite(ge,same_op_first_match));
+
+        ContinuousPredicate opposite_first_mismatch=
+            RealExpression(z)<=RealExpression(y);
+        ARIADNE_TEST_ASSERT(not opposite(ge,opposite_first_mismatch));
+
+        ContinuousPredicate opposite_second_mismatch=
+            RealExpression(x)<=RealExpression(z);
+        ARIADNE_TEST_ASSERT(not opposite(ge,opposite_second_mismatch));
 
         ARIADNE_TEST_BINARY_PREDICATE(
             identical,indicator(ge,Sign::POSITIVE),RealExpression(x)-RealExpression(y));
