@@ -188,6 +188,33 @@ class TestFormula
         ARIADNE_TEST_ASSERT(identical(simplified_vector,Vector<EffectiveFormula>({x,z})));
     }
 
+    Void test_scalar_nodes() {
+        // The scalar node stores its left operand separately from the formula tree.
+        auto scalar = [](BinaryElementaryOperator op, EffectiveNumber c, EffectiveFormula f) {
+            return EffectiveFormula::scalar(op,c,f);
+        };
+        EffectiveFormula scaled=scalar(Mul(),EffectiveNumber(2),x);
+        std::ostringstream stream;
+        stream << scaled;
+        ARIADNE_TEST_EQUALS(stream.str(),"(2*x[0])");
+        ARIADNE_TEST_ASSERT(identical(simplify(scaled),two*x));
+        ARIADNE_TEST_ASSERT(identical(simplify(derivative(scaled,0)),two));
+        ARIADNE_TEST_ASSERT(is_constant(simplify(derivative(scaled,1)),EffectiveNumber(0)));
+        Vector<EffectiveNumber> values({EffectiveNumber(2),EffectiveNumber(3)});
+        ARIADNE_TEST_ASSERT(same(evaluate(substitute(scaled,0,y),values),EffectiveNumber(6)));
+        EffectiveFormula difference=scalar(Sub(),EffectiveNumber(5),x);
+        ARIADNE_TEST_ASSERT(same(evaluate(substitute(difference,0,y),values),EffectiveNumber(2)));
+        ARIADNE_TEST_ASSERT(is_constant_in(scaled,{1}));
+        ARIADNE_TEST_ASSERT(not is_constant_in(scaled,{0}));
+        ARIADNE_TEST_ASSERT(is_affine_in(scaled,{0}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(scalar(Mul(),EffectiveNumber(2),sqr(x)),{0}));
+        ARIADNE_TEST_ASSERT(identical(simplify(scalar(Add(),EffectiveNumber(0),x)),x));
+        ARIADNE_TEST_ASSERT(identical(simplify(scalar(Sub(),EffectiveNumber(0),x)),neg(x)));
+        ARIADNE_TEST_ASSERT(is_constant(simplify(scalar(Div(),EffectiveNumber(0),x)),EffectiveNumber(0)));
+        ARIADNE_TEST_ASSERT(identical(simplify(scalar(Max(),EffectiveNumber(2),x)),max(two,x)));
+        ARIADNE_TEST_ASSERT(identical(simplify(scalar(Min(),EffectiveNumber(2),x)),min(two,x)));
+    }
+
     Void test_evaluate() {
         Vector<EffectiveNumber> values({EffectiveNumber(2),EffectiveNumber(3)});
         ARIADNE_TEST_ASSERT(same(direct_evaluate(two,values),EffectiveNumber(2)));
@@ -250,6 +277,7 @@ class TestFormula
         ARIADNE_TEST_CALL(test_identical());
         ARIADNE_TEST_CALL(test_substitute());
         ARIADNE_TEST_CALL(test_simplify());
+        ARIADNE_TEST_CALL(test_scalar_nodes());
         ARIADNE_TEST_CALL(test_evaluate());
         ARIADNE_TEST_CALL(test_is_constant_in());
         ARIADNE_TEST_CALL(test_is_affine_in());

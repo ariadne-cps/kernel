@@ -339,9 +339,9 @@ template<class T> Bool component_is_constant_in(Expression<Vector<T>> const& e, 
 }
 
 namespace {
-    SizeType _size_impl(const Constant<Vector<Real>>& vc) { return vc.size(); }
-    SizeType _size_impl(const Variable<Vector<Real>>& vv) { return vv.size(); }
-    SizeType _size_impl(const Vector<Expression<Real>>& ve) { return ve.size(); }
+    inline SizeType _size_impl(const Constant<Vector<Real>>& vc) { return vc.size(); }
+    inline SizeType _size_impl(const Variable<Vector<Real>>& vv) { return vv.size(); }
+    inline SizeType _size_impl(const Vector<Expression<Real>>& ve) { return ve.size(); }
     template<class OP> SizeType _size_impl(const Symbolic<OP,Expression<Vector<Real>>>& s) { return s._arg.size(); }
     template<class OP> SizeType _size_impl(const Symbolic<OP,Expression<Vector<Real>>,Expression<Vector<Real>>>& s) { return std::max(s._arg1.size(),s._arg2.size()); }
     template<class OP> SizeType _size_impl(const Symbolic<OP,Expression<Real>,Expression<Vector<Real>>>& s) { return s._arg2.size(); }

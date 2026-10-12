@@ -154,7 +154,8 @@ template<class W> class OperatorSymbolicWriter {
 template<class W> OperatorSymbolicWriter(W const&) -> OperatorSymbolicWriter<W>;
 
 
-namespace {
+// Stateless helpers share one definition across translation units.
+inline namespace SymbolicTemplateDetail {
 
 template<class R, class OP, class E, class V> R _evaluate_as_impl(const OP& op, const E& e, const V& v) {
     return op(evaluate(e,v)); }
@@ -193,10 +194,10 @@ template<class R, class OP, class E, class I, class V> requires AGetter<OP> R ev
 template<class R, class E, class A> R evaluate_as(const Vector<E>& ev, const Map<Identifier,A>& x) {
     return R(ev.size(), [&](SizeType i){return evaluate(ev[i],x);}); }
 
-} // namespace
+} // namespace SymbolicTemplateDetail
 
 
-namespace {
+inline namespace SymbolicTemplateDetail {
 
 template<class OP, class F, class J> inline decltype(auto) _derivative_impl(OP op, F const& f, J j) {
     return op.derivative(f,derivative(f,j)); }
@@ -259,7 +260,7 @@ template<class OP, class A, class N, class J> requires AGraded<OP> decltype(auto
 template<template<class> class E, class V, class I, class J> decltype(auto) derivative(Symbolic<OperatorVariant<Get>,E<V>,I> const& s, J j) {
     return _derivative_impl(s._op,s._vec,s._ind,j); }
 
-} // namespace
+} // namespace SymbolicTemplateDetail
 
 
 inline namespace SymbolicSimplifyDetail {
@@ -351,7 +352,7 @@ template<class E, class SV> inline E simplify_variant(const SV& s) {
 
 } // namespace SymbolicSimplifyDetail
 
-namespace {
+inline namespace SymbolicTemplateDetail {
 
 template<class X, class V, class SE> Expression<X> _substitute(const Constant<X>& c, const V&, const SE&) { return c; }
 template<class X, class V, class SE> Expression<X> _substitute(const Variable<X>& var, const V&, const SE&) { return var; }
@@ -375,9 +376,9 @@ template<class V, class SE, class OP, class VE, class I> requires AGetter<OP> de
 template<class X, class V, class SE> Vector<Expression<X>> _substitute(const Vector<Expression<X>>& ve, const V& v, const SE& s) {
     return Vector<Expression<X>>(ve.size(),[&ve,&v,&s](SizeType i){return substitute(ve[i],v,s);}); }
 
-} // namespace
+} // namespace SymbolicTemplateDetail
 
-namespace {
+inline namespace SymbolicTemplateDetail {
 
 template<class T> Bool same(Vector<T> v1, Vector<T> v2) {
     if (v1.size() != v2.size()) { return false; }
@@ -402,7 +403,7 @@ template<class E1, class E2> Bool _identical_dispatch(const E1&, const E2&) { re
 
 //template<class E1, class E2> Bool identical(const E1& e1, const E2& e2) { return _identical_dispatch(e1,e2); }
 
-} // namespace
+} // namespace SymbolicTemplateDetail
 
 struct IdenticalSymbolic {
     template<class T> static Bool _identical(const Constant<T>& c1, const Constant<T>& c2) {
@@ -434,7 +435,7 @@ struct IdenticalSymbolic {
 
 class UntypedVariable;
 
-namespace {
+inline namespace SymbolicTemplateDetail {
 template<class T> Set<UntypedVariable> _arguments(Constant<T> const&) { return {}; }
 template<class T> Set<UntypedVariable> _arguments(Variable<T> const& var) { return {var}; }
 template<class OP, class E> Set<UntypedVariable> _arguments(Symbolic<OP,E> const& s) {
@@ -447,10 +448,10 @@ template<class OP, class VE, class I> requires AGetter<OP> Set<UntypedVariable> 
     return s._vec.arguments(); }
 template<class E> Set<UntypedVariable> _arguments(Vector<E> const& ve) {
     Set<UntypedVariable> res; for (SizeType i=0; i!=ve.size(); ++i) { res.adjoin(ve[i].arguments()); } return res; }
-}
+} // namespace SymbolicTemplateDetail
 
 
-namespace {
+inline namespace SymbolicTemplateDetail {
 
 template<class T> Bool _is_constant(Constant<T> const&) { return true; }
 template<class T> Bool _is_constant(Variable<T> const&) { return false; }
@@ -614,7 +615,7 @@ template<class OP, class A, class N, class VARS> requires AGraded<OP> Bool is_po
 template<class OP, class V, class I, class VARS> requires AGetter<OP> Bool is_polynomial_in(Symbolic<OP,V,I> const&, VARS const&) {
     ARIADNE_NOT_IMPLEMENTED; }
 
-}
+} // namespace SymbolicTemplateDetail
 
 } // namespace Ariadne
 
