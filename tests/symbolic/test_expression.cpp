@@ -503,7 +503,7 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(boolean_ea||boolean_eb);
 
         StringVariable string_variable("source_string");
-        ARIADNE_TEST_EXECUTE(string_variable!=String("value"));
+        ARIADNE_TEST_EXECUTE((void)(string_variable!=String("value")));
 
         IntegerVariable integer_a("integer_a"), integer_b("integer_b");
         IntegerExpression integer_ea(integer_a), integer_eb(integer_b);
@@ -512,12 +512,12 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(integer_ea+integer_eb);
         ARIADNE_TEST_EXECUTE(integer_ea-integer_eb);
         ARIADNE_TEST_EXECUTE(integer_ea*integer_eb);
-        ARIADNE_TEST_EXECUTE(integer_ea==integer_eb);
-        ARIADNE_TEST_EXECUTE(integer_ea!=integer_eb);
-        ARIADNE_TEST_EXECUTE(integer_ea>=integer_eb);
-        ARIADNE_TEST_EXECUTE(integer_ea<=integer_eb);
-        ARIADNE_TEST_EXECUTE(integer_ea>integer_eb);
-        ARIADNE_TEST_EXECUTE(integer_ea<integer_eb);
+        ARIADNE_TEST_EXECUTE((void)(integer_ea==integer_eb));
+        ARIADNE_TEST_EXECUTE((void)(integer_ea!=integer_eb));
+        ARIADNE_TEST_EXECUTE((void)(integer_ea>=integer_eb));
+        ARIADNE_TEST_EXECUTE((void)(integer_ea<=integer_eb));
+        ARIADNE_TEST_EXECUTE((void)(integer_ea>integer_eb));
+        ARIADNE_TEST_EXECUTE((void)(integer_ea<integer_eb));
 
         IntegerExpression integer_accumulator(integer_a);
         integer_accumulator+=integer_eb;
