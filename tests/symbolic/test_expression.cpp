@@ -603,7 +603,7 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(is_additive_in(RealExpression(2),x));
         ARIADNE_TEST_ASSERT(is_additive_in(RealExpression(x)-RealExpression(y),x));
         ARIADNE_TEST_ASSERT(not is_additive_in(pow(RealExpression(x),2),x));
-        ARIADNE_TEST_FAIL((void)is_additive_in(literal_vector[0],x));
+        ARIADNE_TEST_ASSERT(is_additive_in(literal_vector[0],x));
 
         ARIADNE_TEST_EQUAL(class_name<RealVariables>(),String("RealVariables"));
         ARIADNE_TEST_EQUAL(

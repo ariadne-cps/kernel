@@ -177,7 +177,9 @@ template<class R, class OP, class VE, class I, class V> R _get_evaluate_as_impl(
     return evaluate(ve,v)[i]; }
 
 template<class R, class A> R evaluate_as(const Constant<R>& c, const Map<Identifier,A>&) { return c; }
-template<class R, class A> R evaluate_as(const Variable<R>&, const Map<Identifier,A>&) { abort(); }
+template<class R, class A> R evaluate_as(const Variable<R>& v, const Map<Identifier,A>&) {
+    ARIADNE_THROW(std::runtime_error,"evaluate_as(Variable,Map)",
+                  "Variable "<<v<<" cannot be evaluated with a valuation of a different value type."); }
 template<class R> R evaluate_as(const Variable<R>& v, const Map<Identifier,R>& x) { return x[v.name()]; }
 template<class R, class OP, class E, class V> R evaluate_as(const Symbolic<OP,E>& e, const V& x) {
     return _evaluate_as_impl<R>(e._op,e._arg,x); }
