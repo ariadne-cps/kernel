@@ -725,7 +725,9 @@ class TestExpression {
         ARIADNE_TEST_EQUALS(to_string(sub(sub(x,y),z)),"x-y-z");
         ARIADNE_TEST_EQUALS(to_string(add(mul(x,y),z)),"x*y+z");
         ARIADNE_TEST_EQUALS(to_string(mul(add(x,y),z)),"(x+y)*z");
+        ARIADNE_TEST_EQUALS(to_string(mul(sub(x,y),z)),"(x-y)*z");
         ARIADNE_TEST_EQUALS(to_string(div(x,div(y,z))),"x/(y/z)");
+        ARIADNE_TEST_EQUALS(to_string(div(x,sub(y,z))),"x/(y-z)");
         ARIADNE_TEST_EQUALS(to_string(div(div(x,y),z)),"x/y/z");
         ARIADNE_TEST_EQUALS(to_string(sub(x,div(y,z))),"x-y/z");
         ARIADNE_TEST_EQUALS(to_string(sub(div(x,y),z)),"x/y-z");
@@ -914,6 +916,10 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(simplify(KleeneanExpression(true)&&pe));
         ARIADNE_TEST_EXECUTE(simplify(KleeneanExpression(true)||pe));
         ARIADNE_TEST_EXECUTE(simplify(KleeneanExpression(false)||pe));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pe&&KleeneanExpression(true)),pe);
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pe&&KleeneanExpression(false)),KleeneanExpression(false));
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pe||KleeneanExpression(false)),pe);
+        ARIADNE_TEST_BINARY_PREDICATE(identical,simplify(pe||KleeneanExpression(true)),KleeneanExpression(true));
         ARIADNE_TEST_EXECUTE(simplify(!( !pe )));
         ARIADNE_TEST_EXECUTE(simplify(pe&&qe));
         ARIADNE_TEST_EXECUTE(simplify(pe||qe));
@@ -1205,7 +1211,9 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(is_affine_in(pow(RealExpression(x),0),{x}));
         ARIADNE_TEST_ASSERT(is_affine_in(pow(RealExpression(x),1),{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(RealExpression(y)+sqr(RealExpression(x)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(sqr(RealExpression(x))+RealExpression(y),{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(RealExpression(y)-sqr(RealExpression(x)),{x}));
+        ARIADNE_TEST_ASSERT(not is_affine_in(sqr(RealExpression(x))-RealExpression(y),{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(sqr(RealExpression(x))*RealExpression(2),{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(RealExpression(2)*sqr(RealExpression(x)),{x}));
         ARIADNE_TEST_ASSERT(not is_affine_in(sqr(RealExpression(x))/RealExpression(2),{x}));
@@ -1256,8 +1264,11 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(is_polynomial_in((x+y)*(x-y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(x/(x+y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(RealExpression(y)+sin(RealExpression(x)),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(sin(RealExpression(x))+RealExpression(y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(RealExpression(y)-sin(RealExpression(x)),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(sin(RealExpression(x))-RealExpression(y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(RealExpression(y)*sin(RealExpression(x)),{x,y}))
+        ARIADNE_TEST_ASSERT(not is_polynomial_in(sin(RealExpression(x))*RealExpression(y),{x,y}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(sin(RealExpression(x))/RealExpression(2),{x}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(max(RealExpression(2),RealExpression(x)),{x}))
         ARIADNE_TEST_ASSERT(not is_polynomial_in(min(RealExpression(x),RealExpression(2)),{x}))
