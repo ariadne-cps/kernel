@@ -41,6 +41,7 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_point2d())
         ARIADNE_TEST_CALL(test_colour())
         ARIADNE_TEST_CALL(test_graphics_properties())
+        ARIADNE_TEST_CALL(test_graphics_interface())
         ARIADNE_TEST_CALL(test_construct_figure())
         ARIADNE_TEST_CALL(test_figure_projection())
         ARIADNE_TEST_CALL(test_construct_labelled_figure())
@@ -63,6 +64,21 @@ class TestGraphics {
          .set_fill_opacity(0.5)
          .set_fill_colour(0,1,0);
         ARIADNE_TEST_PRINT(p)
+    }
+
+    void test_graphics_interface() {
+        Projection3d projection(4,3,2,1);
+        ARIADNE_TEST_EQUALS(projection.x_coordinate(),3u)
+        ARIADNE_TEST_EQUALS(projection.y_coordinate(),2u)
+        ARIADNE_TEST_EQUALS(projection.z_coordinate(),1u)
+
+        GraphicsBoundingBoxType bx({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)},
+                                    {FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)}});
+        Figure figure(bx,0,1);
+        Polytope2d shape(List<Point2d>{Point2d(0.0,0.0)});
+        FigureInterface& figure_interface = figure;
+        Drawable2dInterface const& drawable = shape;
+        draw(figure_interface,drawable);
     }
 
     void test_construct_figure() {
