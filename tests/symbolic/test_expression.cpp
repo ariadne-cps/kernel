@@ -536,7 +536,15 @@ class TestExpression {
         ContinuousPredicate unrelated=RealExpression(x)>=RealExpression(z);
         ARIADNE_TEST_ASSERT(opposite(ge,reverse_ge));
         ARIADNE_TEST_ASSERT(opposite(ge,le));
+        ARIADNE_TEST_ASSERT(opposite(le,ge));
+        ContinuousPredicate gt=RealExpression(x)>RealExpression(y);
+        ContinuousPredicate lt=RealExpression(x)<RealExpression(y);
+        ARIADNE_TEST_ASSERT(opposite(gt,lt));
+        ARIADNE_TEST_ASSERT(opposite(lt,gt));
         ARIADNE_TEST_ASSERT(not opposite(ge,unrelated));
+        ARIADNE_TEST_ASSERT(not opposite(
+            RealExpression(x)==RealExpression(y),
+            RealExpression(x)!=RealExpression(y)));
         ARIADNE_TEST_ASSERT(not opposite(sgn(RealExpression(x)),ge));
 
         ARIADNE_TEST_BINARY_PREDICATE(
@@ -550,6 +558,14 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(indicator(ge||(RealExpression(y)>=RealExpression(z)),Sign::POSITIVE));
         ARIADNE_TEST_EXECUTE(indicator(!ge,Sign::POSITIVE));
         ARIADNE_TEST_EXECUTE(indicator(sgn(RealExpression(x)),Sign::NEGATIVE));
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,indicator(ContinuousPredicate(true),Sign::POSITIVE),RealExpression(1));
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,indicator(ContinuousPredicate(false),Sign::POSITIVE),RealExpression(-1));
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,indicator(ContinuousPredicate(Kleenean()),Sign::POSITIVE),RealExpression(0));
+        KleeneanVariable indicator_variable("indicator_variable");
+        ARIADNE_TEST_FAIL((void)indicator(ContinuousPredicate(indicator_variable),Sign::POSITIVE));
         ARIADNE_TEST_FAIL((void)indicator(RealExpression(x)==RealExpression(y),Sign::POSITIVE));
         ARIADNE_TEST_FAIL((void)indicator(RealExpression(x)!=RealExpression(y),Sign::POSITIVE));
 
@@ -577,6 +593,42 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(is_affine_in(binary_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(scaled_vector,{x,y}));
         ARIADNE_TEST_EXECUTE(is_affine_in(divided_vector,{x,y}));
+
+        ARIADNE_TEST_ASSERT(is_additive_in(RealExpression(2),x));
+        ARIADNE_TEST_ASSERT(is_additive_in(RealExpression(x)-RealExpression(y),x));
+        ARIADNE_TEST_ASSERT(not is_additive_in(pow(RealExpression(x),2),x));
+        ARIADNE_TEST_FAIL((void)is_additive_in(literal_vector[0],x));
+
+        ARIADNE_TEST_EQUAL(class_name<RealVariables>(),String("RealVariables"));
+        ARIADNE_TEST_EQUAL(
+            class_name<RealVectorExpression>(),String("Expression<Vector<Real>>"));
+
+        ARIADNE_TEST_EXECUTE(make_formula(RealExpression(x)+1,x));
+        Vector<RealExpression> univariate_outputs({x,x+1});
+        ARIADNE_TEST_EXECUTE(make_formula(univariate_outputs,x));
+        List<RealVariable> xy_variables({x,y});
+        ARIADNE_TEST_EXECUTE(make_formula(RealExpression(x)+RealExpression(y),xy_variables));
+
+        List<RealAssignment> auxiliary_assignments({let(z)=RealExpression(x)+RealExpression(y)});
+        ARIADNE_TEST_EXECUTE(
+            make_formula(RealExpression(z)+1,auxiliary_assignments,RealSpace({x,y})));
+        Vector<RealExpression> auxiliary_outputs({z,z+1});
+        ARIADNE_TEST_EXECUTE(
+            make_formula(auxiliary_outputs,auxiliary_assignments,RealSpace({x,y})));
+
+        Formula<Real> coordinate_formula=Formula<Real>::coordinate(0);
+        RealExpression formula_expression=
+            make_expression(coordinate_formula,RealSpace({x}));
+        ARIADNE_TEST_BINARY_PREDICATE(
+            identical,formula_expression,RealExpression(x));
+
+        EffectiveScalarMultivariateFunction source_function=
+            make_function(RealSpace({x}),RealExpression(x)+1);
+        RealExpression function_expression=
+            make_expression(source_function,RealSpace({x}));
+        RealValuation source_valuation({x=Real(2)});
+        ARIADNE_TEST_EQUAL(
+            evaluate(function_expression,source_valuation),Real(3));
     }
 
     Void test_expression() {
