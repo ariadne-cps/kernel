@@ -983,7 +983,7 @@ class TestExpression {
         ARIADNE_TEST_ASSERT(is_constant_in(right_scaled_vector[0],{z}));
         ARIADNE_TEST_ASSERT(not is_constant_in(right_scaled_vector[0],{xs[0]}));
 
-        ARIADNE_TEST_SAME(simplify(evv[0]),vv[0]);
+        ARIADNE_TEST_SAME(simplify(evv[0]),RealExpression(vv[0]));
         ARIADNE_TEST_SAME(simplify(unary_vector[0]),-xs[0]);
 
         RealVectorExpression node_vector=
