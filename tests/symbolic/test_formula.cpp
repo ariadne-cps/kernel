@@ -59,6 +59,9 @@ class TestFormula
 
         EffectiveFormula default_formula;
         ARIADNE_TEST_ASSERT(is_constant(default_formula));
+        ARIADNE_TEST_ASSERT(same(two.val(),EffectiveNumber(2)));
+        ARIADNE_TEST_ASSERT(is_constant(x.create_zero(),EffectiveNumber(0)));
+        ARIADNE_TEST_ASSERT(is_constant(x.create_constant(EffectiveNumber(3)),EffectiveNumber(3)));
         ARIADNE_TEST_EQUALS(default_formula.code(),Cnst::code());
         ARIADNE_TEST_EQUALS(x.kind(),OperatorKind::VARIABLE);
         ARIADNE_TEST_EQUALS(Nat(x.ind()),0u);
