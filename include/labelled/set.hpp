@@ -14,6 +14,12 @@ template<class S> class LabelledSet {
     typedef S EuclideanSetType;
 
     LabelledSet(const RealSpace& spc, const EuclideanSetType& set) : _spc(spc), _set(set) { ARIADNE_ASSERT_MSG(spc.dimension()==set.dimension(),"spc="<<spc<<", set.dimension()="<<set.dimension()); }
+    template<class X> requires Same<S,Point<X>>
+    explicit LabelledSet(VariablesPoint<X> const& point)
+        : _spc(List<RealVariable>(point.variables())), _set(point.euclidean_set(_spc)) { }
+    template<class IVL> requires Same<S,Box<IVL>>
+    explicit LabelledSet(VariablesBox<IVL> const& box)
+        : _spc(List<RealVariable>(box.variables())), _set(box.euclidean_set(_spc)) { }
     Set<RealVariable> variables() const { return _spc.variables(); }
     RealSpace const& space() const { return this->_spc; }
     EuclideanSetType const& continuous_set() const { return this->_set; }
@@ -38,7 +44,7 @@ template<class S> LabelledSet(const RealSpace&, const S&) -> LabelledSet<S>;
 template<class IVL> class LabelledBox : public LabelledSet<Box<IVL>> {
   public:
     LabelledBox(const RealSpace& spc, const Box<IVL>& set) : LabelledSet<Box<IVL>>(spc,set) { }
-    IVL operator[](const RealVariable& v) const { return VariablesBox<IVL>(*this)[v]; }
+    IVL operator[](const RealVariable& v) const { return this->euclidean_set()[this->space().index(v)]; }
 };
 
 template<class S> EqualsType<S> operator==(LabelledSet<S> const& eset1, LabelledSet<S> const& eset2) {
@@ -46,20 +52,6 @@ template<class S> EqualsType<S> operator==(LabelledSet<S> const& eset1, Labelled
     ARIADNE_ASSERT(eset1.space()==eset2.space());
     return eset1.euclidean_set()==eset2.euclidean_set();
 }
-
-template<class X> VariablesPoint<X>::operator LabelledSet<Point<X>>() const {
-    RealSpace spc(List<RealVariable>(this->variables()));
-    return LabelledSet<Point<X>>(spc,this->euclidean_set(spc));
-}
-
-template<class IVL> VariablesBox<IVL>::operator LabelledSet<Box<IVL>>() const {
-    RealSpace spc(List<RealVariable>(this->variables()));
-    return LabelledSet<Box<IVL>>(spc,this->euclidean_set(spc));
-}
-
-template<class IVL> template<class I> requires Convertible<I,IVL> VariablesBox<IVL>::VariablesBox(LabelledSet<Box<I>> const& lbx)
-    : VariablesBox(lbx.space(),lbx.euclidean_set()) { }
-
 
 template<class UB> using LabelledInterval = VariableInterval<UB>;
 template<class BS> using LabelledListSet = LabelledSet<ListSet<BS>>;

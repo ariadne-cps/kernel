@@ -64,8 +64,6 @@ typedef Space<Real> RealSpace;
 
 template<class UB> class VariableInterval;
 template<class IVL> class VariablesBox;
-template<class S> class LabelledSet;
-template<class IVL> class LabelledBox;
 
 typedef VariableInterval<Real> RealVariableInterval;
 typedef VariablesBox<RealInterval> RealVariablesBox;
@@ -214,7 +212,6 @@ template<class X> class VariablesPoint {
     VariablesPoint() : _vals() { }
     VariablesPoint(const RealSpace& spc, const PointType& pt);
     VariablesPoint(const Map<RealVariable,CoordinateType>& vals) : _vals(vals) { }
-    template<class XX> requires Convertible<XX,X> VariablesPoint(const LabelledSet<Point<XX>>& lpt);
     template<class XX> requires Constructible<X,XX> VariablesPoint(VariablesPoint<XX> const& ept) : _vals(ept.values()) { }
     Map<RealVariable,CoordinateType> values() const { return this->_vals; }
     Set<RealVariable> variables() const { return this->_vals.keys(); }
@@ -224,7 +221,6 @@ template<class X> class VariablesPoint {
             auto entry = this->_vals.find(spc[i]); ARIADNE_ASSERT_MSG(entry != this->_vals.end(),"Variable " << spc[i] << " not found in VariablesPoint."); return entry->second; }); }
     friend OutputStream& operator<<(OutputStream& os, const VariablesPointType& ept) {
         return os << "VariablesPoint"<<class_name<X>()<<"( values=" << ept.values() << " )"; }
-    explicit operator LabelledSet<Point<X>> () const;
 };
 
 template<class X> VariablesPoint<X>::VariablesPoint(const RealSpace& spc, const Point<X>& pt) {
@@ -246,7 +242,6 @@ template<class IVL> class VariablesBox {
     typedef VariablesBox<IVL> VariablesBoxType;
 
     VariablesBox() : _bnds() { }
-    template<class I> requires Convertible<I,IVL> VariablesBox(const LabelledSet<Box<I>>& lbx);
     VariablesBox(const RealSpace& spc, const Box<IVL>& bx);
     VariablesBox(const Map<RealVariable,IntervalType>& bnds) : _bnds(bnds) { }
     VariablesBox(const Set<VariableIntervalType>& bnds) : _bnds() {
@@ -263,7 +258,6 @@ template<class IVL> class VariablesBox {
     decltype(auto) is_empty() const { return any(_bnds,[](auto e){return e.second.is_empty();}); }
     friend OutputStream& operator<<(OutputStream& os, const VariablesBoxType& ebx) {
         return os << "VariablesBox"<<class_name<IVL>()<<"( bounds=" << ebx.bounds() << " )"; }
-    explicit operator LabelledSet<Box<IVL>> () const;
 };
 
 template<class IVL> VariablesBox<IVL>::VariablesBox(const RealSpace& spc, const Box<IVL>& bx) {

@@ -51,20 +51,11 @@ class TestExpressionSet {
     TestExpressionSet() : x("x"), y("y"), z("z") { }
 
     Void test() {
-        ARIADNE_TEST_CALL(test_labelled_set());
         ARIADNE_TEST_CALL(test_variables_point());
         ARIADNE_TEST_CALL(test_template_streaming());
         ARIADNE_TEST_CALL(test_variables_box());
         ARIADNE_TEST_CALL(test_real_expression_constraint_set());
         ARIADNE_TEST_CALL(test_real_expression_bounded_constraint_set());
-    }
-
-    Void test_labelled_set() const {
-        LabelledSet<RealBox> set(RealSpace({x,y,z}),RealBox({{0.1_dec,0.5_dec},{-2.3_dec,1},{0,3}}));
-        ARIADNE_TEST_EQUALS(set.dimension(),3);
-        RealVariable u("u");
-        ARIADNE_TEST_EXECUTE(set.euclidean_set(RealSpace({y,z})));
-        ARIADNE_TEST_FAIL(set.euclidean_set(RealSpace({y,u})));
     }
 
     Void test_variables_point() const {
@@ -76,8 +67,6 @@ class TestExpressionSet {
         ARIADNE_TEST_EQUALS(p.euclidean_set(RealSpace({x,y})).dimension(),2);
         ARIADNE_TEST_FAIL(p.euclidean_set(RealSpace({x,z})));
 
-        auto labelled_set = LabelledSet<RealPoint>(p);
-        ARIADNE_TEST_EQUALS(labelled_set.dimension(),2);
     }
 
     Void test_template_streaming() const {
@@ -129,8 +118,6 @@ class TestExpressionSet {
         ARIADNE_TEST_EQUALS(bx2.variables().size(),2);
         ARIADNE_TEST_PRINT(bx2);
 
-        auto labelled_set = LabelledSet<RealBox>(bx2);
-        ARIADNE_TEST_EQUALS(labelled_set.dimension(),2);
 
         ARIADNE_TEST_EQUALS(variables(bx2.bounds()).size(),2);
 

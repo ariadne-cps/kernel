@@ -91,6 +91,7 @@ setup_standalone_project_tests(
         function
         geometry
         io
+        labelled
         solving
         symbolic
     SOURCES
