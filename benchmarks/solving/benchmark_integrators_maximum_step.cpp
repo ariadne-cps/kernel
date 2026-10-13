@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <chrono>
+#include <iomanip>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -209,27 +211,69 @@ void print_table(
         const std::vector<BenchmarkCase>& cases,
         const std::vector<std::vector<MaximumStepResult>>& results)
 {
+    constexpr std::size_t column_spacing=2u;
+
+    std::size_t function_width=std::string("function").size();
+    for(const auto& benchmark_case : cases) {
+        function_width=std::max(
+            function_width,
+            benchmark_case.name.size());
+    }
+
+    std::vector<std::size_t> integrator_widths(integrators.size());
+    for(SizeType integrator_index=0u;
+            integrator_index!=integrators.size();
+            ++integrator_index) {
+        auto& width=integrator_widths[integrator_index];
+        width=integrators[integrator_index].key.size();
+        for(SizeType case_index=0u;
+                case_index!=cases.size();
+                ++case_index) {
+            width=std::max(
+                width,
+                results[case_index][integrator_index].display.size());
+        }
+    }
+
     std::ostringstream table;
     table
         <<"Maximum-step integrator benchmark\n"
         <<"step_maximum_error="<<benchmark_step_maximum_error<<"\n"
         <<"Values are largest accepted steps found; "
         <<">= means no failing upper bound was found; "
-        <<"< means no accepted step was found\n"
+        <<"< means no accepted step was found\n";
+
+    table
+        <<std::left
+        <<std::setw(static_cast<int>(function_width))
         <<"function";
 
-    for(const auto& named_integrator : integrators) {
-        table<<"\t"<<named_integrator.key;
+    for(SizeType integrator_index=0u;
+            integrator_index!=integrators.size();
+            ++integrator_index) {
+        table
+            <<std::string(column_spacing,' ')
+            <<std::right
+            <<std::setw(static_cast<int>(
+                integrator_widths[integrator_index]))
+            <<integrators[integrator_index].key;
     }
     table<<"\n";
 
     for(SizeType case_index=0u; case_index!=cases.size(); ++case_index) {
-        table<<cases[case_index].name;
+        table
+            <<std::left
+            <<std::setw(static_cast<int>(function_width))
+            <<cases[case_index].name;
+
         for(SizeType integrator_index=0u;
                 integrator_index!=integrators.size();
                 ++integrator_index) {
             table
-                <<"\t"
+                <<std::string(column_spacing,' ')
+                <<std::right
+                <<std::setw(static_cast<int>(
+                    integrator_widths[integrator_index]))
                 <<results[case_index][integrator_index].display;
         }
         table<<"\n";
