@@ -346,12 +346,25 @@ class TestAffineSet
             ARIADNE_TEST_FAIL(empty_set.new_constraint(zero_model_constraint));
             ARIADNE_TEST_FAIL(empty_set.new_parameter_constraint(zero_affine<=0.0_x));
             ARIADNE_TEST_FAIL(empty_set.number_of_parameters());
+
+            Vector<Affine<FloatDPBounds>> empty_affine_models;
+            Vector<ValidatedAffineModelDP> empty_models;
+            ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(D,empty_affine_models));
+            ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(D,empty_models,no_constraints));
+            ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(empty_models));
+
+            Matrix<FloatDP> bad_matrix(1u,1u,dp);
+            Vector<FloatDP> bad_offset(2u,dp);
+            ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(D,bad_matrix,bad_offset));
+            Matrix<FloatDP> empty_matrix(0u,0u,dp);
+            Vector<FloatDP> empty_offset(0u,dp);
+            ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(ExactBoxType(0u),empty_matrix,empty_offset));
         }
     }
 
     Void test_logging_branches() {
         unsigned int const old_verbosity=Logger::instance().configuration().verbosity();
-        Logger::instance().configuration().set_verbosity(2u);
+        Logger::instance().configuration().set_verbosity(5u);
 
         D=ExactBoxType::unit_box(2);
         x=Affine<FloatDPBounds>::variables(2,dp);
