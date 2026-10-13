@@ -2,31 +2,29 @@
 #define ARIADNE_LABELLING_SET_HPP
 
 #include "symbolic/expression_set.hpp"
+#include "labelling/labelling.hpp"
 #include "labelling/graphics_interface.hpp"
 
 namespace Ariadne {
 
 //! \brief A set formed by labelling the variables of a Euclidean set of type \a S.
-template<class S> class LabelledSet {
-    RealSpace _spc;
+template<class S> class LabelledSet : public Labelling {
     S _set;
   public:
     typedef S EuclideanSetType;
 
-    LabelledSet(const RealSpace& spc, const EuclideanSetType& set) : _spc(spc), _set(set) { ARIADNE_ASSERT_MSG(spc.dimension()==set.dimension(),"spc="<<spc<<", set.dimension()="<<set.dimension()); }
+    LabelledSet(const RealSpace& spc, const EuclideanSetType& set) : Labelling(spc), _set(set) { ARIADNE_ASSERT_MSG(spc.dimension()==set.dimension(),"spc="<<spc<<", set.dimension()="<<set.dimension()); }
     template<class X> requires Same<S,Point<X>>
     explicit LabelledSet(VariablesPoint<X> const& point)
-        : _spc(List<RealVariable>(point.variables())), _set(point.euclidean_set(_spc)) { }
+        : Labelling(RealSpace(List<RealVariable>(point.variables()))), _set(point.euclidean_set(this->space())) { }
     template<class IVL> requires Same<S,Box<IVL>>
     explicit LabelledSet(VariablesBox<IVL> const& box)
-        : _spc(List<RealVariable>(box.variables())), _set(box.euclidean_set(_spc)) { }
-    Set<RealVariable> variables() const { return _spc.variables(); }
-    RealSpace const& space() const { return this->_spc; }
+        : Labelling(RealSpace(List<RealVariable>(box.variables()))), _set(box.euclidean_set(this->space())) { }
     EuclideanSetType const& continuous_set() const { return this->_set; }
     EuclideanSetType const& euclidean_set() const { return this->_set; }
     EuclideanSetType& euclidean_set() { return this->_set; }
     EuclideanSetType euclidean_set(const RealSpace& vars) const {
-        Array<SizeType> prj(vars.dimension()); for(SizeType i=0; i!=vars.dimension(); ++i) { prj[i]=this->_spc.index(vars.variable(i)); } return project(this->_set,prj); }
+        Array<SizeType> prj(vars.dimension()); for(SizeType i=0; i!=vars.dimension(); ++i) { prj[i]=this->space().index(vars.variable(i)); } return project(this->_set,prj); }
     DimensionType dimension() const { return this->euclidean_set().dimension(); }
     template<class T> Void adjoin(LabelledSet<T> const& other) const {
         ARIADNE_ASSERT(this->space()==other.space()); this->euclidean_set().adjoin(other.euclidean_set()); }
