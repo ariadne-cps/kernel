@@ -66,6 +66,14 @@ inline Void test_binary_tree() {
     BinaryTreeNode expected_node2(true);
     ARIADNE_TEST_COMPARE( expected_node2, ==, theBinaryTreeRoot );
 
+    ARIADNE_PRINT_TEST_COMMENT("Compare unequal non-null subtrees and null/non-null nodes");
+    BinaryTreeNode unequal_tree_one(false);
+    unequal_tree_one.split();
+    BinaryTreeNode unequal_tree_two(unequal_tree_one);
+    unequal_tree_one.left_node()->set_enabled();
+    ARIADNE_TEST_EQUAL(BinaryTreeNode::is_equal_nodes(&unequal_tree_one,&unequal_tree_two),false);
+    ARIADNE_TEST_EQUAL(BinaryTreeNode::is_equal_nodes(nullptr,&unequal_tree_one),false);
+
     // !!!
     ARIADNE_PRINT_TEST_CASE_TITLE("Split the enabled node");
     ARIADNE_PRINT_TEST_COMMENT("Should mark the node as intermediate and create two enabled subnodes");
@@ -198,6 +206,13 @@ inline Void test_binary_tree() {
     theNewBinaryTreeRoot.add_enabled( binaryWord );
     ARIADNE_PRINT_TEST_COMMENT("The binary tree have three nodes, two leafs and one (true) is enabled");
     expected_binary_tree2.right_node()->make_leaf(true);
+    ARIADNE_TEST_COMPARE( expected_binary_tree2, ==, theNewBinaryTreeRoot );
+
+    ARIADNE_PRINT_TEST_COMMENT("Adding a deeper path below an already enabled leaf changes nothing");
+    BinaryWord deeperEnabledPath;
+    deeperEnabledPath.push_back(true);
+    deeperEnabledPath.push_back(false);
+    theNewBinaryTreeRoot.add_enabled(deeperEnabledPath);
     ARIADNE_TEST_COMPARE( expected_binary_tree2, ==, theNewBinaryTreeRoot );
 
     ARIADNE_PRINT_TEST_COMMENT("Adding enabled sub node, path: (false, true) to a disabled node");
