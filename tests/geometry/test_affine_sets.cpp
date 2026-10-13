@@ -401,6 +401,7 @@ class TestAffineSet
         List<Point2d> vertices=set.boundary(0,1);
         ARIADNE_TEST_ASSERT(!vertices.empty());
         figure.draw(set);
+        figure.write("test_affine_set-logging");
 
         Logger::instance().configuration().set_verbosity(old_verbosity);
     }
