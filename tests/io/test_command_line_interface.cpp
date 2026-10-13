@@ -225,6 +225,9 @@ class TestCommandLineInterface {
                 })
         });
 
+        // Exercise help formatting for long-only extra arguments.
+        ARIADNE_TEST_EXECUTE(extra_parsers[0].help_description_header_size())
+
         Bool success=CommandLineInterface::instance().acquire(
             {"","--custom-value","3","--custom-flag","--verbosity","2"},
             extra_parsers);
