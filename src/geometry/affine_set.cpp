@@ -163,7 +163,6 @@ ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const Vec
 ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const Vector<ValidatedAffineModelDP>& f)
     : _domain(ExactBoxType::unit_box(f[0].argument_size())), _space_models(f)
 {
-    ARIADNE_ASSERT_MSG(_domain.dimension() == f[0].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the function argument size ("<<_space_models[0].argument_size()<<").");
 }
 
 ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const ExactBoxType& D, const Matrix<FloatDP>& G, const Vector<FloatDP>& h)
@@ -701,8 +700,7 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
         for(SizeType k=nc; k!=np; ++k) {
             // Test variable to enter basis; there are m to test, one for each dimension of the domain
             SizeType j=p[k];
-            if(j!=last_exiting_variable || true) {
-                Aj=column(A,j);
+            Aj=column(A,j);
                 BAj=B*Aj;
 
                 // Compute the direction the point in space moves for x[j] entering the basis
@@ -743,7 +741,6 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
                     best_next_vec=trial_vec;
                     s=k;
                 }
-            } // k!=r
         }
 
         ARIADNE_ASSERT_MSG(s<np,"Could not find direction to move along boundary of ValidatedAffineConstrainedImageSet.");

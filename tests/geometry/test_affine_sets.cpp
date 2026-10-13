@@ -196,6 +196,12 @@ class TestAffineSet
         SizeType size=paving.size();
         set.adjoin_outer_approximation_to(paving,0);
         ARIADNE_TEST_EQUALS(paving.size(),size);
+
+        ValidatedAffineConstrainedImageSet empty_set(D,{x[0],x[1]});
+        empty_set.new_parameter_constraint(x[0]<=-2.0_x);
+        GridTreePaving empty_paving(Grid(2));
+        empty_set.robust_adjoin_outer_approximation_to(empty_paving,0);
+        ARIADNE_TEST_EQUALS(empty_paving.size(),0u);
     }
 
     Void test_outer_approximation() {
@@ -317,7 +323,48 @@ class TestAffineSet
             x = Affine<FloatDPBounds>::variables(2,dp);
             auto a = Affine<FloatDPBounds>::variables(1,dp);
             ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(D, {0.125_x*x[0]+1.0_x, 0.125_x*x[1]+1.0_x}, {a[0]<=-0.25_x} ));
+
+            set=ValidatedAffineConstrainedImageSet(D,{x[0],x[1]});
+            ARIADNE_TEST_FAIL(set.new_parameter_constraint(a[0]<=-0.25_x));
+            ARIADNE_TEST_FAIL(set.separated(ExactBoxType::unit_box(1)));
+            ARIADNE_TEST_FAIL(set.inside(ExactBoxType::unit_box(1)));
+
+            GridTreePaving bad_paving(Grid(1));
+            ARIADNE_TEST_FAIL(set.adjoin_outer_approximation_to(bad_paving,0));
+            ARIADNE_TEST_FAIL(set.robust_adjoin_outer_approximation_to(bad_paving,0));
+
+            Vector<ValidatedAffineModelDP> bad_models=ValidatedAffineModelDP::scalings(ExactBoxType::unit_box(1),dp);
+            List<ValidatedAffineModelConstraintDP> no_constraints;
+            ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(D,bad_models,no_constraints));
+
+            ValidatedAffineModelConstraintDP bad_constraint(-1.0_x,bad_models[0],+1.0_x);
+            List<ValidatedAffineModelConstraintDP> bad_constraints;
+            bad_constraints.append(bad_constraint);
+            Vector<ValidatedAffineModelDP> good_models=ValidatedAffineModelDP::scalings(D,dp);
+            ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(D,good_models,bad_constraints));
+            ARIADNE_TEST_FAIL(set.new_constraint(bad_constraint));
         }
+    }
+
+    Void test_logging_branches() {
+        unsigned int const old_verbosity=Logger::instance().configuration().verbosity();
+        Logger::instance().configuration().set_verbosity(2u);
+
+        D=ExactBoxType::unit_box(2);
+        x=Affine<FloatDPBounds>::variables(2,dp);
+        set=ValidatedAffineConstrainedImageSet(D,{x[0],x[1]});
+
+        ARIADNE_TEST_ASSERT(!definitely(set.separated(ExactBoxType{{-0.5_x,+0.5_x},{-0.5_x,+0.5_x}})));
+
+        GridTreePaving paving(Grid(2));
+        set.robust_adjoin_outer_approximation_to(paving,0);
+        ARIADNE_TEST_ASSERT(paving.size()>0);
+
+        List<Point2d> vertices=set.boundary(0,1);
+        ARIADNE_TEST_ASSERT(!vertices.empty());
+        figure.draw(set);
+
+        Logger::instance().configuration().set_verbosity(old_verbosity);
     }
 
     Void test_uniform_error() {
@@ -530,6 +577,7 @@ class TestAffineSet
         ARIADNE_TEST_CALL(test_separated());
         ARIADNE_TEST_CALL(test_outer_approximation());
         ARIADNE_TEST_CALL(test_robust_outer_approximation());
+        ARIADNE_TEST_CALL(test_logging_branches());
         ARIADNE_TEST_CALL(test_uniform_error());
         ARIADNE_TEST_CALL(test_draw());
     }
