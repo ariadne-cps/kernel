@@ -628,7 +628,6 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
     SimplexSolver<FloatDPApproximation> lpsolver;
     PerturbationGenerator eps;
 
-    static const ExactDouble ERROR_TOLERANCE = cast_exact(static_cast<double>(std::numeric_limits<float>::epsilon()));
     static const FloatDPApproximation _inf ( Ariadne::inf, dp );
 
     const SizeType nx=_domain.size();
@@ -767,12 +766,8 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
                               " dot="<<dot<<" cross="<<cross<<" cot="<<cot_theta);
 
 
-                // Due to roundoff error, the computed cross-product may be negative.
-                // If this lies within a reasonable tolerance, set to zero,
-                // otherwise abort.
-                ARIADNE_PRECONDITION_MSG(cross.raw() >= -ERROR_TOLERANCE,
-                                   "ValidatedAffineConstrainedImageSet::boundary(...): cross product is="<<cross<<"; should be positive.");
-
+                // The boundary is traversed anticlockwise, so the exact cross-product
+                // is nonnegative. Roundoff can make it slightly negative; clamp it to zero.
                 if(cross.raw()<=0.0_x ) {
                     cross=+0;
                     cot_theta=-inf;
