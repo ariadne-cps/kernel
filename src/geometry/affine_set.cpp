@@ -119,23 +119,28 @@ ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const Exa
 {
     ARIADNE_ASSERT_MSG(_domain.dimension() == f[0].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the function argument size ("<<_space_models[0].argument_size()<<").");
 
-    const Vector<ValidatedAffineModelDP> parameters=ValidatedAffineModelDP::scalings(d,dp);
+    Vector<Affine<FloatDPBounds>> parameters=Affine<FloatDPBounds>::variables(d.size(),dp);
+    for(SizeType j=0; j!=d.size(); ++j) {
+        const FloatDPBounds midpoint(d[j].midpoint(),dp);
+        const FloatDPBounds radius(d[j].radius(),dp);
+        parameters[j]=midpoint+radius*parameters[j];
+    }
     for(SizeType i=0; i!=f.size(); ++i) {
-        ValidatedAffineModelDP model(d.size(),dp);
-        model += f[i].value();
+        Affine<FloatDPBounds> model(d.size(),dp);
+        model=f[i].value();
         for(SizeType j=0; j!=d.size(); ++j) {
-            model += f[i].gradient(j) * parameters[j];
+            model=model+f[i].gradient(j)*parameters[j];
         }
-        _space_models[i]=model;
+        _space_models[i]=affine_model(model);
     }
     for(SizeType i=0; i!=c.size(); ++i) {
         ARIADNE_ASSERT_MSG(_domain.dimension() == c[i].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the constraint argument size ("<<c[i].argument_size()<<").");
-        ValidatedAffineModelDP model(d.size(),dp);
-        model += c[i].function().value();
+        Affine<FloatDPBounds> model(d.size(),dp);
+        model=c[i].function().value();
         for(SizeType j=0; j!=d.size(); ++j) {
-            model += c[i].function().gradient(j) * parameters[j];
+            model=model+c[i].function().gradient(j)*parameters[j];
         }
-        _constraint_models.append(ValidatedAffineModelConstraintDP(c[i].lower_bound(),model,c[i].upper_bound()));
+        _constraint_models.append(ValidatedAffineModelConstraintDP(c[i].lower_bound(),affine_model(model),c[i].upper_bound()));
     }
 }
 
