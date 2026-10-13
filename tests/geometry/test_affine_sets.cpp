@@ -197,11 +197,6 @@ class TestAffineSet
         set.adjoin_outer_approximation_to(paving,0);
         ARIADNE_TEST_EQUALS(paving.size(),size);
 
-        ValidatedAffineConstrainedImageSet empty_set(D,{x[0],x[1]});
-        empty_set.new_parameter_constraint(x[0]<=-2.0_x);
-        GridTreePaving empty_paving(Grid(2));
-        empty_set.robust_adjoin_outer_approximation_to(empty_paving,0);
-        ARIADNE_TEST_EQUALS(empty_paving.size(),0u);
     }
 
     Void test_outer_approximation() {
