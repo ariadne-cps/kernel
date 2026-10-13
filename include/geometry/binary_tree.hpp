@@ -254,7 +254,7 @@ class BinaryTreeNode {
     //! references an enabled node then nothing is done.
     //! NOTE: This is a recursive method on the position (\a position) in the binary path (\a path).
     //! Therefore, the initial evaluate of this method should be done with \a position == 0;
-    static Void add_enabled( BinaryTreeNode* pRootTreeNode, const BinaryWord& path, const Nat position = 0 );
+    static Void add_enabled( BinaryTreeNode* pRootTreeNode, const BinaryWord& path, const Nat position );
 
     //! \brief Creates a binary tree of the height rootNodePath.size(), puts the subtree oldRootNode
     //! into the node defined by the path \a rootNodePath, returns the root node of the extended tree.
