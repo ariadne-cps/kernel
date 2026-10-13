@@ -59,41 +59,6 @@ StepSizeType benchmark_step() {
     return 0.03125_x;
 }
 
-Bool is_integrator_selection(const std::string& value) {
-    return value=="all"
-        || value=="taylor-picard"
-        || value=="graded-taylor-picard"
-        || value=="taylor-series"
-        || value=="taylor-series-bounder"
-        || value=="graded-taylor-series"
-        || value=="preconditioned-graded-taylor-series";
-}
-
-std::string acquire_integrator_selection(
-        Int argc,
-        const char* argv[],
-        List<String>& cli_arguments)
-{
-    std::string selection="all";
-    Bool selection_found=false;
-
-    cli_arguments.append(String(argv[0]));
-    for(Int i=1; i!=argc; ++i) {
-        const std::string argument(argv[i]);
-        if(is_integrator_selection(argument)) {
-            if(selection_found) {
-                throw std::runtime_error(
-                    "Integrator selection specified more than once.");
-            }
-            selection=argument;
-            selection_found=true;
-        } else {
-            cli_arguments.append(String(argv[i]));
-        }
-    }
-    return selection;
-}
-
 Measurement measure(
         const IntegratorInterface& integrator,
         const BenchmarkCase& benchmark_case,
@@ -298,19 +263,29 @@ Int main(Int argc, const char* argv[]) {
     Logger::instance().configuration().set_verbosity(1u);
 
     List<String> cli_arguments;
-    const std::string selection=
-        acquire_integrator_selection(argc,argv,cli_arguments);
+    const auto selection=
+        acquire_benchmark_selection(argc,argv,cli_arguments);
 
     if(not CommandLineInterface::instance().acquire(cli_arguments)) {
         return -1;
     }
 
-    LOGGING_PRINTLN_AT(2,
-        "Integrator selection="<<selection)
+    const auto cases=make_cases(selection.benchmarks);
+    if(selection.list_cases) {
+        print_benchmark_cases(cases);
+        return 0;
+    }
+    if(cases.empty()) {
+        throw std::runtime_error(
+            "Benchmark selector matched no cases.");
+    }
 
-    const auto cases=make_cases();
+    LOGGING_PRINTLN_AT(2,
+        "Integrator selection="<<selection.integrator
+        <<", benchmark cases="<<cases.size())
+
     const auto integrators=select_integrators(
-        selection,benchmark_step_maximum_error);
+        selection.integrator,benchmark_step_maximum_error);
     const StepSizeType step=benchmark_step();
     const Nat repetitions=determine_repetitions(integrators,cases,step);
     const auto results=run_benchmarks(
