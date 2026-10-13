@@ -21,6 +21,7 @@
 #include "geometry/grid_paving.hpp"
 #include "geometry/affine_set.hpp"
 #include "labelled/curve.hpp"
+#include "labelled/figure.hpp"
 
 #include "function/formula.hpp"
 #include "symbolic/variable.hpp"

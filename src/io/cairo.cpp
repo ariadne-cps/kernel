@@ -32,7 +32,6 @@
 #include "function/function.hpp"
 #include "geometry/point.hpp"
 #include "geometry/box.hpp"
-#include "symbolic/variable.hpp"
 #include "io/geometry2d.hpp"
 #include "io/figure.hpp"
 #include "io/cairo.hpp"

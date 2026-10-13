@@ -5,8 +5,8 @@
 #include "symbolic/identifier.hpp"
 #include "symbolic/space.hpp"
 #include "symbolic/assignment.hpp"
-#include "io/graphics_interface.hpp"
-#include "io/figure.hpp"
+#include "labelled/graphics_interface.hpp"
+#include "labelled/figure.hpp"
 
 namespace Ariadne {
 

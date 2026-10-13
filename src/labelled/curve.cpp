@@ -1,5 +1,5 @@
 #include "labelled/curve.hpp"
-#include "io/figure.hpp"
+#include "labelled/figure.hpp"
 
 namespace Ariadne {
 

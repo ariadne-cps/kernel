@@ -30,6 +30,7 @@
 #include "io/drawer.hpp"
 #include "io/cairo.hpp"
 #include "io/figure.hpp"
+#include "labelled/figure.hpp"
 #include "io/geometry2d.hpp"
 #include "geometry/point.hpp"
 #include "geometry/box.hpp"

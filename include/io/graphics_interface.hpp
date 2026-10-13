@@ -48,12 +48,10 @@ typedef Box<Interval<FloatDPApproximation>> GraphicsBoundingBoxType;
 struct Colour;
 
 class Drawable2dInterface;
-class LabelledDrawable2dInterface;
 class FigureInterface;
 class CanvasInterface;
 
 struct Projection2d;
-struct Variables2d;
 
 enum class ProjType{ no_proj, x1_proj, x2_proj };
 
@@ -95,10 +93,6 @@ inline Void draw(FigureInterface& fig, const Drawable2dInterface& shape) { fig.d
 class Figure;
 Void draw(Figure& fig, const Drawable2dInterface& shape);
 Figure& operator<<(Figure& fig, const Drawable2dInterface& shape);
-
-class LabelledFigure;
-Void draw(LabelledFigure& fig, const LabelledDrawable2dInterface& shape);
-LabelledFigure& operator<<(LabelledFigure& fig, const LabelledDrawable2dInterface& shape);
 
 //! \ingroup GraphicsModule
 //! \brief Interface to two-dimensional drawing canvas with the ability to draw polyhedra.
@@ -159,18 +153,6 @@ class Drawable2dInterface {
     virtual DimensionType dimension() const = 0;
 };
 
-
-//! \ingroup GraphicsModule
-//! \brief Base interface for drawable objects
-class LabelledDrawable2dInterface {
-  public:
-    //! brief Virtual destructor.
-    virtual ~LabelledDrawable2dInterface() = default;
-    //! brief Make a dynamically-allocated copy.
-    virtual LabelledDrawable2dInterface* labelled_clone() const = 0;
-    //! brief Draw the projection of object onto variables \a p on the canvas \a c .
-    virtual Void draw(CanvasInterface& c, const Variables2d& p) const = 0;
-};
 
 
 } // namespace Ariadne

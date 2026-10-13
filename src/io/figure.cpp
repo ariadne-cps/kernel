@@ -30,9 +30,6 @@
 #include "function/function.hpp"
 #include "geometry/point.hpp"
 #include "geometry/box.hpp"
-#include "symbolic/variable.hpp"
-#include "symbolic/space.hpp"
-#include "symbolic/expression_set.hpp"
 #include "io/geometry2d.hpp"
 #include "io/figure.hpp"
 #include "logging/logging.hpp"
@@ -88,35 +85,6 @@ OutputStream& operator<<(OutputStream& os, GraphicsProperties const& gp) {
         << ", line_style=" << gp.line_style<<", line_width=" << gp.line_width << ", line_colour=" << gp.line_colour
         << ", fill_style=" << gp.fill_style << ", fill_colour=" << gp.fill_colour << ", is_animated=" << gp.is_animated << ")"; }
 
-Variables2d::Variables2d(const RealVariable& x, const RealVariable& y) : _x(x.name()), _y(y.name()) { }
-
-RealVariable Variables2d::x() const { return RealVariable(_x); }
-
-RealVariable Variables2d::y() const { return RealVariable(_y); }
-
-Axes2d::Axes2d(const ApproximateDoubleVariableInterval x, const ApproximateDoubleVariableInterval& y)
-        : variables(x.variable(),y.variable()), bounds() {
-    bounds.insert(x.variable(),x.interval());
-    bounds.insert(y.variable(),y.interval());
-}
-
-Axes2d::Axes2d(ApproximateDouble xl, const RealVariable& x, ApproximateDouble xu, ApproximateDouble yl, const RealVariable& y, ApproximateDouble yu)
-        : variables(x,y), bounds() {
-    bounds.insert(x,ApproximateDoubleInterval(xl,xu));
-    bounds.insert(y,ApproximateDoubleInterval(yl,yu));
-}
-
-Bool valid_axis_variables(const RealSpace& space, const Variables2d& variables) {
-    return ( (variables.x().name()==TimeVariable().name()) || space.contains(variables.x()) ) && space.contains(variables.y());
-}
-
-Projection2d projection(const RealSpace& space, const Variables2d& variables) {
-    ARIADNE_ASSERT(valid_axis_variables(space,variables));
-    DimensionType x_index = static_cast<DimensionType>((variables.x()==TimeVariable() && !space.contains(variables.x())) ? space.dimension() : space.index(variables.x()));
-    DimensionType y_index = static_cast<DimensionType>(space.index(variables.y()));
-    return Projection2d(space.dimension(),x_index,y_index);
-}
-
 
 Void draw(Figure& fig, const Drawable2dInterface& shape) {
     fig.draw(shape);
@@ -138,20 +106,16 @@ struct GraphicsObject {
     std::shared_ptr<const Drawable2dInterface> shape_ptr;
 };
 
-struct LabelledGraphicsObject {
-    LabelledGraphicsObject(const GraphicsProperties& gp, const LabelledDrawable2dInterface& sh)
-        : properties(gp), shape_ptr(sh.labelled_clone()) { }
-    GraphicsProperties properties;
-    std::shared_ptr<const LabelledDrawable2dInterface> shape_ptr;
-};
-
 struct Figure::Data
 {
-    Data(ApproximateBoxType bbx, Projection2d prj) : properties(), projection(prj), bounding_box(bbx) { }
+    Data(ApproximateBoxType bbx, Projection2d prj)
+        : properties(), projection(prj), bounding_box(bbx), x_label(), y_label() { }
 
     GraphicsProperties properties;
     Projection2d projection;
     ApproximateBoxType bounding_box;
+    StringType x_label;
+    StringType y_label;
     List<GraphicsObject> objects;
 };
 
@@ -203,6 +167,13 @@ Figure& Figure::set_bounding_box(const ApproximateBoxType& bx)
 Projection2d Figure::get_2d_projection_map() const
 {
     return this->_data->projection;
+}
+
+Figure& Figure::set_axis_labels(StringType const& x, StringType const& y)
+{
+    this->_data->x_label=x;
+    this->_data->y_label=y;
+    return *this;
 }
 
 ApproximateBoxType Figure::get_bounding_box() const
@@ -359,8 +330,8 @@ Void Figure::_paint_all(CanvasInterface& canvas) const
     Dbl yl=numeric_cast<Dbl>(bounding_box[projection.y_coordinate()].lower_bound());
     Dbl yu=numeric_cast<Dbl>(bounding_box[projection.y_coordinate()].upper_bound());
 
-    String tx=String("x")+to_str(projection.x_coordinate());
-    String ty=String("x")+to_str(projection.y_coordinate());
+    StringType tx=this->_data->x_label.empty() ? String("x")+to_str(projection.x_coordinate()) : this->_data->x_label;
+    StringType ty=this->_data->y_label.empty() ? String("x")+to_str(projection.y_coordinate()) : this->_data->y_label;
 
     canvas.initialise(tx,ty,xl,xu,yl,yu);
 
@@ -383,120 +354,6 @@ Figure::write(const Char* cfilename) const
   
 Void
 Figure::write(const Char* cfilename, Nat drawing_width, Nat drawing_height) const
-{
-    SharedPointer<CanvasInterface> canvas=GraphicsManager::instance().backend().make_canvas(cfilename,drawing_width,drawing_height, this->_data->properties.is_animated);
-
-    this->_paint_all(*canvas);
-    canvas->write(cfilename);
-}
-
-struct LabelledFigure::Data
-{
-    Data(Axes2d axes)
-        : properties(), variables(axes.variables), bounds(axes.bounds) { }
-    Data(const Variables2d& vars, const Map<RealVariable,ApproximateDoubleInterval>& bnds)
-        : properties(), variables(vars), bounds(bnds) { }
-
-    GraphicsProperties properties;
-    Variables2d variables;
-    Map<RealVariable,ApproximateDoubleInterval> bounds;
-    List<LabelledGraphicsObject> objects;
-};
-
-LabelledFigure::~LabelledFigure() {
-    delete this->_data;
-}
-
-LabelledFigure::LabelledFigure(const Axes2d& axes)
-    : _data(new Data(axes)) {
-}
-
-LabelledFigure::LabelledFigure(const Variables2d& vars, const VariablesBox<ApproximateIntervalType>& bbx)
-    : _data(new Data(vars,VariablesBox<ApproximateDoubleInterval>(bbx).bounds())) {
-    ARIADNE_ASSERT_MSG(bbx.bounds().size()>=2,"The box must be at least two-dimensional.")
-}
-
-Void LabelledFigure::set_axes(const Axes2d& axes) {
-    _data->bounds=axes.bounds; _data->variables=axes.variables;
-}
-
-Void LabelledFigure::set_bounds(const RealVariable& x, const ApproximateDoubleInterval& ivl) {
-    _data->bounds.insert(x,ivl);
-}
-Void LabelledFigure::set_bounds(const Map<RealVariable,ApproximateDoubleInterval>& b) {
-    _data->bounds=b;
-}
-
-Void LabelledFigure::set_bounding_box(const VariablesBox<ApproximateIntervalType>& bx) {
-    _data->bounds=bx.bounds();
-}
-
-GraphicsProperties& LabelledFigure::properties() {
-    return this->_data->properties;
-}
-
-GraphicsProperties const& LabelledFigure::properties() const {
-    return this->_data->properties;
-}
-
-LabelledFigure& LabelledFigure::draw(const LabelledDrawable2dInterface& shape)
-{
-    this->_data->objects.push_back(LabelledGraphicsObject(this->_data->properties,shape)); return *this;
-}
-
-LabelledFigure& LabelledFigure::clear() {
-    this->_data->objects.clear(); return *this;
-}
-
-LabelledFigure& LabelledFigure::set_animated(Bool b){
-    this->_data->properties.is_animated = b; return *this;
-}
-
-LabelledFigure& operator<<(LabelledFigure& fig, const LabelledDrawable2dInterface& shape) {
-    fig.draw(shape); return fig;
-}
-
-Void LabelledFigure::_paint_all(CanvasInterface& canvas) const
-{
-    LOGGING_SCOPE_CREATE;
-    auto const& bounds = this->_data->bounds;
-    RealVariable const& x=this->_data->variables.x();
-    RealVariable const& y=this->_data->variables.y();
-    
-    ARIADNE_ASSERT(x.name()!="" && y.name()!="");
-
-    String tx=x.name();
-    String ty=y.name();
-
-    Dbl xl=numeric_cast<Dbl>(bounds[x].lower_bound());
-    Dbl xu=numeric_cast<Dbl>(bounds[x].upper_bound());
-    Dbl yl=numeric_cast<Dbl>(bounds[y].lower_bound());
-    Dbl yu=numeric_cast<Dbl>(bounds[y].upper_bound());
-
-    canvas.initialise(tx,ty,xl,xu,yl,yu);
-    // Draw shapes
-    SizeType total_objects = this->_data->objects.size();
-    SizeType processed_objects = 0;
-    ProgressIndicator indicator(static_cast<double>(total_objects));
-    LOGGING_PRINTLN("Writing " << total_objects << " object" << (total_objects > 1 ? "s..." : "..."));
-    for(const LabelledGraphicsObject& object : this->_data->objects) {
-        const LabelledDrawable2dInterface& shape=object.shape_ptr.operator*();
-        set_properties(canvas, object.properties);
-        shape.draw(canvas,this->_data->variables);
-        indicator.update_current(static_cast<double>(processed_objects++));
-        LOGGING_SCOPE_PRINTHOLD("[" << indicator.symbol() << "] " << indicator.percentage() << "% ");
-    }
-    canvas.finalise();
-}
-
-Void
-LabelledFigure::write(const Char* cfilename) const
-{
-    this->write(cfilename, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-}
-
-Void
-LabelledFigure::write(const Char* cfilename, Nat drawing_width, Nat drawing_height) const
 {
     SharedPointer<CanvasInterface> canvas=GraphicsManager::instance().backend().make_canvas(cfilename,drawing_width,drawing_height, this->_data->properties.is_animated);
 
