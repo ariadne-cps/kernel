@@ -258,7 +258,7 @@ inline Void test_binary_tree() {
 
     BinaryTreeNode left_destination(false);
     left_destination.add_enabled(&source_subtree,subtreePath);
-    ARIADNE_TEST_EQUAL(left_destination.left_node()->is_enabled(),true);
+    ARIADNE_TEST_EQUAL(left_destination.is_enabled(subtreePath),true);
 
     ARIADNE_PRINT_TEST_COMMENT("Testing intersect/subset short-circuit outcomes");
     BinaryTreeNode disabled_subtree(false);
