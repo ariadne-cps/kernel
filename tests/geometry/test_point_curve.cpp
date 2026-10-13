@@ -50,7 +50,7 @@ template<class X> class TestPoint {
 
         ARIADNE_TEST_EQUALS(pt.dimension(),2);
         ARIADNE_TEST_EQUAL(pt.space(),RealSpace({x,y}));
-        ARIADNE_TEST_EQUAL(pt.variables(),Set<RealVariable>({x,y}));
+        ARIADNE_TEST_EQUAL(pt.variables(),RealSpace({x,y}).variables());
         ARIADNE_TEST_PRINT(pt.bounding_box());
     }
 
