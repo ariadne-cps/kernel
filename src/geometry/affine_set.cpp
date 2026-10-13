@@ -684,7 +684,6 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
     Vector<FloatDPApproximation> Aj(nc,dp); // The jth column of A
     Vector<FloatDPApproximation> BAj(nc,dp); // The jth column of A
 
-    SizeType last_exiting_variable=np; // Last variable to exit the basis
 
     // FIXME: Do we need check below?
     // if(nx==ne) { vertices.push_back(Point2d(pt[0],pt[1])); return vertices; }
@@ -747,7 +746,6 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
         ARIADNE_DEBUG_ASSERT(vt[p[s]]!=Slackness::BASIS);
         LOGGING_PRINTLN_AT(1,"Choosing variable x["<<p[s]<<"]=x[p["<<s<<"]] to enter basis");
         lpsolver.lpstep(l,u,A,b, vt,p,B,x,s);
-        last_exiting_variable=p[s];
         pt=G*x+h;
         last_vec=best_next_vec;
         LOGGING_PRINTLN_AT(2,"G="<<G<<" h="<<h<<" x="<<x<<" pt="<<pt);
