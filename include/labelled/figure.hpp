@@ -6,6 +6,7 @@
 #include "symbolic/variable.hpp"
 #include "symbolic/space.hpp"
 #include "symbolic/expression_set.hpp"
+#include "labelled/set.hpp"
 
 namespace Ariadne {
 

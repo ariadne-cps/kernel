@@ -22,6 +22,7 @@
 #include "geometry/affine_set.hpp"
 #include "labelled/curve.hpp"
 #include "labelled/figure.hpp"
+#include "labelled/set.hpp"
 
 #include "function/formula.hpp"
 #include "symbolic/variable.hpp"
