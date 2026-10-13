@@ -384,6 +384,22 @@ class TestAffineSet
         }
     }
 
+    Void test_large_zonotope_boundary() {
+        SizeType const n=501u;
+        D=ExactBoxType::unit_box(n);
+
+        Affine<FloatDPBounds> fx(n,dp);
+        Affine<FloatDPBounds> fy(n,dp);
+        for(SizeType i=0; i!=n; ++i) {
+            fx[i]=FloatDPBounds(1,dp);
+            fy[i]=FloatDPBounds(static_cast<Int>(i+1u),dp);
+        }
+
+        set=ValidatedAffineConstrainedImageSet(D,{fx,fy});
+        List<Point2d> vertices=set.boundary(0,1);
+        ARIADNE_TEST_ASSERT(vertices.size()>1000u);
+    }
+
     Void test_collinear_boundary_generators() {
         D=ExactBoxType::unit_box(3);
         x=Affine<FloatDPBounds>::variables(3,dp);
@@ -625,6 +641,7 @@ class TestAffineSet
         ARIADNE_TEST_CALL(test_separated());
         ARIADNE_TEST_CALL(test_outer_approximation());
         ARIADNE_TEST_CALL(test_robust_outer_approximation());
+        ARIADNE_TEST_CALL(test_large_zonotope_boundary());
         ARIADNE_TEST_CALL(test_collinear_boundary_generators());
         ARIADNE_TEST_CALL(test_logging_branches());
         ARIADNE_TEST_CALL(test_uniform_error());

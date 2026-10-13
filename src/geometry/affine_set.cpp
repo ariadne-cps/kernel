@@ -628,7 +628,6 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
     SimplexSolver<FloatDPApproximation> lpsolver;
     PerturbationGenerator eps;
 
-    static const Int MAX_STEPS=1000;
     static const ExactDouble ERROR_TOLERANCE = cast_exact(static_cast<double>(std::numeric_limits<float>::epsilon()));
     static const FloatDPApproximation _inf ( Ariadne::inf, dp );
 
@@ -721,7 +720,6 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
     // (v0*d0+v1*d1) is positive and the ratio (v0*d1-v1*d0)/(v0*d0+v1*d1) is maximised.
     // Note that in in all cases, v0*d1-v1*d0 must be positive.
 
-    Int STEPS=0;
     Array<Slackness> initial_variable_type=vt;
 
     Vector<FloatDPApproximation> pt=G*x+h; // The current point in space
@@ -737,7 +735,6 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
     // if(nx==ne) { vertices.push_back(Point2d(pt[0],pt[1])); return vertices; }
 
     do {
-        ++STEPS;
         FloatDPApproximation cot_theta_max(-inf,dp);
         SizeType s=np; // The index giving the variable x[p[s]] to enter the basis
 
@@ -799,7 +796,7 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
 
         vertices.push_back(Point2d(pt[0].raw(),pt[1].raw()));
 
-    } while(STEPS<MAX_STEPS && vt!=initial_variable_type);
+    } while(vt!=initial_variable_type);
 
     LOGGING_PRINTLN("vertices="<<vertices);
     return vertices;
