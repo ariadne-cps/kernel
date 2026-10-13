@@ -1,8 +1,8 @@
-#ifndef ARIADNE_LABELLED_CURVE_HPP
-#define ARIADNE_LABELLED_CURVE_HPP
+#ifndef ARIADNE_LABELLING_CURVE_HPP
+#define ARIADNE_LABELLING_CURVE_HPP
 
 #include "geometry/curve.hpp"
-#include "labelled/point.hpp"
+#include "labelling/point.hpp"
 
 namespace Ariadne {
 

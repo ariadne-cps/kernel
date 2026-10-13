@@ -1,12 +1,12 @@
-#ifndef ARIADNE_LABELLED_FIGURE_HPP
-#define ARIADNE_LABELLED_FIGURE_HPP
+#ifndef ARIADNE_LABELLING_FIGURE_HPP
+#define ARIADNE_LABELLING_FIGURE_HPP
 
 #include "io/figure.hpp"
-#include "labelled/graphics_interface.hpp"
+#include "labelling/graphics_interface.hpp"
 #include "symbolic/variable.hpp"
 #include "symbolic/space.hpp"
 #include "symbolic/expression_set.hpp"
-#include "labelled/set.hpp"
+#include "labelling/set.hpp"
 
 namespace Ariadne {
 

@@ -1,12 +1,12 @@
-#ifndef ARIADNE_LABELLED_POINT_HPP
-#define ARIADNE_LABELLED_POINT_HPP
+#ifndef ARIADNE_LABELLING_POINT_HPP
+#define ARIADNE_LABELLING_POINT_HPP
 
 #include "geometry/point.hpp"
 #include "symbolic/identifier.hpp"
 #include "symbolic/space.hpp"
 #include "symbolic/assignment.hpp"
-#include "labelled/graphics_interface.hpp"
-#include "labelled/figure.hpp"
+#include "labelling/graphics_interface.hpp"
+#include "labelling/figure.hpp"
 
 namespace Ariadne {
 

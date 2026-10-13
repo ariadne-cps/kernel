@@ -1,7 +1,7 @@
-#ifndef ARIADNE_LABELLED_POINT_TPL_HPP
-#define ARIADNE_LABELLED_POINT_TPL_HPP
+#ifndef ARIADNE_LABELLING_POINT_TPL_HPP
+#define ARIADNE_LABELLING_POINT_TPL_HPP
 
-#include "labelled/point.hpp"
+#include "labelling/point.hpp"
 
 namespace Ariadne {
 
