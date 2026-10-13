@@ -41,7 +41,7 @@
 #include "function/function.hpp"
 #include "function/function_patch.hpp"
 #include "function/function_model.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "function/scaling.hpp"
 #include "function/taylor_function.hpp"
 #include "function/taylor_model.hpp"

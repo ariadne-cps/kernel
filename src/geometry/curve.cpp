@@ -24,7 +24,7 @@
 
 #include "function/functional.hpp"
 #include "function/taylor_model.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include <cassert>
 
 #include "algebra/vector.hpp"

@@ -36,7 +36,7 @@
 #include "geometry/grid_paving.hpp"
 #include "algebra/polynomial.hpp"
 #include "function/function.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "function/procedure.hpp"
 #include "function/constraint.hpp"
 #include "solving/nonlinear_programming.hpp"

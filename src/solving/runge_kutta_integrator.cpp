@@ -33,7 +33,7 @@
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
 #include "function/taylor_model.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 
 namespace Ariadne {
 

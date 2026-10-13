@@ -28,7 +28,7 @@
 #include "algebra/polynomial.hpp"
 #include "function/function.hpp"
 #include "function/taylor_function.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "function/procedure.hpp"
 #include "solving/nonlinear_programming.hpp"
 #include "solving/constraint_solver.hpp"
