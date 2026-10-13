@@ -317,6 +317,11 @@ class TestGraphics {
         ARIADNE_TEST_EQUALS(time_projection.x_coordinate(),1u)
         ARIADNE_TEST_EQUALS(time_projection.y_coordinate(),0u)
 
+        Projection2d contained_time_projection = projection(RealSpace({TimeVariable(),y}),Variables2d(TimeVariable(),y));
+        ARIADNE_TEST_EQUALS(contained_time_projection.argument_size(),2u)
+        ARIADNE_TEST_EQUALS(contained_time_projection.x_coordinate(),0u)
+        ARIADNE_TEST_EQUALS(contained_time_projection.y_coordinate(),1u)
+
         ARIADNE_TEST_FAIL(projection(space,Variables2d(z,y)))
         ARIADNE_TEST_FAIL(projection(space,Variables2d(x,z)))
     }
@@ -383,7 +388,8 @@ class TestGraphics {
         unsigned int const old_verbosity = Logger::instance().configuration().verbosity();
         Logger::instance().configuration().set_verbosity(0u);
         figure.write("test_graphics-labelled");
-        Logger::instance().configuration().set_verbosity(1u);
+
+        Logger::instance().configuration().set_verbosity(2u);
         figure.write("test_graphics-labelled-sized",64u,64u);
 
         figure.clear();
