@@ -1,8 +1,8 @@
-#ifndef ARIADNE_LABELLED_SET_HPP
-#define ARIADNE_LABELLED_SET_HPP
+#ifndef ARIADNE_LABELLING_SET_HPP
+#define ARIADNE_LABELLING_SET_HPP
 
 #include "symbolic/expression_set.hpp"
-#include "labelled/graphics_interface.hpp"
+#include "labelling/graphics_interface.hpp"
 
 namespace Ariadne {
 

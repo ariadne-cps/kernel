@@ -1,4 +1,4 @@
-#include "labelled/point.tpl.hpp"
+#include "labelling/point.tpl.hpp"
 
 namespace Ariadne {
 

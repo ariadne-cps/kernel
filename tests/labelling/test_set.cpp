@@ -4,7 +4,7 @@
 #include "geometry/box.hpp"
 #include "symbolic/expression_set.hpp"
 #include "symbolic/space.hpp"
-#include "labelled/set.hpp"
+#include "labelling/set.hpp"
 
 using namespace Ariadne;
 

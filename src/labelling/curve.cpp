@@ -1,5 +1,5 @@
-#include "labelled/curve.hpp"
-#include "labelled/figure.hpp"
+#include "labelling/curve.hpp"
+#include "labelling/figure.hpp"
 
 namespace Ariadne {
 
@@ -10,7 +10,7 @@ RealSpace LabelledInterpolatedCurve::state_space() const {
     return RealSpace(this->_state_variables);
 }
 
-LabelledInterpolatedCurve* LabelledInterpolatedCurve::labelled_clone() const {
+LabelledInterpolatedCurve* LabelledInterpolatedCurve::labelling_clone() const {
     return new LabelledInterpolatedCurve(*this);
 }
 

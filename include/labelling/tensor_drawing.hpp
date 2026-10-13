@@ -1,5 +1,5 @@
 /***************************************************************************
- *            labelled/tensor_drawing.hpp
+ *            labelling/tensor_drawing.hpp
  *
  *  Copyright  2026  Ariadne contributors
  *
@@ -22,19 +22,19 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file labelled/tensor_drawing.hpp
+/*! \file labelling/tensor_drawing.hpp
  *  \brief Drawing adapters for algebraic Tensor data.
  */
 
-#ifndef ARIADNE_LABELLED_TENSOR_DRAWING_HPP
-#define ARIADNE_LABELLED_TENSOR_DRAWING_HPP
+#ifndef ARIADNE_LABELLING_TENSOR_DRAWING_HPP
+#define ARIADNE_LABELLING_TENSOR_DRAWING_HPP
 
 
 #include "algebra/tensor.hpp"
 #include "numeric/floatdp.hpp"
 #include "numeric/floatmp.hpp"
-#include "labelled/figure.hpp"
-#include "labelled/graphics_interface.hpp"
+#include "labelling/figure.hpp"
+#include "labelling/graphics_interface.hpp"
 
 namespace Ariadne {
 
@@ -52,7 +52,7 @@ class TensorDrawable
     explicit TensorDrawable(Tensor<N,X> const& tensor) : _tensor(tensor) { }
 
     TensorDrawable* clone() const override { return new TensorDrawable(*this); }
-    TensorDrawable* labelled_clone() const override { return new TensorDrawable(*this); }
+    TensorDrawable* labelling_clone() const override { return new TensorDrawable(*this); }
 
     DimensionType dimension() const override { return _tensor.rank(); }
 
@@ -84,4 +84,4 @@ TensorDrawable<N,PR> tensor_drawable(Tensor<N,Float<PR>> const& tensor) {
 
 } // namespace Ariadne
 
-#endif // ARIADNE_LABELLED_TENSOR_DRAWING_HPP
+#endif // ARIADNE_LABELLING_TENSOR_DRAWING_HPP
