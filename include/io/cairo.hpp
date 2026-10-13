@@ -36,7 +36,7 @@ struct ImageSize2d {
     Nat nx,ny;
     ImageSize2d(Nat _nx,Nat _ny) : nx(_nx), ny(_ny) { }
     ImageSize2d(Int _nx,Int _ny) {
-        ARIADNE_ASSERT(_nx > 0 && _ny > 0);
+        ARIADNE_PRECONDITION(_nx > 0 && _ny > 0);
         nx = static_cast<Nat>(_nx);
         ny= static_cast<Nat>(_ny);
     }

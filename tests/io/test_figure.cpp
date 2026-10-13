@@ -155,6 +155,9 @@ class TestGraphics {
     }
 
     void test_cairo() {
+        ARIADNE_TEST_FAIL(ImageSize2d(0,1))
+        ARIADNE_TEST_FAIL(ImageSize2d(1,0))
+
         CairoCanvas canvas(ImageSize2d(32u,32u));
         canvas.initialise("x","y",-1.0,1.0,-1.0,1.0);
         canvas.set_dot_radius(4.0);
