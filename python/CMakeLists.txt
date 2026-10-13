@@ -27,26 +27,7 @@ if(Python3_FOUND)
     add_subdirectory(bindings)
 
     if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-        pybind11_add_module(pyariadne
-            $<TARGET_OBJECTS:pyariadne-kernel-entry-obj>
-            $<TARGET_OBJECTS:KERNEL_FUNCTION_SRC>
-            $<TARGET_OBJECTS:KERNEL_GEOMETRY_SRC>
-            $<TARGET_OBJECTS:KERNEL_IO_SRC>
-            $<TARGET_OBJECTS:KERNEL_SOLVING_SRC>
-            $<TARGET_OBJECTS:KERNEL_SYMBOLIC_SRC>
-            $<TARGET_OBJECTS:ALGEBRA_SRC>
-            $<TARGET_OBJECTS:INTERVAL_SRC>
-            $<TARGET_OBJECTS:NUMERIC_SRC>
-            $<TARGET_OBJECTS:FOUNDATION_SRC>
-            $<TARGET_OBJECTS:BDD_SRC>
-            $<TARGET_OBJECTS:THREADING_SRC>
-            $<TARGET_OBJECTS:LOGGING_SRC>
-            $<TARGET_OBJECTS:UTILITY_SRC>
-        )
-        target_link_libraries(pyariadne PRIVATE
-            pyariadne-kernel
-            kernel
-        )
+        ariadne_finalize_python_module(NAME kernel)
 
         set(PYTHON_BINDINGS_INSTALL_DIR "${Python3_SITEARCH}"
             CACHE STRING "Install destination for Python targets")
