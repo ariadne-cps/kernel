@@ -68,6 +68,31 @@ class TestAffineSet
         figure(ApproximateBoxType({{-1,+1},{-1,+1}}),Projection2d(2,0,1)),
         set(ExactBoxType::unit_box(2),Matrix<FloatDP>(2,2,dp),Vector<FloatDP>(2,dp)) { }
 
+    Void test_basic_coverage() {
+        RealBox real_box(2,RealInterval(-1,1));
+        ValidatedAffineConstrainedImageSet from_real(real_box);
+        ARIADNE_TEST_EQUALS(from_real.dimension(),2u);
+        ARIADNE_TEST_ASSERT(definitely(from_real.is_bounded()));
+        ARIADNE_TEST_EQUALS(from_real.number_of_constraints(),0u);
+
+        ExactBoxType exact_box({{-1.0_x,+1.0_x},{-2.0_x,+2.0_x}});
+        ValidatedAffineConstrainedImageSet from_exact(exact_box);
+        ARIADNE_TEST_EQUALS(from_exact.domain(),exact_box);
+        ARIADNE_TEST_ASSERT(definitely(from_exact.inside(ExactBoxType{{-2.0_x,+2.0_x},{-3.0_x,+3.0_x}})));
+
+        Vector<ValidatedAffineModelDP> models=ValidatedAffineModelDP::scalings(ExactBoxType::unit_box(2),dp);
+        ValidatedAffineConstrainedImageSet from_models(models);
+        List<ValidatedAffineModelConstraintDP> constraints;
+        ValidatedAffineConstrainedImageSet from_models_and_constraints(models,constraints);
+        ARIADNE_TEST_EQUALS(from_models.number_of_parameters(),2u);
+        ARIADNE_TEST_EQUALS(from_models_and_constraints.number_of_constraints(),0u);
+
+        auto y=ValidatedScalarMultivariateFunction::coordinates(2);
+        ValidatedVectorMultivariateFunction h({y[0]+y[1],y[0]-y[1]});
+        auto transformed=image(from_exact,h);
+        ARIADNE_TEST_EQUALS(transformed.dimension(),2u);
+    }
+
     Void test_pure_constraint() {
         figure.clear();
 
@@ -466,6 +491,7 @@ class TestAffineSet
 
     Void test() {
         figure.set_bounding_box(ExactBoxType{{-4.0_x,+4.0_x},{-4.0_x,+4.0_x}});
+        ARIADNE_TEST_CALL(test_basic_coverage());
         ARIADNE_TEST_CALL(test_empty());
         ARIADNE_TEST_CALL(test_invalid());
         ARIADNE_TEST_CALL(test_pure_constraint());
