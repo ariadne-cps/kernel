@@ -206,10 +206,6 @@ template<class OP> struct AlgebraScalar { }
 
 
 
-template<class X, class OP, class A> X evaluate(Symbolic<OP,A> const& s, X const& x);
-template<class X, class OP, class A1, class A2> X evaluate(Symbolic<OP,A1,A2> const& s, X const& x1, X const& x2);
-template<class X, class OP, class A1, class A2> X evaluate(Symbolic<OP,A1,A2> const& s, X const& x1, Int n2);
-
 namespace {
 
 template<class X, class OP> Void propagate(X& r, OP op, X const& x1, X const& x2) { r=op(x1,x2); }

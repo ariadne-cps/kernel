@@ -36,7 +36,6 @@
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "symbolic/formula.decl.hpp"
-#include "symbolic/templates.hpp"
 #include "function/function.decl.hpp"
 
 #include "numeric/operators.hpp"
@@ -69,16 +68,33 @@ Void simple_hull_reduce(
     ProcedureHullReductionStatistics& statistics);
 Void simple_hull_reduce(UpperBoxType& dom, const Vector<ValidatedProcedure>& f, BoxDomainType codom);
 
-struct ConstantProcedureInstruction : Symbolic<Cnst,SizeType> { using Symbolic<Cnst,SizeType>::Symbolic; };
-struct IndexProcedureInstruction : Symbolic<Var,SizeType> { using Symbolic<Var,SizeType>::Symbolic; };
-struct UnaryProcedureInstruction : Symbolic<UnaryElementaryOperator,SizeType> {
-    using Symbolic<UnaryElementaryOperator,SizeType>::Symbolic; };
-struct BinaryProcedureInstruction : Symbolic<BinaryElementaryOperator,SizeType,SizeType> {
-    using Symbolic<BinaryElementaryOperator,SizeType,SizeType>::Symbolic; };
-struct GradedProcedureInstruction : Symbolic<GradedElementaryOperator,SizeType,Int> {
-    using Symbolic<GradedElementaryOperator,SizeType,Int>::Symbolic; };
-struct ScalarProcedureInstruction : Symbolic<BinaryElementaryOperator,SizeType,SizeType> {
-    using Symbolic<BinaryElementaryOperator,SizeType,SizeType>::Symbolic; };
+struct ConstantProcedureInstruction {
+    Cnst _op; SizeType _val;
+    ConstantProcedureInstruction(Cnst op, SizeType val) : _op(op), _val(val) { }
+};
+struct IndexProcedureInstruction {
+    Var _op; SizeType _ind;
+    IndexProcedureInstruction(Var op, SizeType ind) : _op(op), _ind(ind) { }
+};
+struct UnaryProcedureInstruction {
+    UnaryElementaryOperator _op; SizeType _arg;
+    UnaryProcedureInstruction(UnaryElementaryOperator op, SizeType arg) : _op(op), _arg(arg) { }
+};
+struct BinaryProcedureInstruction {
+    BinaryElementaryOperator _op; SizeType _arg1, _arg2;
+    BinaryProcedureInstruction(BinaryElementaryOperator op, SizeType arg1, SizeType arg2)
+        : _op(op), _arg1(arg1), _arg2(arg2) { }
+};
+struct GradedProcedureInstruction {
+    GradedElementaryOperator _op; SizeType _arg; Int _num;
+    GradedProcedureInstruction(GradedElementaryOperator op, SizeType arg, Int num)
+        : _op(op), _arg(arg), _num(num) { }
+};
+struct ScalarProcedureInstruction {
+    BinaryElementaryOperator _op; SizeType _arg1, _arg2;
+    ScalarProcedureInstruction(BinaryElementaryOperator op, SizeType arg1, SizeType arg2)
+        : _op(op), _arg1(arg1), _arg2(arg2) { }
+};
 
 typedef Variant<ConstantProcedureInstruction,IndexProcedureInstruction,
                 UnaryProcedureInstruction,BinaryProcedureInstruction,GradedProcedureInstruction,ScalarProcedureInstruction> ProcedureInstructionVariant;
