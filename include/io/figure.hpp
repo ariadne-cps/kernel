@@ -66,9 +66,9 @@ inline Animated set_animated(Bool b) { return Animated(b); }
 
 struct GraphicsProperties {
     GraphicsProperties()
-        : dot_radius(1.0), line_style(true), line_width(1.0), line_colour(black), fill_style(true), fill_colour(orange), is_projected(false), is_3d(false), is_animated(false) { }
+        : dot_radius(1.0), line_style(true), line_width(1.0), line_colour(black), fill_style(true), fill_colour(orange), is_animated(false) { }
     GraphicsProperties(Bool ls, Dbl lw, Dbl dr, Colour lc, Bool fs, Colour fc)
-        : dot_radius(dr), line_style(ls), line_width(lw), line_colour(lc), fill_style(fs), fill_colour(fc), is_3d(false), is_animated(false) { }
+        : dot_radius(dr), line_style(ls), line_width(lw), line_colour(lc), fill_style(fs), fill_colour(fc), is_animated(false) { }
     Dbl dot_radius;
     Bool line_style;
     Dbl line_width;
@@ -76,8 +76,6 @@ struct GraphicsProperties {
     Bool fill_style;
     Colour fill_colour;
 
-    Bool is_projected;
-    Bool is_3d;
     Bool is_animated;
 
     GraphicsProperties& set_dot_radius(Dbl);
@@ -128,13 +126,6 @@ struct Variables2d {
     RealVariable y() const;
 };
 
-struct Variables3d {
-  Identifier _x,_y,_z;
-  Variables3d(const RealVariable& x, const RealVariable& y, const RealVariable& z);
-  RealVariable x() const;
-  RealVariable y() const;
-  RealVariable z() const;
-};
 
 struct Axes2d {
     Axes2d(const ApproximateDoubleVariableInterval x, const ApproximateDoubleVariableInterval& y);
@@ -143,12 +134,6 @@ struct Axes2d {
     Map<RealVariable,ApproximateDoubleInterval> bounds;
 };
 
-struct Axes3d {
-  Axes3d(const ApproximateDoubleVariableInterval x, const ApproximateDoubleVariableInterval y, const ApproximateDoubleVariableInterval z);
-  Axes3d(ApproximateDouble xl, const RealVariable x, ApproximateDouble xu, ApproximateDouble yl, const RealVariable y, ApproximateDouble yu, ApproximateDouble zl, const RealVariable z, ApproximateDouble zu);
-  Variables3d variables3d;
-  Map<RealVariable, ApproximateDoubleInterval> bounds;
-};
 
 //! \brief Class for plotting figures.
 class Figure
@@ -163,15 +148,11 @@ class Figure
     //! Construct a figure projecting \a bbx onto the (\a ix, \a iy) coordinates
     Figure(const GraphicsBoundingBoxType& bbx, Pair<DimensionType,DimensionType> ixy);
 
-    Figure(const GraphicsBoundingBoxType& bbx, const Projection3d& proj);
 
-    Figure(const GraphicsBoundingBoxType& bbx, DimensionType ix, DimensionType iy, DimensionType iz);
 
     Figure& set_projection_map(const Projection2d&);
-    Figure& set_projection_map(const Projection3d&);
     
     Projection2d get_2d_projection_map() const;
-    Projection3d get_3d_projection_map() const;
 
     Figure& set_bounding_box(const GraphicsBoundingBoxType&);
     
@@ -179,7 +160,6 @@ class Figure
     //! Set the displayed coordinates to (\a i, \a j)
     Figure& set_projection(DimensionType i, DimensionType j);
     Figure& set_projection(DimensionType as, DimensionType ix, DimensionType iy);
-    Figure& set_projection(DimensionType as, DimensionType ix, DimensionType iy, DimensionType iz);
     
     //! Set the radiues to draw points (dots).
     Figure& set_dot_radius(Dbl);
@@ -215,7 +195,6 @@ class Figure
     Figure& draw(const ApproximateBoxType& box);
     Figure& draw(const RealBox& box);
 
-    Figure& draw(const Drawable2d3dInterface& shape);
 
     //! Clear the figure.
     Figure& clear();
@@ -234,7 +213,6 @@ class Figure
     struct Data;
   public:
     Void _paint_all(CanvasInterface& canvas) const;
-    Void _paint3d(CanvasInterface& canvas) const;    
   
   private:
     Data* _data;
@@ -263,14 +241,11 @@ class LabelledFigure {
     //! Construct a figure drawing the given coordinates in the given bounds.
     LabelledFigure(const Axes2d& axes);
 
-    LabelledFigure(const Axes3d& axes);
 
     LabelledFigure(const Variables2d& vars, VariablesBox<ApproximateIntervalType> const& bnds);
 
-    LabelledFigure(const Variables3d& vars, VariablesBox<ApproximateIntervalType> const& bnds);
 
     Void set_axes(const Axes2d& axes);
-    Void set_axes(const Axes3d& axes);
 //    Void set_bounds(const RealVariable& x, const ApproximateDouble& l, const ApproximateDouble& u);
     Void set_bounds(const RealVariable& x, const ApproximateDoubleInterval& ivl);
     Void set_bounds(const Map<RealVariable,ApproximateDoubleInterval>& b);
@@ -282,7 +257,6 @@ class LabelledFigure {
 
     //! Add a set to draw onto the figure.
     LabelledFigure& draw(const LabelledDrawable2dInterface& shape);
-    LabelledFigure& draw(const LabelledDrawable2d3dInterface& shape);
 
     //! Clear the figure.
     LabelledFigure& clear();
@@ -300,7 +274,6 @@ class LabelledFigure {
     struct Data;
   public:
     Void _paint_all(CanvasInterface& canvas) const; // Writes all shapes to the canvas
-    Void _paint3d(CanvasInterface& canvas) const;
   private:
     Data* _data;
 };

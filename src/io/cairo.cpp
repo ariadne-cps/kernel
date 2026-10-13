@@ -104,11 +104,6 @@ Void CairoCanvas::set_fill_opacity(double o) { fc.opacity=o; }
 Void CairoCanvas::set_fill_colour(double r, double g, double b) { fc.red=r; fc.green=g; fc.blue=b; }
 
 
-// TODO: Use generic canvas routines; move cairo-specific functionality
-// into CairoCanvas class.
-[[noreturn]] Void CairoCanvas::initialise(StringType, StringType, StringType, double, double, double, double, double, double) {
-    ARIADNE_NOT_IMPLEMENTED;
-}
 Void CairoCanvas::initialise(StringType text_x, StringType text_y, double xl, double xu, double yl, double yu)
 {
     CairoCanvas& cairo_canvas=*this;
@@ -234,9 +229,6 @@ Void CairoCanvas::finalise()
     cairo_stroke (crp);
 }
 
-Void CairoCanvas::set_colour_palette() {  }
-Void CairoCanvas::fill_3d() {  }
-Void CairoCanvas::set_heat_map(Bool) {  }
 
 } // namespace Ariadne
 

@@ -38,7 +38,6 @@ namespace Ariadne {
 class NullCanvas : public CanvasInterface
 {
 public:
-    virtual Void initialise(StringType, StringType, StringType, double, double, double, double, double, double) { };
     virtual Void initialise(StringType, StringType, double, double, double, double) { }
     virtual Void finalise() { }
 
@@ -57,10 +56,6 @@ public:
     virtual Void set_line_colour(double, double, double) { }
     virtual Void set_fill_opacity(double) { }
     virtual Void set_fill_colour(double, double, double) { }
-
-    virtual Void set_heat_map(Bool) { }
-    virtual Void set_colour_palette() { }
-    virtual Void fill_3d() { }
 
     virtual Vector2d scaling() const { return Vector2d(0,0); }
     virtual Box2d bounds() const { return Box2d(0,0,0,0); }

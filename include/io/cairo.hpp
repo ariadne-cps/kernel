@@ -54,7 +54,6 @@ class CairoCanvas
   public:
     ~CairoCanvas();
     CairoCanvas(const ImageSize2d& size);
-    [[noreturn]] Void initialise(StringType x, StringType y, StringType z, double xl, double xu, double yl, double yu, double lz, double uz);
     Void initialise(StringType x, StringType y, double xl, double xu, double yl, double yu);
     Void write(const char* filename) const;
     Void finalise();
@@ -71,9 +70,6 @@ class CairoCanvas
     Void set_fill_opacity(double o);
     Void set_fill_colour(double r, double g, double b);
 
-    Void set_colour_palette();
-    Void fill_3d();
-    Void set_heat_map(Bool b);
   public:
     ImageSize2d size_in_pixels() const;
 };

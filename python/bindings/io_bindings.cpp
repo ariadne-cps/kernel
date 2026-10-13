@@ -152,8 +152,6 @@ Void export_graphics_properties(pybind11::module& module)
     graphics_properties_class.def_readwrite("line_colour", &GraphicsProperties::line_colour);
     graphics_properties_class.def_readwrite("fill_style", &GraphicsProperties::fill_style);
     graphics_properties_class.def_readwrite("fill_colour", &GraphicsProperties::fill_colour);
-    graphics_properties_class.def_readwrite("is_projected", &GraphicsProperties::is_projected);
-    graphics_properties_class.def_readwrite("is_3d", &GraphicsProperties::is_3d);
     graphics_properties_class.def_readwrite("is_animated", &GraphicsProperties::is_animated);
     graphics_properties_class.def("__str__", &__cstr__<GraphicsProperties>);
     graphics_properties_class.def("__repr__", &__cstr__<GraphicsProperties>);

@@ -134,11 +134,6 @@ class TestGraphics {
     }
 
     void test_graphics_interface() {
-        Projection3d projection(4,3,2,1);
-        ARIADNE_TEST_EQUALS(projection.x_coordinate(),3u)
-        ARIADNE_TEST_EQUALS(projection.y_coordinate(),2u)
-        ARIADNE_TEST_EQUALS(projection.z_coordinate(),1u)
-
         GraphicsBoundingBoxType bx({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)},
                                     {FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)}});
         Figure figure(bx,0,1);
@@ -163,14 +158,8 @@ class TestGraphics {
         canvas.set_dot_radius(4.0);
         canvas.circle(0.0,0.0,0.25);
         canvas.dot(0.5,0.5);
-        canvas.set_colour_palette();
-        canvas.set_heat_map(true);
-        canvas.fill_3d();
         canvas.finalise();
         canvas.write("test_cairo-explicit.png");
-
-        CairoCanvas canvas3d(ImageSize2d(16u,16u));
-        ARIADNE_TEST_FAIL(canvas3d.initialise("x","y","z",-1.0,1.0,-1.0,1.0,-1.0,1.0))
     }
 
     void test_construct_figure() {
@@ -179,15 +168,11 @@ class TestGraphics {
                                     {FloatDPApproximation(-2.0,dp),FloatDPApproximation(2.0,dp)}});
         ARIADNE_TEST_EXECUTE(Figure(bx3,0,1))
         ARIADNE_TEST_EXECUTE(Figure(bx3,{0,1}))
-        ARIADNE_TEST_EXECUTE(Figure(bx3,0,1,2))
         ARIADNE_TEST_EXECUTE(Figure(bx3,Projection2d(3,0,1)))
-        ARIADNE_TEST_EXECUTE(Figure(bx3,Projection3d(3,2,1,0)))
         GraphicsBoundingBoxType bx1({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)}});
         ARIADNE_TEST_FAIL(Figure(bx1,0,1))
         ARIADNE_TEST_FAIL(Figure(bx1,{0,1}))
-        ARIADNE_TEST_FAIL(Figure(bx1,0,1,2))
         ARIADNE_TEST_FAIL(Figure(bx1,Projection2d(2,0,1)))
-        ARIADNE_TEST_FAIL(Figure(bx1,Projection3d(3,2,1,0)))
         Figure fig(bx3,0,1);
         ARIADNE_TEST_PRINT(fig.get_bounding_box())
         auto const& p = fig.properties();
@@ -199,32 +184,21 @@ class TestGraphics {
                                     {FloatDPApproximation(-1.0,dp),FloatDPApproximation(0.0,dp)},
                                     {FloatDPApproximation(-2.0,dp),FloatDPApproximation(2.0,dp)}});
         Figure f(bx,0,1,2);
-        f.set_projection(3,0,2,1);
         ARIADNE_TEST_FAIL(f.set_projection(4,0,1))
-        ARIADNE_TEST_FAIL(f.set_projection(4,0,1,2))
         ARIADNE_TEST_EXECUTE(f.set_projection(3,0,1))
-        ARIADNE_TEST_EXECUTE(f.set_projection(3,0,1,2))
         ARIADNE_TEST_FAIL(f.set_projection_map(Projection2d(4,0,1)))
-        ARIADNE_TEST_FAIL(f.set_projection_map(Projection3d(4,0,1,2)))
         ARIADNE_TEST_EXECUTE(f.set_projection_map(Projection2d(3,0,1)))
-        ARIADNE_TEST_EXECUTE(f.set_projection_map(Projection3d(3,2,0,1)))
         ARIADNE_TEST_PRINT(f.get_2d_projection_map())
-        ARIADNE_TEST_PRINT(f.get_3d_projection_map())
     }
 
     void test_construct_labelled_figure() {
-        RealVariable x("x"), y("y"), z("z");
+        RealVariable x("x"), y("y");
         GraphicsBoundingBoxType bx1d({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)}});
         GraphicsBoundingBoxType bx2d({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)},
                                       {FloatDPApproximation(-1.0,dp),FloatDPApproximation(0.0,dp)}});
-        GraphicsBoundingBoxType bx3d({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)},
-                                    {FloatDPApproximation(-1.0,dp),FloatDPApproximation(0.0,dp)},
-                                    {FloatDPApproximation(-2.0,dp),FloatDPApproximation(2.0,dp)}});
         ARIADNE_TEST_FAIL(LabelledFigure(Variables2d({x,y}),VariablesBox<ApproximateIntervalType>(RealSpace({x}),bx1d)))
         ARIADNE_TEST_EXECUTE(LabelledFigure(Variables2d({x,y}),VariablesBox<ApproximateIntervalType>(RealSpace({x,y}),bx2d)))
-        ARIADNE_TEST_FAIL(LabelledFigure(Variables3d({x,y,z}),VariablesBox<ApproximateIntervalType>(RealSpace({x,y}),bx2d)))
-        ARIADNE_TEST_EXECUTE(LabelledFigure(Variables3d({x,y,z}),VariablesBox<ApproximateIntervalType>(RealSpace({x,y,z}),bx3d)))
-        LabelledFigure f(Variables3d({x,y,z}),VariablesBox<ApproximateIntervalType>(RealSpace({x,y,z}),bx3d));
+        LabelledFigure f(Variables2d({x,y}),VariablesBox<ApproximateIntervalType>(RealSpace({x,y}),bx2d));
         auto const& p = f.properties();
         ARIADNE_TEST_PRINT(p)
     }
@@ -233,7 +207,6 @@ class TestGraphics {
         RealVariable x("x"), y("y"), z("z");
         LabelledFigure f(Axes2d({0<=x<=1,-1<=y<=2}));
         ARIADNE_TEST_EXECUTE(f.set_axes(Axes2d({0<=z<=1,-1<=y<=2})))
-        ARIADNE_TEST_EXECUTE(f.set_axes(Axes3d({0<=z<=1,-1<=y<=2,0<=x<=2})))
         ARIADNE_TEST_EXECUTE(f.set_bounds(x,ApproximateDoubleInterval(1.0,2.0)))
         ARIADNE_TEST_EXECUTE(f.set_bounds({{x,ApproximateDoubleInterval(1.0,2.0)},{y,ApproximateDoubleInterval(0.0,1.0)}}))
         ARIADNE_TEST_EXECUTE(f.set_bounding_box(VariablesBox<ApproximateIntervalType>(RealSpace({x}),GraphicsBoundingBoxType({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)}}))))

@@ -42,8 +42,6 @@ class TestNullGraphics {
         NullCanvas canvas;
 
         canvas.initialise("x", "y", -1.0, 1.0, -2.0, 2.0);
-        canvas.initialise("x", "y", "z", -1.0, 1.0, -2.0, 2.0, -3.0, 3.0);
-
         canvas.move_to(0.0, 0.0);
         canvas.line_to(1.0, 1.0);
         canvas.circle(0.5, 0.5, 0.25);
@@ -58,10 +56,6 @@ class TestNullGraphics {
         canvas.set_line_colour(0.1, 0.2, 0.3);
         canvas.set_fill_opacity(0.5);
         canvas.set_fill_colour(0.4, 0.5, 0.6);
-        canvas.set_heat_map(true);
-        canvas.set_colour_palette();
-        canvas.fill_3d();
-
         Vector2d scaling = canvas.scaling();
         ARIADNE_TEST_EQUALS(scaling.x, 0.0)
         ARIADNE_TEST_EQUALS(scaling.y, 0.0)
