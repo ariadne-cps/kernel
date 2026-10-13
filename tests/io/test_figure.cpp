@@ -51,8 +51,10 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_cairo())
         ARIADNE_TEST_CALL(test_construct_figure())
         ARIADNE_TEST_CALL(test_figure_projection())
+        ARIADNE_TEST_CALL(test_figure_public_api())
         ARIADNE_TEST_CALL(test_construct_labelled_figure())
         ARIADNE_TEST_CALL(test_labelled_figure_projection())
+        ARIADNE_TEST_CALL(test_labelled_figure_drawing())
         ARIADNE_TEST_CALL(test_default_drawer())
     }
 
@@ -249,6 +251,70 @@ class TestGraphics {
         ARIADNE_TEST_FAIL(f.set_projection_map(Projection2d(4,0,1)))
         ARIADNE_TEST_EXECUTE(f.set_projection_map(Projection2d(3,0,1)))
         ARIADNE_TEST_PRINT(f.get_2d_projection_map())
+    }
+
+    void test_figure_public_api() {
+        RealVariable x("x"), y("y");
+        Axes2d numeric_axes(-2.0,x,2.0,-1.5,y,1.5);
+        ARIADNE_TEST_EQUALS(numeric_axes.variables.x(),x)
+        ARIADNE_TEST_EQUALS(numeric_axes.variables.y(),y)
+
+        GraphicsBoundingBoxType bx({
+            {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)},
+            {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)}
+        });
+        Figure figure(bx,0,1);
+
+        figure.set_dot_radius(3.0)
+              .set_line_style(false)
+              .set_fill_style(false)
+              .set_animated(true);
+
+        ARIADNE_TEST_EQUALS(figure.get_dot_radius(),3.0)
+        ARIADNE_TEST_EQUALS(figure.get_line_style(),false)
+        ARIADNE_TEST_EQUALS(figure.get_line_width(),1.0)
+        ARIADNE_TEST_EQUALS(figure.get_fill_style(),false)
+        ARIADNE_TEST_EQUALS(figure.get_fill_opacity(),1.0)
+        ARIADNE_TEST_EQUALS(figure.get_line_colour().red,0.0)
+        ARIADNE_TEST_EQUALS(figure.get_fill_colour().red,1.0)
+
+        Figure const& const_figure=figure;
+        ARIADNE_TEST_EQUALS(const_figure.properties().is_animated,true)
+
+        RealBox real_box({{-0.5_dec,0.5_dec},{-0.25_dec,0.25_dec}});
+        draw(figure,real_box);
+        figure.draw(real_box);
+
+        NullCanvas canvas;
+        figure._paint_all(canvas);
+    }
+
+    void test_labelled_figure_drawing() {
+        RealVariable x("x"), y("y");
+        Axes2d axes(-2.0,x,2.0,-1.5,y,1.5);
+        LabelledFigure figure(axes);
+
+        LabelledSet<RealBox> labelled_region(
+            RealSpace({x,y}),
+            RealBox({{-1.25_dec,0.75_dec},{-0.75_dec,1.00_dec}})
+        );
+
+        figure.properties()
+              .set_line_style(false)
+              .set_fill_style(false)
+              .set_dot_radius(2.0);
+
+        LabelledFigure const& const_figure=figure;
+        ARIADNE_TEST_EQUALS(const_figure.properties().line_style,false)
+
+        figure.draw(LabelledDrawableWrapper<RealBox>(labelled_region));
+        figure << labelled_region;
+        figure.set_animated(true);
+        figure.write("test_graphics-labelled");
+        figure.write("test_graphics-labelled-sized",64u,64u);
+
+        figure.clear();
+        figure.write("test_graphics-labelled-empty",32u,32u);
     }
 
     void test_construct_labelled_figure() {
