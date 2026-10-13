@@ -239,7 +239,6 @@ void print_results(
     struct DisplayRow {
         std::string integrator;
         std::string function;
-        std::string repetitions;
         std::string time_us_per_step;
         std::string remainder;
         std::string component_remainders;
@@ -257,7 +256,6 @@ void print_results(
         rows.push_back({
             result.integrator,
             result.function,
-            to_string(result.repetitions),
             to_string(result.time_us_per_step),
             to_string(result.remainder),
             to_string(result.component_remainders)
@@ -266,7 +264,6 @@ void print_results(
 
     std::size_t integrator_width=std::string("integrator").size();
     std::size_t function_width=std::string("function").size();
-    std::size_t repetitions_width=std::string("repetitions").size();
     std::size_t time_width=std::string("time_us_per_step").size();
     std::size_t remainder_width=std::string("remainder").size();
     std::size_t component_remainders_width=
@@ -275,8 +272,6 @@ void print_results(
     for(const auto& row : rows) {
         integrator_width=std::max(integrator_width,row.integrator.size());
         function_width=std::max(function_width,row.function.size());
-        repetitions_width=std::max(
-            repetitions_width,row.repetitions.size());
         time_width=std::max(time_width,row.time_us_per_step.size());
         remainder_width=std::max(remainder_width,row.remainder.size());
         component_remainders_width=std::max(
@@ -297,15 +292,12 @@ void print_results(
 
     const auto print_metrics=[
             &print_column,
-            repetitions_width,
             time_width,
             remainder_width,
             component_remainders_width](
             std::ostringstream& table,
             const DisplayRow& row)
     {
-        table<<std::string(column_spacing,' ');
-        print_column(table,row.repetitions,repetitions_width);
         table<<std::string(column_spacing,' ');
         print_column(table,row.time_us_per_step,time_width);
         table<<std::string(column_spacing,' ');
@@ -319,14 +311,11 @@ void print_results(
 
     const auto print_metric_headers=[
             &print_column,
-            repetitions_width,
             time_width,
             remainder_width,
             component_remainders_width](
             std::ostringstream& table)
     {
-        table<<std::string(column_spacing,' ');
-        print_column(table,"repetitions",repetitions_width);
         table<<std::string(column_spacing,' ');
         print_column(table,"time_us_per_step",time_width);
         table<<std::string(column_spacing,' ');
