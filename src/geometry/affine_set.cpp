@@ -511,8 +511,8 @@ ValidatedAffineConstrainedImageSet::robust_adjoin_outer_approximation_to(PavingI
         lp.u[i]=+1;
     }
     for(SizeType i=0; i!=nc; ++i) {
-        lp.l[ne+nx+i]=0;
-        lp.u[ne+nx+i]=infty;
+        lp.l[ne+nx+i]=-this->_constraint_models[i].upper_bound().value();
+        lp.u[ne+nx+i]=-this->_constraint_models[i].lower_bound().value();
     }
 
 
