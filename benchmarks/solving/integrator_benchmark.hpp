@@ -72,9 +72,9 @@ struct DegreeRange {
     std::optional<Nat> minimum;
     std::optional<Nat> maximum;
 
-    bool contains(Nat degree) const {
-        return (!minimum || degree>=*minimum)
-            && (!maximum || degree<=*maximum);
+    bool contains(Nat polynomial_degree_value) const {
+        return (!minimum || polynomial_degree_value>=*minimum)
+            && (!maximum || polynomial_degree_value<=*maximum);
     }
 };
 
@@ -438,8 +438,8 @@ inline const char* characteristic_name(AlgebraicClass value) {
         case AlgebraicClass::Affine: return "affine";
         case AlgebraicClass::Polynomial: return "polynomial";
         case AlgebraicClass::Analytic: return "analytic";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(Sparsity value) {
@@ -447,8 +447,8 @@ inline const char* characteristic_name(Sparsity value) {
         case Sparsity::Sparse: return "sparse";
         case Sparsity::Intermediate: return "intermediate";
         case Sparsity::Dense: return "dense";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(CouplingStrength value) {
@@ -456,8 +456,8 @@ inline const char* characteristic_name(CouplingStrength value) {
         case CouplingStrength::Weak: return "weak";
         case CouplingStrength::Moderate: return "moderate";
         case CouplingStrength::Strong: return "strong";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(CouplingStructure value) {
@@ -466,8 +466,8 @@ inline const char* characteristic_name(CouplingStructure value) {
         case CouplingStructure::Directed: return "directed";
         case CouplingStructure::Bidirectional: return "bidirectional";
         case CouplingStructure::Global: return "global";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(FlowDegreeGrowth value) {
@@ -477,8 +477,8 @@ inline const char* characteristic_name(FlowDegreeGrowth value) {
         case FlowDegreeGrowth::Moderate: return "moderate";
         case FlowDegreeGrowth::Fast: return "fast";
         case FlowDegreeGrowth::Unbounded: return "unbounded";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(ScaleSeparation value) {
@@ -486,8 +486,8 @@ inline const char* characteristic_name(ScaleSeparation value) {
         case ScaleSeparation::Low: return "low";
         case ScaleSeparation::Moderate: return "moderate";
         case ScaleSeparation::High: return "high";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(Anisotropy value) {
@@ -495,8 +495,8 @@ inline const char* characteristic_name(Anisotropy value) {
         case Anisotropy::Low: return "low";
         case Anisotropy::Moderate: return "moderate";
         case Anisotropy::High: return "high";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(RotationShear value) {
@@ -504,8 +504,8 @@ inline const char* characteristic_name(RotationShear value) {
         case RotationShear::Low: return "low";
         case RotationShear::Moderate: return "moderate";
         case RotationShear::High: return "high";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline std::string describe(const BenchmarkCase& benchmark_case) {
@@ -667,8 +667,8 @@ inline Nat parse_selector_nat(const std::string& value) {
 inline DegreeRange parse_degree_range(const std::string& value) {
     const std::size_t separator=value.find(':');
     if(separator==std::string::npos) {
-        const Nat degree=parse_selector_nat(value);
-        return {degree,degree};
+        const Nat polynomial_degree_value=parse_selector_nat(value);
+        return {polynomial_degree_value,polynomial_degree_value};
     }
     if(value.find(':',separator+1u)!=std::string::npos) {
         throw std::runtime_error(
@@ -771,108 +771,181 @@ inline RotationShear parse_rotation_shear(const std::string& value) {
         "Unknown rotation/shear '"+value+"'.");
 }
 
-inline bool acquire_selector_option(
-        const std::string& argument,
-        const std::string& name,
-        std::string& value)
+inline List<ArgumentParser> make_benchmark_argument_parsers(
+        BenchmarkCommandLineSelection& selection)
 {
-    const std::string prefix="--"+name+"=";
-    if(argument.compare(0u,prefix.size(),prefix)!=0) {
-        return false;
-    }
-    value=argument.substr(prefix.size());
-    return true;
-}
+    List<ArgumentParser> parsers;
 
-inline BenchmarkCommandLineSelection acquire_benchmark_selection(
-        Int argc,
-        const char* argv[],
-        List<String>& cli_arguments)
-{
-    BenchmarkCommandLineSelection selection;
-    bool integrator_found=false;
-    bool degree_found=false;
-
-    cli_arguments.append(String(argv[0]));
-    for(Int i=1; i!=argc; ++i) {
-        const std::string argument(argv[i]);
-        std::string value;
-
-        if(is_integrator_selection(argument)) {
-            if(integrator_found) {
+    parsers.append(make_valued_argument_parser(
+        "",
+        "integrator",
+        "Choose the integrator or 'all'",
+        [&selection](String const& value) -> VoidFunction {
+            const std::string parsed=value;
+            if(!is_integrator_selection(parsed)) {
                 throw std::runtime_error(
-                    "Integrator selection specified more than once.");
+                    "Unknown integrator '"+parsed+"'.");
             }
-            selection.integrator=argument;
-            integrator_found=true;
-        } else if(argument=="--list-cases") {
+            return [&selection,parsed] {
+                selection.integrator=parsed;
+            };
+        }));
+
+    parsers.append(make_unvalued_argument_parser(
+        "",
+        "list-cases",
+        "List benchmark cases selected by the filters",
+        [&selection] {
             selection.list_cases=true;
-        } else if(acquire_selector_option(
-                argument,"dimension",value)) {
+        }));
+
+    parsers.append(make_valued_argument_parser(
+        "",
+        "dimension",
+        "Select dimensions as a comma-separated list, e.g. 2,4",
+        [&selection](String const& value) -> VoidFunction {
+            std::set<Nat> parsed;
             for(const auto& item : split_selector_values(value)) {
+                parsed.insert(parse_selector_nat(item));
+            }
+            return [&selection,parsed] {
                 selection.benchmarks.dimensions.insert(
-                    parse_selector_nat(item));
-            }
-        } else if(acquire_selector_option(argument,"class",value)) {
+                    parsed.begin(),parsed.end());
+            };
+        }));
+
+    parsers.append(make_valued_argument_parser(
+        "",
+        "class",
+        "Select algebraic classes: affine, polynomial, analytic",
+        [&selection](String const& value) -> VoidFunction {
+            std::set<AlgebraicClass> parsed;
             for(const auto& item : split_selector_values(value)) {
+                parsed.insert(parse_algebraic_class(item));
+            }
+            return [&selection,parsed] {
                 selection.benchmarks.algebraic_classes.insert(
-                    parse_algebraic_class(item));
-            }
-        } else if(acquire_selector_option(argument,"degree",value)) {
-            if(degree_found) {
-                throw std::runtime_error(
-                    "Degree range specified more than once.");
-            }
-            selection.benchmarks.polynomial_degree=
-                parse_degree_range(value);
-            degree_found=true;
-        } else if(acquire_selector_option(
-                argument,"sparsity",value)) {
+                    parsed.begin(),parsed.end());
+            };
+        }));
+
+    parsers.append(make_valued_argument_parser(
+        "",
+        "degree",
+        "Select polynomial degree range: N, N:M, N:, or :M",
+        [&selection](String const& value) -> VoidFunction {
+            const DegreeRange parsed=parse_degree_range(value);
+            return [&selection,parsed] {
+                selection.benchmarks.polynomial_degree=parsed;
+            };
+        }));
+
+    parsers.append(make_valued_argument_parser(
+        "",
+        "sparsity",
+        "Select sparsity: sparse, intermediate, dense",
+        [&selection](String const& value) -> VoidFunction {
+            std::set<Sparsity> parsed;
             for(const auto& item : split_selector_values(value)) {
+                parsed.insert(parse_sparsity(item));
+            }
+            return [&selection,parsed] {
                 selection.benchmarks.sparsities.insert(
-                    parse_sparsity(item));
-            }
-        } else if(acquire_selector_option(
-                argument,"coupling-strength",value)) {
+                    parsed.begin(),parsed.end());
+            };
+        }));
+
+    parsers.append(make_valued_argument_parser(
+        "",
+        "coupling-strength",
+        "Select coupling strength: weak, moderate, strong",
+        [&selection](String const& value) -> VoidFunction {
+            std::set<CouplingStrength> parsed;
             for(const auto& item : split_selector_values(value)) {
+                parsed.insert(parse_coupling_strength(item));
+            }
+            return [&selection,parsed] {
                 selection.benchmarks.coupling_strengths.insert(
-                    parse_coupling_strength(item));
-            }
-        } else if(acquire_selector_option(
-                argument,"coupling-structure",value)) {
+                    parsed.begin(),parsed.end());
+            };
+        }));
+
+    parsers.append(make_valued_argument_parser(
+        "",
+        "coupling-structure",
+        "Select coupling structure: decoupled, directed, bidirectional, global",
+        [&selection](String const& value) -> VoidFunction {
+            std::set<CouplingStructure> parsed;
             for(const auto& item : split_selector_values(value)) {
+                parsed.insert(parse_coupling_structure(item));
+            }
+            return [&selection,parsed] {
                 selection.benchmarks.coupling_structures.insert(
-                    parse_coupling_structure(item));
-            }
-        } else if(acquire_selector_option(
-                argument,"flow-growth",value)) {
+                    parsed.begin(),parsed.end());
+            };
+        }));
+
+    parsers.append(make_valued_argument_parser(
+        "",
+        "flow-growth",
+        "Select flow-degree growth: none, slow, moderate, fast, unbounded",
+        [&selection](String const& value) -> VoidFunction {
+            std::set<FlowDegreeGrowth> parsed;
             for(const auto& item : split_selector_values(value)) {
+                parsed.insert(parse_flow_degree_growth(item));
+            }
+            return [&selection,parsed] {
                 selection.benchmarks.flow_degree_growths.insert(
-                    parse_flow_degree_growth(item));
-            }
-        } else if(acquire_selector_option(
-                argument,"scale-separation",value)) {
+                    parsed.begin(),parsed.end());
+            };
+        }));
+
+    parsers.append(make_valued_argument_parser(
+        "",
+        "scale-separation",
+        "Select scale separation: low, moderate, high",
+        [&selection](String const& value) -> VoidFunction {
+            std::set<ScaleSeparation> parsed;
             for(const auto& item : split_selector_values(value)) {
+                parsed.insert(parse_scale_separation(item));
+            }
+            return [&selection,parsed] {
                 selection.benchmarks.scale_separations.insert(
-                    parse_scale_separation(item));
-            }
-        } else if(acquire_selector_option(
-                argument,"anisotropy",value)) {
+                    parsed.begin(),parsed.end());
+            };
+        }));
+
+    parsers.append(make_valued_argument_parser(
+        "",
+        "anisotropy",
+        "Select anisotropy: low, moderate, high",
+        [&selection](String const& value) -> VoidFunction {
+            std::set<Anisotropy> parsed;
             for(const auto& item : split_selector_values(value)) {
+                parsed.insert(parse_anisotropy(item));
+            }
+            return [&selection,parsed] {
                 selection.benchmarks.anisotropies.insert(
-                    parse_anisotropy(item));
-            }
-        } else if(acquire_selector_option(
-                argument,"rotation-shear",value)) {
+                    parsed.begin(),parsed.end());
+            };
+        }));
+
+    parsers.append(make_valued_argument_parser(
+        "",
+        "rotation-shear",
+        "Select rotation/shear: low, moderate, high",
+        [&selection](String const& value) -> VoidFunction {
+            std::set<RotationShear> parsed;
             for(const auto& item : split_selector_values(value)) {
-                selection.benchmarks.rotation_shears.insert(
-                    parse_rotation_shear(item));
+                parsed.insert(parse_rotation_shear(item));
             }
-        } else {
-            cli_arguments.append(String(argv[i]));
-        }
-    }
-    return selection;
+            return [&selection,parsed] {
+                selection.benchmarks.rotation_shears.insert(
+                    parsed.begin(),parsed.end());
+            };
+        }));
+
+    return parsers;
 }
 
 } // namespace IntegratorBenchmark

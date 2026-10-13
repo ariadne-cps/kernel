@@ -46,6 +46,7 @@ class TestCommandLineInterface {
         ARIADNE_TEST_CALL(test_theme_parsing())
         ARIADNE_TEST_CALL(test_verbosity_parsing())
         ARIADNE_TEST_CALL(test_multiple_argument_parsing())
+        ARIADNE_TEST_CALL(test_extra_argument_parsing())
         ARIADNE_TEST_CALL(test_unrecognised_argument())
         ARIADNE_TEST_CALL(test_duplicate_argument())
         ARIADNE_TEST_CALL(test_print_help())
@@ -195,6 +196,55 @@ class TestCommandLineInterface {
         ARIADNE_TEST_ASSERT(success)
         ARIADNE_TEST_EQUALS(ThreadManager::instance().concurrency(),2)
         ARIADNE_TEST_EQUALS(Logger::instance().configuration().verbosity(),4)
+    }
+
+    void test_extra_argument_parsing() {
+        Nat custom_value=0u;
+        Bool custom_flag=false;
+
+        List<ArgumentParser> extra_parsers({
+            make_valued_argument_parser(
+                "",
+                "custom-value",
+                "Set a custom non-negative integer",
+                [&custom_value](String const& value) -> VoidFunction {
+                    int parsed=std::stoi(value);
+                    if(parsed<0) {
+                        throw std::runtime_error("negative custom value");
+                    }
+                    return [&custom_value,parsed] {
+                        custom_value=static_cast<Nat>(parsed);
+                    };
+                }),
+            make_unvalued_argument_parser(
+                "",
+                "custom-flag",
+                "Enable a custom flag",
+                [&custom_flag] {
+                    custom_flag=true;
+                })
+        });
+
+        // Exercise help formatting for long-only extra arguments.
+        ARIADNE_TEST_EXECUTE(extra_parsers[0].help_description_header_size())
+
+        Bool success=CommandLineInterface::instance().acquire(
+            {"","--custom-value","3","--custom-flag","--verbosity","2"},
+            extra_parsers);
+        ARIADNE_TEST_ASSERT(success)
+        ARIADNE_TEST_EQUALS(custom_value,3u)
+        ARIADNE_TEST_ASSERT(custom_flag)
+        ARIADNE_TEST_EQUALS(Logger::instance().configuration().verbosity(),2)
+
+        Bool duplicate=CommandLineInterface::instance().acquire(
+            {"","--custom-value","1","--custom-value","2"},
+            extra_parsers);
+        ARIADNE_TEST_ASSERT(not duplicate)
+
+        Bool invalid=CommandLineInterface::instance().acquire(
+            {"","--custom-value","-1"},
+            extra_parsers);
+        ARIADNE_TEST_ASSERT(not invalid)
     }
 
     void test_unrecognised_argument() {
