@@ -35,7 +35,7 @@
 #include "utility/container.hpp"
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
-#include "symbolic/formula.decl.hpp"
+#include "function/formula.decl.hpp"
 #include "function/function.decl.hpp"
 
 #include "numeric/operators.hpp"
