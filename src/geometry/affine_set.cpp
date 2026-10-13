@@ -775,7 +775,7 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
 
                 if(cross.raw()<=0.0_x ) {
                     cross=+0;
-                    cot_theta=(dot.raw()>0.0_x) ? +inf : -inf;
+                    cot_theta=-inf;
                 }
 
                 // Allow for equality; in particular, if cot_theta=-infty,
