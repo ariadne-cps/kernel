@@ -82,7 +82,6 @@ class ArgumentParserBase : public ArgumentParserInterface {
   public:
     String short_id() const { return _short_id; }
     String long_id() const { return _long_id; }
-    Bool has_short_id() const { return not _short_id.empty(); }
     String instructions() const { return _instructions; }
 
     ArgumentPack consume(ArgumentStream& stream) const override;
@@ -106,17 +105,14 @@ class ArgumentParserBase : public ArgumentParserInterface {
 };
 
 SizeType ArgumentParserBase::help_description_header_size() const {
-    SizeType result = 4+long_id().size();
-    if (has_short_id()) result+= 4+short_id().size();
+    SizeType result = 8+short_id().size()+long_id().size();
     if (requires_value()) result += 8;
     return result;
 }
 
 String ArgumentParserBase::help_description(SizeType num_chars_to_separate_instructions) const {
     StringStream ss;
-    ss << "[";
-    if (has_short_id()) { ss << "-" << short_id() << " | "; }
-    ss << "--" << long_id() << "]";
+    ss << "[-" << short_id() << " | --" << long_id() << "]";
     if (requires_value()) { ss << " <value>"; }
     ss << std::string(num_chars_to_separate_instructions,' ') << instructions();
     return ss.str();
@@ -124,11 +120,9 @@ String ArgumentParserBase::help_description(SizeType num_chars_to_separate_instr
 
 Bool ArgumentParserBase::is_consumable(const ArgumentStream &stream) const {
     auto arg = stream.peek();
-    if (has_short_id()) {
-        std::stringstream short_argument;
-        short_argument << "-" << short_id();
-        if (arg == short_argument.str()) return true;
-    }
+    std::stringstream short_argument;
+    short_argument << "-" << short_id();
+    if (arg == short_argument.str()) return true;
     String long_argument = "--"+long_id();
     return (arg == long_argument);
 }

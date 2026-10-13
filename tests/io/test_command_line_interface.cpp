@@ -125,6 +125,8 @@ class TestCommandLineInterface {
         ARIADNE_TEST_ASSERT(not success11)
         Bool success12 = CommandLineInterface::instance().acquire({"", "-d", "none"});
         ARIADNE_TEST_ASSERT(success12)
+        Bool success13 = CommandLineInterface::instance().acquire({"", "-d", "affine@-1"});
+        ARIADNE_TEST_ASSERT(not success13)
     }
 
     void test_graphics_parsing() {
