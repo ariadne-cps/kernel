@@ -13,6 +13,7 @@
 #include "function/symbolic_function.hpp"
 
 #include "geometry/point.hpp"
+#include "labelling/labelling.hpp"
 #include "labelling/point.hpp"
 #include "geometry/box.hpp"
 #include "geometry/set.hpp"
