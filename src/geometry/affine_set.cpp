@@ -117,7 +117,8 @@ ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const Exa
                      const List<ValidatedAffineConstraintDP>& c)
     : _domain(d), _space_models(f.size(),ValidatedAffineModelDP(d.size(),dp)), _constraint_models()
 {
-    ARIADNE_PRECONDITION_MSG(f.size()>0,"f="<<f);\n    ARIADNE_PRECONDITION_MSG(_domain.dimension() == f[0].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the function argument size ("<<_space_models[0].argument_size()<<").");
+    ARIADNE_PRECONDITION_MSG(f.size()>0,"f="<<f);
+    ARIADNE_PRECONDITION_MSG(_domain.dimension() == f[0].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the function argument size ("<<_space_models[0].argument_size()<<").");
 
     Vector<Affine<FloatDPBounds>> parameters=Affine<FloatDPBounds>::variables(d.size(),dp);
     for(SizeType j=0; j!=d.size(); ++j) {
@@ -149,7 +150,8 @@ ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const Exa
                      const List<ValidatedAffineModelConstraintDP>& c)
     : _domain(d), _space_models(f), _constraint_models(c)
 {
-    ARIADNE_PRECONDITION_MSG(f.size()>0,"f="<<f);\n    ARIADNE_PRECONDITION_MSG(_domain.dimension() == f[0].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the function argument size ("<<_space_models[0].argument_size()<<").");
+    ARIADNE_PRECONDITION_MSG(f.size()>0,"f="<<f);
+    ARIADNE_PRECONDITION_MSG(_domain.dimension() == f[0].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the function argument size ("<<_space_models[0].argument_size()<<").");
     for (auto cons : _constraint_models)
         ARIADNE_PRECONDITION_MSG(_domain.dimension() == cons.argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the constraint argument size ("<<cons.argument_size()<<").");
 }
