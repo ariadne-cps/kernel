@@ -456,8 +456,8 @@ Void ValidatedAffineConstrainedImageSet::_robust_adjoin_outer_approximation_to(P
 
     const ExactBoxType& bx=cell.box();
     for(SizeType i=0; i!=nx; ++i) {
-        lp.l[i]=bx[i].lower_bound();
-        lp.u[i]=bx[i].upper_bound();
+        lp.l[ne+i]=bx[i].lower_bound();
+        lp.u[ne+i]=bx[i].upper_bound();
     }
 
     Int cell_depth=cell.depth();
