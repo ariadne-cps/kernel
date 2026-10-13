@@ -147,7 +147,6 @@ struct LabelledGraphicsObject {
 
 struct Figure::Data
 {
-    Data() : properties(), projection(2,0,1), bounding_box(0) { }
     Data(ApproximateBoxType bbx, Projection2d prj) : properties(), projection(prj), bounding_box(bbx) { }
 
     GraphicsProperties properties;

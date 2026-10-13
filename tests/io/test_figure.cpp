@@ -36,8 +36,19 @@
 #include "geometry/function_set.hpp"
 #include "geometry/grid_paving.hpp"
 #include "symbolic/expression_set.hpp"
+#include "logging/logging.hpp"
 
 using namespace Ariadne;
+
+class TestDrawable final : public Drawable2dInterface {
+  public:
+    explicit TestDrawable(DimensionType dimension) : _dimension(dimension) { }
+    TestDrawable* clone() const override { return new TestDrawable(*this); }
+    Void draw(CanvasInterface&, const Projection2d&) const override { }
+    DimensionType dimension() const override { return _dimension; }
+  private:
+    DimensionType _dimension;
+};
 
 class TestGraphics {
   public:
@@ -53,9 +64,11 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_construct_figure())
         ARIADNE_TEST_CALL(test_figure_projection())
         ARIADNE_TEST_CALL(test_figure_public_api())
+        ARIADNE_TEST_CALL(test_figure_edge_paths())
         ARIADNE_TEST_CALL(test_construct_labelled_figure())
         ARIADNE_TEST_CALL(test_labelled_figure_projection())
         ARIADNE_TEST_CALL(test_labelled_figure_drawing())
+        ARIADNE_TEST_CALL(test_projection_edge_paths())
         ARIADNE_TEST_CALL(test_default_drawer())
     }
 
@@ -290,6 +303,61 @@ class TestGraphics {
         figure._paint_all(canvas);
     }
 
+    void test_projection_edge_paths() {
+        RealVariable x("x"), y("y"), z("z");
+        RealSpace space({x,y});
+
+        Projection2d regular = projection(space,Variables2d(x,y));
+        ARIADNE_TEST_EQUALS(regular.argument_size(),2u)
+        ARIADNE_TEST_EQUALS(regular.x_coordinate(),0u)
+        ARIADNE_TEST_EQUALS(regular.y_coordinate(),1u)
+
+        Projection2d time_projection = projection(RealSpace({y}),Variables2d(TimeVariable(),y));
+        ARIADNE_TEST_EQUALS(time_projection.argument_size(),1u)
+        ARIADNE_TEST_EQUALS(time_projection.x_coordinate(),1u)
+        ARIADNE_TEST_EQUALS(time_projection.y_coordinate(),0u)
+
+        ARIADNE_TEST_FAIL(projection(space,Variables2d(z,y)))
+        ARIADNE_TEST_FAIL(projection(space,Variables2d(x,z)))
+    }
+
+    void test_figure_edge_paths() {
+        GraphicsBoundingBoxType bx2({
+            {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)},
+            {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)}
+        });
+        GraphicsBoundingBoxType bx3({
+            {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)},
+            {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)},
+            {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)}
+        });
+        NullCanvas canvas;
+
+        Figure fallback(bx2,0,1);
+        fallback.set_bounding_box(GraphicsBoundingBoxType(0));
+        fallback._paint_all(canvas);
+
+        Figure mismatched_box(bx2,0,1);
+        mismatched_box.set_bounding_box(bx3);
+        ARIADNE_TEST_FAIL(mismatched_box._paint_all(canvas))
+
+        Figure invalid_x(bx2,Projection2d(2,2,1));
+        ARIADNE_TEST_FAIL(invalid_x._paint_all(canvas))
+
+        Figure invalid_y(bx2,Projection2d(2,0,2));
+        ARIADNE_TEST_FAIL(invalid_y._paint_all(canvas))
+
+        Figure empty_shape_figure(bx2,0,1);
+        TestDrawable empty_shape(0u);
+        empty_shape_figure.draw(empty_shape);
+        empty_shape_figure._paint_all(canvas);
+
+        Figure mismatched_shape_figure(bx2,0,1);
+        TestDrawable mismatched_shape(3u);
+        mismatched_shape_figure.draw(mismatched_shape);
+        ARIADNE_TEST_FAIL(mismatched_shape_figure._paint_all(canvas))
+    }
+
     void test_labelled_figure_drawing() {
         RealVariable x("x"), y("y");
         Axes2d axes(-2.0,x,2.0,-1.5,y,1.5);
@@ -311,11 +379,16 @@ class TestGraphics {
         figure.draw(LabelledDrawableWrapper<RealBox>(labelled_region));
         figure << labelled_region;
         figure.set_animated(true);
+
+        unsigned int const old_verbosity = Logger::instance().configuration().verbosity();
+        Logger::instance().configuration().set_verbosity(0u);
         figure.write("test_graphics-labelled");
+        Logger::instance().configuration().set_verbosity(1u);
         figure.write("test_graphics-labelled-sized",64u,64u);
 
         figure.clear();
         figure.write("test_graphics-labelled-empty",32u,32u);
+        Logger::instance().configuration().set_verbosity(old_verbosity);
     }
 
     void test_construct_labelled_figure() {
