@@ -279,6 +279,11 @@ void print_results(
             row.component_remainders.size());
     }
 
+    const std::size_t table_width=
+        integrator_width+function_width+time_width+remainder_width
+        +component_remainders_width+4u*column_spacing;
+    const std::string separator(table_width,'-');
+
     const auto print_column=[](
             std::ostringstream& table,
             const std::string& value,
@@ -352,12 +357,22 @@ void print_results(
     print_metric_headers(table);
     table<<"\n";
 
-    for(const auto& row : by_integrator) {
+    for(std::size_t row_index=0u;
+            row_index!=by_integrator.size();
+            ++row_index) {
+        const auto& row=by_integrator[row_index];
         print_column(table,row.integrator,integrator_width);
         table<<std::string(column_spacing,' ');
         print_column(table,row.function,function_width);
         print_metrics(table,row);
         table<<"\n";
+
+        const bool end_of_group=
+            row_index+1u==by_integrator.size()
+            || by_integrator[row_index+1u].integrator!=row.integrator;
+        if(end_of_group) {
+            table<<separator<<"\n";
+        }
     }
 
     auto by_function=rows;
@@ -378,12 +393,22 @@ void print_results(
     print_metric_headers(table);
     table<<"\n";
 
-    for(const auto& row : by_function) {
+    for(std::size_t row_index=0u;
+            row_index!=by_function.size();
+            ++row_index) {
+        const auto& row=by_function[row_index];
         print_column(table,row.function,function_width);
         table<<std::string(column_spacing,' ');
         print_column(table,row.integrator,integrator_width);
         print_metrics(table,row);
         table<<"\n";
+
+        const bool end_of_group=
+            row_index+1u==by_function.size()
+            || by_function[row_index+1u].function!=row.function;
+        if(end_of_group) {
+            table<<separator<<"\n";
+        }
     }
 
     LOGGING_PRINTLN(table.str())
