@@ -351,7 +351,7 @@ class TestAffineSet
             Vector<ValidatedAffineModelDP> empty_models;
             ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(D,empty_affine_models));
             ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(D,empty_models,no_constraints));
-            ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(empty_models));
+            ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet{empty_models});
 
             Matrix<FloatDP> bad_matrix(1u,1u,dp);
             Vector<FloatDP> bad_offset(2u,dp);
