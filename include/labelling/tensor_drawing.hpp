@@ -52,7 +52,7 @@ class TensorDrawable
     explicit TensorDrawable(Tensor<N,X> const& tensor) : _tensor(tensor) { }
 
     TensorDrawable* clone() const override { return new TensorDrawable(*this); }
-    TensorDrawable* labelling_clone() const override { return new TensorDrawable(*this); }
+    TensorDrawable* labelled_clone() const override { return new TensorDrawable(*this); }
 
     DimensionType dimension() const override { return _tensor.rank(); }
 

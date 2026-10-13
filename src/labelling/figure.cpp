@@ -27,7 +27,7 @@ ApproximateBoxType coordinate_box(Variables2d const& vars, Map<RealVariable,Appr
 class LabelledDrawableAdapter final : public Drawable2dInterface {
   public:
     LabelledDrawableAdapter(LabelledDrawable2dInterface const& shape, Variables2d const& variables)
-        : _shape(shape.labelling_clone()), _variables(variables) { }
+        : _shape(shape.labelled_clone()), _variables(variables) { }
 
     LabelledDrawableAdapter* clone() const override { return new LabelledDrawableAdapter(*this); }
     DimensionType dimension() const override { return 2u; }

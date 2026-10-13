@@ -10,7 +10,7 @@ RealSpace LabelledInterpolatedCurve::state_space() const {
     return RealSpace(this->_state_variables);
 }
 
-LabelledInterpolatedCurve* LabelledInterpolatedCurve::labelling_clone() const {
+LabelledInterpolatedCurve* LabelledInterpolatedCurve::labelled_clone() const {
     return new LabelledInterpolatedCurve(*this);
 }
 
