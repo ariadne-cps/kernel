@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <iomanip>
@@ -233,25 +234,99 @@ void print_results(
         Nat repetitions,
         const std::vector<BenchmarkResult>& results)
 {
+    constexpr std::size_t column_spacing=2u;
+
+    struct DisplayRow {
+        std::string integrator;
+        std::string function;
+        std::string repetitions;
+        std::string time_us_per_step;
+        std::string remainder;
+        std::string component_remainders;
+    };
+
+    auto to_string=[](const auto& value) {
+        std::ostringstream stream;
+        stream<<std::fixed<<std::setprecision(6)<<value;
+        return stream.str();
+    };
+
+    std::vector<DisplayRow> rows;
+    rows.reserve(results.size());
+    for(const auto& result : results) {
+        rows.push_back({
+            result.integrator,
+            result.function,
+            to_string(result.repetitions),
+            to_string(result.time_us_per_step),
+            to_string(result.remainder),
+            to_string(result.component_remainders)
+        });
+    }
+
+    std::size_t integrator_width=std::string("integrator").size();
+    std::size_t function_width=std::string("function").size();
+    std::size_t repetitions_width=std::string("repetitions").size();
+    std::size_t time_width=std::string("time_us_per_step").size();
+    std::size_t remainder_width=std::string("remainder").size();
+    std::size_t component_remainders_width=
+        std::string("component_remainders").size();
+
+    for(const auto& row : rows) {
+        integrator_width=std::max(integrator_width,row.integrator.size());
+        function_width=std::max(function_width,row.function.size());
+        repetitions_width=std::max(
+            repetitions_width,row.repetitions.size());
+        time_width=std::max(time_width,row.time_us_per_step.size());
+        remainder_width=std::max(remainder_width,row.remainder.size());
+        component_remainders_width=std::max(
+            component_remainders_width,
+            row.component_remainders.size());
+    }
+
     std::ostringstream table;
     table
         <<"Single-step integrator benchmark\n"
         <<"step="<<step
         <<", step_maximum_error="<<benchmark_step_maximum_error
-        <<", repetitions="<<repetitions<<"\n"
-        <<"integrator\tfunction\trepetitions\ttime_us_per_step"
-        <<"\tremainder\tcomponent_remainders\n";
+        <<", repetitions="<<repetitions<<"\n";
 
-    table<<std::fixed<<std::setprecision(6);
-    for(const auto& result : results) {
-        table
-            <<result.integrator<<"\t"
-            <<result.function<<"\t"
-            <<result.repetitions<<"\t"
-            <<result.time_us_per_step<<"\t"
-            <<result.remainder<<"\t"
-            <<result.component_remainders
-            <<"\n";
+    const auto print_column=
+        [&table](const std::string& value,std::size_t width) {
+            table
+                <<std::left
+                <<std::setw(static_cast<int>(width))
+                <<value;
+        };
+
+    print_column("integrator",integrator_width);
+    table<<std::string(column_spacing,' ');
+    print_column("function",function_width);
+    table<<std::string(column_spacing,' ');
+    print_column("repetitions",repetitions_width);
+    table<<std::string(column_spacing,' ');
+    print_column("time_us_per_step",time_width);
+    table<<std::string(column_spacing,' ');
+    print_column("remainder",remainder_width);
+    table<<std::string(column_spacing,' ');
+    print_column("component_remainders",component_remainders_width);
+    table<<"\n";
+
+    for(const auto& row : rows) {
+        print_column(row.integrator,integrator_width);
+        table<<std::string(column_spacing,' ');
+        print_column(row.function,function_width);
+        table<<std::string(column_spacing,' ');
+        print_column(row.repetitions,repetitions_width);
+        table<<std::string(column_spacing,' ');
+        print_column(row.time_us_per_step,time_width);
+        table<<std::string(column_spacing,' ');
+        print_column(row.remainder,remainder_width);
+        table<<std::string(column_spacing,' ');
+        print_column(
+            row.component_remainders,
+            component_remainders_width);
+        table<<"\n";
     }
 
     LOGGING_PRINTLN(table.str())
