@@ -1,5 +1,5 @@
 /***************************************************************************
- *            symbolic/formula.cpp
+ *            function/formula.cpp
  *
  *  Copyright  2008-20  Pieter Collins
  *
@@ -22,10 +22,10 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 
 #include "symbolic/templates.tpl.hpp"
-#include "symbolic/formula.tpl.hpp"
+#include "function/formula.tpl.hpp"
 
 #include "numeric/operators.tpl.hpp"
 

@@ -20,7 +20,7 @@
 #include "geometry/grid_paving.hpp"
 #include "geometry/affine_set.hpp"
 
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "symbolic/variable.hpp"
 #include "symbolic/space.hpp"
 #include "symbolic/expression.hpp"
