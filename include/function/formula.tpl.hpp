@@ -31,7 +31,7 @@ namespace Ariadne {
 
 
 template<class Y> using ConstantFormulaNode = OperationNode<Cnst,Y>;
-template<class Y> using IndexFormulaNode = OperationNode<Var,Index>;
+template<class Y> class IndexFormulaNode : public OperationNode<Var,Index> { public: using OperationNode<Var,Index>::OperationNode; };
 template<class Y> using UnaryFormulaNode = OperationNode<UnaryElementaryOperator,Formula<Y>>;
 template<class Y> using BinaryFormulaNode = OperationNode<BinaryElementaryOperator,Formula<Y>,Formula<Y>>;
 template<class Y> using GradedFormulaNode = OperationNode<GradedElementaryOperator,Formula<Y>,Int>;
