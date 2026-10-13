@@ -34,7 +34,7 @@
 #include "algebra/algebra.hpp"
 #include "symbolic/expression.hpp"
 #include "symbolic/space.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "io/command_line_interface.hpp"
 
 #include "macro/testing.hpp"

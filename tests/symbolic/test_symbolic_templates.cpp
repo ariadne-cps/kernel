@@ -25,7 +25,7 @@
 #include <sstream>
 #include "numeric/numeric.hpp"
 #include "algebra/algebra.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "symbolic/expression.hpp"
 #include "symbolic/valuation.hpp"
 #include "symbolic/templates.tpl.hpp"

@@ -31,7 +31,7 @@
 #include "symbolic/assignment.hpp"
 #include "symbolic/valuation.hpp"
 #include "symbolic/space.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "geometry/function_set.hpp"
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"

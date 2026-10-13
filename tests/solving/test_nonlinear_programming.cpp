@@ -31,7 +31,7 @@
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
 #include "function/taylor_model.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "solving/nonlinear_programming.hpp"
 #include "geometry/box.hpp"
 #include "io/command_line_interface.hpp"
