@@ -68,6 +68,7 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_construct_labelled_figure())
         ARIADNE_TEST_CALL(test_labelled_figure_projection())
         ARIADNE_TEST_CALL(test_labelled_figure_drawing())
+        ARIADNE_TEST_CALL(test_labelled_figure_invalid_axes())
         ARIADNE_TEST_CALL(test_projection_edge_paths())
         ARIADNE_TEST_CALL(test_default_drawer())
     }
@@ -361,6 +362,17 @@ class TestGraphics {
         TestDrawable mismatched_shape(3u);
         mismatched_shape_figure.draw(mismatched_shape);
         ARIADNE_TEST_FAIL(mismatched_shape_figure._paint_all(canvas))
+    }
+
+    void test_labelled_figure_invalid_axes() {
+        RealVariable empty(""), x("x"), y("y");
+        NullCanvas canvas;
+
+        LabelledFigure empty_x(Axes2d(-1.0,empty,1.0,-1.0,y,1.0));
+        ARIADNE_TEST_FAIL(empty_x._paint_all(canvas))
+
+        LabelledFigure empty_y(Axes2d(-1.0,x,1.0,-1.0,empty,1.0));
+        ARIADNE_TEST_FAIL(empty_y._paint_all(canvas))
     }
 
     void test_labelled_figure_drawing() {
