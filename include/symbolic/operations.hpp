@@ -35,7 +35,7 @@
 
 #include "utility/typedefs.hpp"
 #include "numeric/concepts.hpp"
-#include "symbolic/formula.decl.hpp"
+#include "function/formula.decl.hpp"
 
 namespace Ariadne {
 

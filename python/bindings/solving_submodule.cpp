@@ -27,7 +27,7 @@
 
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "solving/solver_interface.hpp"
 #include "solving/solver.hpp"
 #include "function/taylor_function.hpp"
