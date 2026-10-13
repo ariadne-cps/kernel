@@ -264,15 +264,9 @@ ValidatedLowerKleenean ValidatedAffineConstrainedImageSet::separated(const Exact
         lp.l[i]=FloatDP(sub(down,wbx[i].lower_bound(),this->_space_models[i].error().raw()));
         lp.u[i]=FloatDP(add(up,wbx[i].upper_bound(),this->_space_models[i].error().raw()));
     }
-    ValidatedKleenean feasible=indeterminate;
-    try {
-        InteriorPointSolver optimiser;
-        feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
-        //feasible=SimplexSolver<FloatDP>().hotstarted_feasible(lp.A,lp.b,lp.l,lp.u,lp.vt,lp.p,lp.B,lp.x,lp.y);
-    }
-    catch(const DegenerateFeasibilityProblemException&) {
-        feasible=indeterminate;
-    }
+    InteriorPointSolver optimiser;
+    ValidatedKleenean feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
+    //feasible=SimplexSolver<FloatDP>().hotstarted_feasible(lp.A,lp.b,lp.l,lp.u,lp.vt,lp.p,lp.B,lp.x,lp.y);
     return !feasible;
 }
 
