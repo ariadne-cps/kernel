@@ -27,7 +27,7 @@
 
 #include "function/function.hpp"
 #include "io/figure.hpp"
-#include "labelled/figure.hpp"
+#include "labelling/figure.hpp"
 #include "io/cairo.hpp"
 #include "io/null_graphics.hpp"
 #include "io/drawer.hpp"
@@ -202,7 +202,7 @@ class TestGraphics {
 
         RealVariable x("x"), y("y");
         LabelledFigure labelled(Axes2d({0<=x<=1,0<=y<=1}));
-        labelled << line_style_value
+        labelling << line_style_value
                  << line_width_value
                  << line_colour_value
                  << fill_style_value
