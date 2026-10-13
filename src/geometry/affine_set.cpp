@@ -603,9 +603,8 @@ ValidatedAffineConstrainedImageSet::robust_adjoin_outer_approximation_to(PavingI
     }
 
     LOGGING_PRINTLN("A="<<lp.A<<"\nb="<<lp.b<<"\nl="<<lp.l<<"\nu="<<lp.u);
-    ValidatedKleenean feasible=lpsolver.hotstarted_feasible(lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x,lp.y);
+    (void)lpsolver.hotstarted_feasible(lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x,lp.y);
     LOGGING_PRINTLN("  vt="<<lp.vt<<"\nx="<<lp.x);
-    if(definitely(not feasible)) { return; } // no intersection
 
     _robust_adjoin_outer_approximation_to(paving,lp,errors,bounding_cell,fineness);
 }

@@ -203,6 +203,22 @@ class TestAffineSet
         empty_set.robust_adjoin_outer_approximation_to(empty_paving,0);
         ARIADNE_TEST_EQUALS(empty_paving.size(),0u);
 
+        ValidatedAffineConstrainedImageSet infeasible_set(D,{x[0],x[1]});
+        infeasible_set.new_parameter_constraint(x[0]<=-2.0_x);
+        infeasible_set.new_parameter_constraint(-x[0]<=-2.0_x);
+        GridTreePaving infeasible_paving(Grid(2));
+        infeasible_set.robust_adjoin_outer_approximation_to(infeasible_paving,0);
+        ARIADNE_TEST_EQUALS(infeasible_paving.size(),0u);
+
+        ExactBoxType small_box({{0.25_x,0.75_x},{0.25_x,0.75_x}});
+        ValidatedAffineConstrainedImageSet small_set(small_box);
+        GridTreePaving covered_paving(Grid(2));
+        small_set.robust_adjoin_outer_approximation_to(covered_paving,0);
+        ARIADNE_TEST_ASSERT(covered_paving.size()>0);
+        SizeType covered_size=covered_paving.size();
+        small_set.robust_adjoin_outer_approximation_to(covered_paving,0);
+        ARIADNE_TEST_EQUALS(covered_paving.size(),covered_size);
+
     }
 
     Void test_outer_approximation() {
