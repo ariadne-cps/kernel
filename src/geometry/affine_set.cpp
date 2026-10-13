@@ -108,14 +108,8 @@ ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const Exa
 
 ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const ExactBoxType& d,
                      const Vector<Affine<FloatDPBounds>>& f)
-    : _domain(d), _space_models(f.size(),ValidatedAffineModelDP(d.size(),dp))
+    : ValidatedAffineConstrainedImageSet(d,f,List<ValidatedAffineConstraintDP>())
 {
-    if(d==ExactBoxType::unit_box(d.size())) {
-        for(SizeType i=0; i!=f.size(); ++i) {
-            ARIADNE_ASSERT_MSG(_domain.dimension() == f[i].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the function argument size ("<<f[i].argument_size()<<").");
-            _space_models[i] = affine_model(f[i]);
-        }
-    }
 }
 
 ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const ExactBoxType& d,
@@ -125,16 +119,23 @@ ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const Exa
 {
     ARIADNE_ASSERT_MSG(_domain.dimension() == f[0].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the function argument size ("<<_space_models[0].argument_size()<<").");
 
-    if(d==ExactBoxType::unit_box(d.size())) {
-        for(SizeType i=0; i!=f.size(); ++i) {
-            _space_models[i] = affine_model(f[i]);
+    const Vector<ValidatedAffineModelDP> parameters=ValidatedAffineModelDP::scalings(d,dp);
+    for(SizeType i=0; i!=f.size(); ++i) {
+        ValidatedAffineModelDP model(d.size(),dp);
+        model += f[i].value();
+        for(SizeType j=0; j!=d.size(); ++j) {
+            model += f[i].gradient(j) * parameters[j];
         }
-        for(SizeType i=0; i!=c.size(); ++i) {
-            ARIADNE_ASSERT_MSG(_domain.dimension() == c[i].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the constraint argument size ("<<c[i].argument_size()<<").");
-            _constraint_models.append(ValidatedAffineModelConstraintDP(c[i].lower_bound(),affine_model(c[i].function()),c[i].upper_bound()));
+        _space_models[i]=model;
+    }
+    for(SizeType i=0; i!=c.size(); ++i) {
+        ARIADNE_ASSERT_MSG(_domain.dimension() == c[i].argument_size(),"The domain dimension ("<<_domain.dimension()<<") does not match the constraint argument size ("<<c[i].argument_size()<<").");
+        ValidatedAffineModelDP model(d.size(),dp);
+        model += c[i].function().value();
+        for(SizeType j=0; j!=d.size(); ++j) {
+            model += c[i].function().gradient(j) * parameters[j];
         }
-    } else {
-        ARIADNE_NOT_IMPLEMENTED;
+        _constraint_models.append(ValidatedAffineModelConstraintDP(c[i].lower_bound(),model,c[i].upper_bound()));
     }
 }
 

@@ -114,6 +114,19 @@ class TestAffineSet
         figure.draw(set);
     }
 
+    Void test_nonunit_domain() {
+        D=ExactBoxType({{0.0_x,2.0_x},{-3.0_x,1.0_x}});
+        x=Affine<FloatDPBounds>::variables(2,dp);
+
+        set=ValidatedAffineConstrainedImageSet(D,{x[0],x[1]},{x[0]+x[1]<=1.0_x});
+        ARIADNE_TEST_EQUALS(set.domain(),D);
+        ARIADNE_TEST_EQUALS(set.number_of_constraints(),1u);
+        ARIADNE_TEST_SAME(set.bounding_box(),UpperBoxType({{0.0_x,2.0_x},{-3.0_x,1.0_x}}));
+
+        ValidatedAffineConstrainedImageSet unconstrained(D,{x[0],x[1]});
+        ARIADNE_TEST_SAME(unconstrained.bounding_box(),UpperBoxType({{0.0_x,2.0_x},{-3.0_x,1.0_x}}));
+    }
+
     Void test_constrained_image() {
         D = ExactBoxType::unit_box(3);
         x = Affine<FloatDPBounds>::variables(3,dp);
@@ -513,6 +526,7 @@ class TestAffineSet
         ARIADNE_TEST_CALL(test_invalid());
         ARIADNE_TEST_CALL(test_pure_constraint());
         ARIADNE_TEST_CALL(test_constrained_image());
+        ARIADNE_TEST_CALL(test_nonunit_domain());
         ARIADNE_TEST_CALL(test_separated());
         ARIADNE_TEST_CALL(test_outer_approximation());
         ARIADNE_TEST_CALL(test_robust_outer_approximation());
