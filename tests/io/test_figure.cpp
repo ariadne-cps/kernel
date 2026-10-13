@@ -202,7 +202,7 @@ class TestGraphics {
 
         RealVariable x("x"), y("y");
         LabelledFigure labelled(Axes2d({0<=x<=1,0<=y<=1}));
-        labelling << line_style_value
+        labelled << line_style_value
                  << line_width_value
                  << line_colour_value
                  << fill_style_value

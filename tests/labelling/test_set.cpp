@@ -23,7 +23,7 @@ class TestLabelledSet {
         LabelledSet<RealBox> set(RealSpace({x,y,z}),RealBox({{0.1_dec,0.5_dec},{-2.3_dec,1},{0,3}}));
         ARIADNE_TEST_EQUALS(set.dimension(),3);
         ARIADNE_TEST_EQUAL(set.space(),RealSpace({x,y,z}));
-        ARIADNE_TEST_EQUAL(set.variables(),RealSpace({x,y,z}).variables());
+        ARIADNE_TEST_EQUAL(set.variables(),Set<RealVariable>(RealSpace({x,y,z}).variables()));
         RealVariable u("u");
         ARIADNE_TEST_EXECUTE(set.euclidean_set(RealSpace({y,z})));
         ARIADNE_TEST_FAIL(set.euclidean_set(RealSpace({y,u})));
