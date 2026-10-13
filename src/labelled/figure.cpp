@@ -145,10 +145,6 @@ LabelledFigure& LabelledFigure::set_animated(Bool b) {
     return *this;
 }
 
-Void LabelledFigure::display() const {
-    _data->figure.display();
-}
-
 Void LabelledFigure::_paint_all(CanvasInterface& canvas) const {
     _data->figure._paint_all(canvas);
 }

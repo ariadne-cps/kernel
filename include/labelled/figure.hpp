@@ -49,7 +49,6 @@ class LabelledFigure {
     LabelledFigure& clear();
     LabelledFigure& set_animated(Bool b);
 
-    Void display() const;
     Void write(const Char* filename, Nat nx, Nat ny) const;
     Void write(const Char* filename) const;
 

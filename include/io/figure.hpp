@@ -182,9 +182,6 @@ class Figure
     Figure& clear();
     //! Set animation
     Figure& set_animated(Bool b);
-    //! Display the figure.
-    Void display() const;
-
     //! Write to \a filename.
     Void write(const Char* filename) const;
 
