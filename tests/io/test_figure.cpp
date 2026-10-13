@@ -183,7 +183,7 @@ class TestGraphics {
         GraphicsBoundingBoxType bx({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)},
                                     {FloatDPApproximation(-1.0,dp),FloatDPApproximation(0.0,dp)},
                                     {FloatDPApproximation(-2.0,dp),FloatDPApproximation(2.0,dp)}});
-        Figure f(bx,0,1,2);
+        Figure f(bx,0,1);
         ARIADNE_TEST_FAIL(f.set_projection(4,0,1))
         ARIADNE_TEST_EXECUTE(f.set_projection(3,0,1))
         ARIADNE_TEST_FAIL(f.set_projection_map(Projection2d(4,0,1)))
