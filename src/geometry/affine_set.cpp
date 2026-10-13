@@ -442,6 +442,53 @@ ValidatedAffineConstrainedImageSet::adjoin_outer_approximation_to(PavingInterfac
 
 
 
+Void ValidatedAffineConstrainedImageSet::_robust_adjoin_outer_approximation_to(PavingInterface& paving, LinearProgram<FloatDP>& lp, const Vector<FloatDPError>& errors, GridCell& cell, Nat fineness)
+{
+    SimplexSolver<FloatDP> lpsolver;
+
+    const SizeType nx=cell.dimension();
+    const SizeType nc=lp.A.row_size()-nx;
+    const SizeType ne=lp.A.column_size()-lp.A.row_size()-1u;
+
+    if(paving.superset(cell)) {
+        return;
+    }
+
+    const ExactBoxType& bx=cell.box();
+    for(SizeType i=0; i!=nx; ++i) {
+        lp.l[i]=bx[i].lower_bound();
+        lp.u[i]=bx[i].upper_bound();
+    }
+
+    Int cell_depth=cell.depth();
+    Int maximum_depth=static_cast<Int>(fineness*cell.dimension());
+
+    ValidatedKleenean feasible=lpsolver.hotstarted_feasible(lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x,lp.y);
+    if(definitely(not feasible)) {
+        return;
+    }
+
+    Bool done=false;
+    while(!done && possibly(lp.x[ne+nx+nc]<0)) {
+        done=lpsolver.lpstep(lp.c,lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x);
+    }
+
+    Vector<FloatDPBounds> x=lpsolver.compute_x(lp.l,lp.u,lp.A,lp.b,lp.vt);
+    if(possibly(x[ne+nx+nc]<0)) {
+        return;
+    }
+
+    if(cell_depth>=maximum_depth) {
+        paving.adjoin(cell);
+    } else {
+        GridCell subcell1=cell.split(0);
+        GridCell subcell2=cell.split(1);
+        ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(paving,lp,errors,subcell1,fineness);
+        ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(paving,lp,errors,subcell2,fineness);
+    }
+}
+
+
 Void
 ValidatedAffineConstrainedImageSet::robust_adjoin_outer_approximation_to(PavingInterface& paving, Nat fineness) const {
     LOGGING_SCOPE_CREATE;
@@ -560,7 +607,7 @@ ValidatedAffineConstrainedImageSet::robust_adjoin_outer_approximation_to(PavingI
     LOGGING_PRINTLN("  vt="<<lp.vt<<"\nx="<<lp.x);
     if(definitely(not feasible)) { return; } // no intersection
 
-    _adjoin_outer_approximation_to(paving,lp,errors,bounding_cell,fineness);
+    _robust_adjoin_outer_approximation_to(paving,lp,errors,bounding_cell,fineness);
 }
 
 
