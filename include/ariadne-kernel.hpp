@@ -13,12 +13,14 @@
 #include "function/symbolic_function.hpp"
 
 #include "geometry/point.hpp"
+#include "labelled/point.hpp"
 #include "geometry/box.hpp"
 #include "geometry/set.hpp"
 #include "geometry/function_set.hpp"
 #include "geometry/grid.hpp"
 #include "geometry/grid_paving.hpp"
 #include "geometry/affine_set.hpp"
+#include "labelled/curve.hpp"
 
 #include "function/formula.hpp"
 #include "symbolic/variable.hpp"

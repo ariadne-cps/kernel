@@ -1,5 +1,6 @@
 add_subdirectory(function)
 add_subdirectory(geometry)
 add_subdirectory(io)
+add_subdirectory(labelled)
 add_subdirectory(solving)
 add_subdirectory(symbolic)
