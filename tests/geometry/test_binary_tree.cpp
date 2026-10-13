@@ -73,6 +73,23 @@ inline Void test_binary_tree() {
     unequal_tree_one.left_node()->set_enabled();
     ARIADNE_TEST_EQUAL(BinaryTreeNode::is_equal_nodes(&unequal_tree_one,&unequal_tree_two),false);
     ARIADNE_TEST_EQUAL(BinaryTreeNode::is_equal_nodes(nullptr,&unequal_tree_one),false);
+    ARIADNE_TEST_EQUAL(BinaryTreeNode::is_equal_nodes(&unequal_tree_one,nullptr),false);
+
+    BinaryTreeNode unequal_right_one(false);
+    unequal_right_one.split();
+    BinaryTreeNode unequal_right_two(unequal_right_one);
+    unequal_right_one.right_node()->set_enabled();
+    ARIADNE_TEST_EQUAL(unequal_right_one==unequal_right_two,false);
+
+    BinaryTreeNode unknown_node(false);
+    unknown_node.split();
+    BinaryTreeNode enabled_leaf(true);
+    ARIADNE_TEST_EQUAL(unknown_node==enabled_leaf,false);
+
+    BooleanArray truncated_tree(1), truncated_leaves(1);
+    truncated_tree[0]=true;
+    truncated_leaves[0]=false;
+    ARIADNE_TEST_FAIL(BinaryTreeNode(truncated_tree,truncated_leaves));
 
     BinaryTreeNode contract_node(false);
     ARIADNE_TEST_FAIL(BinaryTreeNode::restrict(nullptr,&contract_node));
@@ -230,6 +247,31 @@ inline Void test_binary_tree() {
     expected_binary_tree2.left_node()->split();
     expected_binary_tree2.left_node()->right_node()->set_enabled();
     ARIADNE_TEST_COMPARE( expected_binary_tree2, ==, theNewBinaryTreeRoot );
+
+    ARIADNE_PRINT_TEST_COMMENT("Testing add_enabled(subtree,path) early enabled and left path");
+    BinaryTreeNode source_subtree(true);
+    BinaryTreeNode enabled_destination(true);
+    BinaryWord subtreePath;
+    subtreePath.push_back(false);
+    enabled_destination.add_enabled(&source_subtree,subtreePath);
+    ARIADNE_TEST_EQUAL(enabled_destination.is_enabled(),true);
+
+    BinaryTreeNode left_destination(false);
+    left_destination.add_enabled(&source_subtree,subtreePath);
+    ARIADNE_TEST_EQUAL(left_destination.left_node()->is_enabled(),true);
+
+    ARIADNE_PRINT_TEST_COMMENT("Testing intersect/subset short-circuit outcomes");
+    BinaryTreeNode disabled_subtree(false);
+    disabled_subtree.split();
+    BinaryTreeNode enabled_subtree(false);
+    enabled_subtree.split();
+    enabled_subtree.left_node()->set_enabled();
+    BinaryTreeNode enabled_leaf_for_relation(true);
+    BinaryTreeNode disabled_leaf_for_relation(false);
+
+    ARIADNE_TEST_EQUAL(BinaryTreeNode::intersect(&disabled_subtree,&enabled_leaf_for_relation),false);
+    ARIADNE_TEST_EQUAL(BinaryTreeNode::intersect(&enabled_leaf_for_relation,&disabled_subtree),false);
+    ARIADNE_TEST_EQUAL(BinaryTreeNode::subset(&enabled_subtree,&disabled_leaf_for_relation),false);
 }
 
 

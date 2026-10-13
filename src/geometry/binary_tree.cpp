@@ -120,7 +120,7 @@ Void BinaryTreeNode::restrict( BinaryTreeNode * pThisNode, const BinaryTreeNode 
                 pThisNode->make_leaf(false);
             }
         } else {
-            if( pThisNode->is_leaf() && !pOtherNode->is_leaf() ){
+            if( pThisNode->is_leaf() ){
                 if( pThisNode->is_enabled() ){
                     pThisNode->copy_from( pOtherNode );
                 }
@@ -161,23 +161,15 @@ Void BinaryTreeNode::remove( BinaryTreeNode * pThisNode, const BinaryTreeNode * 
 
 Void BinaryTreeNode::restore_node( BinaryTreeNode * pCurrentNode, Nat & arr_index, Nat & leaf_counter,
                                    const BooleanArray& theTree, const BooleanArray& theEnabledCells) {
-    //If we are not done with the the tree yet
-    if( arr_index < theTree.size() ) {
-        //If we are in a non-leaf node then go further
-        if( theTree[arr_index] ) {
-            pCurrentNode->split();
-            //IVAN S. ZAPREEV:
-            //NOTE: We assume a correct input, i.e. both children are present
-            //NOTE: We increase the arr_index before calling recursion for each
-            //      of the subnodes of the tree
-            restore_node( pCurrentNode->_pLeftNode, ++arr_index, leaf_counter, theTree, theEnabledCells );
-            restore_node( pCurrentNode->_pRightNode, ++arr_index, leaf_counter, theTree, theEnabledCells );
-        } else {
-            //If we are in a leaf node then chek if it needs to be enabled/disabled
-            pCurrentNode->_isEnabled = ValidatedKleenean(theEnabledCells[leaf_counter]);
+    ARIADNE_PRECONDITION(arr_index < theTree.size());
 
-            leaf_counter++;
-        }
+    if( theTree[arr_index] ) {
+        pCurrentNode->split();
+        restore_node( pCurrentNode->_pLeftNode, ++arr_index, leaf_counter, theTree, theEnabledCells );
+        restore_node( pCurrentNode->_pRightNode, ++arr_index, leaf_counter, theTree, theEnabledCells );
+    } else {
+        pCurrentNode->_isEnabled = ValidatedKleenean(theEnabledCells[leaf_counter]);
+        leaf_counter++;
     }
 }
 
@@ -372,7 +364,7 @@ Bool BinaryTreeNode::intersect( const BinaryTreeNode * pRootNodeOne, const Binar
             //and the first node has an enabled sub-node
             result = pRootNodeTwo->is_enabled() && pRootNodeOne->has_enabled();
         } else {
-            if( isNodeOneALeaf && ! isNodeTwoALeaf ){
+            if( isNodeOneALeaf ){
                 //If the first node is a leaf then the trees overlap is it is enabled
                 //and the second node has an enabled sub-node
                 result = pRootNodeOne->is_enabled() && pRootNodeTwo->has_enabled();
@@ -406,7 +398,7 @@ Bool BinaryTreeNode::subset( const BinaryTreeNode * pRootNodeOne, const BinaryTr
             // 2. pRootNodeOne has no enabled sub-nodes
             result = pRootNodeTwo->is_enabled() || ( ! pRootNodeOne->has_enabled() );
         } else {
-            if( isNodeOneALeaf && ! isNodeTwoALeaf ){
+            if( isNodeOneALeaf ){
                 //If pRootNodeOne is a leaf then pRootNodeOne is a subset of pRootNodeTwo if:
                 // 1. pRootNodeOne is disabled or
                 // 2. all of the pRootNodeTwo's leaf nodes are enabled
