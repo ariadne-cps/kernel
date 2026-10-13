@@ -284,54 +284,121 @@ void print_results(
             row.component_remainders.size());
     }
 
+    const auto print_column=[](
+            std::ostringstream& table,
+            const std::string& value,
+            std::size_t width)
+    {
+        table
+            <<std::left
+            <<std::setw(static_cast<int>(width))
+            <<value;
+    };
+
+    const auto print_metrics=[
+            &print_column,
+            repetitions_width,
+            time_width,
+            remainder_width,
+            component_remainders_width](
+            std::ostringstream& table,
+            const DisplayRow& row)
+    {
+        table<<std::string(column_spacing,' ');
+        print_column(table,row.repetitions,repetitions_width);
+        table<<std::string(column_spacing,' ');
+        print_column(table,row.time_us_per_step,time_width);
+        table<<std::string(column_spacing,' ');
+        print_column(table,row.remainder,remainder_width);
+        table<<std::string(column_spacing,' ');
+        print_column(
+            table,
+            row.component_remainders,
+            component_remainders_width);
+    };
+
+    const auto print_metric_headers=[
+            &print_column,
+            repetitions_width,
+            time_width,
+            remainder_width,
+            component_remainders_width](
+            std::ostringstream& table)
+    {
+        table<<std::string(column_spacing,' ');
+        print_column(table,"repetitions",repetitions_width);
+        table<<std::string(column_spacing,' ');
+        print_column(table,"time_us_per_step",time_width);
+        table<<std::string(column_spacing,' ');
+        print_column(table,"remainder",remainder_width);
+        table<<std::string(column_spacing,' ');
+        print_column(
+            table,
+            "component_remainders",
+            component_remainders_width);
+    };
+
     std::ostringstream table;
     table
         <<"Single-step integrator benchmark\n"
         <<"step="<<step
         <<", step_maximum_error="<<benchmark_step_maximum_error
-        <<", repetitions="<<repetitions<<"\n";
+        <<", repetitions="<<repetitions<<"\n\n";
 
-    const auto print_column=
-        [&table](const std::string& value,std::size_t width) {
-            table
-                <<std::left
-                <<std::setw(static_cast<int>(width))
-                <<value;
-        };
+    auto by_integrator=rows;
+    std::sort(
+        by_integrator.begin(),
+        by_integrator.end(),
+        [](const DisplayRow& lhs,const DisplayRow& rhs) {
+            if(lhs.integrator!=rhs.integrator) {
+                return lhs.integrator<rhs.integrator;
+            }
+            return lhs.function<rhs.function;
+        });
 
-    print_column("integrator",integrator_width);
+    table<<"View by integrator\n";
+    print_column(table,"integrator",integrator_width);
     table<<std::string(column_spacing,' ');
-    print_column("function",function_width);
-    table<<std::string(column_spacing,' ');
-    print_column("repetitions",repetitions_width);
-    table<<std::string(column_spacing,' ');
-    print_column("time_us_per_step",time_width);
-    table<<std::string(column_spacing,' ');
-    print_column("remainder",remainder_width);
-    table<<std::string(column_spacing,' ');
-    print_column("component_remainders",component_remainders_width);
+    print_column(table,"function",function_width);
+    print_metric_headers(table);
     table<<"\n";
 
-    for(const auto& row : rows) {
-        print_column(row.integrator,integrator_width);
+    for(const auto& row : by_integrator) {
+        print_column(table,row.integrator,integrator_width);
         table<<std::string(column_spacing,' ');
-        print_column(row.function,function_width);
+        print_column(table,row.function,function_width);
+        print_metrics(table,row);
+        table<<"\n";
+    }
+
+    auto by_function=rows;
+    std::sort(
+        by_function.begin(),
+        by_function.end(),
+        [](const DisplayRow& lhs,const DisplayRow& rhs) {
+            if(lhs.function!=rhs.function) {
+                return lhs.function<rhs.function;
+            }
+            return lhs.integrator<rhs.integrator;
+        });
+
+    table<<"\nView by function\n";
+    print_column(table,"function",function_width);
+    table<<std::string(column_spacing,' ');
+    print_column(table,"integrator",integrator_width);
+    print_metric_headers(table);
+    table<<"\n";
+
+    for(const auto& row : by_function) {
+        print_column(table,row.function,function_width);
         table<<std::string(column_spacing,' ');
-        print_column(row.repetitions,repetitions_width);
-        table<<std::string(column_spacing,' ');
-        print_column(row.time_us_per_step,time_width);
-        table<<std::string(column_spacing,' ');
-        print_column(row.remainder,remainder_width);
-        table<<std::string(column_spacing,' ');
-        print_column(
-            row.component_remainders,
-            component_remainders_width);
+        print_column(table,row.integrator,integrator_width);
+        print_metrics(table,row);
         table<<"\n";
     }
 
     LOGGING_PRINTLN(table.str())
 }
-
 } // namespace
 
 Int main(Int argc, const char* argv[]) {
