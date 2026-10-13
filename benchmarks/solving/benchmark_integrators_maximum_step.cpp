@@ -253,7 +253,7 @@ void print_table(
             ++integrator_index) {
         table
             <<std::string(column_spacing,' ')
-            <<std::right
+            <<std::left
             <<std::setw(static_cast<int>(
                 integrator_widths[integrator_index]))
             <<integrators[integrator_index].key;
@@ -271,7 +271,7 @@ void print_table(
                 ++integrator_index) {
             table
                 <<std::string(column_spacing,' ')
-                <<std::right
+                <<std::left
                 <<std::setw(static_cast<int>(
                     integrator_widths[integrator_index]))
                 <<results[case_index][integrator_index].display;
