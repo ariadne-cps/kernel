@@ -438,8 +438,8 @@ inline const char* characteristic_name(AlgebraicClass value) {
         case AlgebraicClass::Affine: return "affine";
         case AlgebraicClass::Polynomial: return "polynomial";
         case AlgebraicClass::Analytic: return "analytic";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(Sparsity value) {
@@ -447,8 +447,8 @@ inline const char* characteristic_name(Sparsity value) {
         case Sparsity::Sparse: return "sparse";
         case Sparsity::Intermediate: return "intermediate";
         case Sparsity::Dense: return "dense";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(CouplingStrength value) {
@@ -456,8 +456,8 @@ inline const char* characteristic_name(CouplingStrength value) {
         case CouplingStrength::Weak: return "weak";
         case CouplingStrength::Moderate: return "moderate";
         case CouplingStrength::Strong: return "strong";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(CouplingStructure value) {
@@ -466,8 +466,8 @@ inline const char* characteristic_name(CouplingStructure value) {
         case CouplingStructure::Directed: return "directed";
         case CouplingStructure::Bidirectional: return "bidirectional";
         case CouplingStructure::Global: return "global";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(FlowDegreeGrowth value) {
@@ -477,8 +477,8 @@ inline const char* characteristic_name(FlowDegreeGrowth value) {
         case FlowDegreeGrowth::Moderate: return "moderate";
         case FlowDegreeGrowth::Fast: return "fast";
         case FlowDegreeGrowth::Unbounded: return "unbounded";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(ScaleSeparation value) {
@@ -486,8 +486,8 @@ inline const char* characteristic_name(ScaleSeparation value) {
         case ScaleSeparation::Low: return "low";
         case ScaleSeparation::Moderate: return "moderate";
         case ScaleSeparation::High: return "high";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(Anisotropy value) {
@@ -495,8 +495,8 @@ inline const char* characteristic_name(Anisotropy value) {
         case Anisotropy::Low: return "low";
         case Anisotropy::Moderate: return "moderate";
         case Anisotropy::High: return "high";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline const char* characteristic_name(RotationShear value) {
@@ -504,8 +504,8 @@ inline const char* characteristic_name(RotationShear value) {
         case RotationShear::Low: return "low";
         case RotationShear::Moderate: return "moderate";
         case RotationShear::High: return "high";
+        default: return "unknown";
     }
-    return "unknown";
 }
 
 inline std::string describe(const BenchmarkCase& benchmark_case) {
