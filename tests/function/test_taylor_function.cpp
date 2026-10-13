@@ -39,7 +39,7 @@
 #include "algebra/polynomial.tpl.hpp"
 #include "function/function.hpp"
 
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "function/symbolic_function.hpp"
 
 #include "macro/testing.hpp"

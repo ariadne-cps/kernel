@@ -31,7 +31,7 @@
 #include "geometry/grid_paving.hpp"
 #include "geometry/affine_set.hpp"
 #include "geometry/function_set.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "io/figure.hpp"
 
 #include "macro/testing.hpp"

@@ -26,8 +26,8 @@
 #include "algebra/algebra.hpp"
 #include "algebra/algebra_wrapper.hpp"
 
-#include "symbolic/formula.hpp"
-#include "symbolic/formula.tpl.hpp"
+#include "function/formula.hpp"
+#include "function/formula.tpl.hpp"
 
 #include "symbolic/constant.hpp"
 #include "symbolic/variable.hpp"
