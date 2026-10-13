@@ -422,8 +422,12 @@ Int main(Int argc, const char* argv[]) {
     const auto benchmark_parsers=
         make_benchmark_argument_parsers(selection);
 
-    if(not CommandLineInterface::instance().acquire(
-            argc,argv,benchmark_parsers)) {
+    auto command_line=make_kernel_command_line_interface();
+    command_line.add(CommandLineContribution(
+        "integrator-benchmark",
+        benchmark_parsers));
+
+    if(not command_line.acquire(argc,argv)) {
         return -1;
     }
 

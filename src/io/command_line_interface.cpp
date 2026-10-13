@@ -1,7 +1,7 @@
 /***************************************************************************
  *            io/command_line_interface.cpp
  *
- *  Copyright  2007-21  Luca Geretti
+ *  Copyright  2007-26  Luca Geretti
  *
  ****************************************************************************/
 
@@ -22,405 +22,107 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "logging/command_line.hpp"
+#include "threading/command_line.hpp"
 #include "threading/thread_manager.hpp"
-#include "utility/handle.hpp"
+
 #include "drawer.hpp"
 #include "graphics_manager.hpp"
 #include "cairo.hpp"
 #include "null_graphics.hpp"
-#include "logging/logging.hpp"
 #include "command_line_interface.hpp"
-
 
 namespace Ariadne {
 
+namespace {
 
+ArgumentParser make_drawer_argument_parser() {
+    return make_valued_argument_parser(
+        "d",
+        "drawer",
+        "Choose the drawer as a <value> in [ box | grid@X | affine@X | none ] with X a non-negative integer, where none disables drawing (default: affine@0)",
+        [](String const& value) -> VoidFunction {
+            Drawer drawer=NullDrawer();
 
-ArgumentStream::ArgumentStream(List<String> const& args) {
-    ARIADNE_PRECONDITION(args.size() > 0)
-    for (auto arg : args) _args.push(arg);
-}
+            if (value != "none") {
+                if (value == "box") {
+                    drawer=BoxDrawer();
+                } else {
+                    SizeType const at_pos=value.find('@',0);
+                    if (at_pos == String::npos) {
+                        throw std::runtime_error("invalid drawer");
+                    }
 
-String ArgumentStream::peek() const {
-    ARIADNE_PRECONDITION(not empty())
-    return _args.front();
-}
+                    Int const accuracy=std::stoi(value.substr(at_pos+1));
+                    if (accuracy < 0) {
+                        throw std::runtime_error("negative drawer accuracy");
+                    }
 
-String ArgumentStream::pop() {
-    auto val = peek();
-    _args.pop();
-    return val;
-}
-
-Bool ArgumentStream::empty() const {
-    return _args.empty();
-}
-
-SizeType ArgumentStream::size() const {
-    return _args.size();
-}
-
-ArgumentPack::ArgumentPack(String const& id, VoidFunction const& processor) : _id(id), _processor(processor) { }
-
-String const& ArgumentPack::id() const {
-    return _id;
-}
-
-Void ArgumentPack::process() const {
-    _processor();
-}
-
-Bool ArgumentPack::operator<(ArgumentPack const& other) const {
-    return this->_id < other._id;
-}
-
-//! \brief Supplies base behavior for argument parsers
-class ArgumentParserBase : public ArgumentParserInterface {
-  protected:
-    ArgumentParserBase(String const& short_id, String const& long_id, String const& instructions)
-        : _short_id(short_id), _long_id(long_id), _instructions(instructions) { }
-  public:
-    String short_id() const { return _short_id; }
-    String long_id() const { return _long_id; }
-    String instructions() const { return _instructions; }
-
-    ArgumentPack consume(ArgumentStream& stream) const override;
-
-    //! \brief If a value is required for this argument
-    virtual Bool requires_value() const = 0;
-
-    Bool is_consumable(ArgumentStream const& stream) const override;
-    SizeType help_description_header_size() const override;
-    String help_description(SizeType num_chars_to_align_instructions) const override;
-
-    virtual ~ArgumentParserBase() = default;
-
-  protected:
-    virtual VoidFunction create_processor(ArgumentStream& stream) const = 0;
-
-  private:
-    String _short_id;
-    String _long_id;
-    String _instructions;
-};
-
-SizeType ArgumentParserBase::help_description_header_size() const {
-    SizeType result = 4+long_id().size();
-    if (not short_id().empty()) result += 4+short_id().size();
-    if (requires_value()) result += 8;
-    return result;
-}
-
-String ArgumentParserBase::help_description(SizeType num_chars_to_separate_instructions) const {
-    StringStream ss;
-    if (short_id().empty()) {
-        ss << "[--" << long_id() << "]";
-    } else {
-        ss << "[-" << short_id() << " | --" << long_id() << "]";
-    }
-    if (requires_value()) { ss << " <value>"; }
-    ss << std::string(num_chars_to_separate_instructions,' ') << instructions();
-    return ss.str();
-}
-
-Bool ArgumentParserBase::is_consumable(const ArgumentStream &stream) const {
-    auto arg = stream.peek();
-    if (not short_id().empty()) {
-        std::stringstream short_argument;
-        short_argument << "-" << short_id();
-        if (arg == short_argument.str()) return true;
-    }
-    String long_argument = "--"+long_id();
-    return (arg == long_argument);
-}
-
-ArgumentPack ArgumentParserBase::consume(ArgumentStream& stream) const {
-    stream.pop(); // Pop out the identifier already recognised as the one for this parser
-    return ArgumentPack(_long_id,create_processor(stream));
-}
-
-class ValuedArgumentParserBase : public ArgumentParserBase {
-  public:
-    ValuedArgumentParserBase(String const& s, String const& l, String const& i) : ArgumentParserBase(s,l,i) { }
-    Bool requires_value() const override { return true; }
-    VoidFunction create_processor(ArgumentStream& stream) const override final {
-        VoidFunction f;
-        if (stream.empty()) { throw MissingArgumentValueException(long_id()); }
-        try {
-            f = _create_processor(stream);
-        } catch (std::exception&) {
-            throw InvalidArgumentValueException(long_id());
-        }
-        return f;
-    }
-  protected:
-    virtual VoidFunction _create_processor(ArgumentStream& stream) const = 0;
-};
-
-class UnvaluedArgumentParserBase : public ArgumentParserBase {
-  public:
-    UnvaluedArgumentParserBase(String const& s, String const& l, String const& i) : ArgumentParserBase(s,l,i) { }
-    Bool requires_value() const override { return false; }
-};
-
-class FunctionalValuedArgumentParser : public ValuedArgumentParserBase {
-  public:
-    FunctionalValuedArgumentParser(
-            String const& short_id,
-            String const& long_id,
-            String const& instructions,
-            ArgumentValueProcessor const& processor)
-        : ValuedArgumentParserBase(short_id,long_id,instructions)
-        , _processor(processor) { }
-
-    VoidFunction _create_processor(ArgumentStream& stream) const override {
-        String value=stream.pop();
-        return _processor(value);
-    }
-
-  private:
-    ArgumentValueProcessor _processor;
-};
-
-class FunctionalUnvaluedArgumentParser : public UnvaluedArgumentParserBase {
-  public:
-    FunctionalUnvaluedArgumentParser(
-            String const& short_id,
-            String const& long_id,
-            String const& instructions,
-            VoidFunction const& processor)
-        : UnvaluedArgumentParserBase(short_id,long_id,instructions)
-        , _processor(processor) { }
-
-    VoidFunction create_processor(ArgumentStream&) const override {
-        return _processor;
-    }
-
-  private:
-    VoidFunction _processor;
-};
-
-ArgumentParser make_valued_argument_parser(
-        String const& short_id,
-        String const& long_id,
-        String const& instructions,
-        ArgumentValueProcessor const& processor)
-{
-    return FunctionalValuedArgumentParser(
-        short_id,long_id,instructions,processor);
-}
-
-ArgumentParser make_unvalued_argument_parser(
-        String const& short_id,
-        String const& long_id,
-        String const& instructions,
-        VoidFunction const& processor)
-{
-    return FunctionalUnvaluedArgumentParser(
-        short_id,long_id,instructions,processor);
-}
-
-class ConcurrencyArgumentParser : public ValuedArgumentParserBase {
-  public:
-    ConcurrencyArgumentParser() : ValuedArgumentParserBase(
-            "c","concurrency","Choose the concurrency as a non-negative integer <value> or use 'max' to choose the hardware concurrency of this machine (default: 0)") { }
-
-    VoidFunction _create_processor(ArgumentStream& stream) const override {
-        String arg = stream.pop();
-        if (arg == "max") return []{ ThreadManager::instance().set_maximum_concurrency(); };
-        else {
-            int val = std::stoi(arg);
-            if (val < 0) throw std::exception();
-            return [val]{ ThreadManager::instance().set_concurrency(static_cast<unsigned int>(val)); };
-        }
-    }
-};
-
-class DrawerArgumentParser : public ValuedArgumentParserBase {
-  public:
-    DrawerArgumentParser() : ValuedArgumentParserBase(
-            "d","drawer","Choose the drawer as a <value> in [ box | grid@X | affine@X | none ] with X a non-negative integer, where none disables drawing (default: affine@0)") { }
-
-    VoidFunction _create_processor(ArgumentStream& stream) const override {
-        String value = stream.pop();
-        Drawer drawer = NullDrawer();
-        if (value != "none") {
-            if (value == "box") {
-                drawer = BoxDrawer();
-            } else {
-                std::size_t at_pos = value.find('@',0);
-                if (at_pos == std::string::npos) throw std::exception();
-                else {
-                    int accuracy = stoi(value.substr(at_pos+1));
-                    if (accuracy < 0) throw std::exception();
-                    String drawer_name = value.substr(0,at_pos);
-                    if (drawer_name == "grid") drawer = GridDrawer((Nat)accuracy);
-                    else if (drawer_name == "affine") drawer = AffineDrawer((Nat)accuracy);
-                    else throw std::exception();
+                    String const drawer_name=value.substr(0,at_pos);
+                    if (drawer_name == "grid") {
+                        drawer=GridDrawer(static_cast<Nat>(accuracy));
+                    } else if (drawer_name == "affine") {
+                        drawer=AffineDrawer(static_cast<Nat>(accuracy));
+                    } else {
+                        throw std::runtime_error("invalid drawer");
+                    }
                 }
             }
-        }
-        return [drawer]{ GraphicsManager::instance().set_drawer(drawer); };
-    }
-};
 
-class GraphicsBackendArgumentParser : public ValuedArgumentParserBase {
-  public:
-    GraphicsBackendArgumentParser() : ValuedArgumentParserBase(
-            "g","graphics","Choose the graphics backend as a <value> in [ cairo | none ], where none disables writing to file (default: cairo)") { }
-
-    VoidFunction _create_processor(ArgumentStream& stream) const override {
-        String val = stream.pop();
-        if (val == "cairo") return []{ GraphicsManager::instance().set_backend(CairoGraphicsBackend()); };
-        if (val == "none") return []{ GraphicsManager::instance().set_backend(NullGraphicsBackend()); };
-	    throw std::exception();
-    }
-};
-
-class HelpArgumentParser : public UnvaluedArgumentParserBase {
-  public:
-    HelpArgumentParser() : UnvaluedArgumentParserBase(
-            "h","help","Show this list of supported arguments") { }
-
-    VoidFunction create_processor(ArgumentStream&) const override {
-        return []{};
-    }
-};
-
-class SchedulerArgumentParser : public ValuedArgumentParserBase {
-public:
-    SchedulerArgumentParser() : ValuedArgumentParserBase(
-            "s","scheduler","Choose the logging scheduler as a <value> in [ immediate | blocking | nonblocking ] (default: nonblocking)") { }
-
-    VoidFunction _create_processor(ArgumentStream& stream) const override {
-        String val = stream.pop();
-        if (val == "immediate") return []{ Logger::instance().use_immediate_scheduler(); };
-        else if (val == "blocking") return []{ Logger::instance().use_blocking_scheduler(); };
-        else if (val == "nonblocking") return []{ Logger::instance().use_nonblocking_scheduler(); };
-        else throw std::exception();
-    }
-};
-
-class ThemeArgumentParser : public ValuedArgumentParserBase {
-  public:
-    ThemeArgumentParser() : ValuedArgumentParserBase(
-            "t","theme","Choose the logging theme as a <value> in [ none | light | dark ] (default: none)") { }
-
-    VoidFunction _create_processor(ArgumentStream& stream) const override {
-        TerminalTextTheme theme = TT_THEME_NONE;
-        String val = stream.pop();
-        if (val != "none") {
-            if (val == "light") theme = TT_THEME_LIGHT;
-            else if (val == "dark") theme = TT_THEME_DARK;
-            else throw std::exception();
-        }
-        return [theme]{ Logger::instance().configuration().set_theme(theme); };
-    }
-};
-
-class VerbosityArgumentParser : public ValuedArgumentParserBase {
-  public:
-    VerbosityArgumentParser() : ValuedArgumentParserBase(
-            "v","verbosity","Choose the logging verbosity as a non-negative integer <value> (default: 0)") { }
-
-    VoidFunction _create_processor(ArgumentStream& stream) const override {
-        int val = std::stoi(stream.pop());
-        if (val < 0) throw std::exception();
-        return [val]{ Logger::instance().configuration().set_verbosity(static_cast<unsigned int>(val)); };
-    }
-};
-
-CommandLineInterface::CommandLineInterface() : _parsers({
-    ConcurrencyArgumentParser(),DrawerArgumentParser(),GraphicsBackendArgumentParser(),HelpArgumentParser(),
-    SchedulerArgumentParser(),ThemeArgumentParser(),VerbosityArgumentParser()
-    }) { }
-
-Bool CommandLineInterface::acquire(int argc, const char* argv[]) const {
-    return acquire(argc,argv,List<ArgumentParser>());
+            return [drawer] {
+                GraphicsManager::instance().set_drawer(drawer);
+            };
+        });
 }
 
-Bool CommandLineInterface::acquire(
-        int argc,
-        const char* argv[],
-        List<ArgumentParser> const& extra_parsers) const
-{
-    List<String> args;
-    for (int i = 0; i < argc; ++i) args.append(String(argv[i]));
-    return acquire(args,extra_parsers);
-}
-
-Bool CommandLineInterface::acquire(List<String> const& args) const {
-    return acquire(args,List<ArgumentParser>());
-}
-
-Bool CommandLineInterface::acquire(
-        List<String> const& args,
-        List<ArgumentParser> const& extra_parsers) const
-{
-    List<ArgumentParser> parsers=_parsers;
-    for(auto const& parser : extra_parsers) {
-        parsers.append(parser);
-    }
-
-    ArgumentStream stream(args);
-    stream.pop(); // Pop out the function pointer or script name
-
-    Set<ArgumentPack> packs;
-    while (not stream.empty()) {
-        Bool consumed = false;
-        for (auto& parser : parsers) {
-            if (parser.is_consumable(stream)) {
-                consumed = true;
-                try {
-                    auto p = parser.consume(stream);
-                    if (packs.contains(p)) {
-                        std::clog << "Argument '" << p.id() << "' specified multiple times.\n\n"
-                            << parser.help_description(4) << std::endl;
-                        return false;
-                    } else if (p.id() == "help") {
-                        p.process(); _print_help(parsers);
-                        return false;
-                    } else if (p.id() == "scheduler") {
-                        // Need to process this before the others
-                        p.process();
-                    } else packs.insert(p);
-                } catch(MissingArgumentValueException& exc) {
-                    std::clog << "A value is required by the '" << exc.what() << "' argument, but it is not supplied.\n\n"
-                        << parser.help_description(4) << std::endl;
-                    return false;
-                } catch(InvalidArgumentValueException& exc) {
-                    std::clog << "Invalid '" << exc.what() << "' argument value, see the usage below:" << "\n\n" << parser.help_description(4) << std::endl;
-                    return false;
-                }
-                break;
+ArgumentParser make_graphics_argument_parser() {
+    return make_valued_argument_parser(
+        "g",
+        "graphics",
+        "Choose the graphics backend as a <value> in [ cairo | none ], where none disables writing to file (default: cairo)",
+        [](String const& value) -> VoidFunction {
+            if (value == "cairo") {
+                return [] {
+                    GraphicsManager::instance().set_backend(
+                        CairoGraphicsBackend());
+                };
             }
-        }
-        if (not consumed) {
-            std::clog << "Unrecognised command-line argument '" << stream.peek() << "'" << std::endl << std::endl;
-            _print_help(parsers);
-            return false;
-        }
-    }
-
-    for (auto p : packs) p.process();
-
-    return true;
+            if (value == "none") {
+                return [] {
+                    GraphicsManager::instance().set_backend(
+                        NullGraphicsBackend());
+                };
+            }
+            throw std::runtime_error("invalid graphics backend");
+        });
 }
 
-void CommandLineInterface::_print_help(
-        List<ArgumentParser> const& parsers) const
-{
-    List<SizeType> chars(parsers.size(),0);
-    SizeType max_chars = 0;
-    for (SizeType i=0; i<parsers.size(); ++i)  {
-        chars[i] = parsers[i].help_description_header_size();
-        if (chars[i] > max_chars) max_chars = chars[i];
-    }
+} // namespace
 
-    std::clog << "Supported arguments:" << std::endl;
-    for (SizeType i=0; i<parsers.size(); ++i) {
-        std::clog << "    " << parsers[i].help_description(4+max_chars-chars[i]) << std::endl;
-    }
+CommandLineContribution io_command_line() {
+    return CommandLineContribution(
+        "kernel-io",
+        {
+            make_drawer_argument_parser(),
+            make_graphics_argument_parser()
+        });
+}
+
+CommandLineInterface make_kernel_command_line_interface() {
+    // ThreadManager owns the thread registry used by the logging schedulers.
+    ThreadManager::instance();
+
+    CommandLineInterface command_line;
+    command_line
+        .add(logging_command_line())
+        .add(threading_command_line())
+        .add(io_command_line());
+    return command_line;
+}
+
+CommandLineInterface& kernel_command_line_interface() {
+    static CommandLineInterface command_line=make_kernel_command_line_interface();
+    return command_line;
 }
 
 } // namespace Ariadne

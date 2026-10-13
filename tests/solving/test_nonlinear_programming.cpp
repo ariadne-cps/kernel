@@ -437,7 +437,7 @@ class TestNonlinearInfeasibleInteriorPointOptimiser
 };
 
 Int main(Int argc, const char* argv[]) {
-    if (not CommandLineInterface::instance().acquire(argc,argv)) return -1;
+    if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
     NonlinearInfeasibleInteriorPointOptimiser nlio;
     TestOptimiser(nlio).test();

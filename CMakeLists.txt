@@ -27,7 +27,7 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
     require_same_dependency_commit(Utility
         REFERENCES
             "${PROJECT_SOURCE_DIR}/ss/algebra/ss/interval/ss/numeric/ss/foundation|ss/utility"
-            "${PROJECT_SOURCE_DIR}/ss/bdd/ss/threading|ss/utility"
+            "${PROJECT_SOURCE_DIR}/ss/bdd/ss/threading/ss/logging|ss/utility"
     )
 endif()
 

@@ -342,7 +342,7 @@ Void test_taylor_series_step_maximum_error() {
 }
 
 Int main(Int argc, const char* argv[]) {
-    if (not CommandLineInterface::instance().acquire(argc,argv)) return -1;
+    if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
     ThresholdSweeper<FloatDP> sweeper(DoublePrecision(),1e-10);
 

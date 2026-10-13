@@ -110,7 +110,7 @@ class TestInteriorPointSolver
 
 Int main(Int argc, const char* argv[])
 {
-    if (not CommandLineInterface::instance().acquire(argc,argv)) return -1;
+    if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
     InteriorPointSolver interior_point_optimiser;
     TestInteriorPointSolver(interior_point_optimiser).test();
