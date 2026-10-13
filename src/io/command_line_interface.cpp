@@ -105,14 +105,19 @@ class ArgumentParserBase : public ArgumentParserInterface {
 };
 
 SizeType ArgumentParserBase::help_description_header_size() const {
-    SizeType result = 8+short_id().size()+long_id().size();
+    SizeType result = 4+long_id().size();
+    if (not short_id().empty()) result += 4+short_id().size();
     if (requires_value()) result += 8;
     return result;
 }
 
 String ArgumentParserBase::help_description(SizeType num_chars_to_separate_instructions) const {
     StringStream ss;
-    ss << "[-" << short_id() << " | --" << long_id() << "]";
+    if (short_id().empty()) {
+        ss << "[--" << long_id() << "]";
+    } else {
+        ss << "[-" << short_id() << " | --" << long_id() << "]";
+    }
     if (requires_value()) { ss << " <value>"; }
     ss << std::string(num_chars_to_separate_instructions,' ') << instructions();
     return ss.str();
@@ -120,9 +125,11 @@ String ArgumentParserBase::help_description(SizeType num_chars_to_separate_instr
 
 Bool ArgumentParserBase::is_consumable(const ArgumentStream &stream) const {
     auto arg = stream.peek();
-    std::stringstream short_argument;
-    short_argument << "-" << short_id();
-    if (arg == short_argument.str()) return true;
+    if (not short_id().empty()) {
+        std::stringstream short_argument;
+        short_argument << "-" << short_id();
+        if (arg == short_argument.str()) return true;
+    }
     String long_argument = "--"+long_id();
     return (arg == long_argument);
 }
@@ -155,6 +162,63 @@ class UnvaluedArgumentParserBase : public ArgumentParserBase {
     UnvaluedArgumentParserBase(String const& s, String const& l, String const& i) : ArgumentParserBase(s,l,i) { }
     Bool requires_value() const override { return false; }
 };
+
+class FunctionalValuedArgumentParser : public ValuedArgumentParserBase {
+  public:
+    FunctionalValuedArgumentParser(
+            String const& short_id,
+            String const& long_id,
+            String const& instructions,
+            ArgumentValueProcessor const& processor)
+        : ValuedArgumentParserBase(short_id,long_id,instructions)
+        , _processor(processor) { }
+
+    VoidFunction _create_processor(ArgumentStream& stream) const override {
+        String value=stream.pop();
+        return _processor(value);
+    }
+
+  private:
+    ArgumentValueProcessor _processor;
+};
+
+class FunctionalUnvaluedArgumentParser : public UnvaluedArgumentParserBase {
+  public:
+    FunctionalUnvaluedArgumentParser(
+            String const& short_id,
+            String const& long_id,
+            String const& instructions,
+            VoidFunction const& processor)
+        : UnvaluedArgumentParserBase(short_id,long_id,instructions)
+        , _processor(processor) { }
+
+    VoidFunction create_processor(ArgumentStream&) const override {
+        return _processor;
+    }
+
+  private:
+    VoidFunction _processor;
+};
+
+ArgumentParser make_valued_argument_parser(
+        String const& short_id,
+        String const& long_id,
+        String const& instructions,
+        ArgumentValueProcessor const& processor)
+{
+    return FunctionalValuedArgumentParser(
+        short_id,long_id,instructions,processor);
+}
+
+ArgumentParser make_unvalued_argument_parser(
+        String const& short_id,
+        String const& long_id,
+        String const& instructions,
+        VoidFunction const& processor)
+{
+    return FunctionalUnvaluedArgumentParser(
+        short_id,long_id,instructions,processor);
+}
 
 class ConcurrencyArgumentParser : public ValuedArgumentParserBase {
   public:
@@ -272,19 +336,39 @@ CommandLineInterface::CommandLineInterface() : _parsers({
     }) { }
 
 Bool CommandLineInterface::acquire(int argc, const char* argv[]) const {
+    return acquire(argc,argv,List<ArgumentParser>());
+}
+
+Bool CommandLineInterface::acquire(
+        int argc,
+        const char* argv[],
+        List<ArgumentParser> const& extra_parsers) const
+{
     List<String> args;
     for (int i = 0; i < argc; ++i) args.append(String(argv[i]));
-    return acquire(args);
+    return acquire(args,extra_parsers);
 }
 
 Bool CommandLineInterface::acquire(List<String> const& args) const {
+    return acquire(args,List<ArgumentParser>());
+}
+
+Bool CommandLineInterface::acquire(
+        List<String> const& args,
+        List<ArgumentParser> const& extra_parsers) const
+{
+    List<ArgumentParser> parsers=_parsers;
+    for(auto const& parser : extra_parsers) {
+        parsers.append(parser);
+    }
+
     ArgumentStream stream(args);
     stream.pop(); // Pop out the function pointer or script name
 
     Set<ArgumentPack> packs;
     while (not stream.empty()) {
         Bool consumed = false;
-        for (auto& parser : _parsers) {
+        for (auto& parser : parsers) {
             if (parser.is_consumable(stream)) {
                 consumed = true;
                 try {
@@ -294,7 +378,7 @@ Bool CommandLineInterface::acquire(List<String> const& args) const {
                             << parser.help_description(4) << std::endl;
                         return false;
                     } else if (p.id() == "help") {
-                        p.process(); _print_help();
+                        p.process(); _print_help(parsers);
                         return false;
                     } else if (p.id() == "scheduler") {
                         // Need to process this before the others
@@ -313,7 +397,7 @@ Bool CommandLineInterface::acquire(List<String> const& args) const {
         }
         if (not consumed) {
             std::clog << "Unrecognised command-line argument '" << stream.peek() << "'" << std::endl << std::endl;
-            _print_help();
+            _print_help(parsers);
             return false;
         }
     }
@@ -323,18 +407,19 @@ Bool CommandLineInterface::acquire(List<String> const& args) const {
     return true;
 }
 
-void CommandLineInterface::_print_help() const {
-
-    List<SizeType> chars(_parsers.size(),0);
+void CommandLineInterface::_print_help(
+        List<ArgumentParser> const& parsers) const
+{
+    List<SizeType> chars(parsers.size(),0);
     SizeType max_chars = 0;
-    for (SizeType i=0; i<_parsers.size(); ++i)  {
-        chars[i] = _parsers[i].help_description_header_size();
+    for (SizeType i=0; i<parsers.size(); ++i)  {
+        chars[i] = parsers[i].help_description_header_size();
         if (chars[i] > max_chars) max_chars = chars[i];
     }
 
     std::clog << "Supported arguments:" << std::endl;
-    for (SizeType i=0; i<_parsers.size(); ++i) {
-        std::clog << "    " << _parsers[i].help_description(4+max_chars-chars[i]) << std::endl;
+    for (SizeType i=0; i<parsers.size(); ++i) {
+        std::clog << "    " << parsers[i].help_description(4+max_chars-chars[i]) << std::endl;
     }
 }
 

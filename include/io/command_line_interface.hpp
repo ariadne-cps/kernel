@@ -31,7 +31,6 @@
 
 #include <functional>
 #include <queue>
-#include <functional>
 #include "macro/general.hpp"
 #include "utility/handle.hpp"
 #include "utility/container.hpp"
@@ -40,6 +39,7 @@
 namespace Ariadne {
 
 using VoidFunction = std::function<Void()>;
+using ArgumentValueProcessor = std::function<VoidFunction(String const&)>;
 
 //! \brief Exception for when no value is available, but it should be supplied
 class MissingArgumentValueException : public std::runtime_error {
@@ -117,11 +117,26 @@ class ArgumentParser : public Handle<const ArgumentParserInterface> {
     String help_description(SizeType num_chars_to_separate_instructions) const { return this->_ptr->help_description(num_chars_to_separate_instructions); }
 };
 
+//! \brief Create an argument parser that consumes a value.
+//! \details The processor is called while parsing to validate/translate the
+//! value and returns the action to execute after all arguments are acquired.
+ArgumentParser make_valued_argument_parser(
+    String const& short_id,
+    String const& long_id,
+    String const& instructions,
+    ArgumentValueProcessor const& processor);
+
+//! \brief Create an argument parser that does not consume a value.
+ArgumentParser make_unvalued_argument_parser(
+    String const& short_id,
+    String const& long_id,
+    String const& instructions,
+    VoidFunction const& processor);
+
 //! \brief A static class for acquisition of CLI arguments
 class CommandLineInterface {
   private:
     CommandLineInterface();
-    void _print_help() const;
   public:
     CommandLineInterface(CommandLineInterface const&) = delete;
     Void operator=(CommandLineInterface const&) = delete;
@@ -136,10 +151,24 @@ class CommandLineInterface {
     //! any subsequent code should be run
     Bool acquire(int argc, const char* argv[]) const;
 
+    //! \brief Acquire the CLI arguments with additional parsers local to
+    //! this acquisition.
+    Bool acquire(
+        int argc,
+        const char* argv[],
+        List<ArgumentParser> const& extra_parsers) const;
+
     //! \brief Acquire from a list of strings
     Bool acquire(List<String> const& args) const;
 
+    //! \brief Acquire from a list of strings with additional parsers local
+    //! to this acquisition.
+    Bool acquire(
+        List<String> const& args,
+        List<ArgumentParser> const& extra_parsers) const;
+
   private:
+    void _print_help(List<ArgumentParser> const& parsers) const;
     List<ArgumentParser> const _parsers;
 };
 
