@@ -772,12 +772,8 @@ Void ValidatedAffineConstrainedImageSet::draw(CanvasInterface& canvas, const Pro
 
     List<Point2d> boundary;
 
-    try {
-        boundary=this->boundary(projection.x_coordinate(),projection.y_coordinate());
-        LOGGING_PRINTLN("boundary="<<boundary);
-    } catch(const std::runtime_error& e) {
-        throw e;
-    }
+    boundary=this->boundary(projection.x_coordinate(),projection.y_coordinate());
+    LOGGING_PRINTLN("boundary="<<boundary);
 
     if(boundary.empty()) { return; }
 

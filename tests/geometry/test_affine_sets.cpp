@@ -172,10 +172,17 @@ class TestAffineSet
         D=ExactBoxType::unit_box(2);
         x=Affine<FloatDPBounds>::variables(2,dp);
         set=ValidatedAffineConstrainedImageSet(D,{x[0],x[1]});
+        set.new_parameter_constraint(x[0]+x[1]<=0.5_x);
 
         GridTreePaving paving(Grid(2));
         set.robust_adjoin_outer_approximation_to(paving,0);
         ARIADNE_TEST_ASSERT(paving.size()>0);
+
+        // Repeating the ordinary approximation must recognise cells already
+        // contained in the paving and leave the result unchanged.
+        SizeType size=paving.size();
+        set.adjoin_outer_approximation_to(paving,0);
+        ARIADNE_TEST_EQUALS(paving.size(),size);
     }
 
     Void test_outer_approximation() {
