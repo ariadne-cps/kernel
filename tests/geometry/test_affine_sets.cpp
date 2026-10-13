@@ -384,6 +384,15 @@ class TestAffineSet
         }
     }
 
+    Void test_collinear_boundary_generators() {
+        D=ExactBoxType::unit_box(3);
+        x=Affine<FloatDPBounds>::variables(3,dp);
+        set=ValidatedAffineConstrainedImageSet(D,{x[0]+x[1],x[2]});
+
+        List<Point2d> vertices=set.boundary(0,1);
+        ARIADNE_TEST_ASSERT(!vertices.empty());
+    }
+
     Void test_logging_branches() {
         unsigned int const old_verbosity=Logger::instance().configuration().verbosity();
         Logger::instance().configuration().set_verbosity(10u);
@@ -616,6 +625,7 @@ class TestAffineSet
         ARIADNE_TEST_CALL(test_separated());
         ARIADNE_TEST_CALL(test_outer_approximation());
         ARIADNE_TEST_CALL(test_robust_outer_approximation());
+        ARIADNE_TEST_CALL(test_collinear_boundary_generators());
         ARIADNE_TEST_CALL(test_logging_branches());
         ARIADNE_TEST_CALL(test_uniform_error());
         ARIADNE_TEST_CALL(test_draw());
