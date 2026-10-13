@@ -44,7 +44,6 @@ namespace Ariadne {
 typedef Vector<FloatDP> RawFloatVector;
 typedef Vector<ExactIntervalType> ExactIntervalVectorType;
 
-Pair<Interval<FloatDP>,FloatDPError> make_domain(Interval<Real> const& ivl);
 Pair<Interval<FloatDP>,FloatDPError> make_domain(Interval<FloatDPBall> const& ivl);
 
 template<class X, class XX>
@@ -76,20 +75,6 @@ ValidatedAffineConstrainedImageSet::ValidatedAffineConstrainedImageSet(const Rea
     FloatDPBall(0_z,dp);
 }
 
-
-Pair<Interval<FloatDP>,FloatDPError> make_domain(Interval<Real> const& ivl) {
-    FloatDPBounds dlb(ivl.lower_bound(),dp);
-    FloatDPBounds dub(ivl.upper_bound(),dp);
-    FloatDPApproximation dla(ivl.lower_bound(),dp);
-    FloatDPApproximation dua(ivl.upper_bound(),dp);
-    // Keep the full FloatDP precision of the approximated endpoints.  Reducing
-    // them to Float32 here creates an avoidable, step-size-independent error
-    // which is later transferred to the enclosure remainder.
-    FloatDP dl(dla.raw());
-    FloatDP du(dua.raw());
-    FloatDPError e=cast_positive(max(max(dub.upper()-du,du-dub.lower()),max(dlb.upper()-dl,dl-dlb.lower())));
-    return make_pair(make_interval(dl,du),e);
-}
 
 Pair<Interval<FloatDP>,FloatDPError> make_domain(Interval<FloatDPBall> const& ivl) {
     FloatDPBall const& dlb=ivl.lower_bound();
@@ -453,66 +438,6 @@ ValidatedAffineConstrainedImageSet::adjoin_outer_approximation_to(PavingInterfac
     _adjoin_outer_approximation_to(paving,lp,errors,bounding_cell,fineness);
 }
 
-
-
-
-Void ValidatedAffineConstrainedImageSet::_robust_adjoin_outer_approximation_to(PavingInterface& paving, LinearProgram<FloatDP>& lp, const Vector<FloatDPError>& errors, GridCell& cell, Nat fineness)
-{
-    SimplexSolver<FloatDP> lpsolver;
-
-    const SizeType nx=cell.dimension();
-    const SizeType nc=lp.A.row_size()-nx;
-    const SizeType ne=lp.A.column_size()-lp.A.row_size()-1u;
-
-
-    // No need to check if cell is already part of the set
-    if(paving.superset(cell)) {
-        return;
-    }
-
-    // Find concrete cell box
-    const ExactBoxType& bx=cell.box();
-
-    // Make part of linear program dependent on cell
-    for(SizeType i=0; i!=nx; ++i) {
-        lp.l[i]=bx[i].lower_bound();
-        lp.u[i]=bx[i].upper_bound();
-    }
-
-    Int cell_depth=cell.depth();
-    Int maximum_depth=static_cast<Int>(fineness*cell.dimension());
-
-    // Check for disjointness using linear program
-    ValidatedKleenean feasible=lpsolver.hotstarted_feasible(lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x,lp.y);
-
-    if (definitely(not feasible)) {
-        return;
-    }
-
-    Bool done=false;
-    while(!done && possibly(lp.x[ne+nx+nc]<0)) {
-        done=lpsolver.lpstep(lp.c,lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x);
-    }
-    // FIXME: Should be rigorous!
-    Vector<FloatDPBounds> x=lpsolver.compute_x(lp.l,lp.u,lp.A,lp.b,lp.vt);
-    if(possibly(x[ne+nx+nc]<0)) { return; } // No feasible solution
-
-    //feasible=verify_feasibility(lp.A,lp.b,lp.l,lp.u,lp.vt);
-    //if(!feasible) { return; }
-
-    // If not disjoint, and we are at maximum depth, adjoin the set.
-    // Otherwise, split and continue.
-
-    if(cell_depth>=maximum_depth) {
-        paving.adjoin(cell);
-    } else {
-        GridCell subcell1 = cell.split(0);
-		GridCell subcell2 = cell.split(1);
-        ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(paving,lp,errors,subcell1,fineness);
-        ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(paving,lp,errors,subcell2,fineness);
-    }
-
-}
 
 
 

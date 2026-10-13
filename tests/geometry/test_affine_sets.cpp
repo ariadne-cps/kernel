@@ -168,6 +168,16 @@ class TestAffineSet
         figure.write("test_affine_set-separated");
     }
 
+    Void test_robust_outer_approximation() {
+        D=ExactBoxType::unit_box(2);
+        x=Affine<FloatDPBounds>::variables(2,dp);
+        set=ValidatedAffineConstrainedImageSet(D,{x[0],x[1]});
+
+        GridTreePaving paving(Grid(2));
+        set.robust_adjoin_outer_approximation_to(paving,0);
+        ARIADNE_TEST_ASSERT(paving.size()>0);
+    }
+
     Void test_outer_approximation() {
 
         {
@@ -498,6 +508,7 @@ class TestAffineSet
         ARIADNE_TEST_CALL(test_constrained_image());
         ARIADNE_TEST_CALL(test_separated());
         ARIADNE_TEST_CALL(test_outer_approximation());
+        ARIADNE_TEST_CALL(test_robust_outer_approximation());
         ARIADNE_TEST_CALL(test_uniform_error());
         ARIADNE_TEST_CALL(test_draw());
     }
