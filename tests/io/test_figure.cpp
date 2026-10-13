@@ -45,6 +45,7 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_geometry2d())
         ARIADNE_TEST_CALL(test_colour())
         ARIADNE_TEST_CALL(test_graphics_properties())
+        ARIADNE_TEST_CALL(test_figure_header_helpers())
         ARIADNE_TEST_CALL(test_graphics_interface())
         ARIADNE_TEST_CALL(test_graphics_base())
         ARIADNE_TEST_CALL(test_cairo())
@@ -131,6 +132,65 @@ class TestGraphics {
          .set_fill_opacity(0.5)
          .set_fill_colour(0,1,0);
         ARIADNE_TEST_PRINT(p)
+    }
+
+    void test_figure_header_helpers() {
+        LineStyle line_style_value = line_style(false);
+        ARIADNE_TEST_EQUALS(static_cast<Bool>(line_style_value),false)
+
+        LineWidth line_width_value = line_width(2.0);
+        ARIADNE_TEST_EQUALS(static_cast<Dbl>(line_width_value),2.0)
+
+        LineColour line_colour_value = line_colour(black);
+        LineColour direct_line_colour(0.1,0.2,0.3);
+
+        FillStyle fill_style_value = fill_style(false);
+        ARIADNE_TEST_EQUALS(static_cast<Bool>(fill_style_value),false)
+
+        FillOpacity fill_opacity_value = fill_opacity(0.25);
+        ARIADNE_TEST_EQUALS(static_cast<Dbl>(fill_opacity_value),0.25)
+
+        FillColour direct_fill_colour(0.4,0.5,0.6);
+
+        Animated animated_value = set_animated(true);
+        ARIADNE_TEST_EQUALS(static_cast<Bool>(animated_value),true)
+
+        GraphicsProperties properties(false,2.0,3.0,black,false,white);
+        ARIADNE_TEST_EQUALS(properties.line_style,false)
+        ARIADNE_TEST_EQUALS(properties.line_width,2.0)
+        ARIADNE_TEST_EQUALS(properties.dot_radius,3.0)
+        ARIADNE_TEST_EQUALS(properties.fill_style,false)
+
+        Interval<Double> double_interval(1.0,2.0);
+        ARIADNE_TEST_EQUALS(double_interval.lower_bound(),1.0)
+        ARIADNE_TEST_EQUALS(double_interval.upper_bound(),2.0)
+
+        ApproximateDoubleInterval approximate_interval(1.0,2.0);
+        ARIADNE_TEST_PRINT(approximate_interval.lower_bound())
+        ARIADNE_TEST_PRINT(approximate_interval.upper_bound())
+
+        GraphicsBoundingBoxType bounding_box({
+            {FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)},
+            {FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)}
+        });
+        Figure figure(bounding_box,0,1);
+        figure << line_style_value
+               << line_width_value
+               << direct_line_colour
+               << fill_style_value
+               << fill_opacity_value
+               << direct_fill_colour
+               << animated_value;
+
+        RealVariable x("x"), y("y");
+        LabelledFigure labelled(Axes2d({0<=x<=1,0<=y<=1}));
+        labelled << line_style_value
+                 << line_width_value
+                 << line_colour_value
+                 << fill_style_value
+                 << fill_opacity_value
+                 << direct_fill_colour
+                 << animated_value;
     }
 
     void test_graphics_interface() {
