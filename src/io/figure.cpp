@@ -90,6 +90,10 @@ OutputStream& operator<<(OutputStream& os, GraphicsProperties const& gp) {
 
 Variables2d::Variables2d(const RealVariable& x, const RealVariable& y) : _x(x.name()), _y(y.name()) { }
 
+RealVariable Variables2d::x() const { return RealVariable(_x); }
+
+RealVariable Variables2d::y() const { return RealVariable(_y); }
+
 Axes2d::Axes2d(const ApproximateDoubleVariableInterval x, const ApproximateDoubleVariableInterval& y)
         : variables(x.variable(),y.variable()), bounds() {
     bounds.insert(x.variable(),x.interval());
