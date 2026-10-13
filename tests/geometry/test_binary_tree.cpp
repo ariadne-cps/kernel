@@ -250,13 +250,17 @@ inline Void test_binary_tree() {
 
     ARIADNE_PRINT_TEST_COMMENT("Testing add_enabled(subtree,path) early enabled and left path");
     BinaryTreeNode source_subtree(true);
+    BinaryWord subtreePath("0");
+    ARIADNE_TEST_EQUAL(subtreePath.size(),1u);
+    ARIADNE_TEST_EQUAL(source_subtree.is_enabled(),true);
+
     BinaryTreeNode enabled_destination(true);
-    BinaryWord subtreePath;
-    subtreePath.push_back(false);
     enabled_destination.add_enabled(&source_subtree,subtreePath);
     ARIADNE_TEST_EQUAL(enabled_destination.is_enabled(),true);
 
     BinaryTreeNode left_destination(false);
+    ARIADNE_TEST_EQUAL(left_destination.is_leaf(),true);
+    ARIADNE_TEST_EQUAL(left_destination.is_disabled(),true);
     left_destination.add_enabled(&source_subtree,subtreePath);
     ARIADNE_TEST_EQUAL(left_destination.is_enabled(subtreePath),true);
 
