@@ -72,9 +72,9 @@ struct DegreeRange {
     std::optional<Nat> minimum;
     std::optional<Nat> maximum;
 
-    bool contains(Nat degree) const {
-        return (!minimum || degree>=*minimum)
-            && (!maximum || degree<=*maximum);
+    bool contains(Nat polynomial_degree_value) const {
+        return (!minimum || polynomial_degree_value>=*minimum)
+            && (!maximum || polynomial_degree_value<=*maximum);
     }
 };
 
@@ -667,8 +667,8 @@ inline Nat parse_selector_nat(const std::string& value) {
 inline DegreeRange parse_degree_range(const std::string& value) {
     const std::size_t separator=value.find(':');
     if(separator==std::string::npos) {
-        const Nat degree=parse_selector_nat(value);
-        return {degree,degree};
+        const Nat polynomial_degree_value=parse_selector_nat(value);
+        return {polynomial_degree_value,polynomial_degree_value};
     }
     if(value.find(':',separator+1u)!=std::string::npos) {
         throw std::runtime_error(
