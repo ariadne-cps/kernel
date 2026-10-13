@@ -386,7 +386,7 @@ class TestAffineSet
 
     Void test_logging_branches() {
         unsigned int const old_verbosity=Logger::instance().configuration().verbosity();
-        Logger::instance().configuration().set_verbosity(5u);
+        Logger::instance().configuration().set_verbosity(10u);
 
         D=ExactBoxType::unit_box(2);
         x=Affine<FloatDPBounds>::variables(2,dp);
