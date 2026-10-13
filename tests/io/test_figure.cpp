@@ -28,6 +28,7 @@
 #include "function/function.hpp"
 #include "io/figure.hpp"
 #include "io/cairo.hpp"
+#include "io/null_graphics.hpp"
 #include "io/drawer.hpp"
 #include "geometry/point.hpp"
 #include "geometry/box.hpp"
