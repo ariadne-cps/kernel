@@ -391,8 +391,9 @@ class TestAffineSet
         Affine<FloatDPBounds> fx(n,dp);
         Affine<FloatDPBounds> fy(n,dp);
         for(SizeType i=0; i!=n; ++i) {
-            fx[i]=FloatDPBounds(1,dp);
-            fy[i]=FloatDPBounds(static_cast<Int>(i+1u),dp);
+            Nat j=static_cast<Nat>(i);
+            fx[j]=FloatDPBounds(1,dp);
+            fy[j]=FloatDPBounds(static_cast<Int>(i+1u),dp);
         }
 
         set=ValidatedAffineConstrainedImageSet(D,{fx,fy});
