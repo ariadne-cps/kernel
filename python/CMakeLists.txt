@@ -28,7 +28,7 @@ if(Python3_FOUND)
 
     if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
         pybind11_add_module(pyariadne
-            $<TARGET_OBJECTS:pyariadne-kernel-module-obj>
+            $<TARGET_OBJECTS:pyariadne-kernel-entry-obj>
             $<TARGET_OBJECTS:KERNEL_FUNCTION_SRC>
             $<TARGET_OBJECTS:KERNEL_GEOMETRY_SRC>
             $<TARGET_OBJECTS:KERNEL_IO_SRC>

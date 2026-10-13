@@ -1,14 +1,7 @@
 #include "pybind11.hpp"
 
-void foundation_submodule(pybind11::module& module);
-void numeric_submodule(pybind11::module& module);
-void interval_submodule(pybind11::module& module);
-void algebra_submodule(pybind11::module& module);
-void linear_algebra_submodule(pybind11::module& module);
-void polynomial_submodule(pybind11::module& module);
-void differentiation_submodule(pybind11::module& module);
-void bdd_variable_submodule(pybind11::module& module);
-void robdd_submodule(pybind11::module& module);
+void algebra_module(pybind11::module& module);
+void bdd_module(pybind11::module& module);
 
 void function_submodule(pybind11::module& module);
 void geometry_submodule(pybind11::module& module);
@@ -16,16 +9,9 @@ void io_submodule(pybind11::module& module);
 void solving_submodule(pybind11::module& module);
 void symbolic_submodule(pybind11::module& module);
 
-PYBIND11_MODULE(pyariadne, module) {
-    foundation_submodule(module);
-    numeric_submodule(module);
-    interval_submodule(module);
-    algebra_submodule(module);
-    linear_algebra_submodule(module);
-    polynomial_submodule(module);
-    differentiation_submodule(module);
-    bdd_variable_submodule(module);
-    robdd_submodule(module);
+void kernel_module(pybind11::module& module) {
+    algebra_module(module);
+    bdd_module(module);
 
     function_submodule(module);
     geometry_submodule(module);

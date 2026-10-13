@@ -40,14 +40,7 @@ target_link_libraries(pyariadne-kernel INTERFACE
     pyariadne-bdd
 )
 
-if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-    add_library(pyariadne-kernel-module-obj OBJECT kernel_module.cpp)
-    target_include_directories(pyariadne-kernel-module-obj PRIVATE
-        "${PYTHON_COMMON_SOURCE_DIR}/include"
-    )
-    target_link_libraries(pyariadne-kernel-module-obj PRIVATE
-        pyariadne-python-common
-        pybind11::module
-    )
-    set_target_properties(pyariadne-kernel-module-obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
-endif()
+ariadne_add_python_module(
+    NAME kernel
+    MODULE_SOURCE kernel_module.cpp
+)
