@@ -31,6 +31,7 @@
 
 #include <iosfwd>
 #include "utility/writable.hpp"
+#include "utility/handle.hpp"
 
 namespace Ariadne {
 
