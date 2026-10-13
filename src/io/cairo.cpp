@@ -106,7 +106,7 @@ Void CairoCanvas::set_fill_colour(double r, double g, double b) { fc.red=r; fc.g
 
 // TODO: Use generic canvas routines; move cairo-specific functionality
 // into CairoCanvas class.
-Void CairoCanvas::initialise(StringType, StringType, StringType, double, double, double, double, double, double) {
+[[noreturn]] Void CairoCanvas::initialise(StringType, StringType, StringType, double, double, double, double, double, double) {
     ARIADNE_NOT_IMPLEMENTED;
 }
 Void CairoCanvas::initialise(StringType text_x, StringType text_y, double xl, double xu, double yl, double yu)

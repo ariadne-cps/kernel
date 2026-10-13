@@ -54,7 +54,7 @@ class CairoCanvas
   public:
     ~CairoCanvas();
     CairoCanvas(const ImageSize2d& size);
-    Void initialise(StringType x, StringType y, StringType z, double xl, double xu, double yl, double yu, double lz, double uz);
+    [[noreturn]] Void initialise(StringType x, StringType y, StringType z, double xl, double xu, double yl, double yu, double lz, double uz);
     Void initialise(StringType x, StringType y, double xl, double xu, double yl, double yu);
     Void write(const char* filename) const;
     Void finalise();
