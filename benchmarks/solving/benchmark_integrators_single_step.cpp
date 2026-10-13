@@ -355,7 +355,7 @@ void print_results(
     table<<std::string(column_spacing,' ');
     print_column(table,"function",function_width);
     print_metric_headers(table);
-    table<<"\n";
+    table<<"\n"<<separator<<"\n";
 
     for(std::size_t row_index=0u;
             row_index!=by_integrator.size();
@@ -391,7 +391,7 @@ void print_results(
     table<<std::string(column_spacing,' ');
     print_column(table,"integrator",integrator_width);
     print_metric_headers(table);
-    table<<"\n";
+    table<<"\n"<<separator<<"\n";
 
     for(std::size_t row_index=0u;
             row_index!=by_function.size();
