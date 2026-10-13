@@ -38,7 +38,7 @@
 #include "utility/container.hpp"
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
-#include "symbolic/templates.hpp"
+#include "function/operation_node.hpp"
 #include "geometry/set_interface.hpp"
 #include "function/function.hpp"
 #include "function/function_model.hpp"
