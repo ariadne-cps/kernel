@@ -74,6 +74,12 @@ inline Void test_binary_tree() {
     ARIADNE_TEST_EQUAL(BinaryTreeNode::is_equal_nodes(&unequal_tree_one,&unequal_tree_two),false);
     ARIADNE_TEST_EQUAL(BinaryTreeNode::is_equal_nodes(nullptr,&unequal_tree_one),false);
 
+    BinaryTreeNode contract_node(false);
+    ARIADNE_TEST_FAIL(BinaryTreeNode::restrict(nullptr,&contract_node));
+    ARIADNE_TEST_FAIL(BinaryTreeNode::restrict(&contract_node,nullptr));
+    ARIADNE_TEST_FAIL(BinaryTreeNode::remove(nullptr,&contract_node));
+    ARIADNE_TEST_FAIL(BinaryTreeNode::remove(&contract_node,nullptr));
+
     // !!!
     ARIADNE_PRINT_TEST_CASE_TITLE("Split the enabled node");
     ARIADNE_PRINT_TEST_COMMENT("Should mark the node as intermediate and create two enabled subnodes");
