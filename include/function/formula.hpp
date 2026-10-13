@@ -47,8 +47,7 @@
 #include "algebra/operations.hpp"
 
 #include "function/formula.decl.hpp"
-#include "symbolic/templates.hpp"
-#include "symbolic/constant.hpp"
+#include "function/operation_node.hpp"
 
 namespace Ariadne {
 

@@ -24,7 +24,6 @@
 
 #include "function/formula.hpp"
 
-#include "symbolic/templates.tpl.hpp"
 #include "function/formula.tpl.hpp"
 
 #include "numeric/operators.tpl.hpp"
@@ -86,51 +85,79 @@ template<class Y> inline Formula<Y> Formula<Y>::scalar(const BinaryElementaryOpe
 //    return Formula<Y>(new FormulaNode<Y>(ScalarFormulaNode<Y>(op,a1,c2)),PointerTag()); }
 
 
-template<class Y> class OperatorFormulaWriter {
-  public:
-    template<class OP, class... ARGS> Void _write_impl(OutputStream& os, Symbolic<OP,ARGS...> const& s) const {
-        OperatorSymbolicWriter<OperatorFormulaWriter<Y>>(*this)._write(os,s); }
-    Void _write(OutputStream& os, Formula<Y> const& f) const {
-        f.node_ref().accept([this,&os](auto s){this->_write_impl(os,s);}); }
-};
+template<class Y, Bool UNIVARIATE=false>
+class FormulaWriter {
+    Void write_formula(OutputStream& os, Formula<Y> const& f) const {
+        f.node_ref().accept([this,&os](auto const& node){this->_write(os,node);}); }
 
-template<class Y> class OperationFormulaWriter {
-  public:
-    template<class OP, class... ARGS> Void _write_impl(OutputStream& os, Symbolic<OP,ARGS...> const& s) const {
-        OperationSymbolicWriter<OperationFormulaWriter<Y>>(*this)._write(os,s); }
-    Void _write(OutputStream& os, Formula<Y> const& f) const {
-        f.node_ref().accept([this,&os](auto s){this->_write_impl(os,s);}); }
-};
+    template<class E> Void write_parenthesised(OutputStream& os, E const& e) const {
+        os << '('; write_formula(os,e); os << ')'; }
 
-template<class Y> class OperatorUnivariateFormulaWriter {
-  public:
-    template<class OP, class... ARGS> Void _write_impl(OutputStream& os, Symbolic<OP,ARGS...> const& s) const {
-        OperatorSymbolicWriter<OperatorUnivariateFormulaWriter<Y>>(*this)._write(os,s); }
-    Void _write_impl(OutputStream& os, Symbolic<Var,Index> const&) const {
-        os << 'x'; }
-    Void _write(OutputStream& os, Formula<Y> const& f) const {
-        f.node_ref().accept([this,&os](auto s){this->_write_impl(os,s);}); }
-};
+    template<class E> Void write_unary(OutputStream& os, Pos, E const& e) const {
+        os << '+'; write_formula(os,e); }
+    template<class E> Void write_unary(OutputStream& os, Neg, E const& e) const {
+        os << '-';
+        switch(e.op().code()) {
+            case Cnst::code(): case Var::code(): write_formula(os,e); break;
+            default: write_parenthesised(os,e);
+        }
+    }
+    template<class OP, class E> Void write_unary(OutputStream& os, OP op, E const& e) const {
+        os << op << '('; write_formula(os,e); os << ')'; }
 
-template<class Y> class OperationUnivariateFormulaWriter {
-  public:
-    template<class OP, class... ARGS> Void _write_impl(OutputStream& os, Symbolic<OP,ARGS...> const& s) const {
-        OperationSymbolicWriter<OperationUnivariateFormulaWriter<Y>>(*this)._write(os,s); }
-    Void _write_impl(OutputStream& os, Symbolic<Var,Index> const&) const {
-        os << 'x'; }
-    Void _write(OutputStream& os, Formula<Y> const& f) const {
-        f.node_ref().accept([this,&os](auto s){this->_write_impl(os,s);}); }
-};
+    template<class E> Void write_binary(OutputStream& os, Add, E const& a, E const& b) const {
+        write_formula(os,a); os << '+'; write_formula(os,b); }
+    template<class E> Void write_binary(OutputStream& os, Sub, E const& a, E const& b) const {
+        write_formula(os,a); os << '-';
+        if(b.op().code()==Add::code() || b.op().code()==Sub::code()) write_parenthesised(os,b);
+        else write_formula(os,b); }
+    template<class E> Void write_binary(OutputStream& os, Mul, E const& a, E const& b) const {
+        if(a.op().code()==Add::code() || a.op().code()==Sub::code() || a.op().code()==Div::code()) write_parenthesised(os,a);
+        else write_formula(os,a);
+        os << '*';
+        if(b.op().code()==Add::code() || b.op().code()==Sub::code()) write_parenthesised(os,b);
+        else write_formula(os,b); }
+    template<class E> Void write_binary(OutputStream& os, Div, E const& a, E const& b) const {
+        if(a.op().code()==Add::code() || a.op().code()==Sub::code()) write_parenthesised(os,a);
+        else write_formula(os,a);
+        os << '/';
+        if(b.op().code()==Add::code() || b.op().code()==Sub::code() || b.op().code()==Mul::code() || b.op().code()==Div::code()) write_parenthesised(os,b);
+        else write_formula(os,b); }
+    template<class E> Void write_binary(OutputStream& os, Max, E const& a, E const& b) const {
+        os << "max("; write_formula(os,a); os << ','; write_formula(os,b); os << ')'; }
+    template<class E> Void write_binary(OutputStream& os, Min, E const& a, E const& b) const {
+        os << "min("; write_formula(os,a); os << ','; write_formula(os,b); os << ')'; }
+    template<class OP, class E> Void write_binary(OutputStream& os, OP op, E const& a, E const& b) const {
+        os << op << '('; write_formula(os,a); os << ','; write_formula(os,b); os << ')'; }
 
+  public:
+    Void _write(OutputStream& os, ConstantFormulaNode<Y> const& node) const { os << node._val; }
+    Void _write(OutputStream& os, IndexFormulaNode<Y> const& node) const {
+        if constexpr (UNIVARIATE) os << 'x';
+        else os << "x[" << node._ind << ']'; }
+    Void _write(OutputStream& os, UnaryFormulaNode<Y> const& node) const {
+        node._op.accept([&](auto op){write_unary(os,op,node._arg);}); }
+    Void _write(OutputStream& os, BinaryFormulaNode<Y> const& node) const {
+        node._op.accept([&](auto op){write_binary(os,op,node._arg1,node._arg2);}); }
+    Void _write(OutputStream& os, GradedFormulaNode<Y> const& node) const {
+        os << node._op << '('; write_formula(os,node._arg); os << ',' << node._num << ')'; }
+    Void _write(OutputStream& os, ScalarFormulaNode<Y> const& node) const {
+        os << '(';
+        Formula<Y> cnst=Formula<Y>::constant(node._cnst);
+        node._op.accept([&](auto op){write_binary(os,op,cnst,node._arg);});
+        os << ')'; }
+
+    Void write(OutputStream& os, Formula<Y> const& f) const { write_formula(os,f); }
+};
 
 template<class Y> Formula<Y> Formula<Y>::_derivative(SizeType j) const
 {
-    return this->_root->accept([j](auto fn){return static_cast<Formula<Y>>(derivative(fn,j));});
+    return this->_root->accept([j](auto const& fn){return FormulaNodeDetail::derivative_node(fn,j);});
 }
 
 template<class Y> OutputStream& Formula<Y>::_write_multivariate(OutputStream& os, Formula<Y> const& f) {
-    OperatorFormulaWriter<Y> w;
-    w._write(os,f);
+    FormulaWriter<Y> w;
+    w.write(os,f);
     return os;
 }
 
@@ -139,8 +166,8 @@ template<class Y> OutputStream& Formula<Y>::_write_multivariate(OutputStream& os
 }
 
 template<class Y> OutputStream& Formula<Y>::_write_univariate(OutputStream& os, Formula<Y> const& f) {
-    OperatorUnivariateFormulaWriter<Y> w;
-    w._write(os,f);
+    FormulaWriter<Y,true> w;
+    w.write(os,f);
     return os;
 }
 
