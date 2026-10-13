@@ -262,11 +262,12 @@ void print_results(
 Int main(Int argc, const char* argv[]) {
     Logger::instance().configuration().set_verbosity(1u);
 
-    List<String> cli_arguments;
-    const auto selection=
-        acquire_benchmark_selection(argc,argv,cli_arguments);
+    BenchmarkCommandLineSelection selection;
+    const auto benchmark_parsers=
+        make_benchmark_argument_parsers(selection);
 
-    if(not CommandLineInterface::instance().acquire(cli_arguments)) {
+    if(not CommandLineInterface::instance().acquire(
+            argc,argv,benchmark_parsers)) {
         return -1;
     }
 
