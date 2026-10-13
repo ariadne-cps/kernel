@@ -338,6 +338,14 @@ class TestAffineSet
             Vector<ValidatedAffineModelDP> good_models=ValidatedAffineModelDP::scalings(D,dp);
             ARIADNE_TEST_FAIL(ValidatedAffineConstrainedImageSet(D,good_models,bad_constraints));
             ARIADNE_TEST_FAIL(set.new_constraint(bad_constraint));
+
+            ValidatedAffineConstrainedImageSet empty_set(ExactBoxType(0u));
+            ValidatedAffineModelDP zero_model(0u,dp);
+            ValidatedAffineModelConstraintDP zero_model_constraint(-1.0_x,zero_model,+1.0_x);
+            Affine<FloatDPBounds> zero_affine(0u,dp);
+            ARIADNE_TEST_FAIL(empty_set.new_constraint(zero_model_constraint));
+            ARIADNE_TEST_FAIL(empty_set.new_parameter_constraint(zero_affine<=0.0_x));
+            ARIADNE_TEST_FAIL(empty_set.number_of_parameters());
         }
     }
 
