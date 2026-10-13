@@ -35,7 +35,7 @@
 #include "function/domain.hpp"
 #include "function/function_patch.hpp"
 #include "function/function_model.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "function/symbolic_function.hpp"
 #include "symbolic/expression_set.hpp"
 #include "logging/logging.hpp"

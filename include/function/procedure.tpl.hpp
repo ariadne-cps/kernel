@@ -28,12 +28,12 @@
 #include "algebra/vector.hpp"
 
 #include "numeric/operators.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "algebra/expansion.hpp"
 #include "geometry/box.hpp"
 
 #include "algebra/evaluate.tpl.hpp"
-#include "symbolic/formula.tpl.hpp"
+#include "function/formula.tpl.hpp"
 
 // FIXME: Added to prevent compilation error in Clang++-5.0. Should not be necessary.
 #include "function/taylor_model.hpp"
