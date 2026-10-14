@@ -34,9 +34,6 @@
 #include "function/taylor_multifunction.hpp"
 #include "numeric/numeric.hpp"
 
-#include "symbolic/variable.hpp"
-#include "symbolic/space.hpp"
-#include "symbolic/expression.hpp"
 
 #include "macro/testing.hpp"
 
@@ -85,12 +82,14 @@ Void TestMultifunction::test()
 
 Void TestMultifunction::test_evaluate()
 {
-    RealVariable x0("x0"), x1("x1"), p("p");
+    auto x0=EffectiveScalarMultivariateFunction::coordinate(3,0);
+    auto x1=EffectiveScalarMultivariateFunction::coordinate(3,1);
+    auto p=EffectiveScalarMultivariateFunction::coordinate(3,2);
 
     BoxDomainType dom({{-1,3},{-1,3}});
     BoxDomainType prms({{-1,1}});;
 
-    EffectiveVectorMultivariateFunction f=make_function({x0,x1,p},{1.5_dy-x0*x0-0.375_dy*x1+p,x0});
+    EffectiveVectorMultivariateFunction f({1.5_dy-x0*x0-0.375_dy*x1+p,x0});
 
     Sweeper<FloatDP> swp;
 

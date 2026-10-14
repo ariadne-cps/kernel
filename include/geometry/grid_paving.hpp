@@ -54,7 +54,7 @@
 #include "geometry/grid.hpp"
 #include "geometry/grid_cell.hpp"
 
-#include "io/graphics_interface.hpp"
+#include "drawing/graphics_interface.hpp"
 
 namespace Ariadne {
 

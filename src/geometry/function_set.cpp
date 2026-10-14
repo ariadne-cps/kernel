@@ -28,7 +28,7 @@
 #include "algebra/polynomial.hpp"
 #include "function/function.hpp"
 #include "function/taylor_function.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "function/procedure.hpp"
 #include "solving/nonlinear_programming.hpp"
 #include "solving/constraint_solver.hpp"
@@ -39,9 +39,9 @@
 #include "algebra/algebra.hpp"
 #include "algebra/expansion.inl.hpp"
 
-#include "io/graphics_interface.hpp"
-#include "io/graphics_manager.hpp"
-#include "io/drawer.hpp"
+#include "drawing/graphics_interface.hpp"
+#include "drawing/graphics_manager.hpp"
+#include "drawing/drawer.hpp"
 
 
 namespace Ariadne {
@@ -271,12 +271,12 @@ namespace Detail {
 template<class OP, class... ARGS> struct LogicalExpression;
 
 template<class OP, class ARG1, class ARG2> struct LogicalExpression<OP,ARG1,ARG2>
-    : virtual LogicalInterface, Symbolic<OP,ARG1,ARG2>
+    : virtual LogicalInterface, OperationNode<OP,ARG1,ARG2>
 {
-    using Symbolic<OP,ARG1,ARG2>::Symbolic;
+    using OperationNode<OP,ARG1,ARG2>::OperationNode;
     virtual LogicalInterface* _copy() const { return new LogicalExpression<OP,ARG1,ARG2>(*this); }
     virtual LogicalValue _check(Effort eff) const { return this->_op(this->_arg1,this->_arg2,eff).repr(); }
-    virtual OutputStream& _write(OutputStream& os) const { return os << static_cast<Symbolic<OP,ARG1,ARG2>const&>(*this); }
+    virtual OutputStream& _write(OutputStream& os) const { return os << static_cast<OperationNode<OP,ARG1,ARG2>const&>(*this); }
 };
 
 } // namespace Detail

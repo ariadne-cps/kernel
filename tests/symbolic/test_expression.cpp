@@ -28,12 +28,15 @@
 #include "utility/stlio.hpp"
 #include "numeric/numeric.hpp"
 #include "symbolic/expression.hpp"
+#include "symbolic/templates.hpp"
 #include "symbolic/assignment.hpp"
 #include "symbolic/valuation.hpp"
 #include "symbolic/space.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
+#include "function/procedure.hpp"
+#include "function/procedure.tpl.hpp"
 #include "function/taylor_model.hpp"
 
 #include "algebra/matrix.tpl.hpp"
@@ -667,6 +670,18 @@ class TestExpression {
         RealValuation source_valuation({x=Real(2)});
         ARIADNE_TEST_EQUAL(
             evaluate(function_expression,source_valuation),Real(3));
+
+        RealExpression shared=x+y;
+        RealExpression dag_expression=shared*shared+shared;
+        ARIADNE_TEST_EQUAL(count_nodes(dag_expression),11u);
+        ARIADNE_TEST_EQUAL(count_distinct_node_pointers(dag_expression),5u);
+        Formula<EffectiveNumber> dag_formula=make_formula(dag_expression,RealSpace({x,y}));
+        EffectiveProcedure dag_procedure(2u,dag_formula);
+        ARIADNE_TEST_EQUAL(dag_procedure._instructions.size(),5u);
+        Vector<FloatDPBounds> dag_arguments({
+            FloatDPBounds(1,dp),FloatDPBounds(2,dp)
+        });
+        ARIADNE_TEST_EQUAL(evaluate(dag_procedure,dag_arguments),FloatDPBounds(12,dp));
 
         IntegerValuation integer_only_valuation;
         StringVariable cross_type_string("cross_type_string");

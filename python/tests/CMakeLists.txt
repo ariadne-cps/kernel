@@ -16,7 +16,7 @@ else()
 endif()
 
 if(PYTHON_TESTS)
-    foreach(TESTNAME function geometry io solving symbolic)
+    foreach(TESTNAME function geometry drawing integration labelling satisfiability solving symbolic)
         add_custom_target(
             test_python_${TESTNAME}
             COMMAND "${Python3_EXECUTABLE}" -m pytest "${CMAKE_CURRENT_SOURCE_DIR}/test_${TESTNAME}.py"

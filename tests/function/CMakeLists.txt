@@ -1,5 +1,6 @@
 set(UNIT_TESTS
     test_function
+    test_formula
     test_measurable_function
     test_multifunction
     test_procedure

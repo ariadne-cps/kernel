@@ -26,7 +26,7 @@
 #define ARIADNE_FUNCTION_ARCHETYPES_HPP
 
 
-#include "symbolic/formula.decl.hpp"
+#include "function/formula.decl.hpp"
 
 namespace Ariadne {
 

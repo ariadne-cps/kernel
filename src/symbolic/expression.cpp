@@ -26,8 +26,9 @@
 #include "algebra/algebra.hpp"
 #include "algebra/algebra_wrapper.hpp"
 
-#include "symbolic/formula.hpp"
-#include "symbolic/formula.tpl.hpp"
+#include "function/formula.hpp"
+#include "function/formula.tpl.hpp"
+#include "function/function.hpp"
 
 #include "symbolic/constant.hpp"
 #include "symbolic/variable.hpp"
@@ -652,6 +653,22 @@ Vector<Formula<EffectiveNumber>> make_formula(const Vector<Expression<Real>>& ou
     return make_formula(substitute(out,aux),spc);
 }
 
+EffectiveScalarUnivariateFunction make_function(const Variable<Real>& var, const Expression<Real>& expr) {
+    return EffectiveScalarUnivariateFunction(RealDomain(),make_formula(expr,var));
+}
+
+EffectiveVectorUnivariateFunction make_function(const Variable<Real>& var, const Vector<Expression<Real>>& expr) {
+    return EffectiveVectorUnivariateFunction(RealDomain(),make_formula(expr,var));
+}
+
+EffectiveScalarMultivariateFunction make_function(const Space<Real>& spc, const Expression<Real>& expr) {
+    return EffectiveScalarMultivariateFunction(EuclideanDomain(dimension(spc)),make_formula(expr,spc));
+}
+
+EffectiveVectorMultivariateFunction make_function(const Space<Real>& spc, const Vector<Expression<Real>>& expr) {
+    return EffectiveVectorMultivariateFunction(EuclideanDomain(dimension(spc)),make_formula(expr,spc));
+}
+
 
 Expression<Real> make_expression(const Formula<Real>& f, const Space<Real>& s) {
     const List<RealVariable>& vars=s.variables();
@@ -663,7 +680,6 @@ Expression<Real> make_expression(const Formula<Real>& f, const Space<Real>& s) {
     return fa.template extract<RealExpression>();
 }
 
-Formula<Real> make_formula(const EffectiveScalarMultivariateFunction& f);
 Expression<Real> make_expression(const ScalarMultivariateFunction<EffectiveTag>& f, const Space<Real>& s) {
     return make_expression(make_formula(f),s); }
 

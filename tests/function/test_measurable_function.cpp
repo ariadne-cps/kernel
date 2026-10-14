@@ -30,15 +30,13 @@
 #include <stdexcept>
 #include <fenv.h>
 #include "function/measurable_function.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "function/symbolic_function.hpp"
 #include "function/taylor_model.hpp"
 #include "algebra/algebra.hpp"
 
 #include "numeric/numeric.hpp"
 
-#include "symbolic/variable.hpp"
-#include "symbolic/expression.hpp"
 
 #include "macro/testing.hpp"
 
@@ -74,8 +72,8 @@ Void TestMeasurableFunction::test_scalar_univariate_function()
         ARIADNE_TEST_CONSTRUCT(UnionOfIntervals<Dyadic>,ivls,({{1,2},{1.5_dy,2.5_dy},{0,0.5_dy}}));
         ARIADNE_TEST_CONSTRUCT(ValidatedOpenSet<Real>,vops,(wrap_open(ivls)));
 
-        RealVariable x("x");
-        ValidatedContinuousFunction<Real(Real)> f=make_function(x,x*x);
+        auto x=ValidatedScalarUnivariateFunction::coordinate();
+        ValidatedContinuousFunction<Real(Real)> f=x*x;
         ARIADNE_TEST_PRINT(f);
         ARIADNE_TEST_PRINT(vops);
         ValidatedOpenSet<Real> prevops=preimage(f,vops,IntervalDomainType(-1,3),Accuracy(exp2(-4)));

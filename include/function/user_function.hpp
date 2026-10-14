@@ -44,7 +44,7 @@
 #include "algebra/matrix.hpp"
 #include "function/taylor_model.hpp"
 #include "algebra/differential.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 
 #include "function_mixin.hpp"
 

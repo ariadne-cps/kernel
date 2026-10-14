@@ -48,8 +48,8 @@
 #include "function/function_mixin.hpp"
 #include "function/function_wrapper.hpp"
 #include "function/projection.hpp"
-#include "symbolic/formula.hpp"
-#include "symbolic/formula.tpl.hpp"
+#include "function/formula.hpp"
+#include "function/formula.tpl.hpp"
 
 namespace Ariadne {
 

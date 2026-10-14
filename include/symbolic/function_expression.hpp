@@ -34,7 +34,7 @@
 #include "symbolic/space.hpp"
 
 #include "function/function.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "function/function_model.hpp"
 #include "function/taylor_function.hpp"
 
@@ -99,10 +99,6 @@ template<class P> OutputStream& operator<<(OutputStream& os, ScalarMultivariateF
     for(SizeType i=0; i!=e._vars.size(); ++i) {
         os << (i==0?'[':',') << "x[" << i << "]=" << e._vars[i];
     } return os << "]";
-}
-
-template<class P> FunctionExpression<P,RealVector(RealVector)> FunctionFacade<P,RealVector(RealVector)>::operator() (Vector<RealVariable> const& vars) const {
-    return FunctionExpression<P,RealVector(RealVector)>(static_cast<Function<P,RealVector(RealVector)>const&>(*this),vars);
 }
 
 template<class P> ScalarMultivariateFunctionExpression<P> evaluate(ScalarMultivariateFunction<P> const& f, Vector<RealVariable> const& vars) {

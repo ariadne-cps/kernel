@@ -28,12 +28,12 @@
 #include "algebra/vector.hpp"
 
 #include "numeric/operators.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "algebra/expansion.hpp"
 #include "geometry/box.hpp"
 
 #include "algebra/evaluate.tpl.hpp"
-#include "symbolic/formula.tpl.hpp"
+#include "function/formula.tpl.hpp"
 
 // FIXME: Added to prevent compilation error in Clang++-5.0. Should not be necessary.
 #include "function/taylor_model.hpp"
@@ -205,10 +205,6 @@ template<class OP> struct AlgebraScalar { }
 
 
 
-
-template<class X, class OP, class A> X evaluate(Symbolic<OP,A> const& s, X const& x);
-template<class X, class OP, class A1, class A2> X evaluate(Symbolic<OP,A1,A2> const& s, X const& x1, X const& x2);
-template<class X, class OP, class A1, class A2> X evaluate(Symbolic<OP,A1,A2> const& s, X const& x1, Int n2);
 
 namespace {
 

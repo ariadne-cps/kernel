@@ -24,10 +24,12 @@
 
 #include "numeric/module.hpp"
 #include "geometry/point.hpp"
+#include "labelling/point.hpp"
+#include "labelling/curve.hpp"
 #include "geometry/curve.hpp"
 #include "symbolic/space.hpp"
 #include "symbolic/assignment.hpp"
-#include "io/figure.hpp"
+#include "drawing/figure.hpp"
 
 #include "macro/testing.hpp"
 
@@ -47,6 +49,8 @@ template<class X> class TestPoint {
         PointType pt(rpt,dp);
 
         ARIADNE_TEST_EQUALS(pt.dimension(),2);
+        ARIADNE_TEST_EQUAL(pt.space(),RealSpace({x,y}));
+        ARIADNE_TEST_EQUAL(pt.variables(),Set<RealVariable>(RealSpace({x,y}).variables()));
         ARIADNE_TEST_PRINT(pt.bounding_box());
     }
 
@@ -79,6 +83,8 @@ class TestCurve {
         PointType pt(rpt,dp);
         CurveType curve(pt);
         ARIADNE_TEST_EQUALS(curve.dimension(),2);
+        ARIADNE_TEST_EQUAL(curve.space(),pt.space());
+        ARIADNE_TEST_EQUAL(curve.variables(),pt.variables());
         ARIADNE_TEST_EQUALS(curve.size(),1);
         curve.insert(FloatDP(1.0_x,dp),pt);
         ARIADNE_TEST_EQUALS(curve.size(),2);

@@ -29,7 +29,7 @@
 #include "algebra/vector.hpp"
 #include "algebra/differential.hpp"
 #include "function/taylor_model.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "algebra/algebra.hpp"
 
 #include "function/function_mixin.hpp"

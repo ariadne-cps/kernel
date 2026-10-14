@@ -38,7 +38,7 @@
 #include "geometry/list_set.hpp"
 #include "function/function.hpp"
 #include "geometry/polytope.hpp"
-#include "io/geometry2d.hpp"
+#include "drawing/geometry2d.hpp"
 
 
 namespace Ariadne {

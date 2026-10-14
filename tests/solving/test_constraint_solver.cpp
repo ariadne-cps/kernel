@@ -35,7 +35,7 @@
 #include "function/taylor_function.hpp"
 #include "solving/constraint_solver.hpp"
 #include "geometry/box.hpp"
-#include "io/command_line_interface.hpp"
+#include "drawing/command_line_interface.hpp"
 
 using namespace std;
 using namespace Ariadne;

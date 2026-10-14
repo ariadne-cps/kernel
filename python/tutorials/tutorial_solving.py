@@ -121,36 +121,6 @@ def tutorial_solving():
     show("proved empty during reduction", proved_empty)
     show("contracted domain", contracted_domain)
 
-    section("Validated ODE integration with Taylor-Picard")
-
-    integrator = TaylorPicardIntegrator(1e-8)
-    integrator.set_minimum_temporal_order(2)
-    integrator.set_maximum_temporal_order(16)
-    integrator.set_step_maximum_error(1e-8)
-
-    show("integrator", integrator)
-    show("minimum temporal order", integrator.minimum_temporal_order())
-    show("maximum temporal order", integrator.maximum_temporal_order())
-    show("step maximum error", integrator.step_maximum_error())
-
-    state = EffectiveScalarMultivariateFunction.coordinate(1, 0)
-    logistic = EffectiveVectorMultivariateFunction([
-        state * (1 - state),
-    ])
-    initial_states = exact_box([
-        (0.25, 0.5),
-    ])
-    step = Dyadic("0.125")
-
-    flow = integrator.flow_step(logistic, initial_states, step)
-
-    show("vector field", logistic)
-    show("initial-state box", initial_states)
-    show("requested step", step)
-    show("validated flow patch", flow)
-    show("flow domain", flow.domain())
-    show("flow range", flow.range())
-
     section("Linear programming with the simplex solver")
 
     simplex = FloatDPSimplexSolver()
@@ -210,7 +180,6 @@ def tutorial_solving():
     section("Choosing a solving tool")
     print("IntervalNewtonSolver: roots, fixed points and implicit functions.")
     print("ConstraintSolver: feasibility tests and interval-domain contraction.")
-    print("TaylorPicardIntegrator: validated flow steps for ODEs.")
     print("FloatDPSimplexSolver: bounded linear programs with linear equalities.")
     print("NonlinearInteriorPointOptimiser: constrained nonlinear minimisation with interior-point barriers.")
 

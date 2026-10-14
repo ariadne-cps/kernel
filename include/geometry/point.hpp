@@ -31,14 +31,11 @@
 
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
-#include "symbolic/identifier.hpp"
-
-#include "io/graphics_interface.hpp"
+#include "drawing/graphics_interface.hpp"
 
 namespace Ariadne {
 
 template<class X> class Point;
-template<class X> class LabelledPoint;
 
 //!@{
 //! \relates Point
@@ -46,14 +43,6 @@ template<class X> class LabelledPoint;
 using DyadicPoint = Point<Dyadic>; //!< <p/>
 using RationalPoint = Point<Rational>; //!< <p/>
 using RealPoint = Point<Real>; //!< <p/>
-
-using LabelledRealPoint = LabelledPoint<Real>;
-
-template<class T> class Space;
-using RealSpace = Space<Real>;
-template<class T> class Variable;
-using RealVariable = Variable<Real>;
-template<class V,class E> class Assignment;
 
 template<class F> using ExactPoint = Point<F>;
 template<class F> using ValidatedPoint = Point<Bounds<F>>;
@@ -65,8 +54,6 @@ using FloatDPApproximationPoint = Point<FloatDPApproximation>;
 
 typedef ExactPoint<FloatDP> ExactPointType;
 
-template<class IVL> class LabelledBox;
-using LabelledExactBoxType = LabelledBox<ExactIntervalType>;
 //!@}
 
 //! A point in Euclidean space.
@@ -123,28 +110,6 @@ class Point
     virtual FloatDPUpperBox bounding_box() const;
 };
 
-template<class X>
-class LabelledPoint : public LabelledDrawable2dInterface, public Point<X> {
-  public:
-
-    LabelledPoint(RealSpace const& state_space, Point<X> const& pt);
-    LabelledPoint(List<Assignment<RealVariable,X>> const& val);
-    LabelledPoint(InitializerList<Assignment<RealVariable,X>> const& val);
-    template<class T> requires Convertible<T,X> LabelledPoint(const LabelledPoint<T>& pt) : Point<X>(pt), _state_variables(pt.state_variables()) { }
-    template<class Y, class... PRS> requires Constructible<X,Y,PRS...>
-    LabelledPoint(const LabelledPoint<Y>& pt, PRS... prs) : Point<X>(pt,prs...), _state_variables(pt.state_variables()) { }
-
-    LabelledPoint* labelled_clone() const override;
-
-    List<Identifier> const& state_variables() const { return _state_variables; }
-    RealSpace state_space() const;
-
-    using Point<X>::draw;
-    virtual Void draw(CanvasInterface&, const Variables2d&) const override;
-
-private:
-    List<Identifier> _state_variables;
-};
 
 template<class X> inline X distance(Point<X> const& pt1, Point<X> const& pt2) {
     ARIADNE_PRECONDITION(pt1.dimension() == pt2.dimension());
@@ -168,10 +133,6 @@ template<class X> inline Point<X> project(Point<X> const& pt, Projection2d const
     return Point<X>(rv);
 }
 
-template<class X> inline LabelledPoint<X> project(LabelledPoint<X> const& pt, Variables2d const& v) {
-    Projection2d p = projection(pt.state_space(),v);
-    return LabelledPoint<X>(pt.state_space(),project(pt,p));
-}
 
 template<class X> Point(Vector<X>) -> Point<X>;
 

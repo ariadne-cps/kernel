@@ -129,25 +129,65 @@ jobs:
         $env:PYTHONPATH = "${{ runner.workspace }}\build\python"
         python tutorial_geometry.py
 
-    - name: Prepare C++ IO Tutorial
+    - name: Prepare C++ Drawing Tutorial
       shell: pwsh
-      run: cmake -E copy_directory "$env:GITHUB_WORKSPACE/tutorials/tutorial_io" "${{ runner.workspace }}/tutorial_io"
+      run: cmake -E copy_directory "$env:GITHUB_WORKSPACE/tutorials/tutorial_drawing" "${{ runner.workspace }}/tutorial_drawing"
 
-    - name: Check C++ IO Tutorial
+    - name: Check C++ Drawing Tutorial
       shell: pwsh
-      working-directory: ${{ runner.workspace }}/tutorial_io
+      working-directory: ${{ runner.workspace }}/tutorial_drawing
       run: |
         cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ runner.workspace }}/install" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DX_VCPKG_APPLOCAL_DEPS_SERIALIZED=ON -DVCPKG_USE_LEGACY_APPLOCAL=ON -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
         cmake --build build --parallel
         $env:PATH = "${{ runner.workspace }}\install\bin;C:\vcpkg\installed\x64-windows-release\bin;$env:PATH"
-        & ".\build\tutorial_io.exe"
+        & ".\build\tutorial_drawing.exe"
 
-    - name: Check Python IO Tutorial
+    - name: Check Python Drawing Tutorial
       shell: pwsh
       working-directory: ${{ github.workspace }}/python/tutorials
       run: |
         $env:PYTHONPATH = "${{ runner.workspace }}\build\python"
-        python tutorial_io.py
+        python tutorial_drawing.py
+
+    - name: Prepare C++ Integration Tutorial
+      shell: pwsh
+      run: cmake -E copy_directory "$env:GITHUB_WORKSPACE/tutorials/tutorial_integration" "${{ runner.workspace }}/tutorial_integration"
+
+    - name: Check C++ Integration Tutorial
+      shell: pwsh
+      working-directory: ${{ runner.workspace }}/tutorial_integration
+      run: |
+        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ runner.workspace }}/install" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DX_VCPKG_APPLOCAL_DEPS_SERIALIZED=ON -DVCPKG_USE_LEGACY_APPLOCAL=ON -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        cmake --build build --parallel
+        $env:PATH = "${{ runner.workspace }}\install\bin;C:\vcpkg\installed\x64-windows-release\bin;$env:PATH"
+        & ".\build\tutorial_integration.exe"
+
+    - name: Check Python Integration Tutorial
+      shell: pwsh
+      working-directory: ${{ github.workspace }}/python/tutorials
+      run: |
+        $env:PYTHONPATH = "${{ runner.workspace }}\build\python"
+        python tutorial_integration.py
+
+    - name: Prepare C++ Satisfiability Tutorial
+      shell: pwsh
+      run: cmake -E copy_directory "$env:GITHUB_WORKSPACE/tutorials/tutorial_satisfiability" "${{ runner.workspace }}/tutorial_satisfiability"
+
+    - name: Check C++ Satisfiability Tutorial
+      shell: pwsh
+      working-directory: ${{ runner.workspace }}/tutorial_satisfiability
+      run: |
+        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ runner.workspace }}/install" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DX_VCPKG_APPLOCAL_DEPS_SERIALIZED=ON -DVCPKG_USE_LEGACY_APPLOCAL=ON -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        cmake --build build --parallel
+        $env:PATH = "${{ runner.workspace }}\install\bin;C:\vcpkg\installed\x64-windows-release\bin;$env:PATH"
+        & ".\build\tutorial_satisfiability.exe"
+
+    - name: Check Python Satisfiability Tutorial
+      shell: pwsh
+      working-directory: ${{ github.workspace }}/python/tutorials
+      run: |
+        $env:PYTHONPATH = "${{ runner.workspace }}\build\python"
+        python tutorial_satisfiability.py
 
     - name: Prepare C++ Solving Tutorial
       shell: pwsh

@@ -28,7 +28,7 @@
 
 #include "algebra/algebra.hpp"
 
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 
 namespace Ariadne {
 

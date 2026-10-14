@@ -34,7 +34,7 @@
 #include "utility/stlio.hpp"
 #include "macro/general.hpp"
 
-#include "io/graphics_interface.hpp"
+#include "drawing/graphics_interface.hpp"
 
 #include "geometry/box.hpp"
 

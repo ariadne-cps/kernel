@@ -42,11 +42,5 @@ template class Point<FloatDPApproximation>;
 //template class Point<FloatMPBounds>;
 //template class Point<FloatMPApproximation>;
 
-template<> String class_name<LabelledPoint<Real>>() { return "LabelledPoint<Real>"; }
-
-template<> String class_name<LabelledPoint<FloatDPApproximation>>() { return "LabelledPoint<FloatDPApproximation>"; }
-
-template class LabelledPoint<Real>;
-template class LabelledPoint<FloatDPApproximation>;
 
 } //namespace Ariadne

@@ -27,14 +27,11 @@
 
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 #include "solving/solver_interface.hpp"
 #include "solving/solver.hpp"
 #include "function/taylor_function.hpp"
 
-#include "solving/integrator_interface.hpp"
-#include "solving/integrator.hpp"
-#include "solving/runge_kutta_integrator.hpp"
 
 using namespace Ariadne;
 
@@ -78,21 +75,7 @@ class SolverWrapper
 };
 
 
-class IntegratorWrapper
-  : public pybind11::wrapper<IntegratorInterface>
-{
-  public:
-    IntegratorInterface* clone() const {
-        return this->get_override("clone")(); }
-    FlowStepModelType flow_step(const ValidatedVectorMultivariateFunction& vf, const ExactBoxType& D) const {
-        return this->get_override("flow_step")(vf,D); }
-    FlowStepModelType flow_step(const ValidatedVectorMultivariateFunction& vf, const ExactBoxType& D, const StepSizeType& h) const {
-        return this->get_override("flow_step")(vf,D,h); }
-    FlowStepModelType flow_step(const ValidatedVectorMultivariateFunction& vf, const ExactBoxType& D, const StepSizeType& h, const UpperBoxType& B) const {
-        return this->get_override("flow_step")(vf,D,h,B); }
-    Void _write(OutputStream& os) const {
-        this->get_override("_write")(os); }
-};
+
 
 } // namespace Ariadne
 
@@ -126,68 +109,6 @@ Void export_solvers(pybind11::module& module)
 
 
 
-Void export_integrators(pybind11::module& module)
-{
-    pybind11::class_<FlowStepModelType,pybind11::bases<ValidatedVectorMultivariateFunctionPatch>> flow_step_model_class(module,"FlowStepModelType");
-    flow_step_model_class.def("__str__", &__cstr__<FlowStepModelType>);
-
-    pybind11::class_<FlowModelType> flow_model_class(module,"FlowModelType");
-    flow_model_class.def("size",&FlowModelType::size);
-    // Use a lambda here to prevent errors when using Clang/GCC
-    flow_model_class.def("__len__",[](FlowModelType const& fm){return fm.size();});
-    // NOTE: The export below gives 'ValueError: vector::reserve' at runtime when compiled using Clang
-    // flow_model_class.def("__len__",&FlowModelType::size);
-    // NOTE: The export below produces 'internal compiler error: in fold_convert_loc' with GCC
-    // flow_model_class.def("__len__",(SizeType(FlowModelType::*)()const)&FlowModelType::size);
-    flow_model_class.def("__getitem__",&__getitem__<FlowModelType,SizeType>);
-    flow_model_class.def("__str__", &__cstr__<FlowModelType>);
-
-    pybind11::class_<IntegratorInterface,IntegratorWrapper> integrator_interface_class(module,"IntegratorInterface");
-    integrator_interface_class.def("flow_step",(FlowStepModelType(IntegratorInterface::*)(const ValidatedVectorMultivariateFunction&, const ExactBoxType&)const)&IntegratorInterface::flow_step);
-    integrator_interface_class.def("flow_step",(FlowStepModelType(IntegratorInterface::*)(const ValidatedVectorMultivariateFunction&, const ExactBoxType&, const StepSizeType&)const)&IntegratorInterface::flow_step);
-    integrator_interface_class.def("flow_step",(FlowStepModelType(IntegratorInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&,const StepSizeType&,const UpperBoxType&)const)&IntegratorInterface::flow_step);
-    integrator_interface_class.def("__str__", &__cstr__<IntegratorInterface>);
-
-    pybind11::class_<TaylorPicardIntegrator,IntegratorInterface> taylor_picard_integrator_class(module,"TaylorPicardIntegrator");
-    taylor_picard_integrator_class.def(pybind11::init<ApproximateDouble>());
-    taylor_picard_integrator_class.def("minimum_temporal_order",&TaylorPicardIntegrator::minimum_temporal_order);
-    taylor_picard_integrator_class.def("maximum_temporal_order",&TaylorPicardIntegrator::maximum_temporal_order);
-    taylor_picard_integrator_class.def("step_maximum_error",&TaylorPicardIntegrator::step_maximum_error);
-    taylor_picard_integrator_class.def("set_minimum_temporal_order",&TaylorPicardIntegrator::set_minimum_temporal_order);
-    taylor_picard_integrator_class.def("set_maximum_temporal_order",&TaylorPicardIntegrator::set_maximum_temporal_order);
-    taylor_picard_integrator_class.def("set_step_maximum_error",&TaylorPicardIntegrator::set_step_maximum_error);
-
-    pybind11::class_<GradedTaylorPicardIntegrator,IntegratorInterface> unbounded_taylor_picard_integrator_class(module, "GradedTaylorPicardIntegrator");
-    unbounded_taylor_picard_integrator_class.def(pybind11::init<ApproximateDouble,Order>());
-    unbounded_taylor_picard_integrator_class.def("order",&GradedTaylorPicardIntegrator::order);
-    unbounded_taylor_picard_integrator_class.def("step_maximum_error",&GradedTaylorPicardIntegrator::step_maximum_error);
-    unbounded_taylor_picard_integrator_class.def("error_refinement_minimum_improvement_percentage",&GradedTaylorPicardIntegrator::error_refinement_minimum_improvement_percentage);
-    unbounded_taylor_picard_integrator_class.def("set_order",&GradedTaylorPicardIntegrator::set_order);
-    unbounded_taylor_picard_integrator_class.def("set_step_maximum_error",&GradedTaylorPicardIntegrator::set_step_maximum_error);
-    unbounded_taylor_picard_integrator_class.def("set_error_refinement_minimum_improvement_percentage",&GradedTaylorPicardIntegrator::set_error_refinement_minimum_improvement_percentage);
-
-    pybind11::class_<TaylorSeriesIntegrator,IntegratorInterface> taylor_series_integrator_class(module,"TaylorSeriesIntegrator");
-    taylor_series_integrator_class.def(pybind11::init<ApproximateDouble,Nat>());
-    taylor_series_integrator_class.def("order",&TaylorSeriesIntegrator::order);
-    taylor_series_integrator_class.def("has_step_maximum_error",&TaylorSeriesIntegrator::has_step_maximum_error);
-    taylor_series_integrator_class.def("step_maximum_error",&TaylorSeriesIntegrator::step_maximum_error);
-    taylor_series_integrator_class.def("set_order",&TaylorSeriesIntegrator::set_order);
-    taylor_series_integrator_class.def("set_step_maximum_error",&TaylorSeriesIntegrator::set_step_maximum_error);
-
-    pybind11::class_<GradedTaylorSeriesIntegrator,IntegratorInterface> graded_taylor_series_integrator_class(module,"GradedTaylorSeriesIntegrator");
-    graded_taylor_series_integrator_class.def(pybind11::init<ApproximateDouble>());
-    graded_taylor_series_integrator_class.def("maximum_spacial_order",&GradedTaylorSeriesIntegrator::maximum_spacial_order);
-    graded_taylor_series_integrator_class.def("maximum_temporal_order",&GradedTaylorSeriesIntegrator::maximum_temporal_order);
-    graded_taylor_series_integrator_class.def("step_maximum_error",&GradedTaylorSeriesIntegrator::step_maximum_error);
-    graded_taylor_series_integrator_class.def("set_maximum_spacial_order",&GradedTaylorSeriesIntegrator::set_maximum_spacial_order);
-    graded_taylor_series_integrator_class.def("set_maximum_temporal_order",&GradedTaylorSeriesIntegrator::set_maximum_temporal_order);
-    graded_taylor_series_integrator_class.def("set_step_maximum_error",&GradedTaylorSeriesIntegrator::set_step_maximum_error);
-
-    pybind11::class_<RungeKutta4Integrator> runge_kutta_4_integrator_class(module,"RungeKutta4Integrator");
-    runge_kutta_4_integrator_class.def(pybind11::init<ApproximateDouble>());
-    runge_kutta_4_integrator_class.def("step", &RungeKutta4Integrator::step);
-    runge_kutta_4_integrator_class.def("evolve", &RungeKutta4Integrator::evolve);
-}
 
 
 Void export_solving_optimization(pybind11::module& module);
@@ -195,6 +116,171 @@ Void export_solving_optimization(pybind11::module& module);
 Void solving_submodule(pybind11::module& module)
 {
     export_solvers(module);
-    export_integrators(module);
     export_solving_optimization(module);
+}
+
+/***************************************************************************
+ *            optimization_submodule.cpp
+ *
+ *  Copyright  2008-20  Pieter Collins
+ *
+ ****************************************************************************/
+
+/*
+ *  This file is part of Ariadne.
+ *
+ *  Ariadne is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Ariadne is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "pybind11.hpp"
+#include "kernel-utilities.hpp"
+#include "numeric/numeric.hpp"
+#include "algebra/vector.hpp"
+#include "algebra/matrix.hpp"
+#include "geometry/box.hpp"
+
+#include "function/function.hpp"
+#include "function/constraint.hpp"
+#include "function/procedure.hpp"
+#include "solving/linear_programming.hpp"
+#include "solving/nonlinear_programming.hpp"
+#include "solving/constraint_solver.hpp"
+
+using namespace Ariadne;
+
+
+
+
+Void export_slackness(pybind11::module& module)
+{
+    pybind11::enum_<Slackness> variable_enum(module,"Slackness");
+    variable_enum.value("BASIS", Slackness::BASIS);
+    variable_enum.value("LOWER", Slackness::LOWER);
+    variable_enum.value("UPPER", Slackness::UPPER);
+}
+
+Void export_constraint(pybind11::module& module)
+{
+    pybind11::class_<EffectiveConstraint> effective_nonlinear_constraint_class(module,"EffectiveConstraint");
+    effective_nonlinear_constraint_class.def(pybind11::init<EffectiveConstraint>());
+    effective_nonlinear_constraint_class.def(pybind11::init<EffectiveNumber,EffectiveScalarMultivariateFunction,EffectiveNumber>());
+    effective_nonlinear_constraint_class.def(pybind11::init([](EffectiveScalarMultivariateFunction const& f, EffectiveNumber const& u){return EffectiveConstraint(EffectiveNumber(-infty),f,u);}));
+    effective_nonlinear_constraint_class.def(pybind11::init([](EffectiveNumber const& l, EffectiveScalarMultivariateFunction const& f){return EffectiveConstraint(l,f,EffectiveNumber(infty));}));
+    effective_nonlinear_constraint_class.def(pybind11::init<EffectiveScalarMultivariateFunction,EffectiveNumber>());
+
+    effective_nonlinear_constraint_class.def("__str__",&__cstr__<EffectiveConstraint>);
+
+    pybind11::class_<ValidatedConstraint> validated_nonlinear_constraint_class(module,"ValidatedConstraint");
+    validated_nonlinear_constraint_class.def(pybind11::init<ValidatedNumber,ValidatedScalarMultivariateFunction,ValidatedNumber
+    >());
+    validated_nonlinear_constraint_class.def(pybind11::init<ValidatedConstraint>());
+    validated_nonlinear_constraint_class.def(pybind11::init<EffectiveConstraint>());
+    validated_nonlinear_constraint_class.def("lower_bound", &ValidatedConstraint::lower_bound);
+    validated_nonlinear_constraint_class.def("upper_bound", &ValidatedConstraint::upper_bound);
+    validated_nonlinear_constraint_class.def("function", (const ValidatedScalarMultivariateFunction&(ValidatedConstraint::*)()const) &ValidatedConstraint::function);
+    validated_nonlinear_constraint_class.def("__str__",&__cstr__<ValidatedConstraint>);
+}
+
+Void export_optimiser_interface(pybind11::module& module)
+{
+    typedef OptimiserInterface::ValidatedNumericType ValidatedNumericType;
+    typedef OptimiserInterface::ExactVectorType ExactVectorType;
+
+    pybind11::class_<OptimiserInterface> optimiser_interface_class(module,"OptimiserInterface");
+    optimiser_interface_class.def("minimise", (Vector<ValidatedNumericType>(OptimiserInterface::*)(ValidatedScalarMultivariateFunction, ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType)const) &OptimiserInterface::minimise);
+    optimiser_interface_class.def("minimise", (Vector<ValidatedNumericType>(OptimiserInterface::*)(ValidatedScalarMultivariateFunction, ExactBoxType, ValidatedVectorMultivariateFunction, ValidatedVectorMultivariateFunction)const) &OptimiserInterface::minimise);
+    optimiser_interface_class.def("feasible", (ValidatedKleenean(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType)const) &OptimiserInterface::feasible);
+    optimiser_interface_class.def("feasible", (ValidatedKleenean(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ValidatedVectorMultivariateFunction)const) &OptimiserInterface::feasible);
+    optimiser_interface_class.def("almost_feasible_point", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPApproximationVector, FloatDPApproximation)const) &OptimiserInterface::almost_feasible_point);
+    optimiser_interface_class.def("is_feasible_point", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPVector)const) &OptimiserInterface::is_feasible_point);
+    optimiser_interface_class.def("validate_feasibility", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType)const) &OptimiserInterface::validate_feasibility);
+    optimiser_interface_class.def("validate_feasibility", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType,ExactVectorType)const) &OptimiserInterface::validate_feasibility);
+    optimiser_interface_class.def("validate_infeasibility", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType,ExactVectorType)const) &OptimiserInterface::validate_infeasibility);
+    optimiser_interface_class.def("contains_feasible_point", (ValidatedKleenean(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPBoundsVector)const) &OptimiserInterface::contains_feasible_point);
+    optimiser_interface_class.def("is_infeasibility_certificate", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType)const) &OptimiserInterface::is_infeasibility_certificate);
+    //NOTE: Not in C++ API
+    //optimiser_interface_class.def("__str__", &__cstr__<OptimiserInterface>);
+}
+
+Void export_interior_point_solvers(pybind11::module& module)
+{
+    pybind11::class_<NonlinearInfeasibleInteriorPointOptimiser,OptimiserInterface> nonlinear_infeasible_interior_point_solver_class(module,"NonlinearInfeasibleInteriorPointOptimiser");
+    nonlinear_infeasible_interior_point_solver_class.def(pybind11::init<>());
+
+    pybind11::class_<NonlinearInteriorPointOptimiser,OptimiserInterface> nonlinear_interior_point_solver_class(module,"NonlinearInteriorPointOptimiser");
+    nonlinear_interior_point_solver_class.def(pybind11::init<>());
+}
+
+Void export_interior_point_solver(pybind11::module& module)
+{
+    pybind11::class_<InteriorPointSolver> interior_point_solver_class(module,"InteriorPointSolver");
+    interior_point_solver_class.def(pybind11::init<>());
+    interior_point_solver_class.def("minimise", &InteriorPointSolver::minimise);
+    interior_point_solver_class.def("feasible", (ValidatedKleenean(InteriorPointSolver::*)(const Vector<FloatDP>&,const Vector<FloatDP>&, const Matrix<FloatDP>&,const Vector<FloatDP>&)const) &InteriorPointSolver::feasible);
+    interior_point_solver_class.def("validate_feasibility", &InteriorPointSolver::validate_feasibility);
+}
+
+
+Void export_constraint_solver(pybind11::module& module)
+{
+    pybind11::class_<ConstraintSolver> constraint_solver_class(module,"ConstraintSolver");
+    constraint_solver_class.def(pybind11::init<>());
+    constraint_solver_class.def("feasible", (Pair<ValidatedKleenean,ConstraintSolver::ExactPointType>(ConstraintSolver::*)(const ExactBoxType&,const ValidatedVectorMultivariateFunction&,const ExactBoxType&)const) &ConstraintSolver::feasible);
+    constraint_solver_class.def("check_feasibility", &ConstraintSolver::check_feasibility);
+    constraint_solver_class.def("reduce_box", [](ConstraintSolver const& solver, ExactBoxType const& domain, ValidatedVectorMultivariateFunction const& function, ExactBoxType const& codomain) {
+        UpperBoxType reduced(domain);
+        Bool empty = solver.reduce(reduced,function,codomain);
+        return pybind11::make_tuple(empty,reduced);
+    });
+    constraint_solver_class.def("hull_reduce", (Bool(ConstraintSolver::*)(UpperBoxType&,const ValidatedScalarMultivariateFunction&,const ExactIntervalType&)const) &ConstraintSolver::hull_reduce);
+    constraint_solver_class.def("box_reduce", (Bool(ConstraintSolver::*)(UpperBoxType&,const ValidatedScalarMultivariateFunction&,const ExactIntervalType&,SizeType)const) &ConstraintSolver::box_reduce);
+    constraint_solver_class.def("monotone_reduce", (Bool(ConstraintSolver::*)(UpperBoxType&,const ValidatedScalarMultivariateFunction&,const ExactIntervalType&,SizeType)const) &ConstraintSolver::monotone_reduce);
+    constraint_solver_class.def("reduce", (Bool(ConstraintSolver::*)(UpperBoxType&,const List<ValidatedConstraint>&)const) &ConstraintSolver::reduce);
+    constraint_solver_class.def("reduce", (Bool(ConstraintSolver::*)(UpperBoxType&,const ValidatedVectorMultivariateFunction&,const ExactBoxType&)const) &ConstraintSolver::reduce);
+}
+
+
+template<class X>
+Void export_simplex_solver(pybind11::module& module)
+{
+    typedef Array<SizeType> SizeArray;
+
+    typedef RigorousNumericType<X> XX;
+
+    pybind11::class_< SimplexSolver<X> > simplex_solver_class(module,(class_name<X>()+"SimplexSolver").c_str());
+    simplex_solver_class.def(pybind11::init<>());
+    simplex_solver_class.def("lpstep",(Bool(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&,Array<Slackness>& ,SizeArray&,Matrix<XX>&,Vector<XX>&)const) &SimplexSolver<X>::lpstep);
+
+
+    simplex_solver_class.def("minimise",(Vector<XX>(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&)const) &SimplexSolver<X>::minimise);
+    simplex_solver_class.def("feasible",(ValidatedKleenean(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&)const) &SimplexSolver<X>::feasible);
+
+    simplex_solver_class.def("verify_feasibility",(ValidatedKleenean(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&,const Array<Slackness>&)const) &SimplexSolver<X>::verify_feasibility);
+
+    simplex_solver_class.def("compute_basis",(Pair< SizeArray, Matrix<XX> >(SimplexSolver<X>::*)(const Matrix<X>&)const) &SimplexSolver<X>::compute_basis);
+
+}
+
+
+Void export_solving_optimization(pybind11::module& module) {
+    export_slackness(module);
+    export_constraint(module);
+    export_optimiser_interface(module);
+    export_interior_point_solvers(module);
+    export_simplex_solver<FloatDPApproximation>(module);
+    export_simplex_solver<FloatDP>(module);
+    export_simplex_solver<Rational>(module);
+    export_interior_point_solver(module);
+    export_constraint_solver(module);
 }

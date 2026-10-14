@@ -130,42 +130,6 @@ int main() {
     show("proved empty during reduction", proved_empty);
     show("contracted domain", contracted_domain);
 
-    section("Validated ODE integration with Taylor-Picard");
-
-    // Only TaylorPicardIntegrator is shown here.  The important part of the
-    // module API is the validated flow-step abstraction; alternative
-    // integrators implement the same role with different numerical methods.
-    TaylorPicardIntegrator integrator(1e-8);
-    integrator.set_minimum_temporal_order(2);
-    integrator.set_maximum_temporal_order(16);
-    integrator.set_step_maximum_error(1e-8);
-
-    show("minimum temporal order", integrator.minimum_temporal_order());
-    show("maximum temporal order", integrator.maximum_temporal_order());
-    show("step maximum error", integrator.step_maximum_error());
-
-    auto state = EffectiveScalarMultivariateFunction::coordinate(1, 0);
-    EffectiveVectorMultivariateFunction logistic({
-        state * (1 - state)
-    });
-    ExactBoxType initial_states({
-        {0.25_x, 0.5_x}
-    });
-    StepSizeType step = 0.125_dy;
-
-    FlowStepModelType flow =
-        integrator.flow_step(logistic, initial_states, step);
-
-    // The returned object is a validated function patch in (initial state,
-    // time).  Its domain records both the initial-state box and the time
-    // interval actually covered by the step.
-    show("vector field", logistic);
-    show("initial-state box", initial_states);
-    show("requested step", step);
-    show("validated flow patch", flow);
-    show("flow domain", flow.domain());
-    show("flow range", flow.range());
-
     section("Linear programming with the simplex solver");
 
     // Solve
@@ -229,7 +193,6 @@ int main() {
     cout
         << "IntervalNewtonSolver: roots, fixed points and implicit functions.\n"
         << "ConstraintSolver: feasibility tests and interval-domain contraction.\n"
-        << "TaylorPicardIntegrator: validated flow steps for ODEs.\n"
         << "SimplexSolver: bounded linear programs with linear equalities.\n"
         << "NonlinearInteriorPointOptimiser: constrained nonlinear minimisation with interior-point barriers.\n";
 

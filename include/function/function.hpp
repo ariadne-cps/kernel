@@ -47,17 +47,11 @@
 #include "algebra/differential.hpp"
 #include "algebra/algebra.hpp"
 #include "function/domain.hpp"
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 
 namespace Ariadne {
 
 template<class P, class... ARGS> struct VectorFunctionElementReference;
-
-template<class T> class Variable;
-typedef Variable<Real> RealVariable;
-template<class T> class Expression;
-typedef Expression<Real> RealExpression;
-template<class P, class SIG> class FunctionExpression;
 
 //! \brief Named (static) constructors for constant and coordinate functions.
 template<class P>
@@ -118,8 +112,6 @@ template<class P> class FunctionFacade<P,RealScalar(RealScalar)> {
   public:
     //! \relates Function \brief The slope (derivative) of the function at the point \a x.
     template<class X> Scalar<EvaluateType<P,X>> slope(X const& x) const;
-    //! \relates Function \brief The derivative of the function at the point \a x.
-    FunctionExpression<P,RealScalar(RealScalar)> operator() (const RealVariable& x) const;
 };
 
 //! \brief Function operations for vector univariate functions.
@@ -127,7 +119,6 @@ template<class P> class FunctionFacade<P,RealVector(RealScalar)> {
   public:
     //! \relates Function \brief The tangent vector of derivatives of the function at the point \a x.
     template<class X> Vector<EvaluateType<P,X>> tangent(X const& x) const;
-    FunctionExpression<P,RealVector(RealScalar)> operator() (const RealVariable& x) const;
 };
 
 //! \brief Function operations for scalar multivariate functions.
@@ -136,8 +127,6 @@ template<class P> class FunctionFacade<P,RealScalar(RealVector)> {
   public:
     //! \relates Function \brief The gradient covector of derivatives of the function at the point \a x.
     template<class X> Covector<EvaluateType<P,X>> gradient(Vector<X> const& x) const;
-    FunctionExpression<P,RealScalar(RealVector)> operator() (const Vector<RealVariable>& x) const;
-    //FunctionExpression<P,RealScalar(RealVector)> operator() (const Vector<RealExpression>& x) const;
 };
 
 //! \brief Function operations for vector multivariate functions.
@@ -146,7 +135,6 @@ template<class P> class FunctionFacade<P,RealVector(RealVector)> {
   public:
     //! \relates Function \brief The Jacobian matrix of derivatives of the function at the point \a x.
     template<class X> Matrix<EvaluateType<P,X>> jacobian(Vector<X> const& x) const;
-    FunctionExpression<P,RealVector(RealVector)> operator() (const Vector<RealVariable>& x) const;
 };
 
 template<class P, class SIG> class DeclareFunctionOperations;
@@ -196,7 +184,6 @@ class Function
     typedef D DomainType; //!< The type of the domain.
     typedef C CodomainType; //!< The type of the codomain.
     typedef Number<P> NumericType; //!< The numeric type required to construct a constant scalar function.
-    typedef typename SignatureTraits<SIG>::ArgumentSpaceType ArgumentSpaceType; //!< The type used to descibe an ordered set of argument variables.
     typedef typename SignatureTraits<SIG>::ArgumentSizeType ArgumentSizeType; //!< The type used to descibe the size of an element of the domain.
     typedef typename SignatureTraits<SIG>::ResultSizeType ResultSizeType; //!< The type used to descibe the size of an element of the codomain.
     typedef typename SignatureTraits<SIG>::ArgumentIndexType ArgumentIndexType; //!< The type used to descibe an index into an element of the domain.
@@ -223,9 +210,6 @@ class Function
     explicit Function(DomainType dom, Result<Formula<Y>>const& e);
     //! \brief Construct a function each of whose components are \a sf with the given domain \a dom.
     explicit Function(ResultSizeType rs, ScalarFunction<P,ARG> sf);
-
-    //! \brief Construct from argument variable(s) \a spc and expression(s) \a e in terms of these variables.
-    explicit Function(ArgumentSpaceType const& spc, Result<RealExpression>const& e);
 
     //! \brief Create a vector function from an initializer list of scalar functions.
     Function(InitializerList<ScalarFunction<P,ARG>> const& lsf);
@@ -363,21 +347,6 @@ class Function
 template<class P, class... ARGS> decltype(auto) inline characteristics(Function<P,Real(ARGS...)> const& f) {
     return f.domain(); }
 
-//! \relates Function
-//! \name Function template deduction guides
-//!@{
-//
-//! \brief Deduction guide for constructing scalar univariate functions from an expression.
-explicit Function(RealVariable const& s, Scalar<RealExpression> const& e) -> Function<EffectiveTag,RealScalar(RealScalar)>;
-//! \brief Deduction guide for constructing vector univariate functions from expressions.
-explicit Function(RealVariable const& s, Vector<RealExpression> const& e) -> Function<EffectiveTag,RealVector(RealScalar)>;
-//! \relates Function \brief Deduction guide for constructing scalar multivariate functions from an expression.
-explicit Function(RealSpace const& s, Scalar<RealExpression> const& e) -> Function<EffectiveTag,RealScalar(RealVector)>;
-//! \relates Function \brief Deduction guide for constructing vector multivariate functions from expressions.
-explicit Function(RealSpace const& s, Vector<RealExpression> const& e) -> Function<EffectiveTag,RealVector(RealVector)>;
-//!@}
-
-
 template<class P, class SIG> OutputStream& operator<<(OutputStream& os, Representation<Function<P,SIG>> const& f) {
     f.reference().raw_pointer()->_repr(os); return os; }
 
@@ -505,7 +474,6 @@ EffectiveVectorMultivariateFunction lie_derivative(const EffectiveVectorMultivar
 
 Formula<Real> make_formula(const EffectiveScalarMultivariateFunction& f);
 Vector<Formula<Real>> make_formula(const EffectiveVectorMultivariateFunction& f);
-//RealExpression evaluate(EffectiveScalarMultivariateFunction const& f, Vector<RealVariable> const& vars);
 
 
 

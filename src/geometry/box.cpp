@@ -34,11 +34,11 @@
 #include "box.hpp"
 #include "box.tpl.hpp"
 
-#include "symbolic/formula.hpp"
+#include "function/formula.hpp"
 
 #include "algebra/algebra.hpp"
 
-#include "io/geometry2d.hpp"
+#include "drawing/geometry2d.hpp"
 
 namespace Ariadne {
 
