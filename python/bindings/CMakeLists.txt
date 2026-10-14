@@ -10,6 +10,7 @@ add_library(pyariadne-kernel-submodule-obj OBJECT
     geometry_bindings.cpp
     io_submodule.cpp
     io_bindings.cpp
+    labelling_submodule.cpp
     solving_submodule.cpp
     solving_bindings.cpp
     symbolic_submodule.cpp
