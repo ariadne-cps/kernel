@@ -1,7 +1,6 @@
 add_subdirectory(function)
 add_subdirectory(geometry)
 add_subdirectory(drawing)
-add_subdirectory(integration)
 add_subdirectory(labelling)
 add_subdirectory(satisfiability)
 add_subdirectory(solving)

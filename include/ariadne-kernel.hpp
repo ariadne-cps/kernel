@@ -35,7 +35,6 @@
 #include "satisfiability/smt_solver.hpp"
 #include "solving/solver.hpp"
 #include "solving/constraint_solver.hpp"
-#include "integration/integrator.hpp"
 #include "solving/linear_programming.hpp"
 #include "solving/nonlinear_programming.hpp"
 
