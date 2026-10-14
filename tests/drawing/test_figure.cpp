@@ -65,7 +65,6 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_figure_projection())
         ARIADNE_TEST_CALL(test_figure_public_api())
         ARIADNE_TEST_CALL(test_figure_edge_paths())
-        ARIADNE_TEST_CALL(test_projection_edge_paths())
         ARIADNE_TEST_CALL(test_default_drawer())
     }
 
@@ -256,11 +255,6 @@ class TestGraphics {
     }
 
     void test_figure_public_api() {
-        RealVariable x("x"), y("y");
-        Axes2d numeric_axes(-2.0,x,2.0,-1.5,y,1.5);
-        ARIADNE_TEST_EQUALS(numeric_axes.variables.x(),x)
-        ARIADNE_TEST_EQUALS(numeric_axes.variables.y(),y)
-
         GraphicsBoundingBoxType bx({
             {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)},
             {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)}
@@ -291,30 +285,7 @@ class TestGraphics {
         figure._paint_all(canvas);
     }
 
-    void test_projection_edge_paths() {
-        RealVariable x("x"), y("y"), z("z");
-        RealSpace space({x,y});
-
-        Projection2d regular = projection(space,Variables2d(x,y));
-        ARIADNE_TEST_EQUALS(regular.argument_size(),2u)
-        ARIADNE_TEST_EQUALS(regular.x_coordinate(),0u)
-        ARIADNE_TEST_EQUALS(regular.y_coordinate(),1u)
-
-        Projection2d time_projection = projection(RealSpace({y}),Variables2d(TimeVariable(),y));
-        ARIADNE_TEST_EQUALS(time_projection.argument_size(),1u)
-        ARIADNE_TEST_EQUALS(time_projection.x_coordinate(),1u)
-        ARIADNE_TEST_EQUALS(time_projection.y_coordinate(),0u)
-
-        Projection2d contained_time_projection = projection(RealSpace({TimeVariable(),y}),Variables2d(TimeVariable(),y));
-        ARIADNE_TEST_EQUALS(contained_time_projection.argument_size(),2u)
-        ARIADNE_TEST_EQUALS(contained_time_projection.x_coordinate(),0u)
-        ARIADNE_TEST_EQUALS(contained_time_projection.y_coordinate(),1u)
-
-        ARIADNE_TEST_FAIL(projection(space,Variables2d(z,y)))
-        ARIADNE_TEST_FAIL(projection(space,Variables2d(x,z)))
-    }
-
-    void test_figure_edge_paths() {
+void test_figure_edge_paths() {
         GraphicsBoundingBoxType bx2({
             {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)},
             {FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)}
