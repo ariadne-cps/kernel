@@ -117,7 +117,6 @@ template<class P, class SIG> OutputStream& operator<<(OutputStream& os, const Py
 
 using namespace Ariadne;
 
-typedef ExactIntervalType I;
 typedef Vector<FloatDPApproximation> FV;
 typedef Vector<ExactIntervalType> IV;
 typedef Matrix<FloatDPApproximation> FMx;

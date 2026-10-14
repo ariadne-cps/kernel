@@ -32,7 +32,6 @@
 #include <iosfwd>
 #include <string>
 
-typedef unsigned int Nat;
 
 namespace Ariadne {
 
