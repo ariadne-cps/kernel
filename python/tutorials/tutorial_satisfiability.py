@@ -21,8 +21,8 @@ def tutorial_satisfiability():
     space = RealSpace([x, y])
 
     domain = FloatDPExactBox([
-        {exact(-2), exact(2)},
-        {exact(-2), exact(2)},
+        {exact(-2): exact(2)},
+        {exact(-2): exact(2)},
     ])
 
     formula = (
