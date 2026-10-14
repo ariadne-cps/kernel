@@ -24,8 +24,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-      with:
-        submodules: recursive
 
     - uses: actions/setup-python@v5
       with:
@@ -214,8 +212,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-      with:
-        submodules: recursive
 
     - name: Enable compiler cache
       uses: mozilla-actions/sccache-action@v0.0.11
