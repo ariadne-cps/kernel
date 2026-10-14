@@ -33,12 +33,12 @@
 
 namespace Ariadne {
 
-//! \brief Command-line arguments owned by the kernel IO layer.
+//! \brief Command-line arguments owned by the kernel drawing layer.
 //! \details Contributes drawer and graphics backend options only.
-CommandLineContribution io_command_line();
+CommandLineContribution drawing_command_line();
 
 //! \brief Build the complete kernel command-line profile.
-//! \details Composes logging, threading and kernel IO contributions.
+//! \details Composes logging, threading and kernel drawing contributions.
 CommandLineInterface make_kernel_command_line_interface();
 
 //! \brief Shared kernel command-line profile used by applications and bindings.

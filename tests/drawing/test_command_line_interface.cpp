@@ -24,7 +24,7 @@ using namespace Ariadne;
 class TestCommandLineInterface {
   public:
     Void test() {
-        ARIADNE_TEST_CALL(test_io_contribution())
+        ARIADNE_TEST_CALL(test_drawing_contribution())
         ARIADNE_TEST_CALL(test_profile())
         ARIADNE_TEST_CALL(test_from_c_arguments())
         ARIADNE_TEST_CALL(test_drawer_parsing())
@@ -33,9 +33,9 @@ class TestCommandLineInterface {
         ARIADNE_TEST_CALL(test_local_contribution())
     }
 
-    Void test_io_contribution() {
-        CommandLineContribution const contribution=io_command_line();
-        ARIADNE_TEST_EQUALS(contribution.name(),"kernel-io")
+    Void test_drawing_contribution() {
+        CommandLineContribution const contribution=drawing_command_line();
+        ARIADNE_TEST_EQUALS(contribution.name(),"kernel-drawing")
         ARIADNE_TEST_EQUALS(contribution.parsers().size(),2u)
         ARIADNE_TEST_EQUALS(contribution.parsers()[0].long_id(),"drawer")
         ARIADNE_TEST_EQUALS(contribution.parsers()[1].long_id(),"graphics")
