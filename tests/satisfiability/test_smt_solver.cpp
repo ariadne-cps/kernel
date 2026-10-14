@@ -832,14 +832,14 @@ class TestSmtSolver {
         RealExpression smooth_expression=exp(RealExpression(sx))+RealExpression(sx);
         RealSpace smooth_space({sx});
         ValidatedScalarMultivariateFunction smooth_function(
-            smooth_space,smooth_expression);
+            make_function(smooth_space,smooth_expression));
         auto positive_derivative=SmtSolverTestSupport::optional_derivative(
             smooth_expression,smooth_function,0u);
         ARIADNE_TEST_ASSERT(positive_derivative.has_value());
         RealExpression nonsmooth_expression=max(
             RealExpression(sx),RealExpression(0));
         ValidatedScalarMultivariateFunction nonsmooth_function(
-            smooth_space,nonsmooth_expression);
+            make_function(smooth_space,nonsmooth_expression));
         auto nonsmooth_derivative=SmtSolverTestSupport::optional_derivative(
             nonsmooth_expression,nonsmooth_function,0u);
         ARIADNE_TEST_ASSERT(not nonsmooth_derivative.has_value());
