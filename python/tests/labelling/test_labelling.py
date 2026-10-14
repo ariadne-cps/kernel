@@ -15,8 +15,8 @@ def test_labelling():
     box = LabelledRealBox(
         RealSpace([x, y]),
         RealBox([
-            (Real("-1.0"), Real("1.0")),
-            (Real("-0.5"), Real("0.5")),
+            RealInterval(Real(Decimal("-1.0")), Real(Decimal("1.0"))),
+            RealInterval(Real(Decimal("-0.5")), Real(Decimal("0.5"))),
         ]),
     )
 
