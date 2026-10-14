@@ -45,6 +45,15 @@ class TestCurveCanvas : public NullCanvas {
     Bool lined=false;
 };
 
+class TestPointCanvas : public NullCanvas {
+  public:
+    Void dot(double, double) override { dotted=true; }
+    Void stroke() override { stroked=true; }
+
+    Bool dotted=false;
+    Bool stroked=false;
+};
+
 template<class X> class TestPoint {
     typedef LabelledPoint<X> PointType;
   public:
@@ -65,6 +74,16 @@ template<class X> class TestPoint {
         ARIADNE_TEST_EQUAL(pt.space(),RealSpace({x,y}));
         ARIADNE_TEST_EQUAL(pt.variables(),Set<RealVariable>(RealSpace({x,y}).variables()));
         ARIADNE_TEST_PRINT(pt.bounding_box());
+
+        std::unique_ptr<PointType> clone(pt.labelled_clone());
+        ARIADNE_TEST_EQUALS(clone->dimension(),pt.dimension());
+        ARIADNE_TEST_EQUAL(clone->space(),pt.space());
+        ARIADNE_TEST_EQUAL(clone->variables(),pt.variables());
+
+        TestPointCanvas canvas;
+        pt.draw(canvas,Variables2d(x,y));
+        ARIADNE_TEST_ASSERT(canvas.dotted);
+        ARIADNE_TEST_ASSERT(canvas.stroked);
     }
 
     void test_projection() {
