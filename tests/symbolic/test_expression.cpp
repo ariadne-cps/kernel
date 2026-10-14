@@ -36,6 +36,7 @@
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
 #include "function/procedure.hpp"
+#include "function/procedure.tpl.hpp"
 #include "function/taylor_model.hpp"
 
 #include "algebra/matrix.tpl.hpp"
