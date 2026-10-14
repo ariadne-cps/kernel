@@ -680,7 +680,6 @@ Expression<Real> make_expression(const Formula<Real>& f, const Space<Real>& s) {
     return fa.template extract<RealExpression>();
 }
 
-Formula<Real> make_formula(const EffectiveScalarMultivariateFunction& f);
 Expression<Real> make_expression(const ScalarMultivariateFunction<EffectiveTag>& f, const Space<Real>& s) {
     return make_expression(make_formula(f),s); }
 
