@@ -343,6 +343,19 @@ class TestSmtSolver {
             solver.solve_parallel(two_space,bounded,literals),
             std::runtime_error);
 
+        SmtSolver adaptive_solver(SmtSolverConfiguration(
+            0.125_x,
+            std::numeric_limits<SizeType>::max(),
+            std::numeric_limits<SizeType>::max(),
+            std::numeric_limits<SizeType>::max(),
+            false,false,false,false,false,true,false,false,false,true,true));
+        ARIADNE_TEST_THROWS(
+            adaptive_solver.solve_parallel(bounded,one_dimensional),
+            std::runtime_error);
+        ARIADNE_TEST_THROWS(
+            adaptive_solver.solve_parallel(one_space,bounded,literals),
+            std::runtime_error);
+
         ContinuousPredicate predicate=(ex>=0);
         ARIADNE_TEST_THROWS(
             solver.solve(one_space,unbounded,predicate),
@@ -601,6 +614,30 @@ class TestSmtSolver {
             ARIADNE_TEST_EQUAL(refreshed.observed_hits,1u);
             ARIADNE_TEST_EQUAL(refreshed.suspensions,2u);
             ARIADNE_TEST_EQUAL(refreshed.reactivations,1u);
+
+            std::vector<SmtPreclassificationOutcome> skipped_positive(
+                17u,SmtPreclassificationOutcome::UNRESOLVED);
+            skipped_positive[16]=SmtPreclassificationOutcome::PRUNED;
+            auto skipped_hit=SmtSolverTestSupport::preclassification_shadow_summary(
+                skipped_positive);
+            ARIADNE_TEST_EQUAL(skipped_hit.checks,16u);
+            ARIADNE_TEST_EQUAL(skipped_hit.skipped,1u);
+            ARIADNE_TEST_EQUAL(skipped_hit.skipped_hits,1u);
+            ARIADNE_TEST_EQUAL(skipped_hit.suspensions,1u);
+            ARIADNE_TEST_EQUAL(skipped_hit.reactivations,0u);
+
+            ARIADNE_TEST_THROWS(
+                SmtSolverTestSupport::preclassification_shadow_summary(
+                    std::vector<SmtPreclassificationOutcome>{},0u,8u,8u),
+                std::runtime_error);
+            ARIADNE_TEST_THROWS(
+                SmtSolverTestSupport::preclassification_shadow_summary(
+                    std::vector<SmtPreclassificationOutcome>{},16u,0u,8u),
+                std::runtime_error);
+            ARIADNE_TEST_THROWS(
+                SmtSolverTestSupport::preclassification_shadow_summary(
+                    std::vector<SmtPreclassificationOutcome>{},16u,8u,0u),
+                std::runtime_error);
         }
 
         SmtSearchStatistics empty_target;
@@ -1382,6 +1419,65 @@ class TestSmtSolver {
         }
 
         {
+            std::cout << "[smt-lookahead] interval lookahead keeps geometric split" << std::endl;
+            RealVariable sy("lookahead_geometric_y");
+            RealSpace lookahead_space({sx,sy});
+            SmtSolver lookahead_solver(SmtSolverConfiguration(
+                0.125_x,
+                std::numeric_limits<SizeType>::max(),
+                std::numeric_limits<SizeType>::max(),
+                1u,
+                false,false,false,false,false,false,true));
+            List<SmtTheoryPrimitiveLiteral> literals({
+                SmtTheoryPrimitiveLiteral(
+                    ex,SmtTheoryPrimitiveRelation::GEQ_ZERO)
+            });
+            SmtResult solve_result=lookahead_solver.solve(
+                lookahead_space,
+                ExactBoxType({
+                    ExactIntervalType(-2,2),
+                    ExactIntervalType(-1,1)}),
+                literals);
+            ARIADNE_TEST_ASSERT(solve_result.is_unknown());
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().interval_lookahead_guided_splits,1u);
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().interval_lookahead_overrides_geometric_splits,0u);
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().interval_lookahead_function_evaluations,4u);
+        }
+
+        {
+            std::cout << "[smt-lookahead] singleton coordinate is skipped" << std::endl;
+            RealVariable sy("lookahead_singleton_y");
+            RealSpace lookahead_space({sx,sy});
+            RealExpression ey=sy;
+            SmtSolver lookahead_solver(SmtSolverConfiguration(
+                0.125_x,
+                std::numeric_limits<SizeType>::max(),
+                std::numeric_limits<SizeType>::max(),
+                1u,
+                false,false,false,false,false,false,true));
+            List<SmtTheoryPrimitiveLiteral> literals({
+                SmtTheoryPrimitiveLiteral(
+                    ey,SmtTheoryPrimitiveRelation::GEQ_ZERO)
+            });
+            SmtResult solve_result=lookahead_solver.solve(
+                lookahead_space,
+                ExactBoxType({
+                    ExactIntervalType(0,0),
+                    ExactIntervalType(-2,2)}),
+                literals);
+            ARIADNE_TEST_ASSERT(solve_result.is_unknown());
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().interval_lookahead_guided_splits,1u);
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().interval_lookahead_overrides_geometric_splits,0u);
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().interval_lookahead_function_evaluations,2u);
+        }
+
+        {
             SmtSolver contractor_solver(SmtSolverConfiguration(
                 0.125_x,
                 std::numeric_limits<SizeType>::max(),
@@ -1480,6 +1576,32 @@ class TestSmtSolver {
                 ==SmtPreclassificationOutcome::UNRESOLVED);
             ARIADNE_TEST_ASSERT(
                 solve_result.statistics().hull_reduction_rounds>=1u);
+        }
+
+        {
+            std::cout << "[smt-preclassify] epsilon-satisfied box is recorded" << std::endl;
+            SmtSolver preclassification_solver(SmtSolverConfiguration(
+                0.125_x,
+                std::numeric_limits<SizeType>::max(),
+                std::numeric_limits<SizeType>::max(),
+                1u,
+                false,false,false,false,false,true,false,false,false,true));
+            List<SmtTheoryPrimitiveLiteral> literals({
+                SmtTheoryPrimitiveLiteral(
+                    ex,SmtTheoryPrimitiveRelation::GEQ_ZERO)
+            });
+            SmtResult solve_result=preclassification_solver.solve(
+                space,ExactBoxType({ExactIntervalType(0,0.0625_x)}),literals);
+            ARIADNE_TEST_ASSERT(solve_result.is_epsilon_sat());
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().preclassification_boxes,1u);
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().preclassification_epsilon_boxes,1u);
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().preclassification_outcomes.size(),1u);
+            ARIADNE_TEST_ASSERT(
+                solve_result.statistics().preclassification_outcomes[0]
+                ==SmtPreclassificationOutcome::EPSILON_SAT);
         }
 
         {
@@ -2913,6 +3035,28 @@ class TestSmtSolver {
             ARIADNE_TEST_EQUAL(solve_result.statistics().candidate_witness_searches,0u);
             ARIADNE_TEST_EQUAL(solve_result.statistics().boxes_split,1u);
             ARIADNE_TEST_EQUAL(solve_result.statistics().sensitivity_guided_splits,1u);
+        }
+
+        {
+            std::cout << "[smt-theory-solve] non-differentiable sensitivity falls back to geometry" << std::endl;
+            SmtSolver split_solver(SmtSolverConfiguration(
+                0.01_pr,
+                std::numeric_limits<SizeType>::max(),
+                std::numeric_limits<SizeType>::max(),
+                1u,
+                false,false,true,false,false,false));
+            List<SmtTheoryPrimitiveLiteral> literals({
+                SmtTheoryPrimitiveLiteral(
+                    abs(ex)-0.3_pr,SmtTheoryPrimitiveRelation::EQ_ZERO)
+            });
+            SmtResult solve_result=split_solver.solve(
+                space,
+                ExactBoxType({ExactIntervalType(-1,1)}),
+                literals);
+            ARIADNE_TEST_ASSERT(solve_result.is_unknown());
+            ARIADNE_TEST_EQUAL(solve_result.statistics().boxes_split,1u);
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().sensitivity_guided_splits,0u);
         }
 
         {
