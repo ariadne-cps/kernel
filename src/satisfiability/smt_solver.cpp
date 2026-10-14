@@ -1616,9 +1616,7 @@ struct SmtParallelTask {
                 return;
             }
             ++state->statistics.boxes_processed;
-        }
-
-        { SmtSolver::BoxProcessingResult processing=solver._process_box(box,conjunction);
+        } SmtSolver::BoxProcessingResult processing=solver._process_box(box,conjunction); {
             {
                 std::lock_guard<std::mutex> lock(state->mutex);
                 solver._accumulate_box_processing_statistics(
