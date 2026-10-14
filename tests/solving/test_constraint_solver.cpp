@@ -550,6 +550,24 @@ class TestConstraintSolver
             ARIADNE_TEST_ASSERT(empty);
             ARIADNE_TEST_ASSERT(statistics.hull_rounds>=1u);
         }
+
+        {
+            std::cout << "[constraint-propagate] shaving proves dependency-hidden infeasibility" << std::endl;
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            auto function=x[0]*(1-x[0]);
+            List<ValidatedConstraint> constraints({
+                ValidatedConstraint(
+                    ValidatedNumber(0.32_pr),
+                    function,
+                    ValidatedNumber(0.32_pr))
+            });
+            ConstraintPropagationStatistics statistics;
+            Bool empty=solver.propagate(
+                domain,constraints,statistics,true,false);
+            ARIADNE_TEST_ASSERT(empty);
+            ARIADNE_TEST_ASSERT(definitely(domain.is_empty()));
+            ARIADNE_TEST_ASSERT(statistics.shaving_function_evaluations>=1u);
+        }
     }
 
     Void test_precompiled_propagate() {
@@ -811,6 +829,193 @@ class TestConstraintSolver
             ARIADNE_TEST_ASSERT(
                 domain[0].lower_bound().raw()==domain[0].upper_bound().raw());
         }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] cached agenda stable constraint has no effective call" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            auto function=y[0];
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    function,
+                    ExactIntervalType(0.0_x,1.0_x),
+                    {},
+                    false,
+                    false,
+                    std::make_shared<ValidatedProcedure>(function)
+                }
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                not solver.propagate(
+                    domain,constraints,false,statistics,false,true));
+            ARIADNE_TEST_EQUAL(statistics.hull_agenda_effective_calls,0u);
+            ARIADNE_TEST_EQUAL(statistics.hull_effective,0u);
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] cached agenda hull contraction proves empty" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            auto function=y[0];
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    function,
+                    ExactIntervalType(2.0_x,3.0_x),
+                    {},
+                    false,
+                    false,
+                    std::make_shared<ValidatedProcedure>(function)
+                }
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                solver.propagate(
+                    domain,constraints,false,statistics,false,true));
+            ARIADNE_TEST_ASSERT(definitely(domain.is_empty()));
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] cached agenda applies strict endpoint rejection" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            auto function=y[0];
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    function,
+                    ExactIntervalType(0.0_x,+infty),
+                    {},
+                    true,
+                    false,
+                    std::make_shared<ValidatedProcedure>(function)
+                }
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,0.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                solver.propagate(
+                    domain,constraints,false,statistics,false,true));
+            ARIADNE_TEST_ASSERT(not definitely(domain.is_empty()));
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] strict lower feasible side survives" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            UpperBoxType domain=ExactBoxType({{0.5_x,1.0_x}});
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {y[0],ExactIntervalType(0.0_x,+infty),{},true,false}
+            });
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                not solver.propagate(
+                    domain,constraints,false,statistics,false,false));
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] one uncached hull sweep stays stable" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {y[0],ExactIntervalType(0.0_x,1.0_x),{},false,false}
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                not solver.propagate_hull_once(domain,constraints,statistics));
+            ARIADNE_TEST_EQUAL(statistics.hull_procedure_builds,1u);
+            ARIADNE_TEST_EQUAL(statistics.hull_effective,0u);
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] one hull sweep can prove empty" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {y[0],ExactIntervalType(2.0_x,3.0_x),{},false,false}
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                solver.propagate_hull_once(domain,constraints,statistics));
+            ARIADNE_TEST_ASSERT(definitely(domain.is_empty()));
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] one cached hull sweep applies strict rejection" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            auto function=y[0];
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    function,
+                    ExactIntervalType(0.0_x,+infty),
+                    {},
+                    true,
+                    false,
+                    std::make_shared<ValidatedProcedure>(function)
+                }
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,0.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                solver.propagate_hull_once(domain,constraints,statistics));
+            ARIADNE_TEST_ASSERT(not definitely(domain.is_empty()));
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] cached full scan reuses procedure" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            auto function=y[0];
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    function,
+                    ExactIntervalType(0.0_x,1.0_x),
+                    {},
+                    false,
+                    false,
+                    std::make_shared<ValidatedProcedure>(function)
+                }
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                not solver.propagate(
+                    domain,constraints,true,statistics,false,true));
+            ARIADNE_TEST_EQUAL(statistics.hull_procedure_builds,0u);
+            ARIADNE_TEST_EQUAL(statistics.monotone_rounds,1u);
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] full scan hull contraction proves empty" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {y[0],ExactIntervalType(2.0_x,3.0_x),{},false,false}
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                solver.propagate(
+                    domain,constraints,true,statistics,false,true));
+            ARIADNE_TEST_ASSERT(definitely(domain.is_empty()));
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] shaving can prove dependency-hidden infeasibility" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            auto function=y[0]*(1-y[0]);
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    function,
+                    ExactIntervalType(0.32_pr,0.32_pr),
+                    {},
+                    false,
+                    false
+                }
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                solver.propagate(
+                    domain,constraints,false,statistics,true,false));
+            ARIADNE_TEST_ASSERT(definitely(domain.is_empty()));
+            ARIADNE_TEST_ASSERT(statistics.shaving_function_evaluations>=1u);
+        }
     }
 
     Void test_reduce_edge_cases() {
@@ -840,6 +1045,18 @@ class TestConstraintSolver
         ARIADNE_TEST_ASSERT(
             not solver.reduce(stable_domain,vector_function,vector_codomain));
         ARIADNE_TEST_ASSERT(not definitely(stable_domain.is_empty()));
+
+        std::cout << "[constraint-reduce] nonempty deprecated list reaches fixed point" << std::endl;
+        UpperBoxType stable_list_domain=ExactBoxType({{0.0_x,1.0_x}});
+        List<ValidatedConstraint> stable_constraints({
+            ValidatedConstraint(
+                ValidatedNumber(0.0_x),
+                x[0],
+                ValidatedNumber(1.0_x))
+        });
+        ARIADNE_TEST_ASSERT(
+            not solver.reduce(stable_list_domain,stable_constraints));
+        ARIADNE_TEST_ASSERT(not definitely(stable_list_domain.is_empty()));
     }
 
     Void test_check_feasibility() {
