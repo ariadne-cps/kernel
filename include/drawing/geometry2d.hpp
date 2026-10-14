@@ -29,7 +29,6 @@
 #ifndef ARIADNE_GEOMETRY2D_HPP
 #define ARIADNE_GEOMETRY2D_HPP
 
-typedef unsigned int Nat;
 
 namespace Ariadne {
 
