@@ -30,12 +30,9 @@
 #include "io/drawer.hpp"
 #include "io/cairo.hpp"
 #include "io/figure.hpp"
-#include "labelling/figure.hpp"
 #include "io/geometry2d.hpp"
 #include "geometry/point.hpp"
 #include "geometry/box.hpp"
-#include "symbolic/space.hpp"
-#include "symbolic/expression_set.hpp"
 #include "function/function.hpp"
 
 using namespace Ariadne;
@@ -83,17 +80,6 @@ Void export_figure(pybind11::module& module)
     planar_projection_map_class.def_readwrite("n",&Projection2d::n);
     planar_projection_map_class.def_readwrite("i",&Projection2d::i);
     planar_projection_map_class.def_readwrite("j",&Projection2d::j);
-
-    pybind11::class_<Variables2d> variables2d_class(module,"Variables2d");
-    variables2d_class.def(pybind11::init<RealVariable,RealVariable>());
-    variables2d_class.def("x", &Variables2d::x);
-    variables2d_class.def("y", &Variables2d::y);
-
-    module.def("projection",&projection);
-
-    pybind11::class_<Axes2d> axes2d_class(module,"Axes2d");
-    axes2d_class.def(pybind11::init<double,RealVariable,double,double,RealVariable,double>());
-    axes2d_class.def(pybind11::init<Real,RealVariable,Real,Real,RealVariable,Real>());
 
     static constexpr auto reference_internal = pybind11::return_value_policy::reference_internal ;
 
@@ -158,34 +144,6 @@ Void export_graphics_properties(pybind11::module& module)
     graphics_properties_class.def("__repr__", &__cstr__<GraphicsProperties>);
 }
 
-Void export_labelled_figure(pybind11::module& module)
-{
-    static constexpr auto reference_internal = pybind11::return_value_policy::reference_internal;
-
-    using LabelledRealBox = LabelledBox<RealInterval>;
-    pybind11::class_<LabelledRealBox> labelled_real_box_class(module,"LabelledRealBox");
-    labelled_real_box_class.def(pybind11::init<RealSpace,RealBox>());
-    labelled_real_box_class.def("dimension", &LabelledRealBox::dimension);
-    labelled_real_box_class.def("__str__", &__cstr__<LabelledRealBox>);
-    labelled_real_box_class.def("__repr__", &__cstr__<LabelledRealBox>);
-
-    pybind11::class_<LabelledFigure> labelled_figure_class(module,"LabelledFigure");
-    labelled_figure_class.def(pybind11::init<Axes2d>());
-
-    labelled_figure_class.def("set_axes",(Void(LabelledFigure::*)(const Axes2d&)) &LabelledFigure::set_axes, reference_internal);
-    labelled_figure_class.def("properties",(GraphicsProperties&(LabelledFigure::*)())&LabelledFigure::properties, reference_internal);
-
-    labelled_figure_class.def("draw",(LabelledFigure&(LabelledFigure::*)(const LabelledDrawable2dInterface&))&LabelledFigure::draw, reference_internal);
-    labelled_figure_class.def("draw", [](LabelledFigure& fig, LabelledRealBox const& box) -> LabelledFigure& {
-        LabelledDrawableWrapper<RealBox> wrapper(box);
-        return fig.draw(wrapper);
-    }, reference_internal);
-    labelled_figure_class.def("clear",&LabelledFigure::clear, reference_internal);
-    labelled_figure_class.def("set_animated", &LabelledFigure::set_animated, reference_internal);
-    labelled_figure_class.def("write",(Void(LabelledFigure::*)(const Char*)const)&LabelledFigure::write);
-    labelled_figure_class.def("write",(Void(LabelledFigure::*)(const Char*,Nat,Nat)const)&LabelledFigure::write);
-}
-
 Void export_plot(pybind11::module& module)
 {
     module.def("plot",(Void(*)(const char*,Projection2d const&,ApproximateBoxType const&,List<Pair<Colour,Drawable2dInterface const&>> const&)) &plot);
@@ -237,7 +195,6 @@ Void export_io_graphics(pybind11::module& module) {
     export_colour(module);
     export_figure(module);
     export_graphics_properties(module);
-    export_labelled_figure(module);
     export_plot(module);
     export_backend(module);
     export_drawer(module);

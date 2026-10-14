@@ -510,10 +510,6 @@ Void export_sets(pybind11::module& module, pybind11::class_<RealVariable>& real_
     floatdp_variables_box_class.def("__getitem__", &FloatDPVariablesBox::operator[]);
     floatdp_variables_box_class.def("__str__",&__cstr__<FloatDPVariablesBox>);
 
-    pybind11::class_<LabelledBox<FloatDPUpperInterval>> labelled_floatdp_upper_box_class(module,"LabelledFloatDPUpperBox");
-    labelled_floatdp_upper_box_class.def("__getitem__", &LabelledBox<FloatDPUpperInterval>::operator[]);
-    labelled_floatdp_upper_box_class.def("__str__",&__cstr__<LabelledBox<FloatDPUpperInterval>>);
-
     pybind11::class_<RealExpressionConstraintSet> real_expression_constraint_set_class(module,"RealExpressionConstraintSet");
     real_expression_constraint_set_class.def(pybind11::init<List<ContinuousPredicate>>());
     real_expression_constraint_set_class.def("number_of_variables", [](RealExpressionConstraintSet const& set){ return set.variables().size(); });
