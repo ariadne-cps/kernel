@@ -886,39 +886,42 @@ Bool SmtSolver::_original_reduce(UpperBoxType& domain,
             }
         };
 
-    std::optional<std::vector<SizeType>> ineffective_newton_subsystem;
-    for(auto const& newton_subsystem:newton_candidates) {
+    std::optional<std::vector<SizeType>> retry_newton_subsystem;
+    for(SizeType candidate=0u; candidate!=newton_candidates.size();) {
+        auto const& newton_subsystem=retry_newton_subsystem.has_value()
+            ? *retry_newton_subsystem
+            : newton_candidates[candidate];
         IntervalNewtonOutcome const outcome=
             interval_newton_attempt(newton_subsystem);
+
         if(outcome==IntervalNewtonOutcome::INFEASIBLE) {
             accumulate_propagation_statistics();
             return true;
         }
+
+        if(retry_newton_subsystem.has_value()) {
+            break;
+        }
+
         if(outcome==IntervalNewtonOutcome::SINGULAR) {
+            ++candidate;
             continue;
         }
-        if(outcome==IntervalNewtonOutcome::INEFFECTIVE) {
-            ineffective_newton_subsystem=newton_subsystem;
+
+        Bool const stage_retry=
+            static_cast<unsigned>(outcome==IntervalNewtonOutcome::INEFFECTIVE)
+            & static_cast<unsigned>(_configuration.hull_reduction_enabled());
+        if(stage_retry) {
+            if(contractor.propagate_hull_once(
+                    domain,literals,propagation_statistics)) {
+                accumulate_propagation_statistics();
+                return true;
+            }
+            retry_newton_subsystem=newton_subsystem;
+            continue;
         }
+
         break;
-    }
-
-    Bool const stage_newton_retry=
-        static_cast<unsigned>(ineffective_newton_subsystem.has_value())
-        & static_cast<unsigned>(_configuration.hull_reduction_enabled());
-    if(stage_newton_retry) {
-        if(contractor.propagate_hull_once(
-                domain,literals,propagation_statistics)) {
-            accumulate_propagation_statistics();
-            return true;
-        }
-
-        IntervalNewtonOutcome const outcome=
-            interval_newton_attempt(*ineffective_newton_subsystem);
-        if(outcome==IntervalNewtonOutcome::INFEASIBLE) {
-            accumulate_propagation_statistics();
-            return true;
-        }
     }
 
     Bool const empty=contractor.propagate(
@@ -1615,8 +1618,7 @@ struct SmtParallelTask {
             ++state->statistics.boxes_processed;
         }
 
-        SmtSolver::BoxProcessingResult processing=
-            solver._process_box(box,conjunction);
+        SmtSolver::BoxProcessingResult processing=solver._process_box(box,conjunction);
         {
             std::lock_guard<std::mutex> lock(state->mutex);
             solver._accumulate_box_processing_statistics(
