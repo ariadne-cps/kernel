@@ -1754,9 +1754,9 @@ class TestSmtSolver {
             List<ValidatedConstraint> constraints({
                 ValidatedConstraint(ValidatedNumber(2),x[0],ValidatedNumber(2))
             });
-            SmtResult result=adaptive_constraint_solver.solve(domain,constraints);
-            ARIADNE_TEST_ASSERT(result.is_unsat());
-            ARIADNE_TEST_EQUAL(result.statistics().preclassification_boxes,0u);
+            SmtResult solve_result=adaptive_constraint_solver.solve(domain,constraints);
+            ARIADNE_TEST_ASSERT(solve_result.is_unsat());
+            ARIADNE_TEST_EQUAL(solve_result.statistics().preclassification_boxes,0u);
         }
 
         {
