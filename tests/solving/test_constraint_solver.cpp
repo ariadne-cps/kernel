@@ -568,6 +568,50 @@ class TestConstraintSolver
             ARIADNE_TEST_ASSERT(definitely(domain.is_empty()));
             ARIADNE_TEST_ASSERT(statistics.shaving_function_evaluations>=1u);
         }
+
+        {
+            std::cout << "[constraint-propagate] shaving reduction records a nonempty effective contraction" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(2);
+            UpperBoxType domain=ExactBoxType({
+                {-1.0_x,1.0_x},{-1.0_x,1.0_x}
+            });
+            List<ValidatedConstraint> constraints({
+                ValidatedConstraint(
+                    ValidatedNumber(0.0_x),
+                    sqr(y[0]),
+                    ValidatedNumber(0.25_x))
+            });
+            ConstraintPropagationStatistics statistics;
+            Bool empty=solver.propagate(
+                domain,constraints,statistics,true,false);
+            ARIADNE_TEST_ASSERT(not empty);
+            ARIADNE_TEST_ASSERT(statistics.shaving_coordinate_effective>=1u);
+            ARIADNE_TEST_ASSERT(statistics.shaving_effective>=1u);
+            ARIADNE_TEST_ASSERT(not definitely(domain.is_empty()));
+        }
+
+        {
+            std::cout << "[constraint-propagate] later hull contraction exposes earlier infeasibility" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            auto dependency_hidden=y[0]*(1-y[0]);
+            List<ValidatedConstraint> constraints({
+                ValidatedConstraint(
+                    ValidatedNumber(0.32_pr),
+                    dependency_hidden,
+                    ValidatedNumber(0.32_pr)),
+                ValidatedConstraint(
+                    ValidatedNumber(0.5_x),
+                    y[0],
+                    ValidatedNumber(0.5_x))
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            Bool empty=solver.propagate(
+                domain,constraints,statistics,false,true);
+            ARIADNE_TEST_ASSERT(empty);
+            ARIADNE_TEST_ASSERT(
+                domain[0].lower_bound().raw()==domain[0].upper_bound().raw());
+        }
     }
 
     Void test_precompiled_propagate() {
@@ -1015,6 +1059,62 @@ class TestConstraintSolver
                     domain,constraints,false,statistics,true,false));
             ARIADNE_TEST_ASSERT(definitely(domain.is_empty()));
             ARIADNE_TEST_ASSERT(statistics.shaving_function_evaluations>=1u);
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] one hull sweep rechecks strict constraints after contraction" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {y[0],ExactIntervalType(0.0_x,+infty),{},true,false},
+                {y[0],ExactIntervalType(0.0_x,0.0_x),{},false,false}
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                solver.propagate_hull_once(domain,constraints,statistics));
+            ARIADNE_TEST_ASSERT(not definitely(domain.is_empty()));
+            ARIADNE_TEST_ASSERT(
+                domain[0].lower_bound().raw()==domain[0].upper_bound().raw());
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] full scan rechecks strict constraints after contraction" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {y[0],ExactIntervalType(0.0_x,+infty),{},true,false},
+                {y[0],ExactIntervalType(0.0_x,0.0_x),{},false,false}
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                solver.propagate(
+                    domain,constraints,true,statistics,false,true));
+            ARIADNE_TEST_ASSERT(not definitely(domain.is_empty()));
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] adaptive shaving skips inactive coordinates" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(2);
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    sqr(y[0]),
+                    ExactIntervalType(0.0_x,0.25_x),
+                    {},
+                    false,
+                    false
+                }
+            });
+            UpperBoxType domain=ExactBoxType({
+                {-1.0_x,1.0_x},{-1.0_x,1.0_x}
+            });
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                not solver.propagate(
+                    domain,constraints,false,statistics,true,false));
+            ARIADNE_TEST_ASSERT(statistics.shaving_effective>=1u);
+            ARIADNE_TEST_ASSERT(statistics.shaving_active_rounds>=1u);
+            ARIADNE_TEST_ASSERT(statistics.shaving_adaptive_skipped>=1u);
+            ARIADNE_TEST_ASSERT(not definitely(domain.is_empty()));
         }
     }
 
