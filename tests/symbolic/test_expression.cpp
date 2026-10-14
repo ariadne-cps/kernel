@@ -647,8 +647,26 @@ class TestExpression {
         ARIADNE_TEST_EXECUTE(make_formula(RealExpression(x)+1,x));
         Vector<RealExpression> univariate_outputs({x,x+1});
         ARIADNE_TEST_EXECUTE(make_formula(univariate_outputs,x));
+
+        FloatDPApproximation univariate_argument=2.0_approx;
+        EffectiveScalarUnivariateFunction scalar_univariate_function=
+            make_function(x,RealExpression(x)+1);
+        ARIADNE_TEST_EQUAL(scalar_univariate_function(univariate_argument),3.0_approx);
+
+        EffectiveVectorUnivariateFunction vector_univariate_function=
+            make_function(x,univariate_outputs);
+        ARIADNE_TEST_EQUAL(vector_univariate_function(univariate_argument)[0],2.0_approx);
+        ARIADNE_TEST_EQUAL(vector_univariate_function(univariate_argument)[1],3.0_approx);
+
         List<RealVariable> xy_variables({x,y});
         ARIADNE_TEST_EXECUTE(make_formula(RealExpression(x)+RealExpression(y),xy_variables));
+
+        Vector<RealExpression> multivariate_outputs({x+y,x-y});
+        EffectiveVectorMultivariateFunction vector_multivariate_function=
+            make_function(RealSpace({x,y}),multivariate_outputs);
+        Vector<FloatDPApproximation> multivariate_argument({2.0_approx,1.0_approx});
+        ARIADNE_TEST_EQUAL(vector_multivariate_function(multivariate_argument)[0],3.0_approx);
+        ARIADNE_TEST_EQUAL(vector_multivariate_function(multivariate_argument)[1],1.0_approx);
 
         List<RealAssignment> auxiliary_assignments({let(z)=RealExpression(x)+RealExpression(y)});
         ARIADNE_TEST_EXECUTE(
