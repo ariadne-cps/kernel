@@ -141,9 +141,18 @@ template<class Y> Formula<Y> simplify_node(IndexFormulaNode<Y> const& node) {
     return Formula<Y>::coordinate(Nat(node._ind)); }
 template<class Y> Formula<Y> simplify_node(UnaryFormulaNode<Y> const& node) {
     auto arg=simplify(node._arg);
-    return node._op.accept([&](auto op){
-        if constexpr (Same<decltype(op),Pos>) return arg;
-        else return Formula<Y>(op(arg));
+    return node._op.accept([&](auto op) -> Formula<Y> {
+        if constexpr (Same<decltype(op),Pos>) {
+            return arg;
+        } else if (arg.code()==Cnst::code()) {
+            return Formula<Y>(op(arg.val()));
+        } else {
+            auto const* inverse_node=std::get_if<UnaryFormulaNode<Y>>(&arg.node_ref().base());
+            if (inverse_node && are_inverses(node._op,inverse_node->_op)) {
+                return inverse_node->_arg;
+            }
+            return Formula<Y>(op(arg));
+        }
     }); }
 template<class Y> Formula<Y> simplify_node(BinaryFormulaNode<Y> const& node) {
     auto arg1=simplify(node._arg1);

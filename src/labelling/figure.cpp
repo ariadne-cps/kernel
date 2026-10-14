@@ -146,6 +146,7 @@ LabelledFigure& LabelledFigure::set_animated(Bool b) {
 }
 
 Void LabelledFigure::_paint_all(CanvasInterface& canvas) const {
+    ARIADNE_ASSERT(_data->variables.x().name()!="" && _data->variables.y().name()!="");
     _data->figure._paint_all(canvas);
 }
 
