@@ -1,5 +1,9 @@
 from pyariadne import *
 
+def real(numerator, denominator=1):
+    return Real(Rational(numerator, denominator))
+
+
 
 def test_satisfiability():
     x = RealVariable("x")

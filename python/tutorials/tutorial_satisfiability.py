@@ -2,6 +2,10 @@
 
 from pyariadne import *
 
+def real(numerator, denominator=1):
+    return Real(Rational(numerator, denominator))
+
+
 
 def section(title):
     print(f"\n== {title} ==")
