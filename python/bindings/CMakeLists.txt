@@ -8,7 +8,6 @@ add_library(pyariadne-kernel-submodule-obj OBJECT
     geometry_submodule.cpp
     drawing_submodule.cpp
     solving_submodule.cpp
-    symbolic_submodule.cpp
 )
 
 

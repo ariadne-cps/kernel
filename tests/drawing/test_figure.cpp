@@ -35,7 +35,6 @@
 #include "geometry/curve.hpp"
 #include "geometry/function_set.hpp"
 #include "geometry/grid_paving.hpp"
-#include "symbolic/expression_set.hpp"
 #include "logging/logging.hpp"
 
 using namespace Ariadne;

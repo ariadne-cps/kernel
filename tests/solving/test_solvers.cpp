@@ -32,8 +32,6 @@
 #include "function/taylor_function.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/algebra.hpp"
-#include "symbolic/expression.hpp"
-#include "symbolic/space.hpp"
 #include "function/formula.hpp"
 #include "drawing/command_line_interface.hpp"
 

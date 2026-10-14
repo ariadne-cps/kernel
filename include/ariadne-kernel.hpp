@@ -21,11 +21,6 @@
 #include "geometry/affine_set.hpp"
 
 #include "function/formula.hpp"
-#include "symbolic/variable.hpp"
-#include "symbolic/space.hpp"
-#include "symbolic/expression.hpp"
-#include "symbolic/expression_set.hpp"
-#include "symbolic/assignment.hpp"
 
 #include "solving/solver.hpp"
 #include "solving/constraint_solver.hpp"
