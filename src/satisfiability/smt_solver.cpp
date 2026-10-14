@@ -175,8 +175,8 @@ Pair<SizeType,Pair<Bool,Bool>> sensitivity_split_coordinate(
 Pair<SizeType,Pair<Bool,Bool>> cached_sensitivity_split_coordinate(
     UpperBoxType const& domain,
     std::vector<ConstraintPropagationConstraint const*> const& literals,
-    SizeType* derivative_evaluations=nullptr,
-    double* derivative_evaluation_seconds=nullptr)
+    SizeType& derivative_evaluations,
+    double& derivative_evaluation_seconds)
 {
     auto widths=domain.widths();
 
@@ -196,9 +196,6 @@ Pair<SizeType,Pair<Bool,Bool>> cached_sensitivity_split_coordinate(
         PositiveFloatDPUpperBound sensitivity(0u,dp);
         Bool active=false;
         for(auto const* literal:literals) {
-            if(variable>=literal->derivatives.size()) {
-                continue;
-            }
             auto const& derivative=literal->derivatives[variable];
             if(not derivative.has_value()) {
                 continue;
@@ -208,12 +205,8 @@ Pair<SizeType,Pair<Bool,Bool>> cached_sensitivity_split_coordinate(
             UpperIntervalType derivative_image=apply(*derivative,domain);
             double const evaluation_seconds=
                 elapsed_seconds(evaluation_start);
-            if(derivative_evaluations!=nullptr) {
-                ++*derivative_evaluations;
-            }
-            if(derivative_evaluation_seconds!=nullptr) {
-                *derivative_evaluation_seconds+=evaluation_seconds;
-            }
+            ++derivative_evaluations;
+            derivative_evaluation_seconds+=evaluation_seconds;
 
             Bool const lower_is_zero=
                 derivative_image.lower_bound().raw()
@@ -253,8 +246,8 @@ Pair<SizeType,Pair<Bool,Bool>> cached_sensitivity_split_coordinate(
 Pair<SizeType,Bool> interval_lookahead_split_coordinate(
     UpperBoxType const& domain,
     std::vector<ValidatedScalarMultivariateFunction> const& functions,
-    SizeType* function_evaluations=nullptr,
-    double* evaluation_seconds=nullptr)
+    SizeType& function_evaluations,
+    double& evaluation_seconds)
 {
     auto widths=domain.widths();
     SizeType geometric=0u;
@@ -279,12 +272,8 @@ Pair<SizeType,Bool> interval_lookahead_split_coordinate(
             UpperIntervalType first_image=apply(function,children.first);
             UpperIntervalType second_image=apply(function,children.second);
             double const seconds=elapsed_seconds(start);
-            if(function_evaluations!=nullptr) {
-                *function_evaluations+=2u;
-            }
-            if(evaluation_seconds!=nullptr) {
-                *evaluation_seconds+=seconds;
-            }
+            function_evaluations+=2u;
+            evaluation_seconds+=seconds;
             score+=first_image.width();
             score+=second_image.width();
         }
@@ -379,7 +368,6 @@ std::vector<SizeType> interval_newton_equality_indices(
     for(SizeType i=0u;i!=literals.size();++i) {
         auto const& literal=literals[i];
         if(not literal.strict_lower
-           && not literal.strict_upper
            && definitely(literal.bounds==zero_bounds)) {
             result.push_back(i);
         }
@@ -1036,7 +1024,7 @@ SmtSolver::_direct_classification(
     if(not result.preclassification) {
         statistics.hull_direct_rejection_seconds+=result.seconds;
     }
-    result.epsilon_satisfied=all_epsilon_satisfied && not result.pruned;
+    result.epsilon_satisfied=all_epsilon_satisfied;
     return result;
 }
 
@@ -1115,8 +1103,8 @@ SmtSolver::_split_box(
     if(_configuration.interval_lookahead_split_enabled()) {
         auto selection=interval_lookahead_split_coordinate(
             domain,functions,
-            &result.interval_lookahead_function_evaluations,
-            &result.interval_lookahead_evaluation_seconds);
+            result.interval_lookahead_function_evaluations,
+            result.interval_lookahead_evaluation_seconds);
         result.children=domain.split(selection.first);
         result.interval_lookahead_guided=true;
         result.interval_lookahead_overrode_geometric=selection.second;
@@ -1134,8 +1122,8 @@ SmtSolver::_split_box(
         }
         selection=cached_sensitivity_split_coordinate(
             domain,active_literals,
-            &derivative_evaluations,
-            &derivative_evaluation_seconds);
+            derivative_evaluations,
+            derivative_evaluation_seconds);
     } else {
         selection=sensitivity_split_coordinate(
             domain,functions,
@@ -2062,6 +2050,15 @@ SizeType compiled_theory_derivative_count(
         count+=literal.derivatives.size();
     }
     return count;
+}
+
+SizeType interval_newton_subsystem_candidate_count(
+    SmtSolver const& solver,
+    RealSpace const& space,
+    List<SmtTheoryPrimitiveLiteral> const& literals)
+{
+    auto compiled=solver._compile_theory_literals(space,literals);
+    return interval_newton_subsystem_candidates(compiled,space.dimension()).size();
 }
 
 SearchOutcome SearchOutcome::exhausted()

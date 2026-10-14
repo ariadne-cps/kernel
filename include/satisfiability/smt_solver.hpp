@@ -414,6 +414,11 @@ SizeType compiled_theory_derivative_count(
     RealSpace const& space,
     List<SmtTheoryPrimitiveLiteral> const& literals);
 
+SizeType interval_newton_subsystem_candidate_count(
+    SmtSolver const& solver,
+    RealSpace const& space,
+    List<SmtTheoryPrimitiveLiteral> const& literals);
+
 struct SearchOutcome {
     std::optional<UpperBoxType> witness;
     std::optional<SizeType> backjump_level;
@@ -603,6 +608,9 @@ class SmtSolver {
         SmtSolver const&, RealSpace const&, UpperBoxType const&,
         List<SmtTheoryPrimitiveLiteral> const&);
     friend SizeType SmtSolverTestSupport::compiled_theory_derivative_count(
+        SmtSolver const&, RealSpace const&,
+        List<SmtTheoryPrimitiveLiteral> const&);
+    friend SizeType SmtSolverTestSupport::interval_newton_subsystem_candidate_count(
         SmtSolver const&, RealSpace const&,
         List<SmtTheoryPrimitiveLiteral> const&);
     friend SmtSolverTestSupport::DirectBoxProcessingObservation

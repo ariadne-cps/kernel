@@ -773,6 +773,52 @@ class TestSmtSolver {
             SmtSolverTestSupport::compiled_theory_derivative_count(
                 with_sensitivity,space,literals),
             space.dimension());
+
+        SmtSolver candidate_solver(SmtSolverConfiguration(
+            0.01_pr,
+            std::numeric_limits<SizeType>::max(),
+            std::numeric_limits<SizeType>::max(),
+            std::numeric_limits<SizeType>::max(),
+            false,false,false,false,false,false,false,false,true));
+
+        ARIADNE_TEST_EQUAL(
+            SmtSolverTestSupport::interval_newton_subsystem_candidate_count(
+                candidate_solver,RealSpace({}),List<SmtTheoryPrimitiveLiteral>()),
+            0u);
+
+        List<SmtTheoryPrimitiveLiteral> insufficient_equalities({
+            SmtTheoryPrimitiveLiteral(
+                RealExpression(x),SmtTheoryPrimitiveRelation::EQ_ZERO),
+            SmtTheoryPrimitiveLiteral(
+                RealExpression(y),SmtTheoryPrimitiveRelation::GEQ_ZERO),
+            SmtTheoryPrimitiveLiteral(
+                RealExpression(x)+RealExpression(y),
+                SmtTheoryPrimitiveRelation::GT_ZERO)
+        });
+        ARIADNE_TEST_EQUAL(
+            SmtSolverTestSupport::interval_newton_subsystem_candidate_count(
+                candidate_solver,space,insufficient_equalities),
+            0u);
+
+        List<SmtTheoryPrimitiveLiteral> many_equalities({
+            SmtTheoryPrimitiveLiteral(
+                RealExpression(x),SmtTheoryPrimitiveRelation::EQ_ZERO),
+            SmtTheoryPrimitiveLiteral(
+                RealExpression(y),SmtTheoryPrimitiveRelation::EQ_ZERO),
+            SmtTheoryPrimitiveLiteral(
+                RealExpression(x)+RealExpression(y),
+                SmtTheoryPrimitiveRelation::EQ_ZERO),
+            SmtTheoryPrimitiveLiteral(
+                RealExpression(x)-RealExpression(y),
+                SmtTheoryPrimitiveRelation::EQ_ZERO),
+            SmtTheoryPrimitiveLiteral(
+                2*RealExpression(x)+RealExpression(y),
+                SmtTheoryPrimitiveRelation::EQ_ZERO)
+        });
+        ARIADNE_TEST_EQUAL(
+            SmtSolverTestSupport::interval_newton_subsystem_candidate_count(
+                candidate_solver,space,many_equalities),
+            8u);
     }
 
     Void test_candidate_witness_outcome() {
@@ -1695,6 +1741,23 @@ class TestSmtSolver {
     Void test_solve() {
         auto x=ValidatedScalarMultivariateFunction::coordinates(1);
         SmtSolver solver(SmtSolverConfiguration(0.125_x));
+
+        {
+            std::cout << "[smt-preclassify] adaptive mode on validated constraints bypasses theory preclassification" << std::endl;
+            SmtSolver adaptive_constraint_solver(SmtSolverConfiguration(
+                0.125_x,
+                std::numeric_limits<SizeType>::max(),
+                std::numeric_limits<SizeType>::max(),
+                8u,
+                false,false,false,false,false,true,false,false,false,true,true));
+            ExactBoxType domain({ExactIntervalType(0,1)});
+            List<ValidatedConstraint> constraints({
+                ValidatedConstraint(ValidatedNumber(2),x[0],ValidatedNumber(2))
+            });
+            SmtResult result=adaptive_constraint_solver.solve(domain,constraints);
+            ARIADNE_TEST_ASSERT(result.is_unsat());
+            ARIADNE_TEST_EQUAL(result.statistics().preclassification_boxes,0u);
+        }
 
         {
             std::cout << "[smt-solve] linear UNSAT: x in [0,1], x=2" << std::endl;
@@ -3165,6 +3228,37 @@ class TestSmtSolver {
                 solve_result.statistics().interval_newton_infeasible,0u);
             ARIADNE_TEST_EQUAL(
                 solve_result.statistics().interval_newton_singular,0u);
+        }
+
+        {
+            std::cout << "[smt-newton] inconsistent Newton image proves infeasibility" << std::endl;
+            RealVariable x0("newton_infeasible_x");
+            RealExpression e0=x0;
+            RealSpace space({x0});
+            List<SmtTheoryPrimitiveLiteral> literals({
+                SmtTheoryPrimitiveLiteral(
+                    e0-2,SmtTheoryPrimitiveRelation::EQ_ZERO)
+            });
+            SmtResult solve_result=make_solver(16u).solve(
+                space,ExactBoxType({ExactIntervalType(0,1)}),literals);
+            ARIADNE_TEST_ASSERT(solve_result.is_unsat());
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().interval_newton_infeasible,1u);
+        }
+
+        {
+            std::cout << "[smt-newton] singular Newton subsystem falls back to contractors" << std::endl;
+            RealVariable x0("newton_singular_x");
+            RealExpression e0=x0;
+            RealSpace space({x0});
+            List<SmtTheoryPrimitiveLiteral> literals({
+                SmtTheoryPrimitiveLiteral(
+                    sqr(e0),SmtTheoryPrimitiveRelation::EQ_ZERO)
+            });
+            SmtResult solve_result=make_solver(16u).solve(
+                space,ExactBoxType({ExactIntervalType(-1,1)}),literals);
+            ARIADNE_TEST_ASSERT(
+                solve_result.statistics().interval_newton_singular>=1u);
         }
 
         {
