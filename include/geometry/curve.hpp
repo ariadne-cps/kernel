@@ -35,7 +35,7 @@
 #include "utility/stlio.hpp"
 #include "function/function.hpp"
 #include "geometry/box.decl.hpp"
-#include "io/graphics_interface.hpp"
+#include "drawing/graphics_interface.hpp"
 
 namespace Ariadne {
 

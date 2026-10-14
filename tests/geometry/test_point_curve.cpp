@@ -29,7 +29,7 @@
 #include "geometry/curve.hpp"
 #include "symbolic/space.hpp"
 #include "symbolic/assignment.hpp"
-#include "io/figure.hpp"
+#include "drawing/figure.hpp"
 
 #include "macro/testing.hpp"
 

@@ -36,7 +36,7 @@
 #include "geometry/function_set.hpp"
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
-#include "io/command_line_interface.hpp"
+#include "drawing/command_line_interface.hpp"
 
 #include "macro/testing.hpp"
 

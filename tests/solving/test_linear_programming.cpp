@@ -30,7 +30,7 @@
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
 #include "solving/linear_programming.hpp"
-#include "io/command_line_interface.hpp"
+#include "drawing/command_line_interface.hpp"
 
 using namespace std;
 using namespace Ariadne;

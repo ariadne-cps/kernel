@@ -31,7 +31,7 @@
 
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
-#include "io/graphics_interface.hpp"
+#include "drawing/graphics_interface.hpp"
 
 namespace Ariadne {
 

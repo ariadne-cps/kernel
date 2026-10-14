@@ -39,9 +39,9 @@
 #include "algebra/algebra.hpp"
 #include "algebra/expansion.inl.hpp"
 
-#include "io/graphics_interface.hpp"
-#include "io/graphics_manager.hpp"
-#include "io/drawer.hpp"
+#include "drawing/graphics_interface.hpp"
+#include "drawing/graphics_manager.hpp"
+#include "drawing/drawer.hpp"
 
 
 namespace Ariadne {

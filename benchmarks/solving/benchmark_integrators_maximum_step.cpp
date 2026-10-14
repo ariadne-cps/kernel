@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "io/command_line_interface.hpp"
+#include "drawing/command_line_interface.hpp"
 #include "logging/logging.hpp"
 #include "integrator_benchmark.hpp"
 

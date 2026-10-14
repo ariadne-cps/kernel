@@ -8,8 +8,8 @@ add_library(pyariadne-kernel-submodule-obj OBJECT
     function_bindings.cpp
     geometry_submodule.cpp
     geometry_bindings.cpp
-    io_submodule.cpp
-    io_bindings.cpp
+    drawing_submodule.cpp
+    drawing_bindings.cpp
     labelling_submodule.cpp
     solving_submodule.cpp
     solving_bindings.cpp

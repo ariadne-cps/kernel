@@ -34,7 +34,7 @@
 #include "function/formula.hpp"
 #include "solving/nonlinear_programming.hpp"
 #include "geometry/box.hpp"
-#include "io/command_line_interface.hpp"
+#include "drawing/command_line_interface.hpp"
 
 using namespace std;
 using namespace Ariadne;

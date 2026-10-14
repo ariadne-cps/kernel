@@ -1,10 +1,10 @@
 # Ariadne Kernel
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: GPL v3](https://img.shields.drawing/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Unix Status](https://github.com/ariadne-cps/kernel/actions/workflows/unix.yml/badge.svg)](https://github.com/ariadne-cps/kernel/actions/workflows/unix.yml)
 [![Windows Status](https://github.com/ariadne-cps/kernel/actions/workflows/win.yml/badge.svg)](https://github.com/ariadne-cps/kernel/actions/workflows/win.yml)
 [![Coverage Status](https://github.com/ariadne-cps/kernel/actions/workflows/coverage.yml/badge.svg)](https://github.com/ariadne-cps/kernel/actions/workflows/coverage.yml)
-[![codecov](https://codecov.io/gh/ariadne-cps/kernel/branch/main/graph/badge.svg)](https://codecov.io/gh/ariadne-cps/kernel)
+[![codecov](https://codecov.drawing/gh/ariadne-cps/kernel/branch/main/graph/badge.svg)](https://codecov.drawing/gh/ariadne-cps/kernel)
 
 Ariadne Kernel is the standalone C++20 kernel layer of Ariadne. It contains the Function, Geometry, IO, Symbolic and Solving modules and consumes the standalone Algebra and BDD repositories as direct dependencies.
 

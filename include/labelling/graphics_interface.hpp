@@ -1,7 +1,7 @@
 #ifndef ARIADNE_LABELLING_GRAPHICS_INTERFACE_HPP
 #define ARIADNE_LABELLING_GRAPHICS_INTERFACE_HPP
 
-#include "io/graphics_interface.hpp"
+#include "drawing/graphics_interface.hpp"
 
 namespace Ariadne {
 

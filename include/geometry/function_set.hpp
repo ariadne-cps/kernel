@@ -43,7 +43,7 @@
 #include "function/function.hpp"
 #include "function/function_model.hpp"
 #include "function/constraint.hpp"
-#include "io/graphics_interface.hpp"
+#include "drawing/graphics_interface.hpp"
 
 #include "geometry/box.hpp"
 

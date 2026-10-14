@@ -35,8 +35,8 @@
 #include "geometry/grid_paving.hpp"
 #include "geometry/affine_set.hpp"
 
-#include "io/graphics_interface.hpp"
-#include "io/geometry2d.hpp"
+#include "drawing/graphics_interface.hpp"
+#include "drawing/geometry2d.hpp"
 
 
 namespace Ariadne {

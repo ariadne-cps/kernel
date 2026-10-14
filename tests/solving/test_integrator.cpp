@@ -33,7 +33,7 @@
 #include "function/function.hpp"
 #include "function/taylor_function.hpp"
 #include "function/formula.hpp"
-#include "io/command_line_interface.hpp"
+#include "drawing/command_line_interface.hpp"
 
 #include "macro/testing.hpp"
 

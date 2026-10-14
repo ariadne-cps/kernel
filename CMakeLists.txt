@@ -51,7 +51,7 @@ add_subdirectory(src)
 foreach(target
     KERNEL_FUNCTION_SRC
     KERNEL_GEOMETRY_SRC
-    KERNEL_IO_SRC
+    KERNEL_DRAWING_SRC
     KERNEL_LABELLING_SRC
     KERNEL_SOLVING_SRC
     KERNEL_SYMBOLIC_SRC
@@ -64,7 +64,7 @@ ariadne_register_public_headers(
     DIRECTORIES
         "${PROJECT_SOURCE_DIR}/include/function"
         "${PROJECT_SOURCE_DIR}/include/geometry"
-        "${PROJECT_SOURCE_DIR}/include/io"
+        "${PROJECT_SOURCE_DIR}/include/drawing"
         "${PROJECT_SOURCE_DIR}/include/labelling"
         "${PROJECT_SOURCE_DIR}/include/solving"
         "${PROJECT_SOURCE_DIR}/include/symbolic"
@@ -76,7 +76,7 @@ setup_project_library(
     OBJECTS
         KERNEL_FUNCTION_SRC
         KERNEL_GEOMETRY_SRC
-        KERNEL_IO_SRC
+        KERNEL_DRAWING_SRC
         KERNEL_LABELLING_SRC
         KERNEL_SYMBOLIC_SRC
         KERNEL_SOLVING_SRC
@@ -90,7 +90,7 @@ setup_standalone_project_tests(
     MODULE_REPORTS
         function
         geometry
-        io
+        drawing
         labelling
         solving
         symbolic

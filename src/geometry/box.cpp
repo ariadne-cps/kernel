@@ -38,7 +38,7 @@
 
 #include "algebra/algebra.hpp"
 
-#include "io/geometry2d.hpp"
+#include "drawing/geometry2d.hpp"
 
 namespace Ariadne {
 

@@ -29,7 +29,7 @@
 #include "geometry/grid_paving.hpp"
 #include "function/function.hpp"
 #include "geometry/function_set.hpp"
-#include "io/figure.hpp"
+#include "drawing/figure.hpp"
 #include "logging/logging.hpp"
 
 #include "macro/testing.hpp"

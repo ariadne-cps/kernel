@@ -28,7 +28,7 @@
 #include "numeric_submodule.hpp"
 #include "interval-utilities.hpp"
 #include "geometry/geometry.hpp"
-#include "io/geometry2d.hpp"
+#include "drawing/geometry2d.hpp"
 #include "geometry/point.hpp"
 #include "geometry/curve.hpp"
 #include "geometry/box.hpp"

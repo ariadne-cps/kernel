@@ -28,8 +28,8 @@
 #include "geometry/affine_set.hpp"
 #include "geometry/function_set.hpp"
 #include "geometry/grid_paving.hpp"
-#include "io/figure.hpp"
-#include "io/geometry2d.hpp"
+#include "drawing/figure.hpp"
+#include "drawing/geometry2d.hpp"
 
 #include "macro/testing.hpp"
 

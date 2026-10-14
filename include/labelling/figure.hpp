@@ -1,7 +1,7 @@
 #ifndef ARIADNE_LABELLING_FIGURE_HPP
 #define ARIADNE_LABELLING_FIGURE_HPP
 
-#include "io/figure.hpp"
+#include "drawing/figure.hpp"
 #include "labelling/graphics_interface.hpp"
 #include "symbolic/variable.hpp"
 #include "symbolic/space.hpp"
