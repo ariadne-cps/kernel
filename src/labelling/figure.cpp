@@ -17,7 +17,6 @@ Bool has_axis_bounds(Variables2d const& vars, Map<RealVariable,ApproximateDouble
 }
 
 ApproximateBoxType coordinate_box(Variables2d const& vars, Map<RealVariable,ApproximateDoubleInterval> const& bounds) {
-    ARIADNE_ASSERT(has_axis_bounds(vars,bounds));
     return ApproximateBoxType({
         coordinate_interval(bounds[vars.x()]),
         coordinate_interval(bounds[vars.y()])
@@ -100,8 +99,9 @@ LabelledFigure::LabelledFigure(const Axes2d& axes)
 
 LabelledFigure::LabelledFigure(const Variables2d& vars, const VariablesBox<ApproximateIntervalType>& bbx)
     : _data(nullptr) {
-    ARIADNE_ASSERT_MSG(bbx.bounds().size()>=2,"The box must be at least two-dimensional.")
+    ARIADNE_PRECONDITION_MSG(bbx.bounds().size()>=2,"The box must be at least two-dimensional.")
     Map<RealVariable,ApproximateDoubleInterval> bounds=VariablesBox<ApproximateDoubleInterval>(bbx).bounds();
+    ARIADNE_PRECONDITION_MSG(has_axis_bounds(vars,bounds),"The box must contain bounds for both axis variables.")
     _data=new Data(vars,bounds);
 }
 
