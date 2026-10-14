@@ -1618,31 +1618,32 @@ struct SmtParallelTask {
             ++state->statistics.boxes_processed;
         }
 
-        SmtSolver::BoxProcessingResult processing=solver._process_box(box,conjunction);
-        {
-            std::lock_guard<std::mutex> lock(state->mutex);
-            solver._accumulate_box_processing_statistics(
-                state->statistics,processing);
-        }
-
-        if(processing.status==SmtSolverTestSupport::BoxProcessingStatus::PRUNED) {
-            return;
-        }
-        if(processing.status==SmtSolverTestSupport::BoxProcessingStatus::EPSILON_SAT) {
-            claim_parallel_witness(*state,*processing.witness);
-            return;
-        }
-        if(processing.status==SmtSolverTestSupport::BoxProcessingStatus::SPLIT) {
-            auto children=SmtSolverTestSupport::parallel_children_to_append(
-                state->found.load(),*processing.children);
-            for(auto const& child:children) {
-                access.append(child);
+        { SmtSolver::BoxProcessingResult processing=solver._process_box(box,conjunction);
+            {
+                std::lock_guard<std::mutex> lock(state->mutex);
+                solver._accumulate_box_processing_statistics(
+                    state->statistics,processing);
             }
-            return;
+
+            if(processing.status==SmtSolverTestSupport::BoxProcessingStatus::PRUNED) {
+                return;
+            }
+            if(processing.status==SmtSolverTestSupport::BoxProcessingStatus::EPSILON_SAT) {
+                claim_parallel_witness(*state,*processing.witness);
+                return;
+            }
+            if(processing.status==SmtSolverTestSupport::BoxProcessingStatus::SPLIT) {
+                auto children=SmtSolverTestSupport::parallel_children_to_append(
+                    state->found.load(),*processing.children);
+                for(auto const& child:children) {
+                    access.append(child);
+                }
+                return;
+            }
+            std::lock_guard<std::mutex> lock(state->mutex);
+            state->unknown_reason=SmtSolverTestSupport::combine_unknown_reasons(
+                state->unknown_reason,SmtUnknownReason::DP_RESOLUTION_EXHAUSTED);
         }
-        std::lock_guard<std::mutex> lock(state->mutex);
-        state->unknown_reason=SmtSolverTestSupport::combine_unknown_reasons(
-            state->unknown_reason,SmtUnknownReason::DP_RESOLUTION_EXHAUSTED);
     }
 };
 
