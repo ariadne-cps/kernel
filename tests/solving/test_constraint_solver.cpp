@@ -612,6 +612,28 @@ class TestConstraintSolver
             ARIADNE_TEST_ASSERT(
                 domain[0].lower_bound().raw()==domain[0].upper_bound().raw());
         }
+
+        {
+            std::cout << "[constraint-propagate] shaving can contract only the upper endpoint" << std::endl;
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            List<ValidatedConstraint> constraints({
+                ValidatedConstraint(
+                    ValidatedNumber(0.0_x),
+                    x[0],
+                    ValidatedNumber(0.5_x))
+            });
+            ConstraintPropagationStatistics statistics;
+            Bool empty=solver.propagate(
+                domain,constraints,statistics,true,false);
+            ARIADNE_TEST_ASSERT(not empty);
+            ARIADNE_TEST_ASSERT(
+                domain[0].lower_bound().raw()
+                ==UpperIntervalType(ExactIntervalType(0.0_x,1.0_x)).lower_bound().raw());
+            ARIADNE_TEST_ASSERT(
+                domain[0].upper_bound().raw()
+                <UpperIntervalType(ExactIntervalType(0.0_x,1.0_x)).upper_bound().raw());
+            ARIADNE_TEST_ASSERT(statistics.shaving_coordinate_effective>=1u);
+        }
     }
 
     Void test_precompiled_propagate() {
@@ -1116,6 +1138,64 @@ class TestConstraintSolver
             ARIADNE_TEST_ASSERT(statistics.shaving_adaptive_skipped>=1u);
             ARIADNE_TEST_ASSERT(not definitely(domain.is_empty()));
         }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] cached agenda records lower-only coordinate change" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            auto function=y[0];
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    function,
+                    ExactIntervalType(0.5_x,1.0_x),
+                    {},
+                    false,
+                    false,
+                    std::make_shared<ValidatedProcedure>(function)
+                }
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                not solver.propagate(
+                    domain,constraints,false,statistics,false,true));
+            ARIADNE_TEST_ASSERT(
+                domain[0].lower_bound().raw()
+                >UpperIntervalType(ExactIntervalType(0.0_x,1.0_x)).lower_bound().raw());
+            ARIADNE_TEST_ASSERT(
+                domain[0].upper_bound().raw()
+                ==UpperIntervalType(ExactIntervalType(0.0_x,1.0_x)).upper_bound().raw());
+            ARIADNE_TEST_EQUAL(statistics.hull_effective,1u);
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] cached contraction coalesces duplicate wakeups" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(2);
+            auto function=y[0]+y[1];
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    function,
+                    ExactIntervalType(0.0_x,0.0_x),
+                    {},
+                    false,
+                    false,
+                    std::make_shared<ValidatedProcedure>(function)
+                }
+            });
+            UpperBoxType domain=ExactBoxType({
+                {0.0_x,1.0_x},{0.0_x,1.0_x}
+            });
+            ConstraintPropagationStatistics statistics;
+            ARIADNE_TEST_ASSERT(
+                not solver.propagate(
+                    domain,constraints,false,statistics,false,true));
+            ARIADNE_TEST_SAME(
+                domain,
+                UpperBoxType(ExactBoxType({
+                    {0.0_x,0.0_x},{0.0_x,0.0_x}
+                })));
+            ARIADNE_TEST_ASSERT(statistics.hull_agenda_effective_calls>=1u);
+            ARIADNE_TEST_ASSERT(statistics.hull_agenda_pushes>=2u);
+        }
     }
 
     Void test_reduce_edge_cases() {
@@ -1157,6 +1237,20 @@ class TestConstraintSolver
         ARIADNE_TEST_ASSERT(
             not solver.reduce(stable_list_domain,stable_constraints));
         ARIADNE_TEST_ASSERT(not definitely(stable_list_domain.is_empty()));
+
+        std::cout << "[constraint-reduce] deprecated list repeats after strong contraction" << std::endl;
+        UpperBoxType contracting_list_domain=ExactBoxType({{0.0_x,1.0_x}});
+        List<ValidatedConstraint> contracting_constraints({
+            ValidatedConstraint(
+                ValidatedNumber(0.0_x),
+                x[0],
+                ValidatedNumber(0.0_x))
+        });
+        ARIADNE_TEST_ASSERT(
+            not solver.reduce(contracting_list_domain,contracting_constraints));
+        ARIADNE_TEST_ASSERT(
+            contracting_list_domain[0].lower_bound().raw()
+            ==contracting_list_domain[0].upper_bound().raw());
     }
 
     Void test_check_feasibility() {
