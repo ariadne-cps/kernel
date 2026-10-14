@@ -49,6 +49,17 @@ class TestDrawable final : public Drawable2dInterface {
     DimensionType _dimension;
 };
 
+class RecordingCanvas final : public NullCanvas {
+  public:
+    Void initialise(StringType x, StringType y, double, double, double, double) override {
+        x_label=x;
+        y_label=y;
+    }
+
+    StringType x_label;
+    StringType y_label;
+};
+
 class TestGraphics {
   public:
     void test() {
@@ -139,9 +150,11 @@ class TestGraphics {
 
     void test_graphics_properties() {
         GraphicsProperties p;
-        p.set_line_colour(0,0,1)
+        p.set_dot_radius(2.0)
+         .set_line_colour(0,0,1)
          .set_fill_opacity(0.5)
          .set_fill_colour(0,1,0);
+        ARIADNE_TEST_EQUALS(p.dot_radius,2.0)
         ARIADNE_TEST_PRINT(p)
     }
 
@@ -280,8 +293,11 @@ class TestGraphics {
         draw(figure,real_box);
         figure.draw(real_box);
 
-        NullCanvas canvas;
+        figure.set_axis_labels("horizontal","vertical");
+        RecordingCanvas canvas;
         figure._paint_all(canvas);
+        ARIADNE_TEST_EQUALS(canvas.x_label,StringType("horizontal"))
+        ARIADNE_TEST_EQUALS(canvas.y_label,StringType("vertical"))
     }
 
 void test_figure_edge_paths() {
