@@ -30,10 +30,20 @@
 #include "symbolic/space.hpp"
 #include "symbolic/assignment.hpp"
 #include "drawing/figure.hpp"
+#include "drawing/null_graphics.hpp"
 
 #include "macro/testing.hpp"
 
 using namespace Ariadne;
+
+class TestCurveCanvas : public NullCanvas {
+  public:
+    Void move_to(double, double) override { moved=true; }
+    Void line_to(double, double) override { lined=true; }
+
+    Bool moved=false;
+    Bool lined=false;
+};
 
 template<class X> class TestPoint {
     typedef LabelledPoint<X> PointType;
@@ -91,6 +101,16 @@ class TestCurve {
         ARIADNE_TEST_EQUALS(curve.size(),1);
         curve.insert(FloatDP(1.0_x,dp),pt);
         ARIADNE_TEST_EQUALS(curve.size(),2);
+
+        std::unique_ptr<CurveType> clone(curve.labelled_clone());
+        ARIADNE_TEST_EQUALS(clone->dimension(),curve.dimension());
+        ARIADNE_TEST_EQUAL(clone->space(),curve.space());
+        ARIADNE_TEST_EQUALS(clone->size(),curve.size());
+
+        TestCurveCanvas canvas;
+        curve.draw(canvas,Variables2d(x,y));
+        ARIADNE_TEST_ASSERT(canvas.moved);
+        ARIADNE_TEST_ASSERT(canvas.lined);
     }
 };
 
