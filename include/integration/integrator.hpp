@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/integrator.hpp
+ *            integration/integrator.hpp
  *
  *  Copyright  2006-20  Pieter Collins
  *
@@ -22,7 +22,7 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file solving/integrator.hpp
+/*! \file integration/integrator.hpp
  *  \brief Solver classes for differential equations.
  */
 
@@ -34,8 +34,8 @@
 #include <string>
 #include <limits>
 
-#include "solving/integrator_interface.hpp"
-#include "solving/bounder.hpp"
+#include "integration/integrator_interface.hpp"
+#include "integration/bounder.hpp"
 #include "function/function_interface.hpp"
 
 #include "numeric/declarations.hpp"

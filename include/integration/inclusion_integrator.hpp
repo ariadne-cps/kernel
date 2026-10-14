@@ -39,7 +39,7 @@
 #include "function/symbolic_function.hpp"
 #include "symbolic/expression_set.hpp"
 #include "logging/logging.hpp"
-#include "solving/integrator_interface.hpp"
+#include "integration/integrator_interface.hpp"
 
 
 namespace Ariadne {

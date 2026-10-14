@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/integrator.cpp
+ *            integration/integrator.cpp
  *
  *  Copyright  2006-20  Pieter Collins
  *
@@ -25,8 +25,8 @@
 #include "function/functional.hpp"
 #include <iomanip>
 
-#include "solving/integrator.hpp"
-#include "solving/bounder.hpp"
+#include "integration/integrator.hpp"
+#include "integration/bounder.hpp"
 
 #include "logging/logging.hpp"
 #include "utility/container.hpp"

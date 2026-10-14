@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/runge_kutta_integrator.cpp
+ *            integration/runge_kutta_integrator.cpp
  *
  *  Copyright  2010-20  Pieter Collins
  *
@@ -25,7 +25,7 @@
 #include "utility/standard.hpp"
 #include <iostream>
 
-#include "solving/runge_kutta_integrator.hpp"
+#include "integration/runge_kutta_integrator.hpp"
 
 #include "utility/container.hpp"
 #include "numeric/numeric.hpp"

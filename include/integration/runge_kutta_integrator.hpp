@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/runge_kutta_integrator.hpp
+ *            integration/runge_kutta_integrator.hpp
  *
  *  Copyright  2010-20  Pieter Collins
  *
@@ -32,7 +32,7 @@
 #include "algebra/declarations.hpp"
 #include "function/declarations.hpp"
 #include "geometry/declarations.hpp"
-#include "solving/integrator.hpp"
+#include "integration/integrator.hpp"
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "function/function.hpp"

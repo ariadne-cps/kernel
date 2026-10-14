@@ -26,7 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "solving/bounder.hpp"
+#include "integration/bounder.hpp"
 #include "function/formula.hpp"
 #include "function/taylor_model.hpp"
 

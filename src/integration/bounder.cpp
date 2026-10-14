@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/bounder.cpp
+ *            integration/bounder.cpp
  *
  *  Copyright  2018-20  Luca Geretti
  *

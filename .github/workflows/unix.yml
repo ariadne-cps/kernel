@@ -132,6 +132,24 @@ jobs:
         PYTHONPATH: ${{ runner.workspace }}/build/python
       run: python tutorial_drawing.py
 
+    - name: Prepare C++ Integration Tutorial
+      run: cmake -E copy_directory $GITHUB_WORKSPACE/tutorials/tutorial_integration ${{ runner.workspace }}/tutorial_integration
+
+    - name: Check C++ Integration Tutorial
+      working-directory: ${{ runner.workspace }}/tutorial_integration
+      run: |
+        cmake -S . -B build -DCMAKE_PREFIX_PATH=${{ runner.workspace }}/install -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        cmake --build build --parallel $($NPROC)
+        export LD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${LD_LIBRARY_PATH:-}
+        export DYLD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${DYLD_LIBRARY_PATH:-}
+        ./build/tutorial_integration
+
+    - name: Check Python Integration Tutorial
+      working-directory: ${{ github.workspace }}/python/tutorials
+      env:
+        PYTHONPATH: ${{ runner.workspace }}/build/python
+      run: python tutorial_integration.py
+
     - name: Prepare C++ Solving Tutorial
       run: cmake -E copy_directory $GITHUB_WORKSPACE/tutorials/tutorial_solving ${{ runner.workspace }}/tutorial_solving
 
