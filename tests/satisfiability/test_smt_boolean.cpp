@@ -23,7 +23,7 @@
  */
 
 #include "numeric/numeric.hpp"
-#include "solving/smt_boolean.hpp"
+#include "satisfiability/smt_boolean.hpp"
 #include "symbolic/variable.hpp"
 
 #include "macro/testing.hpp"

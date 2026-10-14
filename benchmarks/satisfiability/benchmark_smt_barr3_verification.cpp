@@ -20,7 +20,7 @@
 #include "function/affine_model.hpp"
 #include "symbolic/expression.hpp"
 #include "solving/linear_programming.hpp"
-#include "solving/smt_solver.hpp"
+#include "satisfiability/smt_solver.hpp"
 
 #include "smt_barr3_full64.hpp"
 

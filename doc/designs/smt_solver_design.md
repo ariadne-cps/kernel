@@ -794,7 +794,7 @@ expansion or SMT machinery.
 The exact published `2-64-64-1` model is now included as the fourth scaling
 point. Rather than embedding another very large C++ initializer, the six
 float32 tensors are stored internally as the raw little-endian tensor payload
-`test/solving/data/smt_barr3_full64.bin`. The payload is derived directly
+`benchmarks/satisfiability/data/smt_barr3_full64.bin`. The payload is derived directly
 from the verified checkpoint by concatenating `W1,b1,W2,b2,W3,b3` in that
 order. Its SHA-256 is
 `d1c6646a9354d44092e23de07495c40d2a6575f2235aaa5be0d68b1e9b61bdbf`

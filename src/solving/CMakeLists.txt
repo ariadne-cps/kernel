@@ -1,8 +1,5 @@
 add_library(KERNEL_SOLVING_SRC OBJECT
     solver.cpp
-    smt_solver.cpp
-    smt_boolean.cpp
-    smt_theory.cpp
     constraint_solver.cpp
     simplex_algorithm.cpp
     linear_programming.cpp

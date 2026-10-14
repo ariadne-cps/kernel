@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/smt_theory.cpp
+ *            satisfiability/smt_theory.cpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -14,7 +14,7 @@
  *  (at your option) any later version.
  */
 
-#include "solving/smt_theory.hpp"
+#include "satisfiability/smt_theory.hpp"
 
 #include "utility/exceptions.hpp"
 

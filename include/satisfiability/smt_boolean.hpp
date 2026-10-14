@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/smt_boolean.hpp
+ *            satisfiability/smt_boolean.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,7 +22,7 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file solving/smt_boolean.hpp
+/*! \file satisfiability/smt_boolean.hpp
  *  \brief Tseitin encoding of continuous predicates for SMT solving.
  */
 
@@ -33,7 +33,7 @@
 
 #include "numeric/numeric.hpp"
 #include "symbolic/expression.hpp"
-#include "solving/smt_theory.hpp"
+#include "satisfiability/smt_theory.hpp"
 
 namespace Ariadne {
 

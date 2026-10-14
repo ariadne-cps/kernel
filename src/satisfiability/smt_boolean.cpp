@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/smt_boolean.cpp
+ *            satisfiability/smt_boolean.cpp
  *
  *  Copyright  2026  Luca Geretti
  *
@@ -22,13 +22,13 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "solving/smt_boolean.hpp"
+#include "satisfiability/smt_boolean.hpp"
 
 #include <map>
 #include <optional>
 
 #include "utility/exceptions.hpp"
-#include "solving/smt_theory.hpp"
+#include "satisfiability/smt_theory.hpp"
 
 namespace Ariadne {
 

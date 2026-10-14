@@ -24,7 +24,7 @@
 
 #include <sstream>
 
-#include "solving/smt_solver.hpp"
+#include "satisfiability/smt_solver.hpp"
 #include "threading/thread_manager.hpp"
 
 #include "macro/testing.hpp"

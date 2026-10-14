@@ -12,6 +12,7 @@ add_library(pyariadne-kernel-submodule-obj OBJECT
     drawing_bindings.cpp
     integration_submodule.cpp
     labelling_submodule.cpp
+    satisfiability_submodule.cpp
     solving_submodule.cpp
     solving_bindings.cpp
     symbolic_submodule.cpp

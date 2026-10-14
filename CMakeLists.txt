@@ -54,6 +54,7 @@ foreach(target
     KERNEL_DRAWING_SRC
     KERNEL_INTEGRATION_SRC
     KERNEL_LABELLING_SRC
+    KERNEL_SATISFIABILITY_SRC
     KERNEL_SOLVING_SRC
     KERNEL_SYMBOLIC_SRC
 )
@@ -68,6 +69,7 @@ ariadne_register_public_headers(
         "${PROJECT_SOURCE_DIR}/include/drawing"
         "${PROJECT_SOURCE_DIR}/include/integration"
         "${PROJECT_SOURCE_DIR}/include/labelling"
+        "${PROJECT_SOURCE_DIR}/include/satisfiability"
         "${PROJECT_SOURCE_DIR}/include/solving"
         "${PROJECT_SOURCE_DIR}/include/symbolic"
     FILES "${PROJECT_SOURCE_DIR}/include/ariadne-kernel.hpp"
@@ -81,6 +83,7 @@ setup_project_library(
         KERNEL_DRAWING_SRC
         KERNEL_INTEGRATION_SRC
         KERNEL_LABELLING_SRC
+        KERNEL_SATISFIABILITY_SRC
         KERNEL_SYMBOLIC_SRC
         KERNEL_SOLVING_SRC
     LINK_LIBRARIES kernel
@@ -96,6 +99,7 @@ setup_standalone_project_tests(
         drawing
         integration
         labelling
+        satisfiability
         solving
         symbolic
     SOURCES

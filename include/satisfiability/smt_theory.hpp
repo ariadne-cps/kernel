@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/smt_theory.hpp
+ *            satisfiability/smt_theory.hpp
  *
  *  Copyright  2026  Luca Geretti
  *
