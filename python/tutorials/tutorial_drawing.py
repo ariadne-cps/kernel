@@ -159,30 +159,8 @@ def tutorial_drawing():
 
     manager.set_drawer(AffineDrawer(0))
 
-    section("Labelled figures")
-
-    x = RealVariable("x")
-    y = RealVariable("y")
-    axes = Axes2d(-2.0, x, 2.0, -1.5, y, 1.5)
-    labelled = LabelledFigure(axes)
-
-    labelled_region = LabelledRealBox(
-        RealSpace([x, y]),
-        real_box([
-            ("-1.25", "0.75"),
-            ("-0.75", "1.0"),
-        ]),
-    )
-
-    labelled.properties().set_fill_colour(0.30, 0.70, 0.40)
-    labelled.properties().set_fill_opacity(0.40)
-    labelled.properties().set_line_colour(0.10, 0.30, 0.15)
-    labelled.properties().set_line_width(2.0)
-    labelled.draw(labelled_region)
-    labelled.write("tutorial_drawing_labelled")
-
     section("What the Drawing layer is responsible for")
-    print("Figure / LabelledFigure: collect drawable objects and their per-layer style.")
+    print("Figure: collect drawable objects and their per-layer style.")
     print("Projection2d: choose which coordinates of a higher-dimensional object are displayed.")
     print("GraphicsProperties / Colour: control line, fill and opacity independently of geometry.")
     print("GraphicsManager: choose the rendering backend and nonlinear-set drawer globally.")

@@ -27,7 +27,6 @@
 
 #include "function/function.hpp"
 #include "drawing/figure.hpp"
-#include "labelling/figure.hpp"
 #include "drawing/cairo.hpp"
 #include "drawing/null_graphics.hpp"
 #include "drawing/drawer.hpp"
@@ -66,10 +65,6 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_figure_projection())
         ARIADNE_TEST_CALL(test_figure_public_api())
         ARIADNE_TEST_CALL(test_figure_edge_paths())
-        ARIADNE_TEST_CALL(test_construct_labelled_figure())
-        ARIADNE_TEST_CALL(test_labelled_figure_projection())
-        ARIADNE_TEST_CALL(test_labelled_figure_drawing())
-        ARIADNE_TEST_CALL(test_labelled_figure_invalid_axes())
         ARIADNE_TEST_CALL(test_projection_edge_paths())
         ARIADNE_TEST_CALL(test_default_drawer())
     }
@@ -200,15 +195,6 @@ class TestGraphics {
                << direct_fill_colour
                << animated_value;
 
-        RealVariable x("x"), y("y");
-        LabelledFigure labelled(Axes2d({0<=x<=1,0<=y<=1}));
-        labelled << line_style_value
-                 << line_width_value
-                 << line_colour_value
-                 << fill_style_value
-                 << fill_opacity_value
-                 << direct_fill_colour
-                 << animated_value;
     }
 
     void test_graphics_interface() {
@@ -365,80 +351,7 @@ class TestGraphics {
         ARIADNE_TEST_FAIL(mismatched_shape_figure._paint_all(canvas))
     }
 
-    void test_labelled_figure_invalid_axes() {
-        RealVariable empty(""), x("x"), y("y");
-        NullCanvas canvas;
-
-        LabelledFigure empty_x(Axes2d(-1.0,empty,1.0,-1.0,y,1.0));
-        ARIADNE_TEST_FAIL(empty_x._paint_all(canvas))
-
-        LabelledFigure empty_y(Axes2d(-1.0,x,1.0,-1.0,empty,1.0));
-        ARIADNE_TEST_FAIL(empty_y._paint_all(canvas))
-    }
-
-    void test_labelled_figure_drawing() {
-        RealVariable x("x"), y("y");
-        Axes2d axes(-2.0,x,2.0,-1.5,y,1.5);
-        LabelledFigure figure(axes);
-
-        LabelledSet<RealBox> labelled_region(
-            RealSpace({x,y}),
-            RealBox({{-1.25_dec,0.75_dec},{-0.75_dec,1.00_dec}})
-        );
-
-        figure.properties()
-              .set_line_style(false)
-              .set_fill_style(false)
-              .set_dot_radius(2.0);
-
-        LabelledFigure const& const_figure=figure;
-        ARIADNE_TEST_EQUALS(const_figure.properties().line_style,false)
-
-        figure.draw(LabelledDrawableWrapper<RealBox>(labelled_region));
-        draw(figure,LabelledDrawableWrapper<RealBox>(labelled_region));
-        figure << labelled_region;
-        figure.set_animated(true);
-
-        NullCanvas canvas;
-        figure._paint_all(canvas);
-
-        unsigned int const old_verbosity = Logger::instance().configuration().verbosity();
-        Logger::instance().configuration().set_verbosity(0u);
-        figure.write("test_graphics-labelled");
-
-        Logger::instance().configuration().set_verbosity(2u);
-        figure.write("test_graphics-labelled-sized",64u,64u);
-
-        figure.clear();
-        figure.write("test_graphics-labelled-empty",32u,32u);
-        Logger::instance().configuration().set_verbosity(old_verbosity);
-    }
-
-    void test_construct_labelled_figure() {
-        RealVariable x("x"), y("y");
-        GraphicsBoundingBoxType bx1d({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)}});
-        GraphicsBoundingBoxType bx2d({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)},
-                                      {FloatDPApproximation(-1.0,dp),FloatDPApproximation(0.0,dp)}});
-        ARIADNE_TEST_FAIL(LabelledFigure(Variables2d({x,y}),VariablesBox<ApproximateIntervalType>(RealSpace({x}),bx1d)))
-        ARIADNE_TEST_FAIL(LabelledFigure(Variables2d({x,RealVariable("z")}),VariablesBox<ApproximateIntervalType>(RealSpace({x,y}),bx2d)))
-        ARIADNE_TEST_EXECUTE(LabelledFigure(Variables2d({x,y}),VariablesBox<ApproximateIntervalType>(RealSpace({x,y}),bx2d)))
-        LabelledFigure f(Variables2d({x,y}),VariablesBox<ApproximateIntervalType>(RealSpace({x,y}),bx2d));
-        auto const& p = f.properties();
-        ARIADNE_TEST_PRINT(p)
-    }
-
-    void test_labelled_figure_projection() {
-        RealVariable x("x"), y("y"), z("z");
-        LabelledFigure f(Axes2d({0<=x<=1,-1<=y<=2}));
-        ARIADNE_TEST_EXECUTE(f.set_axes(Axes2d({0<=z<=1,-1<=y<=2})))
-        ARIADNE_TEST_EXECUTE(f.set_bounds(x,ApproximateDoubleInterval(1.0,2.0)))
-        ARIADNE_TEST_EXECUTE(f.set_bounds({{x,ApproximateDoubleInterval(1.0,2.0)},{y,ApproximateDoubleInterval(0.0,1.0)}}))
-        ARIADNE_TEST_EXECUTE(f.set_axes(Axes2d({0<=x<=1,-1<=y<=2})))
-        ARIADNE_TEST_EXECUTE(f.set_bounds({{x,ApproximateDoubleInterval(1.0,2.0)}}))
-        ARIADNE_TEST_EXECUTE(f.set_bounding_box(VariablesBox<ApproximateIntervalType>(RealSpace({x}),GraphicsBoundingBoxType({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)}}))))
-    }
-
-    void test_default_drawer()
+void test_default_drawer()
     {
         ExactBoxType bx1(2); bx1[0]=ExactIntervalType(-0.2_pr,0.2_pr); bx1[1]=ExactIntervalType(-0.1_pr,0.10_pr);
         ExactBoxType bx2(2); bx2[0]=ExactIntervalType(0.1_pr,0.3_pr); bx2[1]=ExactIntervalType(0.05_pr,0.15_pr);

@@ -166,36 +166,9 @@ int main() {
          blue, region_a,
          orange, region_b);
 
-    section("Labelled figures");
-
-    // LabelledFigure names axes with symbolic variables instead of referring
-    // to them only by coordinate index.  LabelledSet associates a Euclidean
-    // set with the RealSpace that gives meaning to its coordinates.
-    RealVariable x("x");
-    RealVariable y("y");
-    Axes2d axes(-2.0, x, 2.0, -1.5, y, 1.5);
-    LabelledFigure labelled(axes);
-
-    LabelledSet<RealBox> labelled_region(
-        RealSpace({x, y}),
-        RealBox({
-            {-1.25_dec, 0.75_dec},
-            {-0.75_dec, 1.00_dec}
-        })
-    );
-
-    labelled.properties()
-        .set_fill_colour(0.30, 0.70, 0.40)
-        .set_fill_opacity(0.40)
-        .set_line_colour(0.10, 0.30, 0.15)
-        .set_line_width(2.0);
-
-    labelled << labelled_region;
-    labelled.write("tutorial_drawing_labelled");
-
     section("What the Drawing layer is responsible for");
     cout
-        << "Figure / LabelledFigure: collect drawable objects and their per-layer style.\n"
+        << "Figure: collect drawable objects and their per-layer style.\n"
         << "Projection2d: choose which coordinates of a higher-dimensional object are displayed.\n"
         << "GraphicsProperties / Colour: control line, fill and opacity independently of geometry.\n"
         << "GraphicsManager: choose the rendering backend and nonlinear-set drawer globally.\n"

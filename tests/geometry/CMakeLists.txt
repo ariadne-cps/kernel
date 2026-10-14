@@ -2,7 +2,6 @@ set(UNIT_TESTS
     test_affine_sets
     test_binary_tree
     test_box
-    test_point_curve
     test_constrained_image_set
     test_grid_paving
     test_paving
