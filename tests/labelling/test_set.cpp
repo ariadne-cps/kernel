@@ -42,7 +42,7 @@ class TestLabelledSet {
         RealVariablesBox box(RealSpace({x,y}),RealBox({{0.1_dec,0.5_dec},{-2.3_dec,1}}));
         LabelledSet<RealBox> labelled(box);
         ARIADNE_TEST_EQUALS(labelled.dimension(),2);
-        ARIADNE_TEST_EQUAL(labelled.euclidean_set()[labelled.space().index(x)],box[x]);
+        ARIADNE_TEST_SAME(labelled.euclidean_set()[labelled.space().index(x)],box[x]);
     }
 };
 
