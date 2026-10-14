@@ -704,6 +704,113 @@ class TestConstraintSolver
             ARIADNE_TEST_EQUAL(statistics.monotone_rounds,1u);
             ARIADNE_TEST_EQUAL(statistics.monotone_effective,0u);
         }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] cached agenda reaches sparse-chain fixpoint" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(2);
+            auto link=y[1]-y[0];
+            auto root=y[0];
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    link,
+                    ExactIntervalType(0.0_x,0.0_x),
+                    {},
+                    false,
+                    false,
+                    std::make_shared<ValidatedProcedure>(link)
+                },
+                {
+                    root,
+                    ExactIntervalType(0.0_x,0.0_x),
+                    {},
+                    false,
+                    false,
+                    std::make_shared<ValidatedProcedure>(root)
+                }
+            });
+            UpperBoxType domain=ExactBoxType({
+                {0.0_x,1.0_x},{0.0_x,1.0_x}
+            });
+            ConstraintPropagationStatistics statistics;
+            Bool empty=solver.propagate(
+                domain,constraints,false,statistics,false,true);
+            ARIADNE_TEST_ASSERT(not empty);
+            ARIADNE_TEST_SAME(
+                domain,
+                UpperBoxType(ExactBoxType({
+                    {0.0_x,0.0_x},{0.0_x,0.0_x}
+                })));
+            ARIADNE_TEST_EQUAL(statistics.hull_procedure_builds,0u);
+            ARIADNE_TEST_EQUAL(statistics.hull_rounds,1u);
+            ARIADNE_TEST_ASSERT(
+                statistics.hull_agenda_pushes>constraints.size());
+            ARIADNE_TEST_EQUAL(
+                statistics.hull_agenda_pops,statistics.hull_agenda_pushes);
+            ARIADNE_TEST_ASSERT(statistics.hull_agenda_effective_calls>=2u);
+            ARIADNE_TEST_EQUAL(statistics.hull_effective,1u);
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] one hull sweep uses cached procedures" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(2);
+            auto link=y[1]-y[0];
+            auto root=y[0];
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    link,
+                    ExactIntervalType(0.0_x,0.0_x),
+                    {},
+                    false,
+                    false,
+                    std::make_shared<ValidatedProcedure>(link)
+                },
+                {
+                    root,
+                    ExactIntervalType(0.0_x,0.0_x),
+                    {},
+                    false,
+                    false,
+                    std::make_shared<ValidatedProcedure>(root)
+                }
+            });
+            UpperBoxType domain=ExactBoxType({
+                {0.0_x,1.0_x},{0.0_x,1.0_x}
+            });
+            ConstraintPropagationStatistics statistics;
+            Bool empty=solver.propagate_hull_once(
+                domain,constraints,statistics);
+            ARIADNE_TEST_ASSERT(not empty);
+            ARIADNE_TEST_EQUAL(statistics.hull_rounds,1u);
+            ARIADNE_TEST_EQUAL(statistics.hull_procedure_builds,0u);
+            ARIADNE_TEST_ASSERT(
+                domain[0].lower_bound().raw()==domain[0].upper_bound().raw());
+            ARIADNE_TEST_ASSERT(
+                domain[1].width().raw()
+                ==UpperIntervalType(
+                    ExactIntervalType(0.0_x,1.0_x)).width().raw());
+        }
+
+        {
+            std::cout << "[constraint-propagate-precompiled] uncached hull-only propagation falls back to full scan" << std::endl;
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            std::vector<ConstraintPropagationConstraint> constraints({
+                {
+                    y[0],
+                    ExactIntervalType(0.0_x,0.0_x),
+                    {},
+                    false,
+                    false
+                }
+            });
+            UpperBoxType domain=ExactBoxType({{0.0_x,1.0_x}});
+            ConstraintPropagationStatistics statistics;
+            Bool empty=solver.propagate(
+                domain,constraints,false,statistics,false,true);
+            ARIADNE_TEST_ASSERT(not empty);
+            ARIADNE_TEST_ASSERT(statistics.hull_procedure_builds>=1u);
+            ARIADNE_TEST_ASSERT(
+                domain[0].lower_bound().raw()==domain[0].upper_bound().raw());
+        }
     }
 
     Void test_reduce_edge_cases() {
