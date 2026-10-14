@@ -722,7 +722,7 @@ SmtSolver::_compile_theory_literals(RealSpace const& space,
         if(is_constant(expression,Real(0))) {
             continue;
         }
-        ValidatedScalarMultivariateFunction function(space,expression);
+        ValidatedScalarMultivariateFunction function(make_function(space,expression));
         std::vector<std::optional<ValidatedScalarMultivariateFunction>> derivatives;
         if(_configuration.monotone_reduction_enabled()
            || _configuration.sensitivity_split_enabled()) {
@@ -2249,7 +2249,7 @@ TheoryAtomTruth classify_theory_atom(
 {
     SmtTheoryLiteral literal=make_smt_theory_literal(atom);
     RealExpression difference=simplify(literal.lhs()-literal.rhs());
-    ValidatedScalarMultivariateFunction function(space,difference);
+    ValidatedScalarMultivariateFunction function(make_function(space,difference));
     UpperIntervalType image=apply(function,UpperBoxType(domain));
     return classify_theory_relation(literal.relation(),image);
 
@@ -2286,7 +2286,7 @@ Bool epsilon_theory_literal_infeasible(
         Bool alternative_infeasible=false;
         for(auto const& primitive:alternative) {
             RealExpression expression=simplify(primitive.expression());
-            ValidatedScalarMultivariateFunction function(space,expression);
+            ValidatedScalarMultivariateFunction function(make_function(space,expression));
             UpperIntervalType image=apply(function,UpperBoxType(domain));
 
             Bool primitive_infeasible=epsilon_primitive_image_infeasible(

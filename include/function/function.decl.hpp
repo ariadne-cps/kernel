@@ -38,14 +38,6 @@ namespace Ariadne {
 //! \ingroup LinearAlgebraSubModule
 //! \brief A scalar real number. Defined as a synomym for Real.
 using RealScalar=Scalar<Real>;
-// Expression declarations
-template<class T> class Variable;
-template<class T> class Space;
-template<class T> class Expression;
-using RealVariable = Variable<Real>;
-using RealSpace = Space<Real>;
-using RealExpression = Expression<Real>;
-
 // Domain declarations
 typedef Interval<FloatDP> IntervalDomainType;
 typedef Box<Interval<FloatDP>> BoxDomainType;

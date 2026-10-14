@@ -101,10 +101,6 @@ template<class P> OutputStream& operator<<(OutputStream& os, ScalarMultivariateF
     } return os << "]";
 }
 
-template<class P> FunctionExpression<P,RealVector(RealVector)> FunctionFacade<P,RealVector(RealVector)>::operator() (Vector<RealVariable> const& vars) const {
-    return FunctionExpression<P,RealVector(RealVector)>(static_cast<Function<P,RealVector(RealVector)>const&>(*this),vars);
-}
-
 template<class P> ScalarMultivariateFunctionExpression<P> evaluate(ScalarMultivariateFunction<P> const& f, Vector<RealVariable> const& vars) {
     return ScalarMultivariateFunctionExpression<P>(f,vars);
 }

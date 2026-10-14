@@ -47,10 +47,6 @@
 #include "function/procedure.hpp"
 #include "function/function.hpp"
 #include "function/function_mixin.hpp"
-#include "symbolic/expression.hpp"
-#include "symbolic/space.hpp"
-#include "symbolic/assignment.hpp"
-#include "symbolic/function_expression.hpp"
 #include "solving/constraint_solver.hpp"
 
 #include "function/function_mixin.tpl.hpp"
@@ -266,8 +262,6 @@ template<class P, class SIG> Void export_function(pybind11::module& module) {
         function_class.def(pybind11::init<ArgumentSizeType>());
         function_class.def(pybind11::init<DomainType>());
     }
-
-    function_class.def(pybind11::init<typename SignatureTraits<SIG>::ArgumentSpaceType, typename SignatureTraits<SIG>::template Result<RealExpression>>());
 
     if constexpr (Same<RES,RealVector>) {
         // NOTE: This must go *after* the conversion constructor
@@ -499,10 +493,6 @@ Void function_submodule(pybind11::module& module) {
     export_procedures(module);
 
     template_<Function> function_template(module,python_template_name<Function>().c_str());
-    function_template.def_new([](RealVariable var, Scalar<RealExpression> e){return EffectiveScalarUnivariateFunction(var,e);});
-    function_template.def_new([](RealVariable var, Vector<RealExpression> e){return EffectiveVectorUnivariateFunction(var,e);});
-    function_template.def_new([](RealSpace spc, Scalar<RealExpression> e){return EffectiveScalarMultivariateFunction(spc,e);});
-    function_template.def_new([](RealSpace spc, Vector<RealExpression> e){return EffectiveVectorMultivariateFunction(spc,e);});
 
     function_template.def_new([](pybind11::object pyf){return univariate_function_from_python(pyf);});
     function_template.def_new([](SizeType as, pybind11::object pyf){return multivariate_function_from_python(as,pyf);});

@@ -44,8 +44,6 @@
 
 #include "function/symbolic_function.hpp"
 
-#include "symbolic/expression.hpp"
-
 
 namespace Ariadne {
 
@@ -119,9 +117,6 @@ template<class P, class SIG> Function<P,SIG>::Function(List<ScalarFunction<P,ARG
 
 template<class P, class SIG> Function<P,SIG>::Function(DomainType dom, Result<Formula<Y>>const& e)
     : Function(make_formula_function<P>(dom,e)) { }
-
-template<class P, class SIG> Function<P,SIG>::Function(typename SignatureTraits<SIG>::ArgumentSpaceType const& spc, Result<RealExpression> const& e)
-    : Function(make_function(spc,e)) { }
 
 template<class P, class SIG> struct MakeVectorFunction;
 template<class P, class... ARGS> struct MakeVectorFunction<P,Real(ARGS...)> {
@@ -323,14 +318,7 @@ template class FunctionConstructors<ApproximateTag>;
 template class FunctionConstructors<ValidatedTag>;
 template class FunctionConstructors<EffectiveTag>;
 
-//------------------------ Converting to and from Expression classes to Function classes via Formula -----------------------------------//
-
-template<class X> class Expression;
-template<class X> class Variable;
-template<class X> class Space;
-
-SizeType dimension(const Space<Real>& spc);
-
+//------------------------ Formula-function helpers -----------------------------------//
 
 inline EffectiveScalarUnivariateFunction make_formula_function(SizeOne, const Formula<EffectiveNumber>& fm) {
     return EffectiveScalarUnivariateFunction(RealDomain(),fm); }
@@ -340,15 +328,6 @@ inline EffectiveScalarMultivariateFunction make_formula_function(SizeType as, co
     return EffectiveScalarMultivariateFunction(EuclideanDomain(as),fm); }
 inline EffectiveVectorMultivariateFunction make_formula_function(SizeType as, const Vector<Formula<EffectiveNumber>>& fm) {
     return EffectiveVectorMultivariateFunction(EuclideanDomain(as),fm); }
-
-EffectiveScalarUnivariateFunction make_function(const Variable<Real>& var, const Expression<Real>& expr) {
-    return make_formula_function(SizeOne(),make_formula(expr,var)); }
-EffectiveVectorUnivariateFunction make_function(const Variable<Real>& var, const Vector<Expression<Real>>& expr) {
-    return make_formula_function(SizeOne(),make_formula(expr,var)); }
-EffectiveScalarMultivariateFunction make_function(const Space<Real>& spc, const Expression<Real>& expr) {
-    return make_formula_function(dimension(spc),make_formula(expr,spc)); }
-EffectiveVectorMultivariateFunction make_function(const Space<Real>& spc, const Vector<Expression<Real>>& expr) {
-    return make_formula_function(dimension(spc),make_formula(expr,spc)); }
 
 template<class P, class R, class T, class... AS> Function<P,R(AS...)> make_composed_function(const Function<P,R(T)>& f, const Function<P,T(AS...)>& g) {
     ARIADNE_ASSERT(f.argument_size()==g.result_size());

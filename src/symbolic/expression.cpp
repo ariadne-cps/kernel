@@ -28,6 +28,7 @@
 
 #include "function/formula.hpp"
 #include "function/formula.tpl.hpp"
+#include "function/function.hpp"
 
 #include "symbolic/constant.hpp"
 #include "symbolic/variable.hpp"
@@ -650,6 +651,22 @@ Formula<EffectiveNumber> make_formula(const Expression<Real>& out, const List<As
 Vector<Formula<EffectiveNumber>> make_formula(const Vector<Expression<Real>>& out, const List<Assignment<Variable<Real>,Expression<Real>>>& aux, const Space<Real> spc)
 {
     return make_formula(substitute(out,aux),spc);
+}
+
+EffectiveScalarUnivariateFunction make_function(const Variable<Real>& var, const Expression<Real>& expr) {
+    return EffectiveScalarUnivariateFunction(RealDomain(),make_formula(expr,var));
+}
+
+EffectiveVectorUnivariateFunction make_function(const Variable<Real>& var, const Vector<Expression<Real>>& expr) {
+    return EffectiveVectorUnivariateFunction(RealDomain(),make_formula(expr,var));
+}
+
+EffectiveScalarMultivariateFunction make_function(const Space<Real>& spc, const Expression<Real>& expr) {
+    return EffectiveScalarMultivariateFunction(EuclideanDomain(dimension(spc)),make_formula(expr,spc));
+}
+
+EffectiveVectorMultivariateFunction make_function(const Space<Real>& spc, const Vector<Expression<Real>>& expr) {
+    return EffectiveVectorMultivariateFunction(EuclideanDomain(dimension(spc)),make_formula(expr,spc));
 }
 
 
