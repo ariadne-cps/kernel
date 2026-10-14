@@ -395,8 +395,12 @@ class TestGraphics {
         ARIADNE_TEST_EQUALS(const_figure.properties().line_style,false)
 
         figure.draw(LabelledDrawableWrapper<RealBox>(labelled_region));
+        draw(figure,LabelledDrawableWrapper<RealBox>(labelled_region));
         figure << labelled_region;
         figure.set_animated(true);
+
+        NullCanvas canvas;
+        figure._paint_all(canvas);
 
         unsigned int const old_verbosity = Logger::instance().configuration().verbosity();
         Logger::instance().configuration().set_verbosity(0u);
