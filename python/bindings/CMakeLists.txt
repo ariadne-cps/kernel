@@ -14,6 +14,9 @@ add_library(pyariadne-kernel-submodule-obj OBJECT
     solving_bindings.cpp
     symbolic_submodule.cpp
 )
+
+add_subdirectory(labelling)
+
 target_include_directories(pyariadne-kernel-submodule-obj PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${PYTHON_COMMON_SOURCE_DIR}/include"
