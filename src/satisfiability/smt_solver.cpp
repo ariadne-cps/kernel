@@ -285,7 +285,7 @@ Pair<SizeType,Bool> interval_lookahead_split_coordinate(
         }
     }
 
-    return {selected_coordinate,selected && selected_coordinate!=geometric};
+    return {selected_coordinate,selected_coordinate!=geometric};
 }
 
 UpperBoxType singleton_box(
@@ -429,6 +429,42 @@ std::vector<std::vector<SizeType>> interval_newton_subsystem_candidates(
     }
 
     return result;
+}
+
+Bool interval_newton_eligible(
+    Bool enabled,
+    std::vector<ConstraintPropagationConstraint> const& literals,
+    SizeType dimension)
+{
+    if(not enabled) {
+        return false;
+    }
+    return not interval_newton_subsystem_candidates(literals,dimension).empty();
+}
+
+Bool contractor_enabled(
+    Bool hull,
+    Bool shaving,
+    Bool monotone,
+    Bool interval_newton)
+{
+    return static_cast<unsigned>(hull)
+        | static_cast<unsigned>(shaving)
+        | static_cast<unsigned>(monotone)
+        | static_cast<unsigned>(interval_newton);
+}
+
+SmtPreclassificationOutcome preclassification_outcome(
+    Bool pruned,
+    Bool epsilon_satisfied)
+{
+    if(pruned) {
+        return SmtPreclassificationOutcome::PRUNED;
+    }
+    if(epsilon_satisfied) {
+        return SmtPreclassificationOutcome::EPSILON_SAT;
+    }
+    return SmtPreclassificationOutcome::UNRESOLVED;
 }
 
 class AdaptivePreclassificationScheduler {
@@ -785,119 +821,103 @@ Bool SmtSolver::_original_reduce(UpperBoxType& domain,
                 literals,domain.dimension())
             : std::vector<std::vector<SizeType>>();
 
-    std::optional<std::vector<SizeType>> ineffective_newton_subsystem;
-    for(auto const& newton_subsystem:newton_candidates) {
-        ++statistics.interval_newton_attempts;
-        auto const newton_start=std::chrono::steady_clock::now();
-        try {
-            ValidatedVectorMultivariateFunction function(
-                domain.dimension(),
-                literals[newton_subsystem[0u]].function.domain());
-            for(SizeType i=0u;i!=newton_subsystem.size();++i) {
-                function[i]=literals[newton_subsystem[i]].function;
-            }
+    enum class IntervalNewtonOutcome {
+        INFEASIBLE,
+        EFFECTIVE,
+        INEFFECTIVE,
+        SINGULAR
+    };
 
-            Vector<SolverInterface::ValidatedNumericType> current=
-                cast_singleton(cast_exact_box(domain));
-            IntervalNewtonSolver newton_solver(1e-12,1u);
-            Vector<SolverInterface::ValidatedNumericType> image=
-                newton_solver.step(function,current);
+    auto interval_newton_attempt=
+        [&](std::vector<SizeType> const& newton_subsystem) {
+            ++statistics.interval_newton_attempts;
+            auto const newton_start=std::chrono::steady_clock::now();
+            try {
+                ValidatedVectorMultivariateFunction function(
+                    domain.dimension(),
+                    literals[newton_subsystem[0u]].function.domain());
+                for(SizeType i=0u;i!=newton_subsystem.size();++i) {
+                    function[i]=literals[newton_subsystem[i]].function;
+                }
 
-            if(not consistent(image,current)) {
-                ++statistics.interval_newton_infeasible;
+                Vector<SolverInterface::ValidatedNumericType> current=
+                    cast_singleton(cast_exact_box(domain));
+                IntervalNewtonSolver newton_solver(1e-12,1u);
+                Vector<SolverInterface::ValidatedNumericType> image=
+                    newton_solver.step(function,current);
+
+                if(not consistent(image,current)) {
+                    ++statistics.interval_newton_infeasible;
+                    statistics.interval_newton_seconds+=
+                        elapsed_seconds(newton_start);
+                    return IntervalNewtonOutcome::INFEASIBLE;
+                }
+
+                Bool effective=false;
+                for(SizeType i=0u;i!=domain.dimension();++i) {
+                    auto contracted=refinement(image[i],current[i]);
+                    UpperIntervalType next(
+                        contracted.lower(),contracted.upper());
+                    Bool const same_lower=
+                        next.lower_bound().raw()==domain[i].lower_bound().raw();
+                    Bool const same_upper=
+                        next.upper_bound().raw()==domain[i].upper_bound().raw();
+                    Bool const same=
+                        static_cast<unsigned>(same_lower)
+                        & static_cast<unsigned>(same_upper);
+                    if(not same) {
+                        effective=true;
+                    }
+                    domain[i]=next;
+                }
                 statistics.interval_newton_seconds+=
                     elapsed_seconds(newton_start);
-                accumulate_propagation_statistics();
-                return true;
-            }
-
-            Bool effective=false;
-            for(SizeType i=0u;i!=domain.dimension();++i) {
-                auto contracted=refinement(image[i],current[i]);
-                UpperIntervalType next(
-                    contracted.lower(),contracted.upper());
-                Bool const same_lower=
-                    next.lower_bound().raw()==domain[i].lower_bound().raw();
-                Bool const same_upper=
-                    next.upper_bound().raw()==domain[i].upper_bound().raw();
-                if(not (same_lower && same_upper)) {
-                    effective=true;
+                if(effective) {
+                    ++statistics.interval_newton_effective;
+                    return IntervalNewtonOutcome::EFFECTIVE;
                 }
-                domain[i]=next;
+                return IntervalNewtonOutcome::INEFFECTIVE;
             }
-            if(effective) {
-                ++statistics.interval_newton_effective;
-            } else {
-                ineffective_newton_subsystem=newton_subsystem;
+            catch(const SingularMatrixException&) {
+                ++statistics.interval_newton_singular;
+                statistics.interval_newton_seconds+=
+                    elapsed_seconds(newton_start);
+                return IntervalNewtonOutcome::SINGULAR;
             }
-            statistics.interval_newton_seconds+=
-                elapsed_seconds(newton_start);
-            break;
+        };
+
+    std::optional<std::vector<SizeType>> ineffective_newton_subsystem;
+    for(auto const& newton_subsystem:newton_candidates) {
+        IntervalNewtonOutcome const outcome=
+            interval_newton_attempt(newton_subsystem);
+        if(outcome==IntervalNewtonOutcome::INFEASIBLE) {
+            accumulate_propagation_statistics();
+            return true;
         }
-        catch(const SingularMatrixException&) {
-            ++statistics.interval_newton_singular;
-            statistics.interval_newton_seconds+=
-                elapsed_seconds(newton_start);
+        if(outcome==IntervalNewtonOutcome::SINGULAR) {
+            continue;
         }
+        if(outcome==IntervalNewtonOutcome::INEFFECTIVE) {
+            ineffective_newton_subsystem=newton_subsystem;
+        }
+        break;
     }
 
-    if(ineffective_newton_subsystem.has_value()
-       && _configuration.hull_reduction_enabled()) {
+    Bool const stage_newton_retry=
+        static_cast<unsigned>(ineffective_newton_subsystem.has_value())
+        & static_cast<unsigned>(_configuration.hull_reduction_enabled());
+    if(stage_newton_retry) {
         if(contractor.propagate_hull_once(
                 domain,literals,propagation_statistics)) {
             accumulate_propagation_statistics();
             return true;
         }
 
-        auto const& newton_subsystem=*ineffective_newton_subsystem;
-        ++statistics.interval_newton_attempts;
-        auto const newton_start=std::chrono::steady_clock::now();
-        try {
-            ValidatedVectorMultivariateFunction function(
-                domain.dimension(),
-                literals[newton_subsystem[0u]].function.domain());
-            for(SizeType i=0u;i!=newton_subsystem.size();++i) {
-                function[i]=literals[newton_subsystem[i]].function;
-            }
-
-            Vector<SolverInterface::ValidatedNumericType> current=
-                cast_singleton(cast_exact_box(domain));
-            IntervalNewtonSolver newton_solver(1e-12,1u);
-            Vector<SolverInterface::ValidatedNumericType> image=
-                newton_solver.step(function,current);
-
-            if(not consistent(image,current)) {
-                ++statistics.interval_newton_infeasible;
-                statistics.interval_newton_seconds+=
-                    elapsed_seconds(newton_start);
-                accumulate_propagation_statistics();
-                return true;
-            }
-
-            Bool effective=false;
-            for(SizeType i=0u;i!=domain.dimension();++i) {
-                auto contracted=refinement(image[i],current[i]);
-                UpperIntervalType next(
-                    contracted.lower(),contracted.upper());
-                Bool const same_lower=
-                    next.lower_bound().raw()==domain[i].lower_bound().raw();
-                Bool const same_upper=
-                    next.upper_bound().raw()==domain[i].upper_bound().raw();
-                if(not (same_lower && same_upper)) {
-                    effective=true;
-                }
-                domain[i]=next;
-            }
-            if(effective) {
-                ++statistics.interval_newton_effective;
-            }
-            statistics.interval_newton_seconds+=
-                elapsed_seconds(newton_start);
-        }
-        catch(const SingularMatrixException&) {
-            ++statistics.interval_newton_singular;
-            statistics.interval_newton_seconds+=
-                elapsed_seconds(newton_start);
+        IntervalNewtonOutcome const outcome=
+            interval_newton_attempt(*ineffective_newton_subsystem);
+        if(outcome==IntervalNewtonOutcome::INFEASIBLE) {
+            accumulate_propagation_statistics();
+            return true;
         }
     }
 
@@ -959,20 +979,19 @@ SmtSolver::_direct_classification(
     Bool allow_preclassification) const
 {
     DirectClassification result;
-    Bool const interval_newton_eligible=
-        _configuration.interval_newton_reduction_enabled()
-        && not interval_newton_subsystem_candidates(
-            literals,domain.dimension()).empty();
-    Bool const contractor_enabled=
-        _configuration.hull_reduction_enabled()
-        || _configuration.shaving_reduction_enabled()
-        || _configuration.monotone_reduction_enabled()
-        || interval_newton_eligible;
+    Bool const newton_eligible=interval_newton_eligible(
+        _configuration.interval_newton_reduction_enabled(),
+        literals,domain.dimension());
+    Bool const contractors_enabled=contractor_enabled(
+        _configuration.hull_reduction_enabled(),
+        _configuration.shaving_reduction_enabled(),
+        _configuration.monotone_reduction_enabled(),
+        newton_eligible);
     Bool const preclassification=
-        contractor_enabled
+        contractors_enabled
         && _configuration.preclassification_enabled()
         && allow_preclassification;
-    if(contractor_enabled && not preclassification) {
+    if(contractors_enabled && not preclassification) {
         return result;
     }
 
@@ -1290,19 +1309,18 @@ SmtSolver::_preclassification_eligible(
     UpperBoxType const& domain,
     ConjunctionReference const& conjunction) const
 {
-    if(not _configuration.preclassification_enabled()
-       || conjunction.theory_literals==nullptr) {
+    if(conjunction.theory_literals==nullptr) {
         return false;
     }
     auto const& literals=*conjunction.theory_literals;
-    Bool const interval_newton_eligible=
-        _configuration.interval_newton_reduction_enabled()
-        && not interval_newton_subsystem_candidates(
-            literals,domain.dimension()).empty();
-    return _configuration.hull_reduction_enabled()
-        || _configuration.shaving_reduction_enabled()
-        || _configuration.monotone_reduction_enabled()
-        || interval_newton_eligible;
+    Bool const newton_eligible=interval_newton_eligible(
+        _configuration.interval_newton_reduction_enabled(),
+        literals,domain.dimension());
+    return contractor_enabled(
+        _configuration.hull_reduction_enabled(),
+        _configuration.shaving_reduction_enabled(),
+        _configuration.monotone_reduction_enabled(),
+        newton_eligible);
 }
 
 Void
@@ -1390,11 +1408,9 @@ SmtSolver::_accumulate_box_processing_statistics(
             ++statistics.preclassification_epsilon_boxes;
         }
         statistics.preclassification_outcomes.push_back(
-            processing.preclassification_pruned
-                ? SmtPreclassificationOutcome::PRUNED
-                : processing.preclassification_epsilon_satisfied
-                    ? SmtPreclassificationOutcome::EPSILON_SAT
-                    : SmtPreclassificationOutcome::UNRESOLVED);
+            preclassification_outcome(
+                processing.preclassification_pruned,
+                processing.preclassification_epsilon_satisfied));
     }
     SmtSolverTestSupport::accumulate_box_processing_statistics(
         statistics,{
@@ -1445,14 +1461,10 @@ SmtSolver::_solve_sequential_conjunction(
         this->_accumulate_box_processing_statistics(statistics,processing);
 
         if(adaptive_eligible && allow_preclassification) {
-            ARIADNE_ASSERT(processing.preclassification);
-            SmtPreclassificationOutcome const outcome=
-                processing.preclassification_pruned
-                    ? SmtPreclassificationOutcome::PRUNED
-                    : processing.preclassification_epsilon_satisfied
-                        ? SmtPreclassificationOutcome::EPSILON_SAT
-                        : SmtPreclassificationOutcome::UNRESOLVED;
-            preclassification_scheduler.observe(outcome);
+            preclassification_scheduler.observe(
+                preclassification_outcome(
+                    processing.preclassification_pruned,
+                    processing.preclassification_epsilon_satisfied));
         }
         if(_configuration.adaptive_preclassification_enabled()) {
             statistics.preclassification_adaptive_skipped_boxes=
@@ -1587,13 +1599,9 @@ struct SmtParallelTask {
         ParallelSmtWorkload::Access& access,
         UpperBoxType const& box) const
     {
-        if(parallel_stop_condition_impl(state->found,state->limit_reached)) {
-            return;
-        }
-
         {
             std::lock_guard<std::mutex> lock(state->mutex);
-            if(state->limit_reached.load()) {
+            if(parallel_stop_condition_impl(state->found,state->limit_reached)) {
                 return;
             }
             if(state->statistics.boxes_processed>=
@@ -1607,7 +1615,8 @@ struct SmtParallelTask {
             ++state->statistics.boxes_processed;
         }
 
-        auto processing=solver._process_box(box,conjunction);
+        SmtSolver::BoxProcessingResult processing=
+            solver._process_box(box,conjunction);
         {
             std::lock_guard<std::mutex> lock(state->mutex);
             solver._accumulate_box_processing_statistics(
@@ -2689,7 +2698,7 @@ class SmtDpllSearch {
 
         while(this->_current_level_literal_count(analysis.learned_clause)>1u) {
             auto iter=_trail.rbegin();
-            while(true) {
+            for(;;) {
                 SizeType pivot_variable=*iter;
                 AssignmentInfo const& assignment=_assignment[pivot_variable];
                 Bool const current_level=

@@ -1524,6 +1524,26 @@ class TestSmtSolver {
         }
 
         {
+            std::cout << "[smt-fast-path] interval Newton enabled without equality subsystem" << std::endl;
+            SmtSolver no_newton_candidate_solver(SmtSolverConfiguration(
+                0.125_x,
+                std::numeric_limits<SizeType>::max(),
+                std::numeric_limits<SizeType>::max(),
+                1u,
+                false,false,false,false,false,false,false,false,true));
+            List<SmtTheoryPrimitiveLiteral> literals({
+                SmtTheoryPrimitiveLiteral(
+                    ex,SmtTheoryPrimitiveRelation::GEQ_ZERO)
+            });
+            auto observation=SmtSolverTestSupport::process_compiled_box(
+                no_newton_candidate_solver,space,
+                UpperBoxType(ExactBoxType({
+                    ExactIntervalType(-0.25_x,0.25_x)})),
+                literals);
+            ARIADNE_TEST_ASSERT(observation.fused_direct_classification);
+        }
+
+        {
             SmtSolver contractor_solver(SmtSolverConfiguration(
                 0.125_x,
                 std::numeric_limits<SizeType>::max(),
@@ -3259,6 +3279,28 @@ class TestSmtSolver {
                 space,ExactBoxType({ExactIntervalType(-1,1)}),literals);
             ARIADNE_TEST_ASSERT(
                 solve_result.statistics().interval_newton_singular>=1u);
+        }
+
+        {
+            std::cout << "[smt-newton] staged hull sweep can prove infeasibility" << std::endl;
+            RealVariable x0("newton_hull_infeasible_x");
+            RealExpression e0=x0;
+            RealSpace space({x0});
+            List<SmtTheoryPrimitiveLiteral> literals({
+                SmtTheoryPrimitiveLiteral(
+                    e0,SmtTheoryPrimitiveRelation::EQ_ZERO),
+                SmtTheoryPrimitiveLiteral(
+                    e0-1,SmtTheoryPrimitiveRelation::GEQ_ZERO)
+            });
+            SmtResult solve_result=make_solver(16u).solve(
+                space,ExactBoxType({ExactIntervalType(0,0)}),literals);
+            ARIADNE_TEST_ASSERT(solve_result.is_unsat());
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().interval_newton_attempts,1u);
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().interval_newton_effective_reductions,0u);
+            ARIADNE_TEST_EQUAL(
+                solve_result.statistics().interval_newton_infeasible,0u);
         }
 
         {
