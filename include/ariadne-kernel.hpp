@@ -27,7 +27,6 @@
 #include "symbolic/expression_set.hpp"
 #include "symbolic/assignment.hpp"
 
-#include "satisfiability/smt_solver.hpp"
 #include "solving/solver.hpp"
 #include "solving/constraint_solver.hpp"
 #include "solving/linear_programming.hpp"

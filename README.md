@@ -6,7 +6,7 @@
 [![Coverage Status](https://github.com/ariadne-cps/kernel/actions/workflows/coverage.yml/badge.svg)](https://github.com/ariadne-cps/kernel/actions/workflows/coverage.yml)
 [![codecov](https://codecov.io/gh/ariadne-cps/kernel/branch/main/graph/badge.svg)](https://codecov.io/gh/ariadne-cps/kernel)
 
-Ariadne Kernel is the standalone C++20 kernel layer of Ariadne. It contains the Function, Geometry, Drawing, Satisfiability, Symbolic and Solving modules and consumes the standalone Algebra and BDD repositories as direct dependencies.
+Ariadne Kernel is the standalone C++20 kernel layer of Ariadne. It contains the Function, Geometry, Drawing, Symbolic and Solving modules and consumes the standalone Algebra and BDD repositories as direct dependencies.
 
 ## Layout
 
@@ -15,7 +15,6 @@ Public headers are installed from:
 - `include/function`
 - `include/geometry`
 - `include/drawing`
-- `include/satisfiability`
 - `include/solving`
 - `include/symbolic`
 
@@ -47,7 +46,7 @@ ctest --test-dir build --output-on-failure
 
 ## Python bindings
 
-When a compatible Python development environment is available, the standalone build produces `pyariadne` from the lower Algebra bindings plus the Kernel bindings for Function, Geometry, Drawing, Satisfiability, Solving and Symbolic. Sweeper bindings are supplied by Algebra, while Drawing provides the CLI and graphics facilities.
+When a compatible Python development environment is available, the standalone build produces `pyariadne` from the lower Algebra bindings plus the Kernel bindings for Function, Geometry, Drawing, Solving and Symbolic. Sweeper bindings are supplied by Algebra, while Drawing provides the CLI and graphics facilities.
 
 ## Contribution guidelines
 

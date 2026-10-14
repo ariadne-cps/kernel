@@ -130,24 +130,6 @@ jobs:
         PYTHONPATH: ${{ runner.workspace }}/build/python
       run: python tutorial_drawing.py
 
-    - name: Prepare C++ Satisfiability Tutorial
-      run: cmake -E copy_directory $GITHUB_WORKSPACE/tutorials/tutorial_satisfiability ${{ runner.workspace }}/tutorial_satisfiability
-
-    - name: Check C++ Satisfiability Tutorial
-      working-directory: ${{ runner.workspace }}/tutorial_satisfiability
-      run: |
-        cmake -S . -B build -DCMAKE_PREFIX_PATH=${{ runner.workspace }}/install -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-        cmake --build build --parallel $($NPROC)
-        export LD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${LD_LIBRARY_PATH:-}
-        export DYLD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${DYLD_LIBRARY_PATH:-}
-        ./build/tutorial_satisfiability
-
-    - name: Check Python Satisfiability Tutorial
-      working-directory: ${{ github.workspace }}/python/tutorials
-      env:
-        PYTHONPATH: ${{ runner.workspace }}/build/python
-      run: python tutorial_satisfiability.py
-
     - name: Prepare C++ Solving Tutorial
       run: cmake -E copy_directory $GITHUB_WORKSPACE/tutorials/tutorial_solving ${{ runner.workspace }}/tutorial_solving
 
