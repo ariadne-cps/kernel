@@ -48,6 +48,9 @@ template<class X> class TestPoint {
         LabelledPoint<Real> rpt({x=3,y=2.1_dec});
         PointType pt(rpt,dp);
 
+        ARIADNE_TEST_EQUALS(class_name<LabelledPoint<Real>>(),String("LabelledPoint<Real>"));
+        ARIADNE_TEST_EQUALS(class_name<LabelledPoint<FloatDPApproximation>>(),String("LabelledPoint<FloatDPApproximation>"));
+
         ARIADNE_TEST_EQUALS(pt.dimension(),2);
         ARIADNE_TEST_EQUAL(pt.space(),RealSpace({x,y}));
         ARIADNE_TEST_EQUAL(pt.variables(),Set<RealVariable>(RealSpace({x,y}).variables()));
