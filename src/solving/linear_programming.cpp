@@ -344,13 +344,6 @@ feasible(const Vector<X>& xl, const Vector<X>& xu,
         ivlx[i]=VX(xl[i],xu[i]);
     }
 
-    // The deterministic initial point may already be feasible (for example
-    // with mixed finite and infinite bounds). Validate it before taking an
-    // interior-point step, which can be degenerate for otherwise solved cases.
-    ValidatedKleenean initial_feasible=
-        this->validate_feasibility(xl,xu,A,b,x,y);
-    if(definitely(initial_feasible)) { return true; }
-
     const ExactDouble THRESHOLD = 1e-8_pr;
     CounterType step=0;
     while(step++<24) {
@@ -362,20 +355,9 @@ feasible(const Vector<X>& xl, const Vector<X>& xu,
         }
         Vector<X> yv=exact_vector(y);
         VX yb=dot(yv,b);
-        Vector<VX> yA=transpose(A)*yv;
-        VX yAX=zero;
-        Bool certificate_bounded=true;
-        for(SizeType i=0; i!=n; ++i) {
-            Bool const unbounded=(xl[i]==-inf || xu[i]==+inf);
-            Bool const contains_zero=
-                yA[i].lower().raw()<=0.0_x && yA[i].upper().raw()>=0.0_x;
-            if(unbounded && contains_zero) {
-                certificate_bounded=false;
-                break;
-            }
-            yAX += yA[i]*ivlx[i];
-        }
-        if(certificate_bounded && inconsistent(yb,yAX)) { return false; }
+        // NOTE: Must compute y*A first, as A*X may give NaN.
+        VX yAX = dot( transpose(A) * yv, ivlx );
+        if(inconsistent(yb,yAX)) { return false; }
         if(result==LinearProgramStatus::DEGENERATE_FEASIBILITY) { LOGGING_PRINTLN("Degenerate"); return indeterminate; }
         if(decide(compute_mu(xl,xu, x,zl,zu)<THRESHOLD) ) { LOGGING_PRINTLN("Threshold"); return indeterminate; }
     }
@@ -503,6 +485,9 @@ LinearProgramStatus InteriorPointSolver::
 _feasibility_step(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                   Vector<AX>& x, Vector<AX>& y, Vector<AX>& zl, Vector<AX>& zu) const
 {
+    if(definitely(this->validate_feasibility(xl,xu,A,b,x,y))) {
+        return LinearProgramStatus::PRIMAL_FEASIBLE;
+    }
     Vector<X> c(x.size(),X(0.0_x,dp));
     return this->_minimisation_step(c,xl,xu,A,b, x,y,zl,zu);
 }
