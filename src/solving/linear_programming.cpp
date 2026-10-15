@@ -126,7 +126,6 @@ template<class XA, class XD> Matrix<ArithmeticType<XA,XD>> adat(const Matrix<XA>
 {
     typedef ArithmeticType<XA,XD> XR;
     Matrix<XR> R(A.row_size(),A.row_size(),A.zero_element()*D.zero_element()*A.zero_element());
-    ARIADNE_ASSERT(D.size()==A.column_size());
     for(SizeType i=0; i!=A.row_size(); ++i) {
         for(SizeType k=0; k!=A.column_size(); ++k) {
             XR ADik=A[i][k]*D[k];
@@ -280,21 +279,21 @@ hotstarted_minimise(const Vector<X>& c,
 {
     LOGGING_SCOPE_CREATE;
 
-    ARIADNE_ASSERT(A.column_size()==c.size());
-    ARIADNE_ASSERT(A.column_size()==xl.size());
-    ARIADNE_ASSERT(A.column_size()==xu.size());
-    ARIADNE_ASSERT(A.row_size()==b.size());
-    ARIADNE_ASSERT(A.column_size()==x.size());
-    ARIADNE_ASSERT(A.row_size()==y.size());
-    ARIADNE_ASSERT(A.column_size()==zl.size());
-    ARIADNE_ASSERT(A.column_size()==zu.size());
+    ARIADNE_PRECONDITION(A.column_size()==c.size());
+    ARIADNE_PRECONDITION(A.column_size()==xl.size());
+    ARIADNE_PRECONDITION(A.column_size()==xu.size());
+    ARIADNE_PRECONDITION(A.row_size()==b.size());
+    ARIADNE_PRECONDITION(A.column_size()==x.size());
+    ARIADNE_PRECONDITION(A.row_size()==y.size());
+    ARIADNE_PRECONDITION(A.column_size()==zl.size());
+    ARIADNE_PRECONDITION(A.column_size()==zu.size());
 
     const ExactDouble maxerror=1e-3_pr;
     const CounterType maxsteps=10;
 
     AX cx=dot(c,x);
     AX yb=dot(y,b);
-    ARIADNE_ASSERT(decide(yb<=cx));
+    ARIADNE_PRECONDITION(decide(yb<=cx));
 
     LOGGING_PRINTLN("xl="<<xl<<" xu="<<xu<<" A="<<A<<" b="<<b<<" c="<<c);
     LOGGING_PRINTLN("x="<<x<<" y="<<y<<" z="<<zl<<" zu="<<zu);
@@ -334,7 +333,7 @@ feasible(const Vector<X>& xl, const Vector<X>& xu,
         if(xl[i]==-inf) {
             if(xu[i]==+inf) { x[i]=0.0_x; } else { x[i] = xu[i]-1.0_x; }
         } else {
-            if(xu[i]==+inf) { x[i]=xl[i]+1.0_x; } else { ARIADNE_ASSERT(xl[i]<=xu[i]); x[i] = (xl[i]+xu[i])/2; }
+            if(xu[i]==+inf) { x[i]=xl[i]+1.0_x; } else { ARIADNE_PRECONDITION(xl[i]<=xu[i]); x[i] = (xl[i]+xu[i])/2; }
         }
         if(xl[i]==-inf) { zl[i] = 0.0_x; } else { zl[i] = 1.0_x; }
         if(xu[i]==+inf) { zu[i] = 0.0_x; } else { zu[i] = 1.0_x; }

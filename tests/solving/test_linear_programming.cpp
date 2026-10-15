@@ -32,6 +32,7 @@
 #include "algebra/matrix.hpp"
 #include "solving/linear_programming.hpp"
 #include "drawing/command_line_interface.hpp"
+#include "logging/logging.hpp"
 
 using namespace std;
 using namespace Ariadne;
@@ -48,6 +49,8 @@ class TestInteriorPointSolver
         ARIADNE_TEST_CALL(test_validate_feasibility());
         ARIADNE_TEST_CALL(test_validate_feasibility_singular());
         ARIADNE_TEST_CALL(test_status_output());
+        ARIADNE_TEST_CALL(test_preconditions());
+        ARIADNE_TEST_CALL(test_logging_branches());
         ARIADNE_TEST_CALL(test_optimization());
         ARIADNE_TEST_CALL(test_mixed_bound_optimization());
         ARIADNE_TEST_CALL(test_hotstarted_optimization());
@@ -71,6 +74,74 @@ class TestInteriorPointSolver
         ARIADNE_TEST_ASSERT(stream.str().find("PRIMAL_DUAL_FEASIBLE")!=std::string::npos);
         ARIADNE_TEST_ASSERT(stream.str().find("DEGENERATE_FEASIBILITY")!=std::string::npos);
         ARIADNE_TEST_ASSERT(stream.str().find("UNKNOWN_FEASIBILITY_STATUS")!=std::string::npos);
+    }
+
+    Void test_preconditions() {
+        Matrix<FloatDP> A({{1.0_x}},dp);
+        Vector<FloatDP> b({1.0_x},dp);
+        Vector<FloatDP> c({0.0_x},dp);
+        Vector<FloatDP> xl({0.0_x},dp);
+        Vector<FloatDP> xu({2.0_x},dp);
+        Vector<FloatDPApproximation> x({1.0_x},dp);
+        Vector<FloatDPApproximation> y({0.0_x},dp);
+        Vector<FloatDPApproximation> zl({1.0_x},dp);
+        Vector<FloatDPApproximation> zu({1.0_x},dp);
+
+        Vector<FloatDP> two_exact({0.0_x,0.0_x},dp);
+        Vector<FloatDPApproximation> two_approx({0.0_x,0.0_x},dp);
+
+        ARIADNE_TEST_FAIL(optimiser->hotstarted_minimise(two_exact,xl,xu,A,b,x,y,zl,zu));
+        ARIADNE_TEST_FAIL(optimiser->hotstarted_minimise(c,two_exact,xu,A,b,x,y,zl,zu));
+        ARIADNE_TEST_FAIL(optimiser->hotstarted_minimise(c,xl,two_exact,A,b,x,y,zl,zu));
+        ARIADNE_TEST_FAIL(optimiser->hotstarted_minimise(c,xl,xu,A,two_exact,x,y,zl,zu));
+        ARIADNE_TEST_FAIL(optimiser->hotstarted_minimise(c,xl,xu,A,b,two_approx,y,zl,zu));
+        ARIADNE_TEST_FAIL(optimiser->hotstarted_minimise(c,xl,xu,A,b,x,two_approx,zl,zu));
+        ARIADNE_TEST_FAIL(optimiser->hotstarted_minimise(c,xl,xu,A,b,x,y,two_approx,zu));
+        ARIADNE_TEST_FAIL(optimiser->hotstarted_minimise(c,xl,xu,A,b,x,y,zl,two_approx));
+
+        Vector<FloatDPApproximation> positive_dual({1.0_x},dp);
+        ARIADNE_TEST_FAIL(
+            optimiser->hotstarted_minimise(c,xl,xu,A,b,x,positive_dual,zl,zu));
+
+        Vector<FloatDP> invalid_xl({1.0_x},dp);
+        Vector<FloatDP> invalid_xu({0.0_x},dp);
+        ARIADNE_TEST_FAIL(optimiser->feasible(invalid_xl,invalid_xu,A,b));
+    }
+
+    Void test_logging_branches() {
+        auto& configuration=Logger::instance().configuration();
+        unsigned int const old_verbosity=configuration.verbosity();
+        configuration.set_verbosity(10u);
+
+        Matrix<FloatDP> A({
+            {1.0_x,0.0_x,1.0_x},
+            {0.0_x,1.0_x,2.0_x}},dp);
+        Vector<FloatDP> b({1.0_x,1.0_x},dp);
+        Vector<FloatDP> c({1.0_x,0.5_x,-0.75_x},dp);
+        Vector<FloatDP> xl({0.0_x,0.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({+inf,+inf,3.0_x},dp);
+        (void)optimiser->minimise(c,xl,xu,A,b);
+
+        Matrix<FloatDP> hot_A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> hot_b({1.0_x},dp);
+        Vector<FloatDP> hot_c({0.0_x,0.0_x},dp);
+        Vector<FloatDP> hot_xl({0.0_x,0.0_x},dp);
+        Vector<FloatDP> hot_xu({2.0_x,2.0_x},dp);
+        Vector<FloatDPApproximation> hot_x({0.5_x,0.5_x},dp);
+        Vector<FloatDPApproximation> hot_y({0.0_x},dp);
+        Vector<FloatDPApproximation> hot_zl({1.0_x,1.0_x},dp);
+        Vector<FloatDPApproximation> hot_zu({1.0_x,1.0_x},dp);
+        (void)optimiser->hotstarted_minimise(
+            hot_c,hot_xl,hot_xu,hot_A,hot_b,hot_x,hot_y,hot_zl,hot_zu);
+
+        Matrix<FloatDP> singular_A({{0.0_x}},dp);
+        Vector<FloatDP> singular_b({1.0_x},dp);
+        Vector<FloatDP> singular_xl({-1.0_x},dp);
+        Vector<FloatDP> singular_xu({+1.0_x},dp);
+        ARIADNE_TEST_ASSERT(is_indeterminate(
+            optimiser->feasible(singular_xl,singular_xu,singular_A,singular_b)));
+
+        configuration.set_verbosity(old_verbosity);
     }
 
     Void test_hotstarted_optimization() {
