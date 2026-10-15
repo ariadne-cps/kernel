@@ -58,6 +58,7 @@ class TestLinearInteriorPointSolver
         ARIADNE_TEST_CALL(test_hotstarted_boundary_optimum());
         ARIADNE_TEST_CALL(test_feasibility());
         ARIADNE_TEST_CALL(test_mixed_bound_feasibility());
+        ARIADNE_TEST_CALL(test_feasibility_iteration_limit());
         ARIADNE_TEST_CALL(test_constrained_feasibility());
     }
 
@@ -280,6 +281,18 @@ class TestLinearInteriorPointSolver
         ARIADNE_ASSERT(definitely(!optimiser->feasible(xl,xu,A,b)));
     }
 
+
+    Void test_feasibility_iteration_limit() {
+        // The equality is feasible only at the lower bound. A wide initial
+        // interval exercises the fixed iteration budget without claiming
+        // strict interior feasibility.
+        Matrix<FloatDP> A({{1.0_x}},dp);
+        Vector<FloatDP> b({0.0_x},dp);
+        Vector<FloatDP> xl({0.0_x},dp);
+        Vector<FloatDP> xu({281474976710656.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(is_indeterminate(optimiser->feasible(xl,xu,A,b)));
+    }
 
     Void test_constrained_feasibility() {
         Matrix<FloatDP> A({{1.0_x,0.0_x,1.0_x},{0.0_x,1.0_x,2.0_x}},dp);
