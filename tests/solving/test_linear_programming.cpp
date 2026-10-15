@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include "macro/testing.hpp"
 
 #include "numeric/numeric.hpp"
@@ -45,9 +46,45 @@ class TestInteriorPointSolver
 
     Void test() {
         ARIADNE_TEST_CALL(test_validate_feasibility());
-        //ARIADNE_TEST_CALL(test_optimization());
-        //ARIADNE_TEST_CALL(test_feasibility());
+        ARIADNE_TEST_CALL(test_status_output());
+        ARIADNE_TEST_CALL(test_optimization());
+        ARIADNE_TEST_CALL(test_hotstarted_optimization());
+        ARIADNE_TEST_CALL(test_feasibility());
         ARIADNE_TEST_CALL(test_constrained_feasibility());
+    }
+
+    Void test_status_output() {
+        std::ostringstream stream;
+        stream << LinearProgramStatus::INDETERMINATE_FEASIBILITY << " "
+               << LinearProgramStatus::PRIMAL_FEASIBLE << " "
+               << LinearProgramStatus::DUAL_FEASIBLE << " "
+               << LinearProgramStatus::PRIMAL_DUAL_FEASIBLE << " "
+               << LinearProgramStatus::DEGENERATE_FEASIBILITY << " "
+               << static_cast<LinearProgramStatus>(255);
+        ARIADNE_TEST_ASSERT(stream.str().find("INDETERMINATE_FEASIBILITY")!=std::string::npos);
+        ARIADNE_TEST_ASSERT(stream.str().find("PRIMAL_FEASIBLE")!=std::string::npos);
+        ARIADNE_TEST_ASSERT(stream.str().find("DUAL_FEASIBLE")!=std::string::npos);
+        ARIADNE_TEST_ASSERT(stream.str().find("PRIMAL_DUAL_FEASIBLE")!=std::string::npos);
+        ARIADNE_TEST_ASSERT(stream.str().find("DEGENERATE_FEASIBILITY")!=std::string::npos);
+        ARIADNE_TEST_ASSERT(stream.str().find("UNKNOWN_FEASIBILITY_STATUS")!=std::string::npos);
+    }
+
+    Void test_hotstarted_optimization() {
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({1.0_x},dp);
+        Vector<FloatDP> c({0.0_x,0.0_x},dp);
+        Vector<FloatDP> xl({0.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({2.0_x,2.0_x},dp);
+        Vector<FloatDPApproximation> x({0.5_x,0.5_x},dp);
+        Vector<FloatDPApproximation> y({0.0_x},dp);
+        Vector<FloatDPApproximation> zl({1.0_x,1.0_x},dp);
+        Vector<FloatDPApproximation> zu({1.0_x,1.0_x},dp);
+
+        auto result=optimiser->hotstarted_minimise(
+            c,xl,xu,A,b,x,y,zl,zu);
+        ARIADNE_TEST_ASSERT(result.first.raw()==0.0);
+        ARIADNE_TEST_EQUAL(result.second.size(),2u);
+        ARIADNE_TEST_EQUAL(result.third.size(),1u);
     }
 
     Void test_validate_feasibility() {
