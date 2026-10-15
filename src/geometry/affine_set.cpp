@@ -38,6 +38,11 @@
 #include "drawing/graphics_interface.hpp"
 #include "drawing/geometry2d.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <numbers>
+#include <vector>
+
 
 namespace Ariadne {
 
@@ -714,6 +719,57 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
     LOGGING_PRINTLN("x="<<x<<" Ax="<<(A*x)<<" c="<<c<<" cx="<<dot(c,x)<<" pt="<<G*x+h);
 
     lpsolver.consistency_check(l,u,A,b, vt,p,B,x);
+
+    if(nc==0u) {
+        // For an unconstrained zonotope every simplex direction has exactly one
+        // nonzero parameter component.  The generic traversal below repeatedly
+        // scans all candidates and invokes lpstep(), making a boundary with n
+        // generators quadratic.  At the x-minimising point all active edge
+        // directions lie in the right half-plane; order them once by angle from
+        // the downward vertical and then traverse that order and its opposites.
+        struct BoundaryDirection {
+            SizeType variable;
+            double angle;
+        };
+        std::vector<BoundaryDirection> directions;
+        directions.reserve(np);
+        for(SizeType k=0; k!=np; ++k) {
+            SizeType const j=p[k];
+            FloatDPApproximation const ds(
+                vt[j]==Slackness::LOWER ? +1.0_x : -1.0_x,dp);
+            double const vx=(G[0][j]*ds).raw().get_d();
+            double const vy=(G[1][j]*ds).raw().get_d();
+            double angle=std::atan2(vx,-vy);
+            if(angle<0.0) { angle+=2.0*std::numbers::pi; }
+            directions.push_back({j,angle});
+        }
+        std::sort(
+            directions.begin(),directions.end(),
+            [](BoundaryDirection const& lhs, BoundaryDirection const& rhs) {
+                if(lhs.angle!=rhs.angle) { return lhs.angle<rhs.angle; }
+                return lhs.variable<rhs.variable;
+            });
+
+        Vector<FloatDPApproximation> pt=G*x+h;
+        for(SizeType half=0u; half!=2u; ++half) {
+            for(BoundaryDirection const& direction:directions) {
+                SizeType const j=direction.variable;
+                FloatDPApproximation const old_x=x[j];
+                if(vt[j]==Slackness::LOWER) {
+                    x[j]=u[j];
+                    vt[j]=Slackness::UPPER;
+                } else {
+                    x[j]=l[j];
+                    vt[j]=Slackness::LOWER;
+                }
+                FloatDPApproximation const delta=x[j]-old_x;
+                pt[0]+=G[0][j]*delta;
+                pt[1]+=G[1][j]*delta;
+                vertices.push_back(Point2d(pt[0].raw(),pt[1].raw()));
+            }
+        }
+        return vertices;
+    }
 
     // We always want to turn left, so we need to choose a direction d such that
     // (v0*d0+v1*d1) is positive and the ratio (v0*d1-v1*d0)/(v0*d0+v1*d1) is maximised.

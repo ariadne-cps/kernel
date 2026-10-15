@@ -385,6 +385,9 @@ class TestAffineSet
     }
 
     Void test_large_zonotope_boundary() {
+        // Keep n=501: the 501 distinct planar generators yield 2*n=1002
+        // boundary vertices, deliberately exceeding the historical 1000-step
+        // traversal cap.  Reducing n below 501 would weaken this regression.
         SizeType const n=501u;
         D=ExactBoxType::unit_box(n);
 
