@@ -29,10 +29,17 @@
 #include "logging/logging.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
+#include "algebra/differential.hpp"
 #include "algebra/algebra.hpp"
+#include "function/taylor_model.hpp"
+#include "function/formula.hpp"
 #include "function/function.hpp"
 #include "function/function_patch.hpp"
 #include "function/function_model.hpp"
+
+#include "algebra/expansion.inl.hpp"
+#include "algebra/evaluate.hpp"
+#include "algebra/evaluate.tpl.hpp"
 
 namespace Ariadne {
 
