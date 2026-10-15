@@ -193,6 +193,11 @@ Int main(Int argc, const char **argv) {
 
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
+    MaximumError maximum_error_from_approximate(ApproximateDouble(1e-5));
+    MaximumError maximum_error_from_double(1e-5);
+    ARIADNE_TEST_EQUAL(maximum_error_from_approximate.value(),ApproximateDouble(1e-5));
+    ARIADNE_TEST_EQUAL(maximum_error_from_double.value(),ApproximateDouble(1e-5));
+
     IntervalNewtonSolver interval_newton_solver(maximum_error=1e-5_pr,maximum_number_of_steps=12);
     TestSolver(interval_newton_solver,"IntervalNewtonSolver").test();
     KrawczykSolver krawczyk_solver(maximum_error=1e-5_pr,maximum_number_of_steps=12);
