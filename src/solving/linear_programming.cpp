@@ -426,7 +426,7 @@ _minimisation_step(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu,
     DiagonalMatrix<AX> D(erec(ediv(zu,xu-x)+ediv(zl,x-xl)));
     Vector<AX> ryz = ry - ediv(rzl,Vector<AX>(x-xl)) + ediv(rzu,Vector<AX>(xu-x));
     S=adat(A,D.diagonal());
-    LOGGING_PRINTLN("S="<<S<<", inverse(S)="<<inverse(S));
+    LOGGING_PRINTLN("S="<<S);
 
     // dzl = (rzl - Zl dx) / (X-Xl)
     // dzu = (rzu + Zu dx) / (Xu-X)
