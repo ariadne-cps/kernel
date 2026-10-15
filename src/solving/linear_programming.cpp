@@ -153,8 +153,6 @@ template<class X, class XX> XX compute_mu(const Vector<X>& xl, const Vector<X>& 
 
 
 
-inline FloatDPBounds mul_val(FloatDP x1, FloatDP x2) { return FloatDPBounds(mul(down,x1,x2),mul(up,x1,x2)); }
-
 inline Vector<FloatDP> exact_vector(Vector<FloatDPApproximation> const& v) {
     Vector<FloatDP> result(v.size(),dp);
     for(SizeType i=0; i!=v.size(); ++i) {
@@ -304,6 +302,8 @@ hotstarted_minimise(const Vector<X>& c,
     CounterType steps=0;
     while(steps<maxsteps && decide((cx-yb)>maxerror)) {
         this->_minimisation_step(c,xl,xu,A,b, x,y,zl,zu);
+        cx=dot(c,x);
+        yb=dot(y,b);
         ++steps;
     }
 

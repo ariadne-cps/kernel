@@ -46,10 +46,14 @@ class TestInteriorPointSolver
 
     Void test() {
         ARIADNE_TEST_CALL(test_validate_feasibility());
+        ARIADNE_TEST_CALL(test_validate_feasibility_singular());
         ARIADNE_TEST_CALL(test_status_output());
         ARIADNE_TEST_CALL(test_optimization());
+        ARIADNE_TEST_CALL(test_mixed_bound_optimization());
         ARIADNE_TEST_CALL(test_hotstarted_optimization());
+        ARIADNE_TEST_CALL(test_hotstarted_positive_gap());
         ARIADNE_TEST_CALL(test_feasibility());
+        ARIADNE_TEST_CALL(test_mixed_bound_feasibility());
         ARIADNE_TEST_CALL(test_constrained_feasibility());
     }
 
@@ -101,6 +105,65 @@ class TestInteriorPointSolver
         b=Vector<FloatDP>({1.0_x, -1.0_x},dp);
         y=Vector<FloatDP>({-0.5_x, -1.0_x},dp);
         ARIADNE_ASSERT(definitely(!optimiser->validate_feasibility(xl,xu,A,b,x,y)));
+    }
+
+
+    Void test_validate_feasibility_singular() {
+        Vector<FloatDP> xl({-1.0_x,-1.0_x},dp);
+        Vector<FloatDP> xu({+1.0_x,+1.0_x},dp);
+        Matrix<FloatDP> A({{1.0_x,0.0_x},{2.0_x,0.0_x}},dp);
+        Vector<FloatDP> b({0.0_x,0.0_x},dp);
+        Vector<FloatDP> x({0.0_x,0.0_x},dp);
+        Vector<FloatDP> y({0.0_x,0.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(is_indeterminate(
+            optimiser->validate_feasibility(xl,xu,A,b,x,y)));
+    }
+
+    Void test_mixed_bound_optimization() {
+        Matrix<FloatDP> A({
+            {1.0_x,0.0_x,0.0_x,0.0_x},
+            {0.0_x,1.0_x,0.0_x,0.0_x},
+            {0.0_x,0.0_x,1.0_x,0.0_x},
+            {0.0_x,0.0_x,0.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({0.0_x,1.0_x,1.0_x,1.0_x},dp);
+        Vector<FloatDP> c({0.0_x,0.0_x,0.0_x,0.0_x},dp);
+        Vector<FloatDP> xl({-inf,-inf,0.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({+inf,2.0_x,+inf,2.0_x},dp);
+
+        auto optimum=optimiser->minimise(c,xl,xu,A,b);
+        ARIADNE_TEST_EQUAL(std::get<1>(optimum).size(),4u);
+        ARIADNE_TEST_EQUAL(std::get<2>(optimum).size(),4u);
+    }
+
+    Void test_hotstarted_positive_gap() {
+        Matrix<FloatDP> A({{1.0_x}},dp);
+        Vector<FloatDP> b({1.0_x},dp);
+        Vector<FloatDP> c({1.0_x},dp);
+        Vector<FloatDP> xl({0.0_x},dp);
+        Vector<FloatDP> xu({2.0_x},dp);
+        Vector<FloatDPApproximation> x({1.0_x},dp);
+        Vector<FloatDPApproximation> y({0.0_x},dp);
+        Vector<FloatDPApproximation> zl({1.0_x},dp);
+        Vector<FloatDPApproximation> zu({1.0_x},dp);
+
+        auto hotstart_result=optimiser->hotstarted_minimise(
+            c,xl,xu,A,b,x,y,zl,zu);
+        ARIADNE_TEST_EQUAL(std::get<1>(hotstart_result).size(),1u);
+        ARIADNE_TEST_EQUAL(std::get<2>(hotstart_result).size(),1u);
+    }
+
+    Void test_mixed_bound_feasibility() {
+        Matrix<FloatDP> A({
+            {1.0_x,0.0_x,0.0_x,0.0_x},
+            {0.0_x,1.0_x,0.0_x,0.0_x},
+            {0.0_x,0.0_x,1.0_x,0.0_x},
+            {0.0_x,0.0_x,0.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({0.0_x,1.0_x,1.0_x,1.0_x},dp);
+        Vector<FloatDP> xl({-inf,-inf,0.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({+inf,2.0_x,+inf,2.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(definitely(optimiser->feasible(xl,xu,A,b)));
     }
 
 
