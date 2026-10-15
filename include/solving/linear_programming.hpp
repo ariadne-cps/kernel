@@ -54,6 +54,7 @@ template<class X> using ApproximateNumericType = typename ApproximateNumericsTra
 
 
 enum class LinearProgramStatus : std::uint8_t { INDETERMINATE_FEASIBILITY=0, PRIMAL_FEASIBLE=1, DUAL_FEASIBLE=2, PRIMAL_DUAL_FEASIBLE=3, DEGENERATE_FEASIBILITY=4};
+OutputStream& operator<<(OutputStream& os, LinearProgramStatus lps);
 
 class DegenerateFeasibilityProblemException : public std::runtime_error {
   public:

@@ -80,11 +80,11 @@ class TestInteriorPointSolver
         Vector<FloatDPApproximation> zl({1.0_x,1.0_x},dp);
         Vector<FloatDPApproximation> zu({1.0_x,1.0_x},dp);
 
-        auto result=optimiser->hotstarted_minimise(
+        auto hotstart_result=optimiser->hotstarted_minimise(
             c,xl,xu,A,b,x,y,zl,zu);
-        ARIADNE_TEST_ASSERT(result.first.raw()==0.0);
-        ARIADNE_TEST_EQUAL(result.second.size(),2u);
-        ARIADNE_TEST_EQUAL(result.third.size(),1u);
+        ARIADNE_TEST_ASSERT(std::get<0>(hotstart_result).raw()==0.0);
+        ARIADNE_TEST_EQUAL(std::get<1>(hotstart_result).size(),2u);
+        ARIADNE_TEST_EQUAL(std::get<2>(hotstart_result).size(),1u);
     }
 
     Void test_validate_feasibility() {
