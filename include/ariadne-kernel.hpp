@@ -22,7 +22,10 @@
 
 #include "function/formula.hpp"
 
-#include "solving/solver.hpp"
+#include "solving/equation_solver_interface.hpp"
+#include "solving/equation_solver.hpp"
+#include "solving/interval_newton_method.hpp"
+#include "solving/krawczyk_method.hpp"
 #include "solving/constraint_solver.hpp"
 #include "solving/linear_programming.hpp"
 #include "solving/interior_point_method.hpp"

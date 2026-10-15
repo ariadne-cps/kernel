@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/solver.hpp
+ *            solving/equation_solver.hpp
  *
  *  Copyright  2006-20  Pieter Collins
  *
@@ -22,18 +22,18 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file solving/solver.hpp
+/*! \file solving/equation_solver.hpp
  *  \brief Solver classes for algebraic equations.
  */
 
-#ifndef ARIADNE_SOLVER_HPP
-#define ARIADNE_SOLVER_HPP
+#ifndef ARIADNE_EQUATION_SOLVER_HPP
+#define ARIADNE_EQUATION_SOLVER_HPP
 
 #include <exception>
 #include <stdexcept>
 #include <string>
 
-#include "solving/solver_interface.hpp"
+#include "solving/equation_solver_interface.hpp"
 #include "function/function_interface.hpp"
 #include "function/function_patch_interface.hpp"
 
@@ -52,12 +52,12 @@ template<class X> class Vector;
 /*!
  *  \brief %Common functionality for solving (nonlinear) equations.
  */
-class SolverBase
-    : public SolverInterface
+class EquationSolverBase
+    : public EquationSolverInterface
 {
   public:
     /*! \brief Constructor. */
-    SolverBase(ApproximateDouble max_error, Nat max_steps);
+    EquationSolverBase(ApproximateDouble max_error, Nat max_steps);
 
     /*! \brief The maximum permissible error of the solution. */
     ExactDouble maximum_error() const { return this->_max_error; }
@@ -104,77 +104,6 @@ class SolverBase
 };
 
 
-/*! \ingroup AlgebraicEquationSubModule
- *  \brief ExactIntervalType Newton solver. Uses the contractor \f$[x']=x_0-Df^{-1}([x])f(x_0)\f$.
- */
-class IntervalNewtonSolver
-    : public SolverBase
-{
-  public:
-    /*! \brief Constructor. */
-    IntervalNewtonSolver(ApproximateDouble max_error, Nat max_steps) : SolverBase(max_error,max_steps) { }
-    IntervalNewtonSolver(MaximumError max_error, MaximumNumericTypeOfSteps max_steps) : SolverBase(max_error,max_steps) { }
-    /*! \brief Cloning operator. */
-    virtual IntervalNewtonSolver* clone() const { return new IntervalNewtonSolver(*this); }
-    /*! \brief Write to an output stream. */
-    virtual Void _write(OutputStream& os) const;
-
-    using SolverBase::implicit;
-  public:
-    virtual ValidatedVectorMultivariateFunctionPatch implicit_step(const ValidatedVectorMultivariateFunction& f, const ValidatedVectorMultivariateFunctionPatch& p, const ValidatedVectorMultivariateFunctionPatch& x) const;
-
-    virtual Vector<ValidatedNumericType> step(const ValidatedVectorMultivariateFunction& f, const Vector<ValidatedNumericType>& pt) const;
-};
-
-
-/*! \ingroup AlgebraicEquationSubModule
- *  \brief Krawczyk solver. Uses the contractor \f$[x']=x_0-Mf(x_0)+(I-MDf([x])([x]-x_0)\f$
- *  where \f$M\f$ is typically \f$Df^{-1}(x_0)\f$.
- */
-class KrawczykSolver
-    : public SolverBase
-{
-  public:
-    /*! \brief Constructor. */
-    KrawczykSolver(ApproximateDouble max_error, Nat max_steps) : SolverBase(max_error,max_steps) { }
-    KrawczykSolver(MaximumError max_error, MaximumNumericTypeOfSteps max_steps) : SolverBase(max_error,max_steps) { }
-    /*! \brief Cloning operator. */
-    virtual KrawczykSolver* clone() const { return new KrawczykSolver(*this); }
-    /*! \brief Write to an output stream. */
-    virtual Void _write(OutputStream& os) const;
-
-    /*! \brief Solve \f$f(a,x)=0\f$ for a in \a par, looking for solutions with x in \a ix. */
-    virtual ValidatedVectorMultivariateFunctionPatch implicit_step(const ValidatedVectorMultivariateFunction& f, const ValidatedVectorMultivariateFunctionPatch& p, const ValidatedVectorMultivariateFunctionPatch& x) const;
-  public:
-    /*! \brief A single step of the Krawczyk contractor. */
-    virtual Vector<ValidatedNumericType>
-    step(const ValidatedVectorMultivariateFunction& f,
-          const Vector<ValidatedNumericType>& pt) const;
-};
-
-
-/*! \ingroup Solvers
- *  \brief Modified Krawczyk solver. Uses the contractor \f$[x']=x_0-J^{-1}(f(x_0)+(J-Df([x])([x]-x_0)\f$
- *  where \f$J\f$ is typically \f$Df(x_0)\f$.
- */
-class FactoredKrawczykSolver
-    : public KrawczykSolver
-{
-  public:
-    /*! \brief Constructor. */
-    FactoredKrawczykSolver(ApproximateDouble max_error, Nat max_steps) : KrawczykSolver(max_error,max_steps) { }
-    FactoredKrawczykSolver(MaximumError max_error, MaximumNumericTypeOfSteps max_steps) : KrawczykSolver(max_error,max_steps) { }
-    /*! \brief Cloning operator. */
-    virtual FactoredKrawczykSolver* clone() const { return new FactoredKrawczykSolver(*this); }
-    /*! \brief Write to an output stream. */
-    virtual Void _write(OutputStream& os) const;
-  public:
-    /*! \brief A single step of the modified Krawczyk contractor. */
-    virtual Vector<ValidatedNumericType>
-    step(const ValidatedVectorMultivariateFunction& f,
-          const Vector<ValidatedNumericType>& pt) const;
-};
-
 } // namespace Ariadne
 
-#endif /* ARIADNE_SOLVER_HPP */
+#endif /* ARIADNE_EQUATION_SOLVER_HPP */

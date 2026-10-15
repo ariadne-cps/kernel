@@ -47,7 +47,6 @@
 #include "function/procedure.hpp"
 
 #include "solving/nonlinear_programming.hpp"
-#include "solving/solver.hpp"
 #include "algebra/multi_index-noaliasing.hpp"
 #include "solving/constraint_solver.hpp"
 

@@ -28,8 +28,10 @@
 #include "algebra/algebra.hpp"
 #include "function/function.hpp"
 #include "function/formula.hpp"
-#include "solving/solver_interface.hpp"
-#include "solving/solver.hpp"
+#include "solving/equation_solver_interface.hpp"
+#include "solving/equation_solver.hpp"
+#include "solving/interval_newton_method.hpp"
+#include "solving/krawczyk_method.hpp"
 #include "function/taylor_function.hpp"
 
 
@@ -42,13 +44,13 @@ template<> Nat __hash__<FloatDPBoundsVector>(const FloatDPBoundsVector&) {
     return 0;
 }
 
-class SolverWrapper
-  : public pybind11::wrapper< SolverInterface >
+class EquationSolverWrapper
+  : public pybind11::wrapper< EquationSolverInterface >
 {
-    typedef SolverInterface::ValidatedNumericType ValidatedNumericType;
-    typedef SolverInterface::ApproximateNumericType ApproximateNumericType;
+    typedef EquationSolverInterface::ValidatedNumericType ValidatedNumericType;
+    typedef EquationSolverInterface::ApproximateNumericType ApproximateNumericType;
   public:
-    SolverInterface* clone() const { return this->get_override("clone")(); }
+    EquationSolverInterface* clone() const { return this->get_override("clone")(); }
     Void set_maximum_error(ApproximateDouble me) { this->get_override("set_maximum_error")(me); }
     ExactDouble maximum_error() const { return this->get_override("maximum_error")(); }
     Void set_maximum_number_of_steps(Nat ns) { this->get_override("set_maximum_number_of_steps")(ns); }
@@ -82,27 +84,27 @@ class SolverWrapper
 
 Void export_solvers(pybind11::module& module)
 {
-    typedef SolverInterface::ValidatedNumericType ValidatedNumericType;
-    pybind11::class_<SolverInterface,SolverWrapper> solver_interface_class(module,"SolverInterface");
-    solver_interface_class.def("maximum_error", &SolverInterface::maximum_error);
-    solver_interface_class.def("set_maximum_error", &SolverInterface::set_maximum_error);
-    solver_interface_class.def("maximum_number_of_steps", &SolverInterface::maximum_number_of_steps);
-    solver_interface_class.def("set_maximum_number_of_steps", &SolverInterface::set_maximum_number_of_steps);
-    solver_interface_class.def("zero", &SolverInterface::zero);
-    solver_interface_class.def("fixed_point", &SolverInterface::fixed_point);
-    solver_interface_class.def("solve", (Vector<ValidatedNumericType>(SolverInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&)const) &SolverInterface::solve);
-    solver_interface_class.def("implicit",(ValidatedVectorMultivariateFunctionPatch(SolverInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&,const ExactBoxType&)const) &SolverInterface::implicit);
-    solver_interface_class.def("implicit",(ValidatedScalarMultivariateFunctionPatch(SolverInterface::*)(const ValidatedScalarMultivariateFunction&,const ExactBoxType&,const ExactIntervalType&)const) &SolverInterface::implicit);
-    solver_interface_class.def("solve_all",[](SolverInterface const& s, const ValidatedVectorMultivariateFunction& f, const ExactBoxType& bx){ return static_cast< List<Vector<ValidatedNumericType>> >( s.solve_all(f,bx) );});
-    solver_interface_class.def("__str__",&__cstr__<SolverInterface>);
+    typedef EquationSolverInterface::ValidatedNumericType ValidatedNumericType;
+    pybind11::class_<EquationSolverInterface,EquationSolverWrapper> solver_interface_class(module,"EquationSolverInterface");
+    solver_interface_class.def("maximum_error", &EquationSolverInterface::maximum_error);
+    solver_interface_class.def("set_maximum_error", &EquationSolverInterface::set_maximum_error);
+    solver_interface_class.def("maximum_number_of_steps", &EquationSolverInterface::maximum_number_of_steps);
+    solver_interface_class.def("set_maximum_number_of_steps", &EquationSolverInterface::set_maximum_number_of_steps);
+    solver_interface_class.def("zero", &EquationSolverInterface::zero);
+    solver_interface_class.def("fixed_point", &EquationSolverInterface::fixed_point);
+    solver_interface_class.def("solve", (Vector<ValidatedNumericType>(EquationSolverInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&)const) &EquationSolverInterface::solve);
+    solver_interface_class.def("implicit",(ValidatedVectorMultivariateFunctionPatch(EquationSolverInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&,const ExactBoxType&)const) &EquationSolverInterface::implicit);
+    solver_interface_class.def("implicit",(ValidatedScalarMultivariateFunctionPatch(EquationSolverInterface::*)(const ValidatedScalarMultivariateFunction&,const ExactBoxType&,const ExactIntervalType&)const) &EquationSolverInterface::implicit);
+    solver_interface_class.def("solve_all",[](EquationSolverInterface const& s, const ValidatedVectorMultivariateFunction& f, const ExactBoxType& bx){ return static_cast< List<Vector<ValidatedNumericType>> >( s.solve_all(f,bx) );});
+    solver_interface_class.def("__str__",&__cstr__<EquationSolverInterface>);
 
-    pybind11::class_<IntervalNewtonSolver, SolverInterface> interval_newton_solver_class(module,"IntervalNewtonSolver");
+    pybind11::class_<IntervalNewtonSolver, EquationSolverInterface> interval_newton_solver_class(module,"IntervalNewtonSolver");
     interval_newton_solver_class.def(pybind11::init<ApproximateDouble,Nat>());
 
-    pybind11::class_<KrawczykSolver, SolverInterface> krawczyk_solver_class(module,"KrawczykSolver");
+    pybind11::class_<KrawczykSolver, EquationSolverInterface> krawczyk_solver_class(module,"KrawczykSolver");
     krawczyk_solver_class.def(pybind11::init<ApproximateDouble,Nat>());
 
-    pybind11::class_<FactoredKrawczykSolver, SolverInterface> factored_krawczyk_solver_class(module,"FactoredKrawczykSolver");
+    pybind11::class_<FactoredKrawczykSolver, EquationSolverInterface> factored_krawczyk_solver_class(module,"FactoredKrawczykSolver");
     factored_krawczyk_solver_class.def(pybind11::init<ApproximateDouble,Nat>());
 
 }

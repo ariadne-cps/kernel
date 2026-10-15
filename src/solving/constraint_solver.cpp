@@ -44,7 +44,6 @@
 #include "function/taylor_function.hpp"
 
 #include "solving/constraint_solver.hpp"
-#include "solving/solver.hpp"
 
 namespace Ariadne {
 

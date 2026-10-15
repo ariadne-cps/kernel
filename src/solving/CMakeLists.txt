@@ -1,5 +1,7 @@
 add_library(KERNEL_SOLVING_SRC OBJECT
-    solver.cpp
+    equation_solver.cpp
+    interval_newton_method.cpp
+    krawczyk_method.cpp
     constraint_solver.cpp
     simplex_algorithm.cpp
     interior_point_method.cpp

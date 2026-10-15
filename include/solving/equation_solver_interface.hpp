@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/solver_interface.hpp
+ *            solving/equation_solver_interface.hpp
  *
  *  Copyright  2006-20  Alberto Casagrande, Pieter Collins
  *
@@ -22,12 +22,12 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file solving/solver_interface.hpp
- *  \brief Interface class for solving equations.
+/*! \file solving/equation_solver_interface.hpp
+ *  \brief Interface for solving algebraic equations.
  */
 
-#ifndef ARIADNE_SOLVER_INTERFACE_HPP
-#define ARIADNE_SOLVER_INTERFACE_HPP
+#ifndef ARIADNE_EQUATION_SOLVER_INTERFACE_HPP
+#define ARIADNE_EQUATION_SOLVER_INTERFACE_HPP
 
 #include <exception>
 #include <stdexcept>
@@ -54,39 +54,39 @@ template<class X> bool operator<(Vector<X> const& v1, Vector<X> const& v2) {
     return false;
 }
 
-class SolverInterface;
+class EquationSolverInterface;
 
-//! \relates SolverInterface \brief An exception occurring in the solution of a (parameterised) algebraic equation.
-class SolverException : public std::runtime_error
+//! \relates EquationSolverInterface \brief An exception occurring in the solution of a (parameterised) algebraic equation.
+class EquationSolverException : public std::runtime_error
 {
   public:
-    SolverException(const char* what) : std::runtime_error(what) { }
-    SolverException(const StringType& what) : std::runtime_error(what) { }
+    EquationSolverException(const char* what) : std::runtime_error(what) { }
+    EquationSolverException(const StringType& what) : std::runtime_error(what) { }
 };
 
-//! \relates SolverInterface \brief It cannot be shown that there is no solution to a (parameterised) algebraic equation,
+//! \relates EquationSolverInterface \brief It cannot be shown that there is no solution to a (parameterised) algebraic equation,
 //! \brief but no solution can be found by the solver.
-class UnknownSolutionException : public SolverException
+class UnknownSolutionException : public EquationSolverException
 {
   public:
-    UnknownSolutionException(const char* what) : SolverException(what) { }
-    UnknownSolutionException(const StringType& what) : SolverException(what) { }
+    UnknownSolutionException(const char* what) : EquationSolverException(what) { }
+    UnknownSolutionException(const StringType& what) : EquationSolverException(what) { }
 };
 
-//! \relates SolverInterface \brief There are no solutions to a (parameterised) algebraic equation in the domain.
-class NoSolutionException : public SolverException
+//! \relates EquationSolverInterface \brief There are no solutions to a (parameterised) algebraic equation in the domain.
+class NoSolutionException : public EquationSolverException
 {
   public:
-    NoSolutionException(const char* what) : SolverException(what) { }
-    NoSolutionException(const StringType& what) : SolverException(what) { }
+    NoSolutionException(const char* what) : EquationSolverException(what) { }
+    NoSolutionException(const StringType& what) : EquationSolverException(what) { }
 };
 
-//! \relates SolverInterface \brief The solutions to a (parameterised) algebraic equation are degenerate due to the Jacobian being singular.
-class SingularJacobianException : public SolverException
+//! \relates EquationSolverInterface \brief The solutions to a (parameterised) algebraic equation are degenerate due to the Jacobian being singular.
+class SingularJacobianException : public EquationSolverException
 {
   public:
-    SingularJacobianException(const char* what) : SolverException(what) { }
-    SingularJacobianException(const StringType& what) : SolverException(what) { }
+    SingularJacobianException(const char* what) : EquationSolverException(what) { }
+    SingularJacobianException(const StringType& what) : EquationSolverException(what) { }
 };
 
 
@@ -101,7 +101,7 @@ class SingularJacobianException : public SolverException
 //! The maximum_error() provides an upper bound on the size of a box containing a solution point,
 //! uniforma bounds for an implicit function.
 //! The maximum_number_of_steps() provides a timeout mechanism.
-class SolverInterface
+class EquationSolverInterface
 {
     using FLT=FloatDP;
   public:
@@ -110,9 +110,9 @@ class SolverInterface
     typedef ValidatedVectorMultivariateFunctionPatch ValidatedVectorMultivariateFunctionModelType;
   public:
     //! \brief Virtual destructor.
-    virtual ~SolverInterface() = default;
+    virtual ~EquationSolverInterface() = default;
     //! \brief Make a dynamically-allocated copy.
-    virtual SolverInterface* clone() const = 0;
+    virtual EquationSolverInterface* clone() const = 0;
     //! \brief Write to an output stream.
     virtual Void _write(OutputStream& os) const = 0;
 
@@ -132,7 +132,7 @@ class SolverInterface
     //! \brief Solve \f$f(x)=x\f$, starting in the box \a bx.
     virtual Vector<ValidatedNumericType> fixed_point(const ValidatedVectorMultivariateFunction& f,const ExactBoxType& bx) const = 0;
 
-    //! \brief Solve \f$f(x)=0\f$, starting in the box \a bx. Throws a SolverException if a unique solution is not found.
+    //! \brief Solve \f$f(x)=0\f$, starting in the box \a bx. Throws a EquationSolverException if a unique solution is not found.
     //!  \param f A function \f$\R^n\to\R^n\f$ for which the root \f$p\f$ is to be found.
     //!  \param bx A coordinate-aligned box \f$B\f$ in \f$\R^n\f$ for which the root is to be found.
     //! \details
@@ -175,10 +175,10 @@ class SolverInterface
     virtual Set< Vector<ValidatedNumericType> > solve_all(const ValidatedVectorMultivariateFunction& f,const ExactBoxType& bx) const = 0;
 };
 
-inline OutputStream& operator<<(OutputStream& os, const SolverInterface& solver) {
+inline OutputStream& operator<<(OutputStream& os, const EquationSolverInterface& solver) {
     solver._write(os); return os;
 }
 
 } // namespace Ariadne
 
-#endif /* ARIADNE_SOLVER_INTERFACE_HPP */
+#endif /* ARIADNE_EQUATION_SOLVER_INTERFACE_HPP */

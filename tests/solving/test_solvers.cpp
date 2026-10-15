@@ -26,7 +26,9 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "solving/solver.hpp"
+#include "solving/equation_solver.hpp"
+#include "solving/interval_newton_method.hpp"
+#include "solving/krawczyk_method.hpp"
 #include "function/function.hpp"
 #include "function/function_patch.hpp"
 #include "function/taylor_function.hpp"
@@ -42,13 +44,13 @@ using namespace std;
 
 typedef Vector<DyadicInterval> DyadicIntervalVector;
 
-class TestSolver
+class TestEquationSolver
 {
   private:
-    std::unique_ptr<SolverInterface> solver;
+    std::unique_ptr<EquationSolverInterface> solver;
     StringType solver_class_name;
   public:
-    TestSolver(const SolverInterface& s,const char* n)
+    TestEquationSolver(const EquationSolverInterface& s,const char* n)
         : solver(s.clone()), solver_class_name(n) { }
 
     Int test() {
@@ -128,8 +130,8 @@ class TestSolver
             h=solver->implicit(f,p,r);
             ARIADNE_TEST_NOTIFY(solver_class_name<<" silently returns partially defined vector implicit function.");
         }
-        catch(const SolverException&) {
-            ARIADNE_TEST_THROWS(solver->implicit(f,p,r),SolverException);
+        catch(const EquationSolverException&) {
+            ARIADNE_TEST_THROWS(solver->implicit(f,p,r),EquationSolverException);
             ARIADNE_TEST_NOTIFY(solver_class_name<<" throws error on partially defined vector implicit function.");
         }
 
@@ -175,8 +177,8 @@ class TestSolver
             h=solver->implicit(g,p,r);
             ARIADNE_TEST_NOTIFY(solver_class_name<<" silently returns partially defined scalar implicit function.");
         }
-        catch(const SolverException&) {
-            ARIADNE_TEST_THROWS(solver->implicit(g,p,r),SolverException);
+        catch(const EquationSolverException&) {
+            ARIADNE_TEST_THROWS(solver->implicit(g,p,r),EquationSolverException);
             ARIADNE_TEST_NOTIFY(solver_class_name<<" throws error on partially defined scalar implicit function.");
         }
         catch(const DomainException&) {
@@ -199,13 +201,13 @@ Int main(Int argc, const char **argv) {
     ARIADNE_TEST_EQUAL(maximum_error_from_double.value(),ApproximateDouble(1e-5));
 
     IntervalNewtonSolver interval_newton_solver(maximum_error=1e-5_pr,maximum_number_of_steps=12);
-    TestSolver(interval_newton_solver,"IntervalNewtonSolver").test();
+    TestEquationSolver(interval_newton_solver,"IntervalNewtonSolver").test();
     KrawczykSolver krawczyk_solver(maximum_error=1e-5_pr,maximum_number_of_steps=12);
     ARIADNE_TEST_PRINT(krawczyk_solver.function_factory());
-    TestSolver(krawczyk_solver,"KrawczykSolver").test();
+    TestEquationSolver(krawczyk_solver,"KrawczykSolver").test();
 
     FactoredKrawczykSolver factored_krawczyk_solver(maximum_error=1e-5_pr,maximum_number_of_steps=12);
-    TestSolver(factored_krawczyk_solver,"FactoredKrawczykSolver").test();
+    TestEquationSolver(factored_krawczyk_solver,"FactoredKrawczykSolver").test();
 
     std::cerr<<"INCOMPLETE "<<std::flush;
     return ARIADNE_TEST_FAILURES;

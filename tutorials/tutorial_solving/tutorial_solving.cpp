@@ -22,7 +22,7 @@ void show(const std::string& label, const T& value) {
 int main() {
     section("Algebraic equations with Interval Newton");
 
-    // SolverBase exposes a common interface for algebraic solvers.  We use
+    // EquationSolverBase exposes a common interface for algebraic solvers.  We use
     // IntervalNewtonSolver here as the representative implementation: the
     // tutorial is about the solving workflow, not comparing algorithms.
     IntervalNewtonSolver solver(1e-10, 16);
@@ -45,7 +45,7 @@ int main() {
     show("validated root", root);
 
     // zero() is the explicit root-solving entry point.  It is useful when
-    // writing code against SolverInterface and makes the intended equation
+    // writing code against EquationSolverInterface and makes the intended equation
     // f(x)=0 clear at the call site.
     FloatDPBoundsVector root_via_zero = solver.zero(root_function, root_domain);
     show("root via zero()", root_via_zero);
