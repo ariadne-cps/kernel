@@ -69,19 +69,8 @@ Pair<SizeType,RigorousNumericType<FloatDP>> compute_rt(const Vector<FloatDP>& xl
 static_assert(Same<RigorousNumericType<FloatDP>,Bounds<FloatDP>>);
 // end>
 
-// Add functions to remove dependencies
-inline Bool operator==(Rational q, Int n) { return q==Rational(n); }
-inline Bool operator!=(Rational q, Int n) { return q!=Rational(n); }
-inline Bool operator<=(Rational q, Int n) { return q<=Rational(n); }
-inline Bool operator>=(Rational q, Int n) { return q>=Rational(n); }
-inline Bool operator> (Rational q, Int n) { return q> Rational(n); }
-inline Bool operator< (Rational q, Int n) { return q< Rational(n); }
-
-inline Bool operator==(Rational q, ExactDouble n) { return q==Rational(n); }
-inline Rational midpoint(Rational const& q) { return q; }
-
+// Comparisons used by simplex instantiations.
 inline auto operator<=(FloatDPBounds x1, Int x2) -> decltype(x1<=FloatDPBounds(x2,dp)) { return x1<=FloatDPBounds(x2,dp); }
-inline auto operator>=(FloatDPBounds x1, Int x2) -> decltype(x1>=FloatDPBounds(x2,dp)) { return x1>=FloatDPBounds(x2,dp); }
 inline auto operator< (FloatDPBounds x1, Int x2) -> decltype(x1< FloatDPBounds(x2,dp)) { return x1< FloatDPBounds(x2,dp); }
 inline auto operator> (FloatDPBounds x1, Int x2) -> decltype(x1> FloatDPBounds(x2,dp)) { return x1> FloatDPBounds(x2,dp); }
 
