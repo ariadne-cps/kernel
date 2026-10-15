@@ -123,7 +123,7 @@ def tutorial_solving():
 
     section("Linear programming with the simplex solver")
 
-    simplex = FloatDPLinearLinearSimplexSolver()
+    simplex = FloatDPLinearSimplexSolver()
     objective = FloatDPVector([1, 2], dp)
     lower = FloatDPVector([0, 0], dp)
     upper = FloatDPVector([1, 1], dp)
@@ -180,7 +180,7 @@ def tutorial_solving():
     section("Choosing a solving tool")
     print("IntervalNewtonSolver: roots, fixed points and implicit functions.")
     print("ConstraintSolver: feasibility tests and interval-domain contraction.")
-    print("FloatDPLinearLinearSimplexSolver: bounded linear programs with linear equalities.")
+    print("FloatDPLinearSimplexSolver: bounded linear programs with linear equalities.")
     print("NonlinearInteriorPointSolver: constrained nonlinear minimisation with interior-point barriers.")
 
 

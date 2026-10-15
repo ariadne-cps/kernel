@@ -173,7 +173,7 @@ class LinearSimplexSolver
 
 //!@{
 //! \relates LinearSimplexSolver \name Type synonyms
-using RationalLinearLinearSimplexSolver = LinearSimplexSolver<Rational>; //!< \relates LinearSimplexSolver .
+using RationalLinearSimplexSolver = LinearSimplexSolver<Rational>; //!< \relates LinearSimplexSolver .
 //!@}
 
 } // namespace Ariadne

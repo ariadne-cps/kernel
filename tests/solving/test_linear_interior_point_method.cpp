@@ -39,11 +39,11 @@ using namespace Ariadne;
 
 double infd=inf.get_d();
 
-class TestLinearLinearInteriorPointSolver
+class TestLinearInteriorPointSolver
 {
     LinearInteriorPointSolver* optimiser;
   public:
-    TestLinearLinearInteriorPointSolver(LinearInteriorPointSolver& o) : optimiser(&o) { }
+    TestLinearInteriorPointSolver(LinearInteriorPointSolver& o) : optimiser(&o) { }
 
     Void test() {
         ARIADNE_TEST_CALL(test_validate_feasibility());
@@ -284,7 +284,7 @@ Int main(Int argc, const char* argv[])
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
     LinearInteriorPointSolver interior_point_optimiser;
-    TestLinearLinearInteriorPointSolver(interior_point_optimiser).test();
+    TestLinearInteriorPointSolver(interior_point_optimiser).test();
 
     std::cerr<<"INCOMPLETE ";
     return ARIADNE_TEST_FAILURES;
