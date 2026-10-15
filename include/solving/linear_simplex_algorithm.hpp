@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/simplex_algorithm.hpp
+ *            solving/linear_simplex_algorithm.hpp
  *
  *  Copyright  2005-20  Alberto Casagrande, Pieter Collins
  *
@@ -22,12 +22,12 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file solving/simplex_algorithm.hpp
+/*! \file solving/linear_simplex_algorithm.hpp
  *  \brief Simplex algorithms for linear programming.
  */
 
-#ifndef ARIADNE_SIMPLEX_ALGORITHM_HPP
-#define ARIADNE_SIMPLEX_ALGORITHM_HPP
+#ifndef ARIADNE_LINEAR_SIMPLEX_ALGORITHM_HPP
+#define ARIADNE_LINEAR_SIMPLEX_ALGORITHM_HPP
 
 #include "logging/logging.hpp"
 #include "utility/array.hpp"
@@ -40,7 +40,7 @@ namespace Ariadne {
 
 //! \ingroup OptimisationSubModule
 //! \brief The type of variable; lower is_bounded, upper is_bounded, basic, or fixed (upper and lower bounded).
-//! \see SimplexSolver
+//! \see LinearSimplexSolver
 enum class Slackness : std::int8_t {
     LOWER=-1, //!< <p/>
     BASIS=0,  //!< <p/>
@@ -53,7 +53,7 @@ OutputStream& operator<<(OutputStream& os, Slackness t);
 //! \ingroup OptimisationSubModule
 //! Solver for linear programming problems using the simplex algorithm.
 template<class X>
-class SimplexSolver
+class LinearSimplexSolver
 {
     typedef RigorousNumericType<X> XX;
   public:
@@ -172,8 +172,8 @@ class SimplexSolver
 };
 
 //!@{
-//! \relates SimplexSolver \name Type synonyms
-using RationalSimplexSolver = SimplexSolver<Rational>; //!< \relates SimplexSolver .
+//! \relates LinearSimplexSolver \name Type synonyms
+using RationalLinearLinearSimplexSolver = LinearSimplexSolver<Rational>; //!< \relates LinearSimplexSolver .
 //!@}
 
 } // namespace Ariadne

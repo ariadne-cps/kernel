@@ -137,7 +137,7 @@ int main() {
     //   subject to x0 + x1 = 1
     //              0 <= x0,x1 <= 1.
     // The optimum is attained at (1,0).
-    SimplexSolver<FloatDP> simplex;
+    LinearSimplexSolver<FloatDP> simplex;
     Vector<FloatDP> objective({1.0_x, 2.0_x}, dp);
     Vector<FloatDP> lower({0.0_x, 0.0_x}, dp);
     Vector<FloatDP> upper({1.0_x, 1.0_x}, dp);
@@ -193,7 +193,7 @@ int main() {
     cout
         << "IntervalNewtonSolver: roots, fixed points and implicit functions.\n"
         << "ConstraintSolver: feasibility tests and interval-domain contraction.\n"
-        << "SimplexSolver: bounded linear programs with linear equalities.\n"
+        << "LinearSimplexSolver: bounded linear programs with linear equalities.\n"
         << "NonlinearInteriorPointOptimiser: constrained nonlinear minimisation with interior-point barriers.\n";
 
     return 0;

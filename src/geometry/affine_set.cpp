@@ -26,8 +26,8 @@
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
-#include "solving/interior_point_method.hpp"
-#include "solving/simplex_algorithm.hpp"
+#include "solving/linear_interior_point_method.hpp"
+#include "solving/linear_simplex_algorithm.hpp"
 #include "function/function.hpp"
 #include "function/affine.hpp"
 #include "function/affine_model.hpp"
@@ -271,9 +271,9 @@ ValidatedLowerKleenean ValidatedAffineConstrainedImageSet::separated(const Exact
         lp.l[i]=FloatDP(sub(down,wbx[i].lower_bound(),this->_space_models[i].error().raw()));
         lp.u[i]=FloatDP(add(up,wbx[i].upper_bound(),this->_space_models[i].error().raw()));
     }
-    InteriorPointSolver optimiser;
+    LinearInteriorPointSolver optimiser;
     ValidatedKleenean feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
-    //feasible=SimplexSolver<FloatDP>().hotstarted_feasible(lp.A,lp.b,lp.l,lp.u,lp.vt,lp.p,lp.B,lp.x,lp.y);
+    //feasible=LinearSimplexSolver<FloatDP>().hotstarted_feasible(lp.A,lp.b,lp.l,lp.u,lp.vt,lp.p,lp.B,lp.x,lp.y);
     return !feasible;
 }
 
@@ -324,7 +324,7 @@ Void ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(PavingIn
     Int maximum_depth=static_cast<Int>(fineness*cell.dimension());
 
     // Check for disjointness using linear program
-    InteriorPointSolver optimiser;
+    LinearInteriorPointSolver optimiser;
     ValidatedKleenean feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
     if(definitely(!feasible)) { return; }
 
@@ -468,7 +468,7 @@ Void ValidatedAffineConstrainedImageSet::_robust_adjoin_outer_approximation_to(P
     // variable constrained to be nonnegative.  The previous implementation
     // started it at -1 and then optimised -r until r>=0, which needlessly
     // exercised degenerate simplex pivots.
-    InteriorPointSolver optimiser;
+    LinearInteriorPointSolver optimiser;
     ValidatedKleenean feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
     if(definitely(not feasible)) {
         return;
@@ -616,7 +616,7 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
 
     LOGGING_PRINTLN("xind="<<xind<<", yind="<<yind);
 
-    SimplexSolver<FloatDPApproximation> lpsolver;
+    LinearSimplexSolver<FloatDPApproximation> lpsolver;
     PerturbationGenerator eps;
 
     static const FloatDPApproximation _inf ( Ariadne::inf, dp );

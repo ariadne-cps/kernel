@@ -156,8 +156,8 @@ Void solving_submodule(pybind11::module& module)
 #include "function/constraint.hpp"
 #include "function/procedure.hpp"
 #include "solving/linear_programming.hpp"
-#include "solving/interior_point_method.hpp"
-#include "solving/simplex_algorithm.hpp"
+#include "solving/linear_interior_point_method.hpp"
+#include "solving/linear_simplex_algorithm.hpp"
 #include "solving/nonlinear_programming.hpp"
 #include "solving/constraint_solver.hpp"
 
@@ -228,11 +228,11 @@ Void export_interior_point_solvers(pybind11::module& module)
 
 Void export_interior_point_solver(pybind11::module& module)
 {
-    pybind11::class_<InteriorPointSolver> interior_point_solver_class(module,"InteriorPointSolver");
+    pybind11::class_<LinearInteriorPointSolver> interior_point_solver_class(module,"LinearInteriorPointSolver");
     interior_point_solver_class.def(pybind11::init<>());
-    interior_point_solver_class.def("minimise", &InteriorPointSolver::minimise);
-    interior_point_solver_class.def("feasible", (ValidatedKleenean(InteriorPointSolver::*)(const Vector<FloatDP>&,const Vector<FloatDP>&, const Matrix<FloatDP>&,const Vector<FloatDP>&)const) &InteriorPointSolver::feasible);
-    interior_point_solver_class.def("validate_feasibility", &InteriorPointSolver::validate_feasibility);
+    interior_point_solver_class.def("minimise", &LinearInteriorPointSolver::minimise);
+    interior_point_solver_class.def("feasible", (ValidatedKleenean(LinearInteriorPointSolver::*)(const Vector<FloatDP>&,const Vector<FloatDP>&, const Matrix<FloatDP>&,const Vector<FloatDP>&)const) &LinearInteriorPointSolver::feasible);
+    interior_point_solver_class.def("validate_feasibility", &LinearInteriorPointSolver::validate_feasibility);
 }
 
 
@@ -262,17 +262,17 @@ Void export_simplex_solver(pybind11::module& module)
 
     typedef RigorousNumericType<X> XX;
 
-    pybind11::class_< SimplexSolver<X> > simplex_solver_class(module,(class_name<X>()+"SimplexSolver").c_str());
+    pybind11::class_< LinearSimplexSolver<X> > simplex_solver_class(module,(class_name<X>()+"LinearSimplexSolver").c_str());
     simplex_solver_class.def(pybind11::init<>());
-    simplex_solver_class.def("lpstep",(Bool(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&,Array<Slackness>& ,SizeArray&,Matrix<XX>&,Vector<XX>&)const) &SimplexSolver<X>::lpstep);
+    simplex_solver_class.def("lpstep",(Bool(LinearSimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&,Array<Slackness>& ,SizeArray&,Matrix<XX>&,Vector<XX>&)const) &LinearSimplexSolver<X>::lpstep);
 
 
-    simplex_solver_class.def("minimise",(Vector<XX>(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&)const) &SimplexSolver<X>::minimise);
-    simplex_solver_class.def("feasible",(ValidatedKleenean(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&)const) &SimplexSolver<X>::feasible);
+    simplex_solver_class.def("minimise",(Vector<XX>(LinearSimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&)const) &LinearSimplexSolver<X>::minimise);
+    simplex_solver_class.def("feasible",(ValidatedKleenean(LinearSimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&)const) &LinearSimplexSolver<X>::feasible);
 
-    simplex_solver_class.def("verify_feasibility",(ValidatedKleenean(SimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&,const Array<Slackness>&)const) &SimplexSolver<X>::verify_feasibility);
+    simplex_solver_class.def("verify_feasibility",(ValidatedKleenean(LinearSimplexSolver<X>::*)(const Vector<X>&,const Vector<X>&,const Matrix<X>&,const Vector<X>&,const Array<Slackness>&)const) &LinearSimplexSolver<X>::verify_feasibility);
 
-    simplex_solver_class.def("compute_basis",(Pair< SizeArray, Matrix<XX> >(SimplexSolver<X>::*)(const Matrix<X>&)const) &SimplexSolver<X>::compute_basis);
+    simplex_solver_class.def("compute_basis",(Pair< SizeArray, Matrix<XX> >(LinearSimplexSolver<X>::*)(const Matrix<X>&)const) &LinearSimplexSolver<X>::compute_basis);
 
 }
 

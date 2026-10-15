@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/simplex_algorithm.cpp
+ *            solving/linear_simplex_algorithm.cpp
  *
  *  Copyright  2008-20  Pieter Collins
  *
@@ -29,7 +29,7 @@
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
 #include "function/affine.hpp"
-#include "solving/simplex_algorithm.hpp"
+#include "solving/linear_simplex_algorithm.hpp"
 
 #include "macro/general.hpp"
 #include "logging/logging.hpp"
@@ -154,7 +154,7 @@ consistency_check(const Array<Slackness>& vt, const Array<SizeType>& p)
 
 template<class X>
 SizeType
-SimplexSolver<X>::consistency_check(const Array<Slackness>& vt, const Array<SizeType>& p) const
+LinearSimplexSolver<X>::consistency_check(const Array<Slackness>& vt, const Array<SizeType>& p) const
 {
     return Ariadne::consistency_check(vt,p);
 }
@@ -162,7 +162,7 @@ SimplexSolver<X>::consistency_check(const Array<Slackness>& vt, const Array<Size
 // Check that the matrix B is the inverse of the matrix A_B with columns p[0],...,p[m-1] of A.
 template<class X>
 Void
-SimplexSolver<X>::consistency_check(const Matrix<X>& A, const Array<SizeType>& p, const Matrix<XX>& B) const
+LinearSimplexSolver<X>::consistency_check(const Matrix<X>& A, const Array<SizeType>& p, const Matrix<XX>& B) const
 {
     const ExactDouble MAXIMUM_ERROR=ERROR_TOLERANCE;
     const SizeType m=A.row_size();
@@ -186,7 +186,7 @@ SimplexSolver<X>::consistency_check(const Matrix<X>& A, const Array<SizeType>& p
 // Check that Ax=b.
 template<class X>
 Void
-SimplexSolver<X>::consistency_check(const Matrix<X>& A, const Vector<X>& b,const Vector<XX>& x) const
+LinearSimplexSolver<X>::consistency_check(const Matrix<X>& A, const Vector<X>& b,const Vector<XX>& x) const
 {
     const ExactDouble MAXIMUM_ERROR=ERROR_TOLERANCE;
     Vector<XX> z=A*b-x;
@@ -198,7 +198,7 @@ SimplexSolver<X>::consistency_check(const Matrix<X>& A, const Vector<X>& b,const
 // the vector x is given by x_L=l_L, x_U=x_U and x_B=B^{-1} A_N x_N.
 template<class X>
 Void
-SimplexSolver<X>::consistency_check(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
+LinearSimplexSolver<X>::consistency_check(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                                     const Array<Slackness>& vt, const Array<SizeType>& p, const Matrix<XX>& B, const Vector<XX>& x) const
 {
     LOGGING_SCOPE_CREATE;
@@ -296,7 +296,7 @@ compute_p(const Array<Slackness>& tv)
 // Throws an error if the matrix A has full row rank
 template<class X>
 Pair< Array<SizeType>, Matrix<RigorousNumericType<X>> >
-SimplexSolver<X>::compute_basis(const Matrix<X>& A) const
+LinearSimplexSolver<X>::compute_basis(const Matrix<X>& A) const
 {
     const SizeType m=A.row_size();
     const SizeType n=A.column_size();
@@ -732,7 +732,7 @@ compute_rt(const Vector<X>& xl, const Vector<X>& xu, const Array<Slackness>& vt,
 
     if(r==n) {
         // Problem is either highly degenerate or optimal do nothing.
-        ARIADNE_WARN("SimplexSolver<X>::compute_rt(...): "<<
+        ARIADNE_WARN("LinearSimplexSolver<X>::compute_rt(...): "<<
                      "Cannot find compute variable to exit basis\n"<<
                      "  xl="<<xl<<" x="<<x<<" xu="<<xu<<" vt="<<vt<<" p="<<p<<" d="<<d);
     }
@@ -779,7 +779,7 @@ compute_rt(const Vector<FloatDP>& xl, const Vector<FloatDP>& xu, const Array<Sla
 
     if(r==n) {
         // Problem is either highly degenerate or optimal do nothing.
-        ARIADNE_WARN("SimplexSolver<X>::compute_rt(...): "<<
+        ARIADNE_WARN("LinearSimplexSolver<X>::compute_rt(...): "<<
                      "Cannot find compute variable to exit basis\n"<<
                      "  xl="<<xl<<" x="<<x<<" xu="<<xu<<" vt="<<vt<<" p="<<p<<" d="<<d);
     }
@@ -885,7 +885,7 @@ SizeType lpenter(const Matrix<X>& A, const Vector<X>& c, const Array<Slackness>&
 
 template<class X>
 ValidatedKleenean
-SimplexSolver<X>::validated_feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b) const
+LinearSimplexSolver<X>::validated_feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b) const
 {
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN("xl="<<xl<<" xu="<<xu);
@@ -906,7 +906,7 @@ SimplexSolver<X>::validated_feasible(const Vector<X>& xl, const Vector<X>& xu, c
 
 template<class X>
 Bool
-SimplexSolver<X>::validated_feasibility_step(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
+LinearSimplexSolver<X>::validated_feasibility_step(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                                              Array<Slackness>& vt, Array<SizeType>& p) const
 {
     LOGGING_SCOPE_CREATE;
@@ -999,7 +999,7 @@ SimplexSolver<X>::validated_feasibility_step(const Vector<X>& xl, const Vector<X
 
 template<class X>
 SizeType
-SimplexSolver<X>::lpstep(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
+LinearSimplexSolver<X>::lpstep(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                          Array<Slackness>& vt, Array<SizeType>& p, Matrix<XX>& B, Vector<XX>& x, SizeType s) const
 {
     LOGGING_SCOPE_CREATE;
@@ -1095,7 +1095,7 @@ SimplexSolver<X>::lpstep(const Vector<X>& xl, const Vector<X>& xu, const Matrix<
 
 template<class X>
 Bool
-SimplexSolver<X>::lpstep(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
+LinearSimplexSolver<X>::lpstep(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                          Array<Slackness>& vt, Array<SizeType>& p, Matrix<XX>& B, Vector<XX>& x) const
 {
     LOGGING_SCOPE_CREATE;
@@ -1120,7 +1120,7 @@ SimplexSolver<X>::lpstep(const Vector<X>& c, const Vector<X>& xl, const Vector<X
 
 template<class X>
 Vector<RigorousNumericType<X>>
-SimplexSolver<X>::compute_x(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
+LinearSimplexSolver<X>::compute_x(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                             const Array<Slackness>& vt) const
 {
     Array<SizeType> p=compute_p(vt);
@@ -1134,7 +1134,7 @@ SimplexSolver<X>::compute_x(const Vector<X>& xl, const Vector<X>& xu, const Matr
 
 template<class X>
 ValidatedKleenean
-SimplexSolver<X>::_feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
+LinearSimplexSolver<X>::_feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                             Array<Slackness>& vt, Array<SizeType>& p, Matrix<XX>& B, Vector<XX>& x) const
 {
     LOGGING_SCOPE_CREATE;
@@ -1230,7 +1230,7 @@ SimplexSolver<X>::_feasible(const Vector<X>& xl, const Vector<X>& xu, const Matr
 // Check for feasibility of Ax=b xl<=b<=xu
 template<class X>
 ValidatedKleenean
-SimplexSolver<X>::feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b) const
+LinearSimplexSolver<X>::feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b) const
 {
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN("xl="<<xl);
@@ -1262,7 +1262,7 @@ SimplexSolver<X>::feasible(const Vector<X>& xl, const Vector<X>& xu, const Matri
 
 template<class X>
 ValidatedKleenean
-SimplexSolver<X>::hotstarted_feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
+LinearSimplexSolver<X>::hotstarted_feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                                       Array<Slackness>& vt) const
 {
     LOGGING_SCOPE_CREATE;
@@ -1290,7 +1290,7 @@ SimplexSolver<X>::hotstarted_feasible(const Vector<X>& xl, const Vector<X>& xu, 
 
 template<class X>
 ValidatedKleenean
-SimplexSolver<X>::hotstarted_feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
+LinearSimplexSolver<X>::hotstarted_feasible(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                                       Array<Slackness>& vt, Array<SizeType>& p, Matrix<XX>& B, Vector<XX>& x, Vector<XX>& y) const
 {
     LOGGING_SCOPE_CREATE;
@@ -1337,7 +1337,7 @@ SimplexSolver<X>::hotstarted_feasible(const Vector<X>& xl, const Vector<X>& xu, 
 //  y (b - A_L x_L - A_U x_U) > 0
 //  z = c - y A  satisfies z_U < 0 and z_L > 0; by construction z_B = 0.
 template<class X> ValidatedKleenean
-SimplexSolver<X>::verify_feasibility(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b, const Array<Slackness>& vt) const
+LinearSimplexSolver<X>::verify_feasibility(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b, const Array<Slackness>& vt) const
 {
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN("A="<<A<<" b="<<b<<" xl="<<xl<<" xu="<<xu<<" vt="<<vt);
@@ -1427,7 +1427,7 @@ SimplexSolver<X>::verify_feasibility(const Vector<X>& xl, const Vector<X>& xu, c
 
 template<class X>
 Vector<RigorousNumericType<X>>
-SimplexSolver<X>::minimise(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b) const
+LinearSimplexSolver<X>::minimise(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b) const
 {
     const SizeType m=A.row_size();
     const SizeType n=A.column_size();
@@ -1451,7 +1451,7 @@ SimplexSolver<X>::minimise(const Vector<X>& c, const Vector<X>& xl, const Vector
 
 template<class X>
 Vector<RigorousNumericType<X>>
-SimplexSolver<X>::hotstarted_minimise(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
+LinearSimplexSolver<X>::hotstarted_minimise(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                                       Array<Slackness>& vt) const
 {
     const SizeType m=A.row_size();
@@ -1472,7 +1472,7 @@ SimplexSolver<X>::hotstarted_minimise(const Vector<X>& c, const Vector<X>& xl, c
 
 template<class X>
 Vector<RigorousNumericType<X>>
-SimplexSolver<X>::hotstarted_minimise(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
+LinearSimplexSolver<X>::hotstarted_minimise(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                                       Array<Slackness>& vt, Array<SizeType>& p, Matrix<XX>& B) const
 {
     LOGGING_SCOPE_CREATE;
@@ -1518,10 +1518,10 @@ SimplexSolver<X>::hotstarted_minimise(const Vector<X>& c, const Vector<X>& xl, c
 
 
 
-template class SimplexSolver<RoundedFloatDP>;
-template class SimplexSolver<FloatDPApproximation>;
-template class SimplexSolver<FloatDP>;
-template class SimplexSolver<Rational>;
+template class LinearSimplexSolver<RoundedFloatDP>;
+template class LinearSimplexSolver<FloatDPApproximation>;
+template class LinearSimplexSolver<FloatDP>;
+template class LinearSimplexSolver<Rational>;
 
 
 } // namespace Ariadne

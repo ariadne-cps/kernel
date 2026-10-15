@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/interior_point_method.cpp
+ *            solving/linear_interior_point_method.cpp
  *
  *  Copyright  2008-20  Pieter Collins
  *
@@ -29,7 +29,7 @@
 #include "algebra/matrix.hpp"
 #include "algebra/diagonal_matrix.hpp"
 #include "function/affine.hpp"
-#include "solving/interior_point_method.hpp"
+#include "solving/linear_interior_point_method.hpp"
 
 #include "macro/general.hpp"
 #include "logging/logging.hpp"
@@ -171,7 +171,7 @@ OutputStream& operator<<(OutputStream& os, LinearProgramStatus lps) {
     }
 }
 
-ValidatedKleenean InteriorPointSolver::
+ValidatedKleenean LinearInteriorPointSolver::
 validate_feasibility(const Vector<X>& xl, const Vector<X>& xu,
                      const Matrix<X>& A, const Vector<X>& b,
                      const Vector<AX>& ax, const Vector<AX>& ay) const
@@ -228,7 +228,7 @@ validate_feasibility(const Vector<X>& xl, const Vector<X>& xu,
 
 
 auto
-InteriorPointSolver::minimise(const Vector<X>& c,
+LinearInteriorPointSolver::minimise(const Vector<X>& c,
                               const Vector<X>& xl, const Vector<X>& xu,
                               const Matrix<X>& A, const Vector<X>& b) const
     -> Tuple< AX, Vector<AX>, Vector<AX> >
@@ -270,7 +270,7 @@ InteriorPointSolver::minimise(const Vector<X>& c,
 
 
 
-auto InteriorPointSolver::
+auto LinearInteriorPointSolver::
 hotstarted_minimise(const Vector<X>& c,
                     const Vector<X>& xl, const Vector<X>& xu,
                     const Matrix<X>& A, const Vector<X>& b,
@@ -312,7 +312,7 @@ hotstarted_minimise(const Vector<X>& c,
 
 
 ValidatedKleenean
-InteriorPointSolver::
+LinearInteriorPointSolver::
 feasible(const Vector<X>& xl, const Vector<X>& xu,
          const Matrix<X>& A, const Vector<X>& b) const
 {
@@ -374,7 +374,7 @@ feasible(const Vector<X>& xl, const Vector<X>& xu,
 
 
 
-LinearProgramStatus InteriorPointSolver::
+LinearProgramStatus LinearInteriorPointSolver::
 _minimisation_step(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                    Vector<AX>& x, Vector<AX>& y, Vector<AX>& zl, Vector<AX>& zu) const
 {
@@ -482,7 +482,7 @@ _minimisation_step(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu,
 
 
 
-LinearProgramStatus InteriorPointSolver::
+LinearProgramStatus LinearInteriorPointSolver::
 _feasibility_step(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Vector<X>& b,
                   Vector<AX>& x, Vector<AX>& y, Vector<AX>& zl, Vector<AX>& zu) const
 {

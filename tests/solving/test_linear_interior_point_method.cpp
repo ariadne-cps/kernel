@@ -1,5 +1,5 @@
 /***************************************************************************
- *            test_interior_point_method.cpp
+ *            test_linear_interior_point_method.cpp
  *
  *  Copyright  2009-20  Pieter Collins
  *
@@ -30,7 +30,7 @@
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
-#include "solving/interior_point_method.hpp"
+#include "solving/linear_interior_point_method.hpp"
 #include "drawing/command_line_interface.hpp"
 #include "logging/logging.hpp"
 
@@ -39,11 +39,11 @@ using namespace Ariadne;
 
 double infd=inf.get_d();
 
-class TestInteriorPointSolver
+class TestLinearLinearInteriorPointSolver
 {
-    InteriorPointSolver* optimiser;
+    LinearInteriorPointSolver* optimiser;
   public:
-    TestInteriorPointSolver(InteriorPointSolver& o) : optimiser(&o) { }
+    TestLinearLinearInteriorPointSolver(LinearInteriorPointSolver& o) : optimiser(&o) { }
 
     Void test() {
         ARIADNE_TEST_CALL(test_validate_feasibility());
@@ -283,8 +283,8 @@ Int main(Int argc, const char* argv[])
 {
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
-    InteriorPointSolver interior_point_optimiser;
-    TestInteriorPointSolver(interior_point_optimiser).test();
+    LinearInteriorPointSolver interior_point_optimiser;
+    TestLinearLinearInteriorPointSolver(interior_point_optimiser).test();
 
     std::cerr<<"INCOMPLETE ";
     return ARIADNE_TEST_FAILURES;

@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/interior_point_method.hpp
+ *            solving/linear_interior_point_method.hpp
  *
  *  Copyright  2008-20  Pieter Collins
  *
@@ -22,12 +22,12 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file solving/interior_point_method.hpp
+/*! \file solving/linear_interior_point_method.hpp
  *  \brief Interior-point algorithms for linear programming.
  */
 
-#ifndef ARIADNE_INTERIOR_POINT_METHOD_HPP
-#define ARIADNE_INTERIOR_POINT_METHOD_HPP
+#ifndef ARIADNE_LINEAR_INTERIOR_POINT_METHOD_HPP
+#define ARIADNE_LINEAR_INTERIOR_POINT_METHOD_HPP
 
 #include "logging/logging.hpp"
 #include "algebra/vector.hpp"
@@ -42,7 +42,7 @@ OutputStream& operator<<(OutputStream& os, LinearProgramStatus lps);
 
 //! \ingroup OptimisationSubModule
 //! Solver for linear programming problems using interior point methods.
-class InteriorPointSolver
+class LinearInteriorPointSolver
 {
     typedef FloatDP X;
     typedef RigorousNumericType<X> VX;

@@ -32,7 +32,7 @@
 #include "utility/array.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
-#include "solving/simplex_algorithm.hpp"
+#include "solving/linear_simplex_algorithm.hpp"
 #include "geometry/point.hpp"
 #include "geometry/box.hpp"
 #include "geometry/list_set.hpp"
@@ -863,7 +863,7 @@ separated(const Zonotope& z, const ExactBoxType& bx)
         xu[d+j]=+1;
     }
 
-    return ! SimplexSolver<FloatDP>().feasible(xl,xu,A,b);
+    return ! LinearSimplexSolver<FloatDP>().feasible(xl,xu,A,b);
 }
 
 
@@ -892,7 +892,7 @@ separated(const Zonotope& z1, const Zonotope& z2)
     project(A,range(0,d),range(0,ng1))=G1;
     project(A,range(0,d),range(ng1,ng1+ng2))=G2;
 
-    return ! SimplexSolver<FloatDP>().feasible(xl,xu,A,b);
+    return ! LinearSimplexSolver<FloatDP>().feasible(xl,xu,A,b);
 }
 
 
@@ -910,7 +910,7 @@ contains(const Zonotope& z, const ExactPoint& pt)
     Vector<FloatDP> xl(m,-1.0);
     Vector<FloatDP> xu(m,1.0);
 
-    ValidatedKleenean result=SimplexSolver<FloatDP>().feasible(xl,xu,A,b);
+    ValidatedKleenean result=LinearSimplexSolver<FloatDP>().feasible(xl,xu,A,b);
     return result;
 }
 
