@@ -1348,9 +1348,9 @@ class TestConstraintSolver
                 y[0]*(1-y[0])
             });
             ExactBoxType domain({{0.0_x,1.0_x}});
-            auto result=solver.feasible(
+            auto feasibility_result=solver.feasible(
                 domain,function,ExactBoxType({{0.32_pr,0.32_pr}}));
-            ARIADNE_TEST_ASSERT(not definitely(result.first));
+            ARIADNE_TEST_ASSERT(not definitely(feasibility_result.first));
         }
 
         configuration.set_verbosity(old_verbosity);
