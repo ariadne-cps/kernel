@@ -355,8 +355,13 @@ feasible(const Vector<X>& xl, const Vector<X>& xu,
         }
         Vector<X> yv=exact_vector(y);
         VX yb=dot(yv,b);
-        // NOTE: Must compute y*A first, as A*X may give NaN.
-        VX yAX = dot( transpose(A) * yv, ivlx );
+        Vector<X> yA=transpose(A)*yv;
+        VX yAX=zero;
+        for(SizeType i=0; i!=n; ++i) {
+            if(yA[i]!=zero) {
+                yAX += yA[i]*ivlx[i];
+            }
+        }
         if(inconsistent(yb,yAX)) { return false; }
         if(result==LinearProgramStatus::DEGENERATE_FEASIBILITY) { LOGGING_PRINTLN("Degenerate"); return indeterminate; }
         if(decide(compute_mu(xl,xu, x,zl,zu)<THRESHOLD) ) { LOGGING_PRINTLN("Threshold"); return indeterminate; }
