@@ -56,6 +56,7 @@ class TestLinearInteriorPointSolver
         ARIADNE_TEST_CALL(test_hotstarted_optimization());
         ARIADNE_TEST_CALL(test_hotstarted_positive_gap());
         ARIADNE_TEST_CALL(test_hotstarted_boundary_optimum());
+        ARIADNE_TEST_CALL(test_hotstarted_nonfinite_direction());
         ARIADNE_TEST_CALL(test_feasibility());
         ARIADNE_TEST_CALL(test_mixed_bound_feasibility());
         ARIADNE_TEST_CALL(test_feasibility_iteration_limit());
@@ -253,6 +254,25 @@ class TestLinearInteriorPointSolver
         auto boundary_run=optimiser->hotstarted_minimise(c,xl,xu,A,b,x,y,zl,zu);
         ARIADNE_TEST_EQUAL(std::get<1>(boundary_run).size(),1u);
         ARIADNE_TEST_EQUAL(std::get<2>(boundary_run).size(),1u);
+    }
+
+    Void test_hotstarted_nonfinite_direction() {
+        // All public inputs are finite, but forming the normal equations
+        // overflows double precision. Rejecting a NaN Newton direction
+        // must leave the caller's primal and dual estimates unchanged.
+        Matrix<FloatDP> A({{1e200_pr}},dp);
+        Vector<FloatDP> b({0.0_x},dp);
+        Vector<FloatDP> c({1.0_x},dp);
+        Vector<FloatDP> xl({0.0_x},dp);
+        Vector<FloatDP> xu({2e200_pr},dp);
+        Vector<FloatDPApproximation> x({1e200_pr},dp);
+        Vector<FloatDPApproximation> y({0.0_x},dp);
+        Vector<FloatDPApproximation> zl({1.0_x},dp);
+        Vector<FloatDPApproximation> zu({1.0_x},dp);
+
+        auto result=optimiser->hotstarted_minimise(c,xl,xu,A,b,x,y,zl,zu);
+        ARIADNE_TEST_EQUAL(std::get<1>(result)[0],FloatDPApproximation(1e200_pr,dp));
+        ARIADNE_TEST_EQUAL(std::get<2>(result)[0],FloatDPApproximation(0.0_x,dp));
     }
 
     Void test_mixed_bound_feasibility() {
