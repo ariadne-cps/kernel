@@ -43,6 +43,27 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
         ARIADNE_TEST_CALL(test_compute_basis_nonunit_two_by_two());
+        ARIADNE_TEST_CALL(test_compute_basis_column_pivoting());
+    }
+
+    Void test_compute_basis_column_pivoting() {
+        // The first column cannot pivot on row zero. The algorithm
+        // must exchange the two columns and return the inverse in
+        // the resulting basis order.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{0.0_x,2.0_x},{1.0_x,1.0_x}},dp);
+
+        auto basis=solver.compute_basis(A);
+        const auto& p=basis.first;
+        const auto& B=basis.second;
+        ARIADNE_TEST_EQUAL(p.size(),2u);
+        ARIADNE_TEST_EQUAL(p[0],1u);
+        ARIADNE_TEST_EQUAL(p[1],0u);
+        ARIADNE_TEST_ASSERT(definitely(B[0][0]==FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(B[0][1]==FloatDPBounds(0.0_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(B[1][0]==FloatDPBounds(-0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(B[1][1]==FloatDPBounds(1.0_x,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,p,B));
     }
 
     Void test_compute_basis_nonunit_two_by_two() {
