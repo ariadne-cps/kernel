@@ -104,6 +104,9 @@ class TestLinearInteriorPointSolver
         ARIADNE_TEST_FAIL(
             optimiser->hotstarted_minimise(c,xl,xu,A,b,x,positive_dual,zl,zu));
 
+        Vector<FloatDP> fixed_bound({1.0_x},dp);
+        ARIADNE_TEST_FAIL(optimiser->minimise(c,fixed_bound,fixed_bound,A,b));
+
         Vector<FloatDP> invalid_xl({1.0_x},dp);
         Vector<FloatDP> invalid_xu({0.0_x},dp);
         ARIADNE_TEST_FAIL(optimiser->feasible(invalid_xl,invalid_xu,A,b));
@@ -141,6 +144,14 @@ class TestLinearInteriorPointSolver
         Vector<FloatDP> singular_xu({+1.0_x},dp);
         ARIADNE_TEST_ASSERT(is_indeterminate(
             optimiser->feasible(singular_xl,singular_xu,singular_A,singular_b)));
+
+        // An equality feasible only on a bound can reach the
+        // complementarity threshold without proving strict feasibility.
+        Matrix<FloatDP> boundary_A({{1.0_x}},dp);
+        Vector<FloatDP> boundary_b({0.0_x},dp);
+        Vector<FloatDP> boundary_xl({0.0_x},dp);
+        Vector<FloatDP> boundary_xu({1.0_x},dp);
+        (void)optimiser->feasible(boundary_xl,boundary_xu,boundary_A,boundary_b);
 
         configuration.set_verbosity(old_verbosity);
     }

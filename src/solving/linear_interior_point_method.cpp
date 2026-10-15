@@ -249,7 +249,7 @@ LinearInteriorPointSolver::minimise(const Vector<X>& c,
         if(xl[i]==-inf) {
             if(xu[i]==+inf) { x[i]=0.0_x; } else { x[i] = xu[i]-1.0_x; }
         } else {
-            if(xu[i]==+inf) { x[i]=xl[i]+1.0_x; } else { ARIADNE_ASSERT(xl[i]<xu[i]); x[i] = (xl[i]+xu[i])/2; }
+            if(xu[i]==+inf) { x[i]=xl[i]+1.0_x; } else { ARIADNE_PRECONDITION(xl[i]<xu[i]); x[i] = (xl[i]+xu[i])/2; }
         }
         if(xl[i]==-inf) { zl[i] = 0.0_x; } else { zl[i] = 1.0_x; }
         if(xu[i]==+inf) { zu[i] = 0.0_x; } else { zu[i] = 1.0_x; }
