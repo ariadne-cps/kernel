@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/linear_interior_point.hpp
+ *            solving/interior_point_method.hpp
  *
  *  Copyright  2008-20  Pieter Collins
  *
@@ -22,12 +22,12 @@
  *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file solving/linear_interior_point.hpp
+/*! \file solving/interior_point_method.hpp
  *  \brief Interior-point algorithms for linear programming.
  */
 
-#ifndef ARIADNE_LINEAR_INTERIOR_POINT_HPP
-#define ARIADNE_LINEAR_INTERIOR_POINT_HPP
+#ifndef ARIADNE_INTERIOR_POINT_METHOD_HPP
+#define ARIADNE_INTERIOR_POINT_METHOD_HPP
 
 #include "logging/logging.hpp"
 #include "algebra/vector.hpp"

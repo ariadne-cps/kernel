@@ -1,5 +1,5 @@
 /***************************************************************************
- *            test_linear_interior_point.cpp
+ *            test_interior_point_method.cpp
  *
  *  Copyright  2009-20  Pieter Collins
  *
@@ -30,7 +30,7 @@
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
-#include "solving/linear_interior_point.hpp"
+#include "solving/interior_point_method.hpp"
 #include "drawing/command_line_interface.hpp"
 #include "logging/logging.hpp"
 

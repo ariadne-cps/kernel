@@ -154,7 +154,7 @@ Void solving_submodule(pybind11::module& module)
 #include "function/constraint.hpp"
 #include "function/procedure.hpp"
 #include "solving/linear_programming.hpp"
-#include "solving/linear_interior_point.hpp"
+#include "solving/interior_point_method.hpp"
 #include "solving/simplex_algorithm.hpp"
 #include "solving/nonlinear_programming.hpp"
 #include "solving/constraint_solver.hpp"

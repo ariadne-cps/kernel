@@ -26,7 +26,7 @@
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
-#include "solving/linear_interior_point.hpp"
+#include "solving/interior_point_method.hpp"
 #include "solving/simplex_algorithm.hpp"
 #include "function/function.hpp"
 #include "function/affine.hpp"
