@@ -162,9 +162,9 @@ def tutorial_solving():
         (0.75, 1.25),
     ])
 
-    optimiser = NonlinearInteriorPointOptimiser()
+    optimiser = NonlinearInteriorPointSolver()
     # Feasibility as a separate task was already demonstrated with
-    # ConstraintSolver.  The current NonlinearInteriorPointOptimiser
+    # ConstraintSolver.  The current NonlinearInteriorPointSolver
     # feasibility_step path is not implemented, so this section focuses on
     # the supported minimisation workflow.
     optimum = optimiser.minimise(
@@ -181,7 +181,7 @@ def tutorial_solving():
     print("IntervalNewtonSolver: roots, fixed points and implicit functions.")
     print("ConstraintSolver: feasibility tests and interval-domain contraction.")
     print("FloatDPLinearLinearSimplexSolver: bounded linear programs with linear equalities.")
-    print("NonlinearInteriorPointOptimiser: constrained nonlinear minimisation with interior-point barriers.")
+    print("NonlinearInteriorPointSolver: constrained nonlinear minimisation with interior-point barriers.")
 
 
 if __name__ == "__main__":

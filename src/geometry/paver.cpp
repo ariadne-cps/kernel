@@ -32,6 +32,7 @@
 #include "function/taylor_function.hpp"
 #include "function/procedure.hpp"
 #include "solving/nonlinear_programming.hpp"
+#include "solving/nonlinear_interior_point_method.hpp"
 #include "solving/constraint_solver.hpp"
 #include "geometry/function_set.hpp"
 #include "geometry/affine_set.hpp"
@@ -343,7 +344,7 @@ Void hotstarted_constraint_adjoin_outer_approximation_recursion(
     // Set up the classes used for constraint propagation and
     // optimisation using the Kuhn-Tucker conditions
     ConstraintSolver solver;
-    NonlinearInteriorPointOptimiser optimiser;
+    NonlinearInteriorPointSolver optimiser;
     ValidatedVectorMultivariateFunction fg=join(f,g);
 
     const SizeType m=fg.argument_size();
@@ -514,7 +515,7 @@ Void hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(PavingIn
     LOGGING_PRINTLN_AT(1,"dom="<<d<<" cnst="<<c<<" cell="<<b.box()<<" dpth="<<b.depth()<<" e="<<e);
 
     ConstraintSolver solver;
-    NonlinearInteriorPointOptimiser optimiser;
+    NonlinearInteriorPointSolver optimiser;
 
     FloatDP t{pr};
     FloatDPPoint z(x.size(),dp);

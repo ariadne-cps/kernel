@@ -31,6 +31,8 @@
 #include "solving/linear_interior_point_method.hpp"
 #include "solving/linear_simplex_algorithm.hpp"
 #include "solving/nonlinear_programming.hpp"
+#include "solving/nonlinear_interior_point_method.hpp"
+#include "solving/nonlinear_penalty_function_method.hpp"
 
 #include "drawing/figure.hpp"
 #include "drawing/drawer.hpp"

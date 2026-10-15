@@ -159,6 +159,8 @@ Void solving_submodule(pybind11::module& module)
 #include "solving/linear_interior_point_method.hpp"
 #include "solving/linear_simplex_algorithm.hpp"
 #include "solving/nonlinear_programming.hpp"
+#include "solving/nonlinear_interior_point_method.hpp"
+#include "solving/nonlinear_penalty_function_method.hpp"
 #include "solving/constraint_solver.hpp"
 
 using namespace Ariadne;
@@ -198,31 +200,31 @@ Void export_constraint(pybind11::module& module)
 
 Void export_optimiser_interface(pybind11::module& module)
 {
-    typedef OptimiserInterface::ValidatedNumericType ValidatedNumericType;
-    typedef OptimiserInterface::ExactVectorType ExactVectorType;
+    typedef NonlinearProgrammingSolverInterface::ValidatedNumericType ValidatedNumericType;
+    typedef NonlinearProgrammingSolverInterface::ExactVectorType ExactVectorType;
 
-    pybind11::class_<OptimiserInterface> optimiser_interface_class(module,"OptimiserInterface");
-    optimiser_interface_class.def("minimise", (Vector<ValidatedNumericType>(OptimiserInterface::*)(ValidatedScalarMultivariateFunction, ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType)const) &OptimiserInterface::minimise);
-    optimiser_interface_class.def("minimise", (Vector<ValidatedNumericType>(OptimiserInterface::*)(ValidatedScalarMultivariateFunction, ExactBoxType, ValidatedVectorMultivariateFunction, ValidatedVectorMultivariateFunction)const) &OptimiserInterface::minimise);
-    optimiser_interface_class.def("feasible", (ValidatedKleenean(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType)const) &OptimiserInterface::feasible);
-    optimiser_interface_class.def("feasible", (ValidatedKleenean(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ValidatedVectorMultivariateFunction)const) &OptimiserInterface::feasible);
-    optimiser_interface_class.def("almost_feasible_point", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPApproximationVector, FloatDPApproximation)const) &OptimiserInterface::almost_feasible_point);
-    optimiser_interface_class.def("is_feasible_point", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPVector)const) &OptimiserInterface::is_feasible_point);
-    optimiser_interface_class.def("validate_feasibility", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType)const) &OptimiserInterface::validate_feasibility);
-    optimiser_interface_class.def("validate_feasibility", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType,ExactVectorType)const) &OptimiserInterface::validate_feasibility);
-    optimiser_interface_class.def("validate_infeasibility", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType,ExactVectorType)const) &OptimiserInterface::validate_infeasibility);
-    optimiser_interface_class.def("contains_feasible_point", (ValidatedKleenean(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPBoundsVector)const) &OptimiserInterface::contains_feasible_point);
-    optimiser_interface_class.def("is_infeasibility_certificate", (Bool(OptimiserInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType)const) &OptimiserInterface::is_infeasibility_certificate);
+    pybind11::class_<NonlinearProgrammingSolverInterface> optimiser_interface_class(module,"NonlinearProgrammingSolverInterface");
+    optimiser_interface_class.def("minimise", (Vector<ValidatedNumericType>(NonlinearProgrammingSolverInterface::*)(ValidatedScalarMultivariateFunction, ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType)const) &NonlinearProgrammingSolverInterface::minimise);
+    optimiser_interface_class.def("minimise", (Vector<ValidatedNumericType>(NonlinearProgrammingSolverInterface::*)(ValidatedScalarMultivariateFunction, ExactBoxType, ValidatedVectorMultivariateFunction, ValidatedVectorMultivariateFunction)const) &NonlinearProgrammingSolverInterface::minimise);
+    optimiser_interface_class.def("feasible", (ValidatedKleenean(NonlinearProgrammingSolverInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType)const) &NonlinearProgrammingSolverInterface::feasible);
+    optimiser_interface_class.def("feasible", (ValidatedKleenean(NonlinearProgrammingSolverInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ValidatedVectorMultivariateFunction)const) &NonlinearProgrammingSolverInterface::feasible);
+    optimiser_interface_class.def("almost_feasible_point", (Bool(NonlinearProgrammingSolverInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPApproximationVector, FloatDPApproximation)const) &NonlinearProgrammingSolverInterface::almost_feasible_point);
+    optimiser_interface_class.def("is_feasible_point", (Bool(NonlinearProgrammingSolverInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPVector)const) &NonlinearProgrammingSolverInterface::is_feasible_point);
+    optimiser_interface_class.def("validate_feasibility", (Bool(NonlinearProgrammingSolverInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType)const) &NonlinearProgrammingSolverInterface::validate_feasibility);
+    optimiser_interface_class.def("validate_feasibility", (Bool(NonlinearProgrammingSolverInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType,ExactVectorType)const) &NonlinearProgrammingSolverInterface::validate_feasibility);
+    optimiser_interface_class.def("validate_infeasibility", (Bool(NonlinearProgrammingSolverInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType,ExactVectorType)const) &NonlinearProgrammingSolverInterface::validate_infeasibility);
+    optimiser_interface_class.def("contains_feasible_point", (ValidatedKleenean(NonlinearProgrammingSolverInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,FloatDPBoundsVector)const) &NonlinearProgrammingSolverInterface::contains_feasible_point);
+    optimiser_interface_class.def("is_infeasibility_certificate", (Bool(NonlinearProgrammingSolverInterface::*)(ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType,ExactVectorType)const) &NonlinearProgrammingSolverInterface::is_infeasibility_certificate);
     //NOTE: Not in C++ API
-    //optimiser_interface_class.def("__str__", &__cstr__<OptimiserInterface>);
+    //optimiser_interface_class.def("__str__", &__cstr__<NonlinearProgrammingSolverInterface>);
 }
 
 Void export_interior_point_solvers(pybind11::module& module)
 {
-    pybind11::class_<NonlinearInfeasibleInteriorPointOptimiser,OptimiserInterface> nonlinear_infeasible_interior_point_solver_class(module,"NonlinearInfeasibleInteriorPointOptimiser");
+    pybind11::class_<NonlinearInfeasibleInteriorPointSolver,NonlinearProgrammingSolverInterface> nonlinear_infeasible_interior_point_solver_class(module,"NonlinearInfeasibleInteriorPointSolver");
     nonlinear_infeasible_interior_point_solver_class.def(pybind11::init<>());
 
-    pybind11::class_<NonlinearInteriorPointOptimiser,OptimiserInterface> nonlinear_interior_point_solver_class(module,"NonlinearInteriorPointOptimiser");
+    pybind11::class_<NonlinearInteriorPointSolver,NonlinearProgrammingSolverInterface> nonlinear_interior_point_solver_class(module,"NonlinearInteriorPointSolver");
     nonlinear_interior_point_solver_class.def(pybind11::init<>());
 }
 

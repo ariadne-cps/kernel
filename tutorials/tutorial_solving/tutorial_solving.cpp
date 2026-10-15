@@ -162,9 +162,9 @@ int main() {
     // use case for the barrier-based interior-point implementation.
     //
     // Feasibility as a separate task was already demonstrated above with
-    // ConstraintSolver.  NonlinearInteriorPointOptimiser::feasible() is not
+    // ConstraintSolver.  NonlinearInteriorPointSolver::feasible() is not
     // used here because its current feasibility_step path is not implemented.
-    NonlinearInteriorPointOptimiser optimiser;
+    NonlinearInteriorPointSolver optimiser;
     auto q = EffectiveScalarMultivariateFunction::coordinates(2);
     EffectiveScalarMultivariateFunction objective_function =
         sqr(q[0] - 0.625_x) + sqr(q[1] - 0.375_x);
@@ -194,7 +194,7 @@ int main() {
         << "IntervalNewtonSolver: roots, fixed points and implicit functions.\n"
         << "ConstraintSolver: feasibility tests and interval-domain contraction.\n"
         << "LinearSimplexSolver: bounded linear programs with linear equalities.\n"
-        << "NonlinearInteriorPointOptimiser: constrained nonlinear minimisation with interior-point barriers.\n";
+        << "NonlinearInteriorPointSolver: constrained nonlinear minimisation with interior-point barriers.\n";
 
     return 0;
 }

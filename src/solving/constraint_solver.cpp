@@ -40,6 +40,7 @@
 #include "function/procedure.hpp"
 #include "function/constraint.hpp"
 #include "solving/nonlinear_programming.hpp"
+#include "solving/nonlinear_interior_point_method.hpp"
 #include "function/function_mixin.hpp"
 #include "function/taylor_function.hpp"
 
@@ -106,7 +107,7 @@ auto ConstraintSolver::feasible(const ExactBoxType& domain,
         }
     }
 
-    NonlinearInfeasibleInteriorPointOptimiser optimiser;
+    NonlinearInfeasibleInteriorPointSolver optimiser;
     Pair<ValidatedKleenean,FloatDPApproximationVector> candidate_result;
     try {
         candidate_result=optimiser.feasible_candidate(

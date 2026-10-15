@@ -31,6 +31,7 @@
 #include "function/formula.hpp"
 #include "function/procedure.hpp"
 #include "solving/nonlinear_programming.hpp"
+#include "solving/nonlinear_interior_point_method.hpp"
 #include "solving/constraint_solver.hpp"
 #include "geometry/function_set.hpp"
 #include "geometry/affine_set.hpp"
@@ -1050,7 +1051,7 @@ ValidatedLowerKleenean ValidatedConstrainedImageSet::overlaps(const ExactBoxType
     ExactBoxType constraint_bounds = intersection(this->constraint_bounds(),cast_exact_box(Ariadne::apply(this->constraint_function(),subdomain)));
     ExactBoxType codomain = product(bx,constraint_bounds);
     //std::cerr<<"codomain="<<codomain<<"\n";
-    NonlinearInfeasibleInteriorPointOptimiser optimiser;
+    NonlinearInfeasibleInteriorPointSolver optimiser;
 
     List<Pair<Nat,ExactBoxType> > subdomains;
     Nat splittings(0);

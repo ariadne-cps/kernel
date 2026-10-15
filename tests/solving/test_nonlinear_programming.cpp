@@ -33,19 +33,21 @@
 #include "function/taylor_model.hpp"
 #include "function/formula.hpp"
 #include "solving/nonlinear_programming.hpp"
+#include "solving/nonlinear_interior_point_method.hpp"
+#include "solving/nonlinear_penalty_function_method.hpp"
 #include "geometry/box.hpp"
 #include "drawing/command_line_interface.hpp"
 
 using namespace std;
 using namespace Ariadne;
 
-class TestOptimiser
+class TestNonlinearProgrammingSolver
 {
   private:
-    std::unique_ptr<OptimiserInterface> optimiser;
+    std::unique_ptr<NonlinearProgrammingSolverInterface> optimiser;
     DoublePrecision pr;
   public:
-    TestOptimiser(const OptimiserInterface& opt)
+    TestNonlinearProgrammingSolver(const NonlinearProgrammingSolverInterface& opt)
         : optimiser(opt.clone()) { }
 
     Void test() {
@@ -196,10 +198,10 @@ class TestOptimiser
 
 };
 
-class TestNonlinearInfeasibleInteriorPointOptimiser
+class TestNonlinearInfeasibleInteriorPointSolver
 {
   private:
-    NonlinearInfeasibleInteriorPointOptimiser optimiser;
+    NonlinearInfeasibleInteriorPointSolver optimiser;
   public:
     Void test() {
         ARIADNE_TEST_CALL(test_candidate_linear());
@@ -439,18 +441,18 @@ class TestNonlinearInfeasibleInteriorPointOptimiser
 Int main(Int argc, const char* argv[]) {
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
-    NonlinearInfeasibleInteriorPointOptimiser nlio;
-    TestOptimiser(nlio).test();
-    TestNonlinearInfeasibleInteriorPointOptimiser().test();
+    NonlinearInfeasibleInteriorPointSolver nlio;
+    TestNonlinearProgrammingSolver(nlio).test();
+    TestNonlinearInfeasibleInteriorPointSolver().test();
     return ARIADNE_TEST_FAILURES;
-    NonlinearInteriorPointOptimiser nlo;
-    TestOptimiser(nlo).test();
+    NonlinearInteriorPointSolver nlo;
+    TestNonlinearProgrammingSolver(nlo).test();
 
-    ApproximateOptimiser appo;
-    TestOptimiser(appo).test_nonlinear_equality_feasibility();
+    ApproximateNonlinearInteriorPointSolver appo;
+    TestNonlinearProgrammingSolver(appo).test_nonlinear_equality_feasibility();
 
-    IntervalOptimiser ivlo;
-    TestOptimiser(ivlo).test_nonlinear_equality_feasibility();
+    IntervalNonlinearInteriorPointSolver ivlo;
+    TestNonlinearProgrammingSolver(ivlo).test_nonlinear_equality_feasibility();
     return ARIADNE_TEST_FAILURES;
 }
 
