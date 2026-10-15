@@ -35,6 +35,19 @@ class TestLinearSimplexSolver
   public:
     Void test() {
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
+        ARIADNE_TEST_CALL(test_validated_strict_feasibility());
+    }
+
+    Void test_validated_strict_feasibility() {
+        // With x0+x1=1/2 and both variables in [0,1], the initial
+        // basis gives x0=1/2, a strictly feasible basic variable.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({0.5_x},dp);
+        Vector<FloatDP> xl({0.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({1.0_x,1.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(definitely(solver.validated_feasible(xl,xu,A,b)));
     }
 
     Void test_pivot_to_better_vertex() {
