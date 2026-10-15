@@ -42,6 +42,25 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_hotstarted_minimise_partial_permutation());
         ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
+        ARIADNE_TEST_CALL(test_compute_basis_nonunit_two_by_two());
+    }
+
+    Void test_compute_basis_nonunit_two_by_two() {
+        // With no unit column, both pivot stages require elimination.
+        // The nonzero upper off-diagonal also requires backsubstitution.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{2.0_x,1.0_x},{1.0_x,2.0_x}},dp);
+        Array<SizeType> p(2u);
+        Matrix<FloatDPBounds> B=Matrix<FloatDPBounds>::identity(2u,dp);
+
+        make_lpair(p,B)=solver.compute_basis(A);
+        ARIADNE_TEST_EQUAL(p[0],0u);
+        ARIADNE_TEST_EQUAL(p[1],1u);
+        ARIADNE_TEST_ASSERT(definitely(B[0][0]>FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(B[1][1]>FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(B[0][1]<FloatDPBounds(-0.25_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(B[1][0]<FloatDPBounds(-0.25_x,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,p,B));
     }
 
     Void test_hotstarted_feasibility_optional_basis() {
