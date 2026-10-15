@@ -41,6 +41,52 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_hotstarted_optimisation_from_alternate_basis());
         ARIADNE_TEST_CALL(test_hotstarted_minimise_partial_permutation());
         ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
+        ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
+    }
+
+    Void test_hotstarted_feasibility_optional_basis() {
+        // The full hotstart interface can construct a basis when no
+        // variable types are supplied, or reconstruct the permutation
+        // from caller-supplied variable types.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({0.5_x},dp);
+        Vector<FloatDP> xl({0.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({1.0_x,1.0_x},dp);
+
+        Array<Slackness> inferred_vt(0u);
+        Array<SizeType> inferred_p(0u);
+        Matrix<FloatDPBounds> inferred_B=Matrix<FloatDPBounds>::identity(1u,dp);
+        Vector<FloatDPBounds> inferred_x({0.0_x,0.0_x},dp);
+        Vector<FloatDPBounds> inferred_y({0.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(definitely(solver.hotstarted_feasible(
+            xl,xu,A,b,inferred_vt,inferred_p,inferred_B,inferred_x,inferred_y)));
+        ARIADNE_TEST_EQUAL(inferred_vt.size(),2u);
+        ARIADNE_TEST_EQUAL(inferred_vt[0],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(inferred_vt[1],Slackness::LOWER);
+        ARIADNE_TEST_EQUAL(inferred_p.size(),2u);
+        ARIADNE_TEST_EQUAL(inferred_p[0],0u);
+        ARIADNE_TEST_EQUAL(inferred_p[1],1u);
+        ARIADNE_TEST_ASSERT(definitely(inferred_x[0]==FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(inferred_x[1]==FloatDPBounds(0.0_x,dp)));
+
+        Array<Slackness> supplied_vt(2u);
+        supplied_vt[0]=Slackness::BASIS;
+        supplied_vt[1]=Slackness::LOWER;
+        Array<SizeType> reconstructed_p(0u);
+        Matrix<FloatDPBounds> reconstructed_B=Matrix<FloatDPBounds>::identity(1u,dp);
+        Vector<FloatDPBounds> reconstructed_x({0.0_x,0.0_x},dp);
+        Vector<FloatDPBounds> reconstructed_y({0.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(definitely(solver.hotstarted_feasible(
+            xl,xu,A,b,supplied_vt,reconstructed_p,reconstructed_B,reconstructed_x,reconstructed_y)));
+        ARIADNE_TEST_EQUAL(reconstructed_p.size(),2u);
+        ARIADNE_TEST_EQUAL(reconstructed_p[0],0u);
+        ARIADNE_TEST_EQUAL(reconstructed_p[1],1u);
+        ARIADNE_TEST_ASSERT(definitely(reconstructed_x[0]==inferred_x[0]));
+        ARIADNE_TEST_ASSERT(definitely(reconstructed_x[1]==inferred_x[1]));
+        ARIADNE_TEST_ASSERT(definitely(reconstructed_B[0][0]==inferred_B[0][0]));
     }
 
     Void test_consistency_check_nonsquare_system() {
