@@ -96,7 +96,7 @@ auto ConstraintSolver::feasible(const ExactBoxType& domain,
     LOGGING_PRINTLN("domain="<<domain);
     LOGGING_PRINTLN("function="<<function);
     LOGGING_PRINTLN("codomain="<<codomain);
-    ARIADNE_ASSERT(codomain.dimension()>0);
+    ARIADNE_PRECONDITION(codomain.dimension()>0);
 
     UpperBoxType image=apply(function,domain);
     LOGGING_PRINTLN_AT(1,"image="<<image);
@@ -132,8 +132,8 @@ auto ConstraintSolver::feasible(const ExactBoxType& domain,
 Bool ConstraintSolver::reduce(UpperBoxType& domain, const ValidatedVectorMultivariateFunction& function, const ExactBoxType& codomain) const
 {
     const ExactDouble MINIMUM_REDUCTION = 0.75_x;
-    ARIADNE_ASSERT(function.argument_size()==domain.size());
-    ARIADNE_ASSERT(function.result_size()==codomain.size());
+    ARIADNE_PRECONDITION(function.argument_size()==domain.size());
+    ARIADNE_PRECONDITION(function.result_size()==codomain.size());
 
     if(definitely(domain.is_empty())) { return true; }
 
@@ -297,7 +297,6 @@ std::vector<SizeType> propagation_procedure_dependencies(
     ValidatedProcedure const& procedure)
 {
     std::vector<SizeType> dependencies;
-    std::vector<Bool> seen(procedure.argument_size(),false);
     for(SizeType i=0u;i!=procedure._instructions.size();++i) {
         auto const* variable=
             std::get_if<IndexProcedureInstruction>(
@@ -305,11 +304,10 @@ std::vector<SizeType> propagation_procedure_dependencies(
         if(variable==nullptr) {
             continue;
         }
-        SizeType const index=variable->_ind;
-        if(index<seen.size() && not seen[index]) {
-            seen[index]=true;
-            dependencies.push_back(index);
-        }
+        // Procedures produced from a function contain one cached index
+        // instruction per referenced coordinate. The instruction index is
+        // therefore already an argument index of the procedure.
+        dependencies.push_back(variable->_ind);
     }
     return dependencies;
 }
@@ -433,9 +431,7 @@ Bool ConstraintSolver::propagate(
                 propagation_procedure_dependencies(
                     *constraints[constraint_index].hull_procedure);
             for(SizeType variable:dependencies[constraint_index]) {
-                if(variable<watchers.size()) {
-                    watchers[variable].push_back(constraint_index);
-                }
+                watchers[variable].push_back(constraint_index);
             }
         }
 
@@ -589,7 +585,6 @@ Bool ConstraintSolver::propagate(
 
         if(same(domain,previous)) {
             UpperBoxType before_shaving=domain;
-            Bool shaving_refresh_without_change=false;
             if(shaving_reduction_enabled) {
                 ++statistics.shaving_rounds;
                 if(shaving_full_refresh) {
@@ -652,13 +647,9 @@ Bool ConstraintSolver::propagate(
                     // after contractions performed by other pairs.
                     shaving_full_refresh=true;
                     continue;
-                } else {
-                    shaving_refresh_without_change=true;
                 }
             }
-            if(same(domain,before_shaving)
-               && (not shaving_reduction_enabled
-                   || shaving_refresh_without_change)) {
+            if(same(domain,before_shaving)) {
                 if(not monotone_reduction_enabled) {
                     return false;
                 }
@@ -950,8 +941,6 @@ Bool ConstraintSolver::box_reduce(
     // The set cannot be empty, since a nonempty slice has been found in the upper pass.
     // Note that the interval is an UpperIntervalType, so non-emptiness of the approximated set cannot be guaranteed,
     // but emptiness would be verified
-    ARIADNE_ASSERT(not definitely(new_interval.is_empty()));
-
     domain[variable]=new_interval;
 
     return false;

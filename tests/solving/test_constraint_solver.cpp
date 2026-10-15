@@ -1252,6 +1252,20 @@ class TestConstraintSolver
         ARIADNE_TEST_ASSERT(
             contracting_list_domain[0].lower_bound().raw()
             ==contracting_list_domain[0].upper_bound().raw());
+
+        std::cout << "[constraint-reduce] reject argument/domain dimension mismatch" << std::endl;
+        UpperBoxType wrong_domain=ExactBoxType({
+            {0.0_x,1.0_x},{0.0_x,1.0_x}
+        });
+        ARIADNE_TEST_FAIL(
+            solver.reduce(wrong_domain,vector_function,vector_codomain));
+
+        std::cout << "[constraint-reduce] reject result/codomain dimension mismatch" << std::endl;
+        UpperBoxType one_dimensional_domain=ExactBoxType({{0.0_x,1.0_x}});
+        ExactBoxType empty_codomain(0u);
+        ARIADNE_TEST_FAIL(
+            solver.reduce(
+                one_dimensional_domain,vector_function,empty_codomain));
     }
 
     Void test_check_feasibility() {
@@ -1319,6 +1333,26 @@ class TestConstraintSolver
             ExactBoxType({{0.0_x,1.0_x}}),
             point)));
 
+        {
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            ValidatedVectorMultivariateFunction function({y[0]});
+            ExactBoxType domain({{0.0_x,1.0_x}});
+            ARIADNE_TEST_ASSERT(not possibly(
+                solver.feasible(
+                    domain,function,ExactBoxType({{2.0_x,3.0_x}})).first));
+        }
+
+        {
+            auto y=ValidatedScalarMultivariateFunction::coordinates(1);
+            ValidatedVectorMultivariateFunction function({
+                y[0]*(1-y[0])
+            });
+            ExactBoxType domain({{0.0_x,1.0_x}});
+            auto result=solver.feasible(
+                domain,function,ExactBoxType({{0.32_pr,0.32_pr}}));
+            ARIADNE_TEST_ASSERT(not definitely(result.first));
+        }
+
         configuration.set_verbosity(old_verbosity);
     }
 
@@ -1347,11 +1381,19 @@ class TestConstraintSolver
 
     Void test_feasible() {
 
-        auto& configuration=Logger::instance().configuration();
-        unsigned int const old_verbosity=configuration.verbosity();
-        configuration.set_verbosity(10u);
-
         ConstraintSolver contractor;
+        {
+            std::cout << "[constraint-feasible] reject empty codomain" << std::endl;
+            auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+            ValidatedVectorMultivariateFunction empty_function(
+                0u,coordinate[0].domain());
+            ARIADNE_TEST_FAIL(
+                contractor.feasible(
+                    ExactBoxType({{0.0_x,1.0_x}}),
+                    empty_function,
+                    ExactBoxType(0u)));
+        }
+
         {
             std::cout << "[constraint-feasible] empty constraint system" << std::endl;
             List<ValidatedConstraint> no_constraints;
@@ -1469,7 +1511,6 @@ class TestConstraintSolver
                     domain,function,codomain,feasibility_result.second)));
             }
         }
-        configuration.set_verbosity(old_verbosity);
     }
 };
 
