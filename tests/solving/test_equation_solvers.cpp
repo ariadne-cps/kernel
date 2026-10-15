@@ -274,7 +274,7 @@ Void test_equation_solver_base_paths()
 
     IntervalNewtonSolver loose_newton(3.0,4);
     EffectiveVectorMultivariateFunction singular({x*x});
-    ExactBoxType small({{-0.1_x,0.1_x}});
+    ExactBoxType small({{-0.125_x,0.125_x}});
     ARIADNE_TEST_EQUAL(loose_newton.solve_all(singular,small).size(),0u);
 
     FloatDPApproximationVector parameter(1u,dp);
