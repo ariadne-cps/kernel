@@ -43,6 +43,33 @@
 
 namespace Ariadne {
 
+namespace {
+
+template<class X> auto
+operator*(const Matrix<X>& A,const ValidatedVectorMultivariateFunctionPatch& v)
+    -> ValidatedVectorMultivariateFunctionPatch
+{
+    ARIADNE_ASSERT(v.size()!=0);
+    ValidatedVectorMultivariateFunctionPatch r(A.row_size(),factory(v).create_zero());
+    for(SizeType i=0; i!=r.size(); ++i) {
+        ValidatedScalarMultivariateFunctionPatch t=r[i];
+        for(SizeType j=0; j!=v.size(); ++j) {
+            t+=A[i][j]*v[j];
+        }
+        r[i]=t;
+    }
+    return r;
+}
+
+template<class X> auto
+linear_solve(const Matrix<X>& A,const ValidatedVectorMultivariateFunctionPatch& v)
+    -> ValidatedVectorMultivariateFunctionPatch
+{
+    return inverse(A)*v;
+}
+
+} // namespace
+
 
 auto IntervalNewtonSolver::step(const ValidatedVectorMultivariateFunction& f,
                                         const Vector<ValidatedNumericType>& x) const
