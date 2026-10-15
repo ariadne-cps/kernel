@@ -322,12 +322,26 @@ Void ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(PavingIn
     Int cell_depth=cell.depth();
     Int maximum_depth=static_cast<Int>(fineness*cell.dimension());
 
-    // Check for disjointness using linear program
-    //ValidatedKleenean feasible=SimplexSolver<FloatDP>().hotstarted_feasible(lp.A,lp.b,lp.l,lp.u,lp.vt,lp.p,lp.B,lp.x,lp.y);
-    InteriorPointSolver optimiser;
-    ValidatedKleenean feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
-    //feasible=verify_feasibility(lp.A,lp.b,lp.l,lp.u,lp.vt);
+    // Check for disjointness using a hot-started simplex basis first.
+    // A validated simplex certificate is sufficient to decide the cell and
+    // avoids restarting the interior-point method for most recursive cells.
+    // Keep the interior-point solver as a fallback when validation is
+    // indeterminate, preserving the previous behaviour in difficult cases.
+    ValidatedKleenean feasible=indeterminate;
+    try {
+        SimplexSolver<FloatDP> lpsolver;
+        (void)lpsolver.hotstarted_feasible(
+            lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x,lp.y);
+        feasible=lpsolver.verify_feasibility(lp.l,lp.u,lp.A,lp.b,lp.vt);
+    } catch(DegenerateFeasibilityProblemException const&) {
+        feasible=indeterminate;
+    }
     if(definitely(!feasible)) { return; }
+    if(not definitely(feasible)) {
+        InteriorPointSolver optimiser;
+        feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
+        if(definitely(!feasible)) { return; }
+    }
 
     // If not disjoint, and we are at maximum depth, adjoin the set.
     // Otherwise, split and continue.
