@@ -322,25 +322,10 @@ Void ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(PavingIn
     Int cell_depth=cell.depth();
     Int maximum_depth=static_cast<Int>(fineness*cell.dimension());
 
-    // Check for disjointness with a fresh simplex solve first. Do not
-    // reuse simplex state across sibling cells: their bounds differ and a
-    // previously feasible basis may no longer satisfy the new cell bounds.
-    // If simplex cannot decide robustly, retain the interior-point solver as
-    // the fallback so difficult cases keep the previous semantics.
-    ValidatedKleenean feasible=indeterminate;
-    try {
-        feasible=SimplexSolver<FloatDP>().feasible(lp.l,lp.u,lp.A,lp.b);
-    } catch(DegenerateFeasibilityProblemException const&) {
-        feasible=indeterminate;
-    } catch(SingularLinearProgram const&) {
-        feasible=indeterminate;
-    }
+    // Check for disjointness using linear program
+    InteriorPointSolver optimiser;
+    ValidatedKleenean feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
     if(definitely(!feasible)) { return; }
-    if(not definitely(feasible)) {
-        InteriorPointSolver optimiser;
-        feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
-        if(definitely(!feasible)) { return; }
-    }
 
     // If not disjoint, and we are at maximum depth, adjoin the set.
     // Otherwise, split and continue.
@@ -462,8 +447,6 @@ ValidatedAffineConstrainedImageSet::adjoin_outer_approximation_to(PavingInterfac
 
 Void ValidatedAffineConstrainedImageSet::_robust_adjoin_outer_approximation_to(PavingInterface& paving, LinearProgram<FloatDP>& lp, const Vector<FloatDPError>& errors, GridCell& cell, Nat fineness)
 {
-    SimplexSolver<FloatDP> lpsolver;
-
     const SizeType nx=cell.dimension();
     const SizeType nc=lp.A.row_size()-nx;
     const SizeType ne=lp.A.column_size()-lp.A.row_size()-1u;
@@ -481,18 +464,13 @@ Void ValidatedAffineConstrainedImageSet::_robust_adjoin_outer_approximation_to(P
     Int cell_depth=cell.depth();
     Int maximum_depth=static_cast<Int>(fineness*cell.dimension());
 
-    ValidatedKleenean feasible=lpsolver.hotstarted_feasible(lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x,lp.y);
+    // Robust intersection is equivalent to feasibility with the robustness
+    // variable constrained to be nonnegative.  The previous implementation
+    // started it at -1 and then optimised -r until r>=0, which needlessly
+    // exercised degenerate simplex pivots.
+    InteriorPointSolver optimiser;
+    ValidatedKleenean feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
     if(definitely(not feasible)) {
-        return;
-    }
-
-    Bool done=false;
-    while(!done && possibly(lp.x[ne+nx+nc]<0)) {
-        done=lpsolver.lpstep(lp.c,lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x);
-    }
-
-    Vector<FloatDPBounds> x=lpsolver.compute_x(lp.l,lp.u,lp.A,lp.b,lp.vt);
-    if(possibly(x[ne+nx+nc]<0)) {
         return;
     }
 
@@ -512,8 +490,6 @@ ValidatedAffineConstrainedImageSet::robust_adjoin_outer_approximation_to(PavingI
     LOGGING_SCOPE_CREATE;
 
     ARIADNE_PRECONDITION(this->dimension()==paving.dimension());
-
-    SimplexSolver<FloatDP> lpsolver;
 
     GridCell bounding_cell=GridCell::smallest_enclosing_primary_cell(this->bounding_box(),paving.grid());
 
@@ -589,8 +565,7 @@ ValidatedAffineConstrainedImageSet::robust_adjoin_outer_approximation_to(PavingI
         lp.A[i][ne+nx+nc]=1;
     }
     lp.c[ne+nx+nc]=-1;
-    //lp.l[ne+nx+nc]=0;
-    lp.l[ne+nx+nc]=-1;
+    lp.l[ne+nx+nc]=0;
     lp.u[ne+nx+nc]=infty;
     lp.vt[ne+nx+nc]=Slackness::LOWER;
     lp.p[ne+nx+nc]=ne+nx+nc;
@@ -621,8 +596,6 @@ ValidatedAffineConstrainedImageSet::robust_adjoin_outer_approximation_to(PavingI
     }
 
     LOGGING_PRINTLN("A="<<lp.A<<"\nb="<<lp.b<<"\nl="<<lp.l<<"\nu="<<lp.u);
-    (void)lpsolver.hotstarted_feasible(lp.l,lp.u,lp.A,lp.b,lp.vt,lp.p,lp.B,lp.x,lp.y);
-    LOGGING_PRINTLN("  vt="<<lp.vt<<"\nx="<<lp.x);
 
     _robust_adjoin_outer_approximation_to(paving,lp,errors,bounding_cell,fineness);
 }
