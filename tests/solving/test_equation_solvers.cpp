@@ -360,6 +360,38 @@ Void test_interval_newton_paths()
     config.set_verbosity(old_verbosity);
 }
 
+
+Void test_krawczyk_logging_paths()
+{
+    EffectiveScalarMultivariateFunction x=EffectiveScalarMultivariateFunction::coordinate(1,0);
+    EffectiveVectorMultivariateFunction linear({x-0.5_x});
+    FloatDPBoundsVector search_box({FloatDPBounds(0.0_x,1.0_x,dp)});
+
+    KrawczykSolver krawczyk(1e-8,12);
+    FactoredKrawczykSolver factored(1e-8,12);
+    auto& configuration=Logger::instance().configuration();
+    unsigned int const previous_verbosity=configuration.verbosity();
+    configuration.set_verbosity(10u);
+
+    auto krawczyk_step=krawczyk.step(linear,search_box);
+    auto factored_step=factored.step(linear,search_box);
+    ARIADNE_TEST_BINARY_PREDICATE(
+        contains,ExactIntervalType(0.0_x,1.0_x),krawczyk_step[0]);
+    ARIADNE_TEST_BINARY_PREDICATE(
+        contains,ExactIntervalType(0.0_x,1.0_x),factored_step[0]);
+
+    auto coordinates=EffectiveScalarMultivariateFunction::coordinates(2);
+    EffectiveVectorMultivariateFunction implicit_equation({coordinates[1]-coordinates[0]});
+    ExactBoxType parameter_box({{-0.25_x,0.25_x}});
+    ExactBoxType solution_box({{-1.0_x,1.0_x}});
+    auto implicit_solution=krawczyk.implicit(implicit_equation,parameter_box,solution_box);
+    EffectiveScalarMultivariateFunction p=EffectiveScalarMultivariateFunction::coordinate(1,0);
+    EffectiveVectorMultivariateFunction expected({p});
+    ARIADNE_TEST_COMPARE(norm(implicit_solution-expected),<,1e-8_pr);
+
+    configuration.set_verbosity(previous_verbosity);
+}
+
 #include "algebra/differential.hpp"
 
 Int main(Int argc, const char **argv) {
@@ -368,6 +400,7 @@ Int main(Int argc, const char **argv) {
 
     ARIADNE_TEST_CALL(test_equation_solver_base_paths());
     ARIADNE_TEST_CALL(test_interval_newton_paths());
+    ARIADNE_TEST_CALL(test_krawczyk_logging_paths());
 
     MaximumError maximum_error_from_approximate(ApproximateDouble(1e-5));
     MaximumError maximum_error_from_double(1e-5);
