@@ -168,17 +168,8 @@ class TestAffineSet
         ARIADNE_TEST_ASSERT(definitely(set.separated(cell5)));
         ARIADNE_TEST_ASSERT(definitely(set.separated(cell6)));
 
-        figure.clear();
-        figure.set_bounding_box(widen(set.bounding_box(),0.125_x));
-        figure << set
-               << fill_colour(0,0,1) << cell1
-               << fill_colour(0,1,0) << cell2
-               << fill_colour(1,1,0) << cell3
-               << fill_colour(1,0,0) << cell4
-               << fill_colour(1,0,0) << cell5
-               << fill_colour(1,0,0) << cell6
-               ;
-        figure.write("test_affine_set-separated");
+        // The six separation outcomes above are the regression checks.
+        // Rendering them here duplicated draw coverage already exercised by test_draw().
     }
 
     Void test_robust_outer_approximation() {
@@ -235,14 +226,7 @@ class TestAffineSet
             std::cout<<std::setprecision(17);
             ARIADNE_TEST_PRINT(paving);
 
-            figure.clear();
-            figure.set_bounding_box(widen(set.bounding_box(),0.125_x));
-            figure.set_fill_opacity(0.5);
-            figure.set_fill_colour(1.0,0.0,0.0);
-            figure.draw(paving);
-            figure.set_fill_colour(0.0,0.5,1.0);
-            figure.draw(set);
-            figure.write("test_affine_set-outer_approximation-4");
+            ARIADNE_TEST_ASSERT(paving.size()>0);
         }
 
         {
@@ -252,16 +236,8 @@ class TestAffineSet
             set.new_parameter_constraint(-0.5_x*x[0]+1.0_x*x[1]<=0.75_x);
             set.new_parameter_constraint(-0.5_x*x[0]-1.0_x*x[1]<=0.875_x);
 
-            figure.clear();
-            figure.set_bounding_box(widen(ExactBoxType{{-1.0_x,+1.0_x},{-1.0_x,+1.0_x}},+0.125_x));
-            figure.set_fill_opacity(0.5);
-            figure.set_fill_colour(1.0,0.0,0.0);
-            figure.draw(set.outer_approximation(Grid(2),3));
-            figure.set_fill_colour(0.0,0.5,1.0);
-            figure.draw(set);
-
-            figure.write("test_affine_set-outer_approximation-2");
-            figure.clear();
+            GridTreePaving paving=set.outer_approximation(Grid(2),3);
+            ARIADNE_TEST_ASSERT(paving.size()>0);
         }
 
         {
@@ -279,15 +255,7 @@ class TestAffineSet
             set.adjoin_outer_approximation_to(paving,3);
             paving.recombine();
 
-            figure.clear();
-            figure.set_bounding_box(ExactBoxType{{-7.0_x,+7.0_x},{-1.0_x,+5.0_x}});
-            figure.set_fill_colour(1.0,0.0,0.0);
-            figure.set_fill_opacity(0.5);
-            figure.draw(paving);
-            figure.set_fill_colour(0.0,0.5,1.0);
-            figure.draw(set);
-            figure.write("test_affine_set-outer_approximation-1");
-            figure.clear();
+            ARIADNE_TEST_ASSERT(paving.size()>0);
         }
 
         {
@@ -300,14 +268,7 @@ class TestAffineSet
             std::cout<<std::setprecision(17);
             ARIADNE_TEST_PRINT(paving);
 
-            figure.clear();
-            figure.set_bounding_box(widen(set.bounding_box(),+0.125_x));
-            figure.set_fill_opacity(0.5);
-            figure.set_fill_colour(1.0,0.0,0.0);
-            figure.draw(paving);
-            figure.set_fill_colour(0.0,0.5,1.0);
-            figure.draw(set);
-            figure.write("test_affine_set-outer_approximation-3");
+            ARIADNE_TEST_ASSERT(paving.size()>0);
         }
 
 
@@ -438,25 +399,9 @@ class TestAffineSet
         ValidatedAffineConstrainedImageSet set2=ValidatedAffineConstrainedImageSet(D, {0.5_x*x[0]+0.25_x*x[1]+e*x[2]/2, 0.25_x*x[0]-0.25_x*x[1]+e*x[3]} );
         ARIADNE_TEST_PRINT(set2);
 
-        figure.clear();
-        figure.set_bounding_box(ExactBoxType{{-1.0_x,+1.0_x},{-1.0_x,+1.0_x}});
-        figure.set_fill_opacity(0.5);
-        figure.set_fill_colour(0,1,0);
-        figure.draw(set2);
-        figure.set_fill_colour(0,0,1);
-        figure.draw(set1);
-        figure.write("test_affine_set-uniform_error");
-
         Grid g(2);
         GridTreePaving paving1=outer_approximation(set1,g,4);
         GridTreePaving paving2=outer_approximation(set2,g,4);
-
-        figure.clear();
-        figure.set_fill_colour(1,0,0);
-        figure.draw(paving1);
-        figure.set_fill_colour(0,0,1);
-        figure.draw(set1);
-        figure.write("test_affine_set-uniform_error-paving");
 
         ARIADNE_TEST_ASSERT(paving1==paving2);
 
