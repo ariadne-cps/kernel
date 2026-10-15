@@ -317,6 +317,8 @@ Void test_equation_solver_base_paths()
     ARIADNE_TEST_PRINT(one_step_newton.implicit(scalar_implicit_function,par,implicit_range[0]));
     logging_configuration.set_verbosity(old_verbosity);
 
+    ARIADNE_TEST_FAIL(newton.implicit(root,par,implicit_range));
+
     ExactBoxType bad_range;
     ARIADNE_TEST_FAIL(newton.implicit(implicit_function,par,bad_range));
 }

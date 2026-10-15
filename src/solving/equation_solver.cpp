@@ -250,8 +250,7 @@ auto EquationSolverBase::zero(const ValidatedVectorMultivariateFunction& f,
     if(refines(nr,r)) {
         return nr;
     }
-    ARIADNE_THROW(EquationSolverException,"EquationSolverBase::zero","No result verified in "<<bx<<"; maximum number of steps reached with approximation "<<r<<" which cannot be robustly checked");
-}
+    ARIADNE_THROW(EquationSolverException,"EquationSolverBase::zero","No result verified in "<<bx<<"; maximum number of steps reached with approximation "<<r<<" which cannot be robustly checked"); }
 
 
 
@@ -302,8 +301,7 @@ auto EquationSolverBase::implicit(const ValidatedVectorMultivariateFunction& f,
                     ARIADNE_THROW(NoSolutionException,"EquationSolverBase::implicit","No result found in "<<ix<<"; function "<<nh<<" is disjoint from "<<h<<" for at least one point.");
                 // TODO: Avoid cast to Dyadic below
                 } else if (cast_exact(nh[i].error())>static_cast<Dyadic>(cast_exact(mag(h[i].range())))) {
-                    ARIADNE_THROW(UnknownSolutionException,"EquationSolverBase::implicit","No convergence looking for implicit function with domain "<<h.domain()<<" and codomain "<<ix<<"; "<<nh<<" error bound is larger than range of "<<h);
-                }
+                    ARIADNE_THROW(UnknownSolutionException,"EquationSolverBase::implicit","No convergence looking for implicit function with domain "<<h.domain()<<" and codomain "<<ix<<"; "<<nh<<" error bound is larger than range of "<<h); }
             }
         }
 
@@ -320,8 +318,7 @@ auto EquationSolverBase::implicit(const ValidatedVectorMultivariateFunction& f,
         }
     }
 
-    ARIADNE_THROW(NoSolutionException,"EquationSolverBase::implicit","Could not prove existence of a solution in "<<ix<<".");
-}
+    ARIADNE_THROW(NoSolutionException,"EquationSolverBase::implicit","Could not prove existence of a solution in "<<ix<<"."); }
 
 ValidatedScalarMultivariateFunctionPatch
 EquationSolverBase::implicit(const ValidatedScalarMultivariateFunction& f,
@@ -340,8 +337,7 @@ auto EquationSolverBase::continuation(const ValidatedVectorMultivariateFunction&
                               const ExactBoxType&) const
     -> ValidatedVectorMultivariateFunctionModelType
 {
-    ARIADNE_NOT_IMPLEMENTED;
-}
+    ARIADNE_NOT_IMPLEMENTED; }
 
 
 
