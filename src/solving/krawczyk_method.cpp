@@ -84,10 +84,6 @@ template<class PR> FloatError<PR> sup_error(const ValidatedVectorMultivariateFun
     return r;
 }
 
-PositiveValidatedUpperNumber sup_error(ValidatedVectorMultivariateFunctionPatch const& fp) {
-    return fp.error();
-}
-
 } // namespace
 
 auto KrawczykSolver::step(const ValidatedVectorMultivariateFunction& f,
