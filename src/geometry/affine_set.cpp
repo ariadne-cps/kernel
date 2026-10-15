@@ -746,13 +746,19 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
             Aj=column(A,j);
                 BAj=B*Aj;
 
-                // Compute the direction the point in space moves for x[j] entering the basis
-                Vector<FloatDPApproximation> d(np,FloatDPApproximation(0.0_x,dp)); // The direction x moves in in changing the basis
-                d[j] = (vt[j]==Slackness::LOWER ? +1 : -1);
+                // Compute G*d directly. The simplex direction d has only the
+                // entering component and the nc basic components nonzero, so
+                // constructing a dense np-vector and multiplying G*d would
+                // turn large unconstrained zonotopes into cubic work.
+                FloatDPApproximation ds(
+                    vt[j]==Slackness::LOWER ? +1.0_x : -1.0_x,dp);
+                trial_vec[0]=G[0][j]*ds;
+                trial_vec[1]=G[1][j]*ds;
                 for(SizeType i=0; i!=nc; ++i) {
-                    d[p[i]]=-BAj[i]*d[j];
+                    FloatDPApproximation di=-BAj[i]*ds;
+                    trial_vec[0]+=G[0][p[i]]*di;
+                    trial_vec[1]+=G[1][p[i]]*di;
                 }
-                trial_vec=G*d;
 
                 // Compare the direction moved in this step with the last step.
                 // dot compares the direction of the two steps;
@@ -762,7 +768,7 @@ ValidatedAffineConstrainedImageSet::boundary(SizeType xind, SizeType yind) const
                 FloatDPApproximation dot=last_vec[0]*trial_vec[0]+last_vec[1]*trial_vec[1];
                 FloatDPApproximation cross=last_vec[0]*trial_vec[1]-last_vec[1]*trial_vec[0];
                 FloatDPApproximation cot_theta=dot/cross;
-                LOGGING_PRINTLN_AT(1,"k="<<k<<" p[k]="<<p[k]<<" d="<<d<<" trial_vec="<<trial_vec<<" last_vec="<<last_vec<<
+                LOGGING_PRINTLN_AT(1,"k="<<k<<" p[k]="<<p[k]<<" ds="<<ds<<" trial_vec="<<trial_vec<<" last_vec="<<last_vec<<
                               " dot="<<dot<<" cross="<<cross<<" cot="<<cot_theta);
 
 
