@@ -451,12 +451,13 @@ _minimisation_step(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu,
 
     // Try to enforce feasibility or dual feasibility
     AX alphax(1.0_x,pr);
+    const AX minimum_alphax=AX(gamma,pr)/4096;
     nx=x-dx;
     while ( decide( !emul_gtr(nx-xl,zl,gamma*mu) || !emul_gtr(xu-nx,zu,gamma*mu) ) ) {
         alphax=alphax*scale;
         nx=(x-alphax*dx);
         // The step fraction is dimensionless; its cutoff must not scale with mu.
-        if(decide(alphax<gamma/4096)) { return LinearProgramStatus::DEGENERATE_FEASIBILITY; }
+        if(decide(alphax<minimum_alphax)) { return LinearProgramStatus::DEGENERATE_FEASIBILITY; }
     }
 
     AX alphaz(1.0_x,pr);
