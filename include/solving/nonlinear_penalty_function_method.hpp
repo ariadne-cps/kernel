@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/nonlinear_programming.hpp
+ *            solving/nonlinear_penalty_function_method.hpp
  *
  *  Copyright  2009-20  Pieter Collins
  *

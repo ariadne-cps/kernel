@@ -2,7 +2,7 @@ set(UNIT_TESTS
     test_constraint_solver
     test_linear_interior_point_method
     test_nonlinear_programming
-    test_solvers
+    test_equation_solvers
 )
 foreach(TEST ${UNIT_TESTS})
     add_executable(${TEST} ${TEST}.cpp)

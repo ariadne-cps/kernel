@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/nonlinear_programming.hpp
+ *            solving/nonlinear_interior_point_method.hpp
  *
  *  Copyright  2009-20  Pieter Collins
  *
@@ -34,7 +34,7 @@
 namespace Ariadne {
 
 //! \ingroup OptimisationSubModule
-//! \brief Solver for linear programming problems using invalid interior point methods.
+//! \brief Solver for nonlinear programming problems using invalid interior point methods.
 //! \details Introduces variables \f$w\f$ and attempts to find \f$x\in D\f$ and \f$w\in C\f$ such that \f$g(x)=w\f$.
 //!   The dual variables \f$y\f$ are unconstrained Lagrange multipliers for \f$y\cdot(g(x)-w)=0\f$.
 class NonlinearInfeasibleInteriorPointSolver
@@ -49,7 +49,7 @@ class NonlinearInfeasibleInteriorPointSolver
     struct PrimalDualData;
     struct StepData;
 
-    //! \brief Compute a \em local optimum of linear programming problem \f$\min f(x) \text{ such that } x\in D \text{ and } g(x)\in C\f$.
+    //! \brief Compute a \em local optimum of nonlinear programming problem \f$\min f(x) \text{ such that } x\in D \text{ and } g(x)\in C\f$.
     //! \pre The domain \f$D\f$ is bounded and has nonempty interior, and the codomain \f$C\f$ is nonempty.
     //! \return A box \f$X\f$ which definitely contains a feasible point, and contains a local optimum.
     virtual Vector<ValidatedNumericType> minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactBoxType C) const;
@@ -76,7 +76,7 @@ class NonlinearInfeasibleInteriorPointSolver
 
 
 //! \ingroup OptimisationSubModule
-//! Solver for linear programming problems using interior point methods.
+//! Solver for nonlinear programming problems using interior point methods.
 class NonlinearInteriorPointSolver
     : public NonlinearProgrammingSolverBase
 {
@@ -86,7 +86,7 @@ class NonlinearInteriorPointSolver
     using NonlinearProgrammingSolverBase::minimise;
     using NonlinearProgrammingSolverBase::feasible;
 
-    //! \brief Compute a \em local optimum of linear programming problem \f$\min f(x) \text{ such that } x\in D \text{ and } g(x)\in C.\f$.
+    //! \brief Compute a \em local optimum of nonlinear programming problem \f$\min f(x) \text{ such that } x\in D \text{ and } g(x)\in C.\f$.
     //! \pre The domain \f$D\f$ is bounded and has nonempty interior, and the codomain \f$C\f$ is nonempty.
     //! \return A box \f$X\f$ which definitely contains a feasible point, and contains a local optimum.
     virtual Vector<ValidatedNumericType> minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactBoxType C) const;

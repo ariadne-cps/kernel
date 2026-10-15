@@ -1,5 +1,5 @@
 /***************************************************************************
- *            test_solvers.cpp
+ *            test_equation_solvers.cpp
  *
  *  Copyright  2008-20  Pieter Collins
  *

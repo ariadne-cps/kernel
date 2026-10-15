@@ -82,21 +82,21 @@ class EquationSolverWrapper
 } // namespace Ariadne
 
 
-Void export_solvers(pybind11::module& module)
+Void export_equation_solvers(pybind11::module& module)
 {
     typedef EquationSolverInterface::ValidatedNumericType ValidatedNumericType;
-    pybind11::class_<EquationSolverInterface,EquationSolverWrapper> solver_interface_class(module,"EquationSolverInterface");
-    solver_interface_class.def("maximum_error", &EquationSolverInterface::maximum_error);
-    solver_interface_class.def("set_maximum_error", &EquationSolverInterface::set_maximum_error);
-    solver_interface_class.def("maximum_number_of_steps", &EquationSolverInterface::maximum_number_of_steps);
-    solver_interface_class.def("set_maximum_number_of_steps", &EquationSolverInterface::set_maximum_number_of_steps);
-    solver_interface_class.def("zero", &EquationSolverInterface::zero);
-    solver_interface_class.def("fixed_point", &EquationSolverInterface::fixed_point);
-    solver_interface_class.def("solve", (Vector<ValidatedNumericType>(EquationSolverInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&)const) &EquationSolverInterface::solve);
-    solver_interface_class.def("implicit",(ValidatedVectorMultivariateFunctionPatch(EquationSolverInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&,const ExactBoxType&)const) &EquationSolverInterface::implicit);
-    solver_interface_class.def("implicit",(ValidatedScalarMultivariateFunctionPatch(EquationSolverInterface::*)(const ValidatedScalarMultivariateFunction&,const ExactBoxType&,const ExactIntervalType&)const) &EquationSolverInterface::implicit);
-    solver_interface_class.def("solve_all",[](EquationSolverInterface const& s, const ValidatedVectorMultivariateFunction& f, const ExactBoxType& bx){ return static_cast< List<Vector<ValidatedNumericType>> >( s.solve_all(f,bx) );});
-    solver_interface_class.def("__str__",&__cstr__<EquationSolverInterface>);
+    pybind11::class_<EquationSolverInterface,EquationSolverWrapper> equation_solver_interface_class(module,"EquationSolverInterface");
+    equation_solver_interface_class.def("maximum_error", &EquationSolverInterface::maximum_error);
+    equation_solver_interface_class.def("set_maximum_error", &EquationSolverInterface::set_maximum_error);
+    equation_solver_interface_class.def("maximum_number_of_steps", &EquationSolverInterface::maximum_number_of_steps);
+    equation_solver_interface_class.def("set_maximum_number_of_steps", &EquationSolverInterface::set_maximum_number_of_steps);
+    equation_solver_interface_class.def("zero", &EquationSolverInterface::zero);
+    equation_solver_interface_class.def("fixed_point", &EquationSolverInterface::fixed_point);
+    equation_solver_interface_class.def("solve", (Vector<ValidatedNumericType>(EquationSolverInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&)const) &EquationSolverInterface::solve);
+    equation_solver_interface_class.def("implicit",(ValidatedVectorMultivariateFunctionPatch(EquationSolverInterface::*)(const ValidatedVectorMultivariateFunction&,const ExactBoxType&,const ExactBoxType&)const) &EquationSolverInterface::implicit);
+    equation_solver_interface_class.def("implicit",(ValidatedScalarMultivariateFunctionPatch(EquationSolverInterface::*)(const ValidatedScalarMultivariateFunction&,const ExactBoxType&,const ExactIntervalType&)const) &EquationSolverInterface::implicit);
+    equation_solver_interface_class.def("solve_all",[](EquationSolverInterface const& s, const ValidatedVectorMultivariateFunction& f, const ExactBoxType& bx){ return static_cast< List<Vector<ValidatedNumericType>> >( s.solve_all(f,bx) );});
+    equation_solver_interface_class.def("__str__",&__cstr__<EquationSolverInterface>);
 
     pybind11::class_<IntervalNewtonSolver, EquationSolverInterface> interval_newton_solver_class(module,"IntervalNewtonSolver");
     interval_newton_solver_class.def(pybind11::init<ApproximateDouble,Nat>());
@@ -117,7 +117,7 @@ Void export_solving_optimization(pybind11::module& module);
 
 Void solving_submodule(pybind11::module& module)
 {
-    export_solvers(module);
+    export_equation_solvers(module);
     export_solving_optimization(module);
 }
 
