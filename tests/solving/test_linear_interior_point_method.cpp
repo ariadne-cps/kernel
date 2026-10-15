@@ -55,6 +55,7 @@ class TestLinearInteriorPointSolver
         ARIADNE_TEST_CALL(test_mixed_bound_optimization());
         ARIADNE_TEST_CALL(test_hotstarted_optimization());
         ARIADNE_TEST_CALL(test_hotstarted_positive_gap());
+        ARIADNE_TEST_CALL(test_hotstarted_boundary_optimum());
         ARIADNE_TEST_CALL(test_feasibility());
         ARIADNE_TEST_CALL(test_mixed_bound_feasibility());
         ARIADNE_TEST_CALL(test_constrained_feasibility());
@@ -222,6 +223,24 @@ class TestLinearInteriorPointSolver
             c,xl,xu,A,b,x,y,zl,zu);
         ARIADNE_TEST_EQUAL(std::get<1>(hotstart_result).size(),1u);
         ARIADNE_TEST_EQUAL(std::get<2>(hotstart_result).size(),1u);
+    }
+
+    Void test_hotstarted_boundary_optimum() {
+        // The primal optimum is on the lower bound. A large but finite
+        // objective coefficient stresses the capped primal-dual iterations.
+        Matrix<FloatDP> A({{1.0_x}},dp);
+        Vector<FloatDP> b({0.0_x},dp);
+        Vector<FloatDP> c({8192.0_x},dp);
+        Vector<FloatDP> xl({0.0_x},dp);
+        Vector<FloatDP> xu({2.0_x},dp);
+        Vector<FloatDPApproximation> x({1.0_x},dp);
+        Vector<FloatDPApproximation> y({0.0_x},dp);
+        Vector<FloatDPApproximation> zl({1.0_x},dp);
+        Vector<FloatDPApproximation> zu({1.0_x},dp);
+
+        auto boundary_run=optimiser->hotstarted_minimise(c,xl,xu,A,b,x,y,zl,zu);
+        ARIADNE_TEST_EQUAL(std::get<1>(boundary_run).size(),1u);
+        ARIADNE_TEST_EQUAL(std::get<2>(boundary_run).size(),1u);
     }
 
     Void test_mixed_bound_feasibility() {
