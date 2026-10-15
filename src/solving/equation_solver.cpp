@@ -236,23 +236,21 @@ auto EquationSolverBase::zero(const ValidatedVectorMultivariateFunction& f,
             return nr;
         }
 
-        if(!consistent(nr,r)) {
+        if(!consistent(nr,r))
             ARIADNE_THROW(NoSolutionException,"EquationSolverBase::zero","No result found in "<<bx<<"; "<<nr<<" is inconsistent with "<<r);
-        }
         r=refinement(nr,r);
         n=n-1;
     }
-    if(!consistent(f.evaluate(r),Vector<ValidatedNumericType>(f.result_size(),dp))) {
+    if(!consistent(f.evaluate(r),Vector<ValidatedNumericType>(f.result_size(),dp)))
         ARIADNE_THROW(NoSolutionException,"EquationSolverBase::zero","No result found in "<<bx<<"; f("<<r<<") is inconsistent with zero");
-    } else {
-        FloatDPError widen=FloatDPError(FloatDP::eps(dp))*sup_error(r);
-        r+=Vector<ValidatedNumericType>(r.size(),ValidatedNumericType(-widen,+widen));
-        nr=this->step(f,r);
-        if(refines(nr,r)) {
-            return nr;
-        }
-        ARIADNE_THROW(EquationSolverException,"EquationSolverBase::zero","No result verified in "<<bx<<"; maximum number of steps reached with approximation "<<r<<" which cannot be robustly checked");
+
+    FloatDPError widen=FloatDPError(FloatDP::eps(dp))*sup_error(r);
+    r+=Vector<ValidatedNumericType>(r.size(),ValidatedNumericType(-widen,+widen));
+    nr=this->step(f,r);
+    if(refines(nr,r)) {
+        return nr;
     }
+    ARIADNE_THROW(EquationSolverException,"EquationSolverBase::zero","No result verified in "<<bx<<"; maximum number of steps reached with approximation "<<r<<" which cannot be robustly checked");
 }
 
 
@@ -300,12 +298,11 @@ auto EquationSolverBase::implicit(const ValidatedVectorMultivariateFunction& f,
                 if(refines(nh[i],h[i])) {
                     is_refinement[i]=true;
                     --number_unrefined;
-                } else if(definitely(disjoint(ValidatedScalarMultivariateFunctionPatch(nh[i]).range(),ix[i]))) {
+                } else if(definitely(disjoint(ValidatedScalarMultivariateFunctionPatch(nh[i]).range(),ix[i])))
                     ARIADNE_THROW(NoSolutionException,"EquationSolverBase::implicit","No result found in "<<ix<<"; function "<<nh<<" is disjoint from "<<h<<" for at least one point.");
                 // TODO: Avoid cast to Dyadic below
-                } else if (cast_exact(nh[i].error())>static_cast<Dyadic>(cast_exact(mag(h[i].range())))) {
-                   ARIADNE_THROW(UnknownSolutionException,"EquationSolverBase::implicit","No convergence looking for implicit function with domain "<<h.domain()<<" and codomain "<<ix<<"; "<<nh<<" error bound is larger than range of "<<h);
-                }
+                else if (cast_exact(nh[i].error())>static_cast<Dyadic>(cast_exact(mag(h[i].range()))))
+                    ARIADNE_THROW(UnknownSolutionException,"EquationSolverBase::implicit","No convergence looking for implicit function with domain "<<h.domain()<<" and codomain "<<ix<<"; "<<nh<<" error bound is larger than range of "<<h);
             }
         }
 

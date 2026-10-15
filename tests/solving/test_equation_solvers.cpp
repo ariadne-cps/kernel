@@ -193,7 +193,7 @@ class TestEquationSolver
 class TestEquationSolverBase : public EquationSolverBase
 {
   public:
-    enum class StepMode { Identity, Disjoint, Wide };
+    enum class StepMode { Identity, Disjoint, Wide, HighError };
 
     TestEquationSolverBase(StepMode mode, ApproximateDouble max_error=1e-5, Nat max_steps=0)
         : EquationSolverBase(max_error,max_steps), _mode(mode) { }
@@ -206,7 +206,7 @@ class TestEquationSolverBase : public EquationSolverBase
     step(const ValidatedVectorMultivariateFunction&,
          const Vector<ValidatedNumericType>& x) const
     {
-        if(_mode==StepMode::Identity) { return x; }
+        if(_mode==StepMode::Identity || _mode==StepMode::HighError) { return x; }
         Vector<ValidatedNumericType> r(x.size(),dp);
         for(SizeType i=0; i!=x.size(); ++i) {
             if(_mode==StepMode::Disjoint) {
@@ -223,6 +223,14 @@ class TestEquationSolverBase : public EquationSolverBase
                   const ValidatedVectorMultivariateFunctionPatch&,
                   const ValidatedVectorMultivariateFunctionPatch& x) const
     {
+        if(_mode==StepMode::HighError) {
+            ValidatedScalarMultivariateTaylorFunctionModelDP high_error=
+                ValidatedScalarMultivariateTaylorFunctionModelDP::zero(
+                    x.domain(),ThresholdSweeper<FloatDP>(dp,1e-12));
+            high_error.set_error(FloatDPError(2u,dp));
+            return ValidatedVectorMultivariateFunctionPatch(
+                ValidatedVectorMultivariateTaylorFunctionModelDP(x.result_size(),high_error));
+        }
         return x;
     }
 
@@ -241,6 +249,7 @@ Void test_equation_solver_base_paths()
     TestEquationSolverBase disjoint(TestEquationSolverBase::StepMode::Disjoint,1e-5,1);
     TestEquationSolverBase wide(TestEquationSolverBase::StepMode::Wide);
     TestEquationSolverBase wide_loose(TestEquationSolverBase::StepMode::Wide,3.0,0);
+    TestEquationSolverBase high_error(TestEquationSolverBase::StepMode::HighError,1e-8,1);
 
     identity.set_function_factory(identity.function_factory());
 
@@ -295,6 +304,18 @@ Void test_equation_solver_base_paths()
 
     EffectiveVectorMultivariateFunction disjoint_implicit_function({y-10});
     ARIADNE_TEST_THROWS(newton.implicit(disjoint_implicit_function,par,implicit_range),NoSolutionException);
+    ARIADNE_TEST_THROWS(high_error.implicit(implicit_function,par,implicit_range),UnknownSolutionException);
+
+    auto& logging_configuration=Logger::instance().configuration();
+    unsigned int const old_verbosity=logging_configuration.verbosity();
+    logging_configuration.set_verbosity(10u);
+    TestEquationSolverBase logging_identity(TestEquationSolverBase::StepMode::Identity,1e-5,1);
+    ARIADNE_TEST_PRINT(logging_identity.solve_all(root,unit));
+    ARIADNE_TEST_PRINT(logging_identity.zero(root,unit));
+    ARIADNE_TEST_PRINT(one_step_newton.implicit(implicit_function,par,implicit_range));
+    EffectiveScalarMultivariateFunction scalar_implicit_function(y-a);
+    ARIADNE_TEST_PRINT(one_step_newton.implicit(scalar_implicit_function,par,implicit_range[0]));
+    logging_configuration.set_verbosity(old_verbosity);
 
     ExactBoxType bad_range;
     ARIADNE_TEST_FAIL(newton.implicit(implicit_function,par,bad_range));
