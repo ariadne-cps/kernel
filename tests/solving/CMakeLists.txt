@@ -1,6 +1,6 @@
 set(UNIT_TESTS
     test_constraint_solver
-    test_linear_programming
+    test_linear_interior_point
     test_nonlinear_programming
     test_solvers
 )

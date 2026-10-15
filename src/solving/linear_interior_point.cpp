@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/linear_programming.cpp
+ *            solving/linear_interior_point.cpp
  *
  *  Copyright  2008-20  Pieter Collins
  *
@@ -29,7 +29,7 @@
 #include "algebra/matrix.hpp"
 #include "algebra/diagonal_matrix.hpp"
 #include "function/affine.hpp"
-#include "solving/linear_programming.hpp"
+#include "solving/linear_interior_point.hpp"
 
 #include "macro/general.hpp"
 #include "logging/logging.hpp"

@@ -25,6 +25,8 @@
 #include "solving/solver.hpp"
 #include "solving/constraint_solver.hpp"
 #include "solving/linear_programming.hpp"
+#include "solving/linear_interior_point.hpp"
+#include "solving/simplex_algorithm.hpp"
 #include "solving/nonlinear_programming.hpp"
 
 #include "drawing/figure.hpp"

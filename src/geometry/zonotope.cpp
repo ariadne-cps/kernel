@@ -32,7 +32,7 @@
 #include "utility/array.hpp"
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
-#include "solving/linear_programming.hpp"
+#include "solving/simplex_algorithm.hpp"
 #include "geometry/point.hpp"
 #include "geometry/box.hpp"
 #include "geometry/list_set.hpp"

@@ -2,7 +2,7 @@ add_library(KERNEL_SOLVING_SRC OBJECT
     solver.cpp
     constraint_solver.cpp
     simplex_algorithm.cpp
-    linear_programming.cpp
+    linear_interior_point.cpp
     nonlinear_programming.cpp
 )
 

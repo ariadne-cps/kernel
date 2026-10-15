@@ -29,7 +29,7 @@
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
 #include "function/affine.hpp"
-#include "solving/linear_programming.hpp"
+#include "solving/simplex_algorithm.hpp"
 
 #include "macro/general.hpp"
 #include "logging/logging.hpp"
