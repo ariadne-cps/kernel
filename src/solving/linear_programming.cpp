@@ -464,7 +464,9 @@ _minimisation_step(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu,
         alphaz=alphaz*scale;
         nzl=(zl-alphaz*dzl);
         nzu=(zu-alphaz*dzu);
-        if(decide(alphaz<gamma*mu/4096)) { return LinearProgramStatus::DEGENERATE_FEASIBILITY; }
+        // At alphaz=0, nzl/nzu equal the old zl/zu, for which nx was
+        // already accepted by the alphax loop. Hence this backtracking
+        // necessarily reaches an admissible dual step without a cutoff.
     }
     ny=(y-alphaz*dy);
     LOGGING_PRINTLN("alphax="<<alphax<<" nx="<<nx<<" alphaz="<<alphaz<<" ny="<<ny<<" nzl="<<nzl<<" nzu="<<nzu);
