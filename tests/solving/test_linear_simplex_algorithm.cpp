@@ -39,6 +39,47 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_validated_feasibility_bound_flip());
         ARIADNE_TEST_CALL(test_hotstarted_basis_initialisation());
         ARIADNE_TEST_CALL(test_hotstarted_optimisation_from_alternate_basis());
+        ARIADNE_TEST_CALL(test_hotstarted_minimise_partial_permutation());
+    }
+
+    Void test_hotstarted_minimise_partial_permutation() {
+        // A warm start may specify only the index of each basic variable.
+        // Extending that permutation must preserve the feasible starting
+        // basis and yield the same optimum as the complete permutation.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({1.0_x},dp);
+        Vector<FloatDP> xl({0.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({1.0_x,1.0_x},dp);
+        Vector<FloatDP> c({1.0_x,2.0_x},dp);
+
+        Array<Slackness> short_vt(2u);
+        short_vt[0]=Slackness::LOWER;
+        short_vt[1]=Slackness::BASIS;
+        Array<SizeType> short_p(1u);
+        short_p[0]=1u;
+        Matrix<FloatDPBounds> short_B=Matrix<FloatDPBounds>::identity(1u,dp);
+
+        auto short_optimum=solver.hotstarted_minimise(c,xl,xu,A,b,short_vt,short_p,short_B);
+        ARIADNE_TEST_EQUAL(short_p.size(),2u);
+        ARIADNE_TEST_EQUAL(short_p[0],1u);
+        ARIADNE_TEST_EQUAL(short_p[1],0u);
+        ARIADNE_TEST_ASSERT(definitely(short_optimum[0]>FloatDPBounds(0.75_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(short_optimum[1]<FloatDPBounds(0.25_x,dp)));
+
+        Array<Slackness> full_vt(2u);
+        full_vt[0]=Slackness::LOWER;
+        full_vt[1]=Slackness::BASIS;
+        Array<SizeType> full_p(2u);
+        full_p[0]=1u;
+        full_p[1]=0u;
+        Matrix<FloatDPBounds> full_B=Matrix<FloatDPBounds>::identity(1u,dp);
+
+        auto full_optimum=solver.hotstarted_minimise(c,xl,xu,A,b,full_vt,full_p,full_B);
+        ARIADNE_TEST_ASSERT(definitely(
+            abs(short_optimum[0]-full_optimum[0])<FloatDPBounds(0.25_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(
+            abs(short_optimum[1]-full_optimum[1])<FloatDPBounds(0.25_x,dp)));
     }
 
     Void test_hotstarted_optimisation_from_alternate_basis() {
