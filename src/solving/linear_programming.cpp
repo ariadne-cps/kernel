@@ -355,10 +355,12 @@ feasible(const Vector<X>& xl, const Vector<X>& xu,
         }
         Vector<X> yv=exact_vector(y);
         VX yb=dot(yv,b);
-        Vector<X> yA=transpose(A)*yv;
+        Vector<VX> yA=transpose(A)*yv;
         VX yAX=zero;
         for(SizeType i=0; i!=n; ++i) {
-            if(yA[i]!=zero) {
+            Bool const exact_zero=
+                yA[i].lower().raw()==0.0_x && yA[i].upper().raw()==0.0_x;
+            if(!exact_zero) {
                 yAX += yA[i]*ivlx[i];
             }
         }
