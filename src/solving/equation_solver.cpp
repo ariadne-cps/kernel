@@ -102,10 +102,6 @@ PositiveValidatedUpperNumber sup_error(ValidatedVectorMultivariateFunctionPatch 
 } // namespace
 
 
-
-
-static const Bool ALLOW_PARTIAL_FUNCTION = true;
-
 FunctionPatchFactoryInterface<ValidatedTag>* make_taylor_function_patch_factory();
 
 
@@ -145,12 +141,6 @@ auto EquationSolverBase::solve(const ValidatedVectorMultivariateFunction& f,
     return *r.begin();
 }
 
-Void
-solve_all(Set< Vector<EquationSolverInterface::ValidatedNumericType> >& r,
-          const EquationSolverInterface& s,
-          const ValidatedVectorMultivariateFunction& f,
-          const ExactBoxType& ix);
-
 auto EquationSolverBase::solve_all(const ValidatedVectorMultivariateFunction& f,
                            const ExactBoxType& bx) const
     -> Set< Vector<ValidatedNumericType> >
@@ -179,32 +169,20 @@ auto EquationSolverBase::solve_all(const ValidatedVectorMultivariateFunction& f,
         invertible_jacobian=false;
     }
 
-    Bool need_to_split=true;
+    Bool need_to_split=false;
 
     if(invertible_jacobian) {
         //std::cerr<<"Nonsingular matrix -- applying contractor\n";
         try {
-            Vector<ValidatedNumericType> y=this->zero(f,bx);
-            Bool is_new=true;
-            for(Set<Vector<ValidatedNumericType> >::ConstIterator iter=r.begin(); iter!=r.end(); ++iter) {
-                if(consistent(y,*iter)) {
-                    is_new=false;
-                    break;
-                }
-            }
-            if(is_new) {
-                r.insert(y);
-            }
-            need_to_split=false;
+            r.insert(this->zero(f,bx));
         }
         catch(const NoSolutionException&) {
-            //ARIADNE_WARN("NoSolutionException exception: "<<e.what());
-            need_to_split=false;
+            // No solution exists in this box.
         }
         catch(const EquationSolverException& e) {
             ARIADNE_WARN("EquationSolverException exception: "<<e.what());
             need_to_split=true;
-            // No solution found, try splitting
+            // No solution verified, try splitting.
         }
     } else {
         need_to_split=true;
@@ -215,8 +193,7 @@ auto EquationSolverBase::solve_all(const ValidatedVectorMultivariateFunction& f,
         if(definitely(sup_error(cast_singleton(bx))<this->maximum_error())) {
             if(!invertible_jacobian) {
                 ARIADNE_WARN("Cannot verify solution in "<<bx<<" with f="<<f(cast_singleton(bx))<<"); "
-                             <<"Jacobian "<<f.jacobian(nx)<<" is not invertible; "
-                             <<"approximate inverse="<<inverse(midpoint(f.jacobian(nx))));
+                             <<"Jacobian "<<f.jacobian(nx)<<" is not invertible.");
             } else {
                 ARIADNE_WARN("Cannot verify or falsify solution in "<<bx<<"; f("<<bx<<")="<<f(cast_singleton(bx))<<".");
             }
@@ -295,8 +272,8 @@ auto EquationSolverBase::implicit(const ValidatedVectorMultivariateFunction& f,
 {
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN_AT(1,"f="<<f);
-    ARIADNE_ASSERT(f.result_size()==ix.size());
-    ARIADNE_ASSERT(f.argument_size()==ip.size()+ix.size());
+    ARIADNE_PRECONDITION(f.result_size()==ix.size());
+    ARIADNE_PRECONDITION(f.argument_size()==ip.size()+ix.size());
 
     const SizeType n=ix.size();
     const ExactDouble err=this->maximum_error();
@@ -317,46 +294,27 @@ auto EquationSolverBase::implicit(const ValidatedVectorMultivariateFunction& f,
         LOGGING_PRINTLN_AT(2,"nh="<<nh);
         LOGGING_PRINTLN_AT(2,"fnh="<<fnh);
 
-        if(ALLOW_PARTIAL_FUNCTION) {
-            for(SizeType i=0; i!=n; ++i) {
-                if(!is_refinement[i]) {
-                    LOGGING_PRINTLN_AT(3,"refines(nh["<<i<<"],x["<<i<<"])="<<refines(nh[i],h[i]));
-                    if(refines(nh[i],h[i])) {
-                        is_refinement[i]=true;
-                        --number_unrefined;
-                    } else if(definitely(disjoint(ValidatedScalarMultivariateFunctionPatch(nh[i]).range(),ix[i]))) {
-                        ARIADNE_THROW(NoSolutionException,"EquationSolverBase::implicit","No result found in "<<ix<<"; function "<<nh<<" is disjoint from "<<h<<" for at least one point.");
-                    // TODO: Avoid cast to Dyadic below
-                    } else if (cast_exact(nh[i].error())>static_cast<Dyadic>(cast_exact(mag(h[i].range())))) {
-                       ARIADNE_THROW(UnknownSolutionException,"EquationSolverBase::implicit","No convergence looking for implicit function with domain "<<h.domain()<<" and codomain "<<ix<<"; "<<nh<<" error bound is larger than range of "<<h);
-                    }
+        for(SizeType i=0; i!=n; ++i) {
+            if(!is_refinement[i]) {
+                LOGGING_PRINTLN_AT(3,"refines(nh["<<i<<"],x["<<i<<"])="<<refines(nh[i],h[i]));
+                if(refines(nh[i],h[i])) {
+                    is_refinement[i]=true;
+                    --number_unrefined;
+                } else if(definitely(disjoint(ValidatedScalarMultivariateFunctionPatch(nh[i]).range(),ix[i]))) {
+                    ARIADNE_THROW(NoSolutionException,"EquationSolverBase::implicit","No result found in "<<ix<<"; function "<<nh<<" is disjoint from "<<h<<" for at least one point.");
+                // TODO: Avoid cast to Dyadic below
+                } else if (cast_exact(nh[i].error())>static_cast<Dyadic>(cast_exact(mag(h[i].range())))) {
+                   ARIADNE_THROW(UnknownSolutionException,"EquationSolverBase::implicit","No convergence looking for implicit function with domain "<<h.domain()<<" and codomain "<<ix<<"; "<<nh<<" error bound is larger than range of "<<h);
                 }
             }
-
-            LOGGING_PRINTLN_AT(2,"is_refinement="<<is_refinement);
-            LOGGING_PRINTLN_AT(2,"nh.range()="<<nh.range());
-            LOGGING_PRINTLN_AT(2,"sup_error(nh)="<<sup_error(nh));
-            LOGGING_PRINTLN_AT(2,"sup_error(fnh)="<<sup_error(fnh));
-
-            h=nh;
-
-        } else { // !ALLOW_PARTIAL_FUNCTION
-            for(SizeType i=0; i!=n; ++i) {
-                if(!is_refinement[i]) {
-                    if(refines(nh[i],h[i])) {
-                        is_refinement[i]=true;
-                        --number_unrefined;
-                    } else if(inconsistent(nh[i],h[i])) {
-                        ARIADNE_THROW(NoSolutionException,"EquationSolverBase::implicit","No result found in "<<ix<<"; "<<nh<<" is disjoint from "<<h);
-                    // TODO: Avoid cast to Dyadic below
-                    } else if (cast_exact(nh[i].error())>static_cast<Dyadic>(cast_exact(mag(h[i].range())))) {
-                        ARIADNE_THROW(UnknownSolutionException,"EquationSolverBase::implicit","No convergence looking for implicit function with domain "<<h.domain()<<" and codomain "<<ix<<"; "<<nh<<" error bound is larger than range of "<<h);
-                    }
-                }
-            }
-
-            h=refinement(nh,h);
         }
+
+        LOGGING_PRINTLN_AT(2,"is_refinement="<<is_refinement);
+        LOGGING_PRINTLN_AT(2,"nh.range()="<<nh.range());
+        LOGGING_PRINTLN_AT(2,"sup_error(nh)="<<sup_error(nh));
+        LOGGING_PRINTLN_AT(2,"sup_error(fnh)="<<sup_error(fnh));
+
+        h=nh;
 
         steps_remaining=steps_remaining-1;
         if( (number_unrefined==0) && ( (steps_remaining==0) || (definitely(sup_error(nh)<err) && definitely(sup_error(fnh)<err)) ) ) {

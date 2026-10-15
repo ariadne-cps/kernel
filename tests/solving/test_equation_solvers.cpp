@@ -189,11 +189,112 @@ class TestEquationSolver
 
 };
 
+
+class TestEquationSolverBase : public EquationSolverBase
+{
+  public:
+    enum class StepMode { Identity, Disjoint, Wide };
+
+    TestEquationSolverBase(StepMode mode, ApproximateDouble max_error=1e-5, Nat max_steps=0)
+        : EquationSolverBase(max_error,max_steps), _mode(mode) { }
+
+    virtual TestEquationSolverBase* clone() const { return new TestEquationSolverBase(*this); }
+    virtual Void _write(OutputStream& os) const { os << "TestEquationSolverBase"; }
+
+  protected:
+    virtual Vector<ValidatedNumericType>
+    step(const ValidatedVectorMultivariateFunction&,
+         const Vector<ValidatedNumericType>& x) const
+    {
+        if(_mode==StepMode::Identity) { return x; }
+        Vector<ValidatedNumericType> r(x.size(),dp);
+        for(SizeType i=0; i!=x.size(); ++i) {
+            if(_mode==StepMode::Disjoint) {
+                r[i]=ValidatedNumericType(10,11,dp);
+            } else {
+                r[i]=ValidatedNumericType(-10,10,dp);
+            }
+        }
+        return r;
+    }
+
+    virtual ValidatedVectorMultivariateFunctionPatch
+    implicit_step(const ValidatedVectorMultivariateFunction&,
+                  const ValidatedVectorMultivariateFunctionPatch&,
+                  const ValidatedVectorMultivariateFunctionPatch& x) const
+    {
+        return x;
+    }
+
+  private:
+    StepMode _mode;
+};
+
+Void test_equation_solver_base_paths()
+{
+    EffectiveScalarMultivariateFunction x=EffectiveScalarMultivariateFunction::coordinate(1,0);
+    EffectiveVectorMultivariateFunction root({x});
+    EffectiveVectorMultivariateFunction no_root({x+2});
+    ExactBoxType unit({{-1.0_x,1.0_x}});
+
+    TestEquationSolverBase identity(TestEquationSolverBase::StepMode::Identity);
+    TestEquationSolverBase disjoint(TestEquationSolverBase::StepMode::Disjoint,1e-5,1);
+    TestEquationSolverBase wide(TestEquationSolverBase::StepMode::Wide);
+    TestEquationSolverBase wide_loose(TestEquationSolverBase::StepMode::Wide,3.0,0);
+
+    identity.set_function_factory(identity.function_factory());
+
+    FloatDPBoundsVector interval_point({FloatDPBounds(-1,1,dp)});
+    ARIADNE_TEST_PRINT(identity.solve(root,interval_point));
+
+    ARIADNE_TEST_THROWS(identity.zero(no_root,unit),NoSolutionException);
+    ARIADNE_TEST_PRINT(identity.zero(root,unit));
+    ARIADNE_TEST_THROWS(wide.zero(root,unit),EquationSolverException);
+    ARIADNE_TEST_THROWS(disjoint.zero(root,unit),NoSolutionException);
+
+    ARIADNE_TEST_EQUAL(wide_loose.solve_all(root,unit).size(),0u);
+
+    EffectiveVectorMultivariateFunction fixed_map({(x+1)/2});
+    ExactBoxType fixed_domain({{0.0_x,2.0_x}});
+    IntervalNewtonSolver newton(1e-8,12);
+    FloatDPBoundsVector fp=newton.fixed_point(fixed_map,fixed_domain);
+    ARIADNE_TEST_BINARY_PREDICATE(contains,ExactIntervalType(1.0_x,1.0_x),fp[0]);
+
+    EffectiveVectorMultivariateFunction impossible({x*x+1});
+    ARIADNE_TEST_EQUAL(newton.solve_all(impossible,unit).size(),0u);
+    ARIADNE_TEST_THROWS(newton.solve(impossible,unit),NoSolutionException);
+
+    IntervalNewtonSolver split_newton(1e-3,12);
+    EffectiveVectorMultivariateFunction two_roots({x*x-1});
+    ExactBoxType two_root_domain({{-2.0_x,2.0_x}});
+    auto roots=split_newton.solve_all(two_roots,two_root_domain);
+    ARIADNE_TEST_COMPARE(roots.size(),>=,2u);
+    ARIADNE_TEST_THROWS(split_newton.solve(two_roots,two_root_domain),EquationSolverException);
+
+    IntervalNewtonSolver loose_newton(3.0,4);
+    EffectiveVectorMultivariateFunction singular({x*x});
+    ExactBoxType small({{-0.1_x,0.1_x}});
+    ARIADNE_TEST_EQUAL(loose_newton.solve_all(singular,small).size(),0u);
+
+    FloatDPApproximationVector parameter(1u,dp);
+    parameter[0]=FloatDPApproximation(0.0_x,dp);
+    ARIADNE_TEST_FAIL(identity.continuation(root,parameter,unit,unit));
+
+    EffectiveScalarMultivariateFunction a=EffectiveScalarMultivariateFunction::coordinate(2,0);
+    EffectiveScalarMultivariateFunction y=EffectiveScalarMultivariateFunction::coordinate(2,1);
+    EffectiveVectorMultivariateFunction implicit_function({y-a});
+    ExactBoxType par({{-1.0_x,1.0_x}});
+    ExactBoxType bad_range;
+    ARIADNE_TEST_FAIL(newton.implicit(implicit_function,par,bad_range));
+}
+
 #include "algebra/differential.hpp"
 
 Int main(Int argc, const char **argv) {
 
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
+
+    ARIADNE_TEST_CALL(test_equation_solver_base_paths());
 
     MaximumError maximum_error_from_approximate(ApproximateDouble(1e-5));
     MaximumError maximum_error_from_double(1e-5);
