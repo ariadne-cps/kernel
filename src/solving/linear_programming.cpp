@@ -358,11 +358,14 @@ feasible(const Vector<X>& xl, const Vector<X>& xu,
         Vector<VX> yA=transpose(A)*yv;
         VX yAX=zero;
         for(SizeType i=0; i!=n; ++i) {
-            Bool const exact_zero=
-                yA[i].lower().raw()==0.0_x && yA[i].upper().raw()==0.0_x;
-            if(!exact_zero) {
-                yAX += yA[i]*ivlx[i];
+            Bool const unbounded=(xl[i]==-inf || xu[i]==+inf);
+            Bool const contains_zero=
+                yA[i].lower().raw()<=0.0_x && yA[i].upper().raw()>=0.0_x;
+            if(unbounded && contains_zero) {
+                yAX=VX(-inf,+inf);
+                break;
             }
+            yAX += yA[i]*ivlx[i];
         }
         if(inconsistent(yb,yAX)) { return false; }
         if(result==LinearProgramStatus::DEGENERATE_FEASIBILITY) { LOGGING_PRINTLN("Degenerate"); return indeterminate; }
