@@ -455,7 +455,8 @@ _minimisation_step(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu,
     while ( decide( !emul_gtr(nx-xl,zl,gamma*mu) || !emul_gtr(xu-nx,zu,gamma*mu) ) ) {
         alphax=alphax*scale;
         nx=(x-alphax*dx);
-        if(decide(alphax<gamma*mu/4096)) { return LinearProgramStatus::DEGENERATE_FEASIBILITY; }
+        // The step fraction is dimensionless; its cutoff must not scale with mu.
+        if(decide(alphax<gamma/4096)) { return LinearProgramStatus::DEGENERATE_FEASIBILITY; }
     }
 
     AX alphaz(1.0_x,pr);
