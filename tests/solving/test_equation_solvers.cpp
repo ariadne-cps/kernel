@@ -251,6 +251,7 @@ Void test_equation_solver_base_paths()
     ARIADNE_TEST_PRINT(identity.zero(root,unit));
     ARIADNE_TEST_THROWS(wide.zero(root,unit),EquationSolverException);
     ARIADNE_TEST_THROWS(disjoint.zero(root,unit),NoSolutionException);
+    ARIADNE_TEST_EQUAL(disjoint.solve_all(root,unit).size(),0u);
 
     ARIADNE_TEST_EQUAL(wide_loose.solve_all(root,unit).size(),0u);
 
@@ -284,6 +285,17 @@ Void test_equation_solver_base_paths()
     EffectiveScalarMultivariateFunction y=EffectiveScalarMultivariateFunction::coordinate(2,1);
     EffectiveVectorMultivariateFunction implicit_function({y-a});
     ExactBoxType par({{-1.0_x,1.0_x}});
+    ExactBoxType implicit_range({{-1.0_x,1.0_x}});
+
+    IntervalNewtonSolver zero_step_newton(1e-8,0);
+    ARIADNE_TEST_THROWS(zero_step_newton.implicit(implicit_function,par,implicit_range),NoSolutionException);
+
+    IntervalNewtonSolver one_step_newton(1e-20,1);
+    ARIADNE_TEST_PRINT(one_step_newton.implicit(implicit_function,par,implicit_range));
+
+    EffectiveVectorMultivariateFunction disjoint_implicit_function({y-10});
+    ARIADNE_TEST_THROWS(newton.implicit(disjoint_implicit_function,par,implicit_range),NoSolutionException);
+
     ExactBoxType bad_range;
     ARIADNE_TEST_FAIL(newton.implicit(implicit_function,par,bad_range));
 }
