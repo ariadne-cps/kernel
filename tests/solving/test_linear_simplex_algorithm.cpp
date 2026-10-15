@@ -38,6 +38,29 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
         ARIADNE_TEST_CALL(test_validated_feasibility_bound_flip());
         ARIADNE_TEST_CALL(test_hotstarted_basis_initialisation());
+        ARIADNE_TEST_CALL(test_hotstarted_optimisation_from_alternate_basis());
+    }
+
+    Void test_hotstarted_optimisation_from_alternate_basis() {
+        // Start from (0,1) with x1 basic and x0 at its lower bound.
+        // Minimising x0+2*x1 must move to (1,0), even though the
+        // supplied basis describes a feasible starting point.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({1.0_x},dp);
+        Vector<FloatDP> xl({0.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({1.0_x,1.0_x},dp);
+        Vector<FloatDP> c({1.0_x,2.0_x},dp);
+        Array<Slackness> vt(2u);
+        vt[0]=Slackness::LOWER;
+        vt[1]=Slackness::BASIS;
+
+        auto optimum=solver.hotstarted_minimise(c,xl,xu,A,b,vt);
+        ARIADNE_TEST_EQUAL(optimum.size(),2u);
+        ARIADNE_TEST_ASSERT(definitely(optimum[0]>FloatDPBounds(0.75_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(optimum[1]<FloatDPBounds(0.25_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(
+            optimum[0]+optimum[1]==FloatDPBounds(1.0_x,dp)));
     }
 
     Void test_hotstarted_basis_initialisation() {
