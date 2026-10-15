@@ -49,7 +49,6 @@ template<class X> auto
 operator*(const Matrix<X>& A,const ValidatedVectorMultivariateFunctionPatch& v)
     -> ValidatedVectorMultivariateFunctionPatch
 {
-    ARIADNE_ASSERT(v.size()!=0);
     ValidatedVectorMultivariateFunctionPatch r(A.row_size(),factory(v).create_zero());
     for(SizeType i=0; i!=r.size(); ++i) {
         ValidatedScalarMultivariateFunctionPatch t=r[i];
@@ -146,8 +145,7 @@ IntervalNewtonSolver::implicit_step(const ValidatedVectorMultivariateFunction& f
     ValidatedVectorMultivariateFunctionPatch dh(n,z);
     if(n==1) {
         if(possibly(contains(rngJ[0][0],FloatDP(0.0_x,dp)))) {
-            ARIADNE_THROW(SingularJacobianException,"IntervalNewtonSolver","D2f(P,X)="<<rngJ[0][0]<<" which contains zero.");
-        }
+            ARIADNE_THROW(SingularJacobianException,"IntervalNewtonSolver","D2f(P,X)="<<rngJ[0][0]<<" which contains zero."); }
         if(possibly(contains(J[0][0].range(),FloatDP(0.0_x,dp)))) {
             dh[0]=fidmh[0]/cast_singleton(rngJ[0][0]);
         } else {
