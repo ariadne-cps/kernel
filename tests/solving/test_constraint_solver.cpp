@@ -60,6 +60,7 @@ class TestConstraintSolver
         ARIADNE_TEST_CALL(test_precompiled_propagate());
         ARIADNE_TEST_CALL(test_reduce_edge_cases());
         ARIADNE_TEST_CALL(test_check_feasibility());
+        ARIADNE_TEST_CALL(test_logging_branches());
         ARIADNE_TEST_CALL(test_feasible());
         ARIADNE_TEST_CALL(test_split());
         ARIADNE_TEST_CALL(test_virtual_destruction());
@@ -1285,6 +1286,42 @@ class TestConstraintSolver
                 domain,function,codomain,interior)));
     }
 
+    Void test_logging_branches() {
+        std::cout << "[constraint-coverage] exercise logging-enabled solver paths" << std::endl;
+        auto& configuration=Logger::instance().configuration();
+        unsigned int const old_verbosity=configuration.verbosity();
+        configuration.set_verbosity(10u);
+
+        ConstraintSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ExactIntervalType bounds(0.0_x,1.0_x);
+
+        UpperBoxType scalar_domain=ExactBoxType({{0.0_x,1.0_x}});
+        solver.hull_reduce(scalar_domain,x[0],bounds);
+
+        UpperBoxType vector_domain=ExactBoxType({{0.0_x,1.0_x}});
+        ValidatedVectorMultivariateFunction vector_function({x[0]});
+        ExactBoxType vector_bounds({bounds});
+        solver.hull_reduce(vector_domain,vector_function,vector_bounds);
+
+        UpperBoxType monotone_domain=ExactBoxType({{0.0_x,2.0_x}});
+        solver.monotone_reduce(
+            monotone_domain,x[0],ExactIntervalType(1.0_x,1.0_x),0u);
+
+        UpperBoxType shaving_domain=ExactBoxType({{0.0_x,1.0_x}});
+        solver.box_reduce(
+            shaving_domain,x[0],ExactIntervalType(0.0_x,0.5_x),0u);
+
+        ConstraintSolver::ExactPointType point({FloatDP(0.5_x,dp)});
+        ARIADNE_TEST_ASSERT(definitely(solver.check_feasibility(
+            ExactBoxType({{0.0_x,1.0_x}}),
+            vector_function,
+            ExactBoxType({{0.0_x,1.0_x}}),
+            point)));
+
+        configuration.set_verbosity(old_verbosity);
+    }
+
     Void test_virtual_destruction() {
         std::cout << "[constraint-lifetime] destroy ConstraintSolver through interface" << std::endl;
         ConstraintSolverInterface* solver=new ConstraintSolver();
@@ -1309,6 +1346,10 @@ class TestConstraintSolver
     }
 
     Void test_feasible() {
+
+        auto& configuration=Logger::instance().configuration();
+        unsigned int const old_verbosity=configuration.verbosity();
+        configuration.set_verbosity(10u);
 
         ConstraintSolver contractor;
         {
@@ -1428,6 +1469,7 @@ class TestConstraintSolver
                     domain,function,codomain,feasibility_result.second)));
             }
         }
+        configuration.set_verbosity(old_verbosity);
     }
 };
 
