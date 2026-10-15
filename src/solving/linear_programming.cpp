@@ -344,6 +344,13 @@ feasible(const Vector<X>& xl, const Vector<X>& xu,
         ivlx[i]=VX(xl[i],xu[i]);
     }
 
+    // The deterministic initial point may already be feasible (for example
+    // with mixed finite and infinite bounds). Validate it before taking an
+    // interior-point step, which can be degenerate for otherwise solved cases.
+    ValidatedKleenean initial_feasible=
+        this->validate_feasibility(xl,xu,A,b,x,y);
+    if(definitely(initial_feasible)) { return true; }
+
     const ExactDouble THRESHOLD = 1e-8_pr;
     CounterType step=0;
     while(step++<24) {
