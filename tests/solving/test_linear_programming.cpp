@@ -82,7 +82,7 @@ class TestInteriorPointSolver
 
         auto hotstart_result=optimiser->hotstarted_minimise(
             c,xl,xu,A,b,x,y,zl,zu);
-        ARIADNE_TEST_ASSERT(std::get<0>(hotstart_result).raw()==0.0);
+        ARIADNE_TEST_EQUAL(std::get<0>(hotstart_result),FloatDPApproximation(0.0_x,dp));
         ARIADNE_TEST_EQUAL(std::get<1>(hotstart_result).size(),2u);
         ARIADNE_TEST_EQUAL(std::get<2>(hotstart_result).size(),1u);
     }
