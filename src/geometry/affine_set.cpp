@@ -448,7 +448,6 @@ ValidatedAffineConstrainedImageSet::adjoin_outer_approximation_to(PavingInterfac
 Void ValidatedAffineConstrainedImageSet::_robust_adjoin_outer_approximation_to(PavingInterface& paving, LinearProgram<FloatDP>& lp, const Vector<FloatDPError>& errors, GridCell& cell, Nat fineness)
 {
     const SizeType nx=cell.dimension();
-    const SizeType nc=lp.A.row_size()-nx;
     const SizeType ne=lp.A.column_size()-lp.A.row_size()-1u;
 
     if(paving.superset(cell)) {
