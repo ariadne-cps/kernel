@@ -399,7 +399,6 @@ _minimisation_step(const Vector<X>& c, const Vector<X>& xl, const Vector<X>& xu,
     DiagonalMatrix<AX> Xl(xl), Xu(xu), Xa(x), Zl(zl), Zu(zu);
 
     AX mu = compute_mu(xl,xu, x,zl,zu) * sigma;
-    mu=1.0_x;
     LOGGING_PRINTLN("mu="<<mu);
 
     // rx = Ax-b; ry=yA+zl-zu-c; rzl=(x-xl).zl-mu; rzu=(xu-x).zu-mu.
