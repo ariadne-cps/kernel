@@ -323,6 +323,43 @@ Void test_equation_solver_base_paths()
     ARIADNE_TEST_FAIL(newton.implicit(implicit_function,par,bad_range));
 }
 
+
+Void test_interval_newton_paths()
+{
+    auto vars=EffectiveScalarMultivariateFunction::coordinates(3);
+    EffectiveScalarMultivariateFunction a=vars[0];
+    EffectiveScalarMultivariateFunction u=vars[1];
+    EffectiveScalarMultivariateFunction v=vars[2];
+    ExactBoxType parameter_domain({{-0.25_x,0.25_x}});
+    ExactBoxType solution_domain({{-1.0_x,1.0_x},{-1.0_x,1.0_x}});
+
+    IntervalNewtonSolver solver(1e-8,12);
+    EffectiveVectorMultivariateFunction coupled({u-a,v+a});
+    auto solutions=solver.implicit(coupled,parameter_domain,solution_domain);
+    EffectiveScalarMultivariateFunction p=EffectiveScalarMultivariateFunction::coordinate(1,0);
+    EffectiveVectorMultivariateFunction expected({p,-p});
+    ARIADNE_TEST_EQUAL(solutions.result_size(),2u);
+    ARIADNE_TEST_COMPARE(norm(solutions-expected),<,1e-4_pr);
+
+    auto scalar_vars=EffectiveScalarMultivariateFunction::coordinates(2);
+    EffectiveVectorMultivariateFunction singular({scalar_vars[1]*scalar_vars[1]-scalar_vars[0]});
+    ExactBoxType scalar_domain({{-1.0_x,1.0_x}});
+    ARIADNE_TEST_THROWS(
+        solver.implicit(singular,parameter_domain,scalar_domain),
+        SingularJacobianException);
+
+    auto& config=Logger::instance().configuration();
+    unsigned int const old_verbosity=config.verbosity();
+    config.set_verbosity(10u);
+    EffectiveScalarMultivariateFunction x=EffectiveScalarMultivariateFunction::coordinate(1,0);
+    EffectiveVectorMultivariateFunction linear({x-0.5_x});
+    ExactBoxType root_domain({{0.0_x,1.0_x}});
+    FloatDPBoundsVector root=solver.solve(linear,root_domain);
+    ARIADNE_TEST_BINARY_PREDICATE(
+        contains,ExactIntervalType(0.25_x,0.75_x),root[0]);
+    config.set_verbosity(old_verbosity);
+}
+
 #include "algebra/differential.hpp"
 
 Int main(Int argc, const char **argv) {
@@ -330,6 +367,7 @@ Int main(Int argc, const char **argv) {
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
     ARIADNE_TEST_CALL(test_equation_solver_base_paths());
+    ARIADNE_TEST_CALL(test_interval_newton_paths());
 
     MaximumError maximum_error_from_approximate(ApproximateDouble(1e-5));
     MaximumError maximum_error_from_double(1e-5);

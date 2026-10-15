@@ -43,55 +43,6 @@
 
 namespace Ariadne {
 
-namespace {
-
-template<class PR> auto
-operator*(const Matrix<FloatBounds<PR>>& A,const ValidatedVectorMultivariateFunctionModel<PR>& v)
-    -> ValidatedVectorMultivariateFunctionModel<PR>
-{
-    ARIADNE_ASSERT(v.size()!=0);
-    ValidatedVectorMultivariateFunctionModel<PR> r(A.row_size(),factory(v).create_zero());
-    for(SizeType i=0; i!=r.size(); ++i) {
-        ValidatedScalarMultivariateFunctionModel<PR> t=r[i];
-        for(SizeType j=0; j!=v.size(); ++j) {
-            t+=A[i][j]*v[j];
-        }
-        r[i]=t;
-    }
-    return r;
-}
-
-template<class X> auto
-operator*(const Matrix<X>& A,const ValidatedVectorMultivariateFunctionPatch& v)
-    -> ValidatedVectorMultivariateFunctionPatch
-{
-    ARIADNE_ASSERT(v.size()!=0);
-    ValidatedVectorMultivariateFunctionPatch r(A.row_size(),factory(v).create_zero());
-    for(SizeType i=0; i!=r.size(); ++i) {
-        ValidatedScalarMultivariateFunctionPatch t=r[i];
-        for(SizeType j=0; j!=v.size(); ++j) {
-            t+=A[i][j]*v[j];
-        }
-        r[i]=t;
-    }
-    return r;
-}
-
-template<class X> auto
-linear_solve(const Matrix<X>& A,const ValidatedVectorMultivariateFunctionPatch& v)
-    -> ValidatedVectorMultivariateFunctionPatch
-{
-    return inverse(A)*v;
-}
-
-template<class PR> FloatError<PR> sup_error(const ValidatedVectorMultivariateFunctionModel<PR>& x) {
-    ARIADNE_PRECONDITION(x.size()>0);
-    FloatError<PR> r(0u,x[0].error().precision());
-    for(SizeType i=0; i!=x.size(); ++i) { r=max(r,x[i].error()); }
-    return r;
-}
-
-} // namespace
 
 auto IntervalNewtonSolver::step(const ValidatedVectorMultivariateFunction& f,
                                         const Vector<ValidatedNumericType>& x) const
