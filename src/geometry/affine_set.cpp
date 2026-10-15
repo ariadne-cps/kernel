@@ -322,10 +322,25 @@ Void ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(PavingIn
     Int cell_depth=cell.depth();
     Int maximum_depth=static_cast<Int>(fineness*cell.dimension());
 
-    // Check for disjointness using linear program
-    InteriorPointSolver optimiser;
-    ValidatedKleenean feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
+    // Check for disjointness with a fresh simplex solve first. Do not
+    // reuse simplex state across sibling cells: their bounds differ and a
+    // previously feasible basis may no longer satisfy the new cell bounds.
+    // If simplex cannot decide robustly, retain the interior-point solver as
+    // the fallback so difficult cases keep the previous semantics.
+    ValidatedKleenean feasible=indeterminate;
+    try {
+        feasible=SimplexSolver<FloatDP>().feasible(lp.l,lp.u,lp.A,lp.b);
+    } catch(DegenerateFeasibilityProblemException const&) {
+        feasible=indeterminate;
+    } catch(SingularLinearProgram const&) {
+        feasible=indeterminate;
+    }
     if(definitely(!feasible)) { return; }
+    if(not definitely(feasible)) {
+        InteriorPointSolver optimiser;
+        feasible=optimiser.feasible(lp.l,lp.u,lp.A,lp.b);
+        if(definitely(!feasible)) { return; }
+    }
 
     // If not disjoint, and we are at maximum depth, adjoin the set.
     // Otherwise, split and continue.
