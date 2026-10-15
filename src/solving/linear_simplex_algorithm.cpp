@@ -189,7 +189,7 @@ Void
 LinearSimplexSolver<X>::consistency_check(const Matrix<X>& A, const Vector<X>& b,const Vector<XX>& x) const
 {
     const ExactDouble MAXIMUM_ERROR=ERROR_TOLERANCE;
-    Vector<XX> z=A*b-x;
+    Vector<XX> z=A*x-b;
     ARIADNE_ASSERT(decide(norm(z)<MAXIMUM_ERROR));
 }
 

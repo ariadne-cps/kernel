@@ -40,6 +40,21 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_hotstarted_basis_initialisation());
         ARIADNE_TEST_CALL(test_hotstarted_optimisation_from_alternate_basis());
         ARIADNE_TEST_CALL(test_hotstarted_minimise_partial_permutation());
+        ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
+    }
+
+    Void test_consistency_check_nonsquare_system() {
+        // An equality system may have more variables than equations.
+        // The check must form A*x-b, not A*b-x (the latter has
+        // incompatible dimensions in this 1-by-2 example).
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({1.0_x},dp);
+        Vector<FloatDPBounds> x({0.25_x,0.75_x},dp);
+
+        ARIADNE_TEST_ASSERT(definitely(
+            x[0]+x[1]==FloatDPBounds(1.0_x,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,b,x));
     }
 
     Void test_hotstarted_minimise_partial_permutation() {
