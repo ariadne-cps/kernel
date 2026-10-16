@@ -271,6 +271,10 @@ rasterization, and optional PNG encoding/file I/O. The benchmark uses the
 Kernel command-line profile extended with benchmark-specific selectors,
 and the standard logger for its report and optional progress messages. Rendering measurements
 include median and p95 times; throughput is reported in primitives/second.
+An optional `--breakdown` diagnostic runs full, geometry-only, fill-only
+and stroke-only passes with identical precomputed commands and selective
+paint suppression. Each pass is independently timed: results are not
+exclusive phase durations and must not be summed.
 
 Example Release run:
 

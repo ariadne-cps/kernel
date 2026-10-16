@@ -73,6 +73,7 @@ struct Options {
     unsigned iterations=5, warmup=1;
     std::string backend="embedded", scene="all", png_prefix="benchmark-drawing";
     bool write_png=false;
+    bool breakdown=false;
 };
 
 unsigned positive_integer(std::string const& text,unsigned limit) {
@@ -136,6 +137,9 @@ List<ArgumentParser> benchmark_argument_parsers(Options& opts) {
     parsers.append(make_unvalued_argument_parser(
         "", "write-png", "Measure optional PNG encoding and filesystem output",
         [&opts] { opts.write_png=true; }));
+    parsers.append(make_unvalued_argument_parser(
+        "", "breakdown", "Also measure geometry-only, fill-only and stroke-only passes",
+        [&opts] { opts.breakdown=true; }));
     parsers.append(make_valued_argument_parser(
         "", "png-prefix", "Output path prefix for optional PNG files",
         [&opts](String const& input) -> VoidFunction {
@@ -263,7 +267,33 @@ std::vector<Scene> make_scenes() {
     return scenes;
 }
 
-void draw(CanvasInterface& canvas,Scene const& scene) {
+enum class RenderPass {
+    full, geometry, fill_only, stroke_only
+};
+
+const char* pass_name(RenderPass pass) {
+    switch(pass) {
+        case RenderPass::full: return "full";
+        case RenderPass::geometry: return "geometry";
+        case RenderPass::fill_only: return "fill-only";
+        case RenderPass::stroke_only: return "stroke-only";
+        default: throw std::logic_error("invalid drawing benchmark pass");
+    }
+}
+
+// Diagnostic passes use the exact same precomputed path commands as the
+// regular benchmark. Disabling the paint, rather than skipping fill()/stroke(),
+// retains path lifecycle and circle tessellation costs in each measurement.
+// The default full pass keeps the original style and drawing commands.
+void draw(CanvasInterface& canvas,Scene const& scene,
+          RenderPass pass=RenderPass::full) {
+    const bool suppress_fill=pass==RenderPass::geometry ||
+                             pass==RenderPass::stroke_only;
+    const bool suppress_stroke=pass==RenderPass::geometry ||
+                               pass==RenderPass::fill_only;
+    if(suppress_fill) canvas.set_fill_opacity(0.0);
+    if(suppress_stroke) canvas.set_line_width(0.0);
+
     for(auto const& command:scene.commands) {
         switch(command.op) {
             case Operation::move: canvas.move_to(command.a,command.b); break;
@@ -271,12 +301,16 @@ void draw(CanvasInterface& canvas,Scene const& scene) {
             case Operation::circle: canvas.circle(command.a,command.b,command.c); break;
             case Operation::fill: canvas.fill(); break;
             case Operation::stroke: canvas.stroke(); break;
-            case Operation::width: canvas.set_line_width(command.a); break;
+            case Operation::width:
+                canvas.set_line_width(suppress_stroke ? 0.0 : command.a);
+                break;
             case Operation::line_colour:
                 canvas.set_line_colour(command.a,command.b,command.c); break;
             case Operation::fill_colour:
                 canvas.set_fill_colour(command.a,command.b,command.c); break;
-            case Operation::opacity: canvas.set_fill_opacity(command.a); break;
+            case Operation::opacity:
+                canvas.set_fill_opacity(suppress_fill ? 0.0 : command.a);
+                break;
             default: throw std::logic_error("invalid drawing benchmark command");
         }
     }
@@ -318,20 +352,23 @@ Statistics summarize(std::vector<double> values) {
 struct Result {
     std::string backend;
     std::string scene;
+    RenderPass pass=RenderPass::full;
     std::size_t primitives=0, commands=0;
     Statistics creation, initialisation, rendering, png;
     double primitives_per_second=0.0;
 };
 
 Result benchmark(Options const& opts,std::string const& backend,
-                 Scene const& scene) {
+                 Scene const& scene,RenderPass pass=RenderPass::full) {
     Samples samples;
     const unsigned repeats=opts.warmup+opts.iterations;
     const std::string filename=
-        opts.png_prefix+"-"+backend+"-"+scene.name+".png";
+        opts.png_prefix+"-"+backend+"-"+scene.name+
+        (pass==RenderPass::full ? "" : std::string("-")+pass_name(pass))+".png";
 
     LOGGING_PRINTLN_AT(2, "Measuring backend="<<backend
-        <<", scene="<<scene.name<<", iterations="<<opts.iterations)
+        <<", scene="<<scene.name<<", pass="<<pass_name(pass)
+        <<", iterations="<<opts.iterations)
 
     for(unsigned i=0;i<repeats;++i) {
         const auto before=Clock::now();
@@ -339,7 +376,7 @@ Result benchmark(Options const& opts,std::string const& backend,
         const auto constructed=Clock::now();
         canvas->initialise("x","y",-1.0,1.0,-1.0,1.0);
         const auto initialized=Clock::now();
-        draw(*canvas,scene);
+        draw(*canvas,scene,pass);
         const auto rendered=Clock::now();
         if(opts.write_png) canvas->write(filename.c_str());
         const auto finished=Clock::now();
@@ -351,7 +388,7 @@ Result benchmark(Options const& opts,std::string const& backend,
                 samples.export_png.push_back(milliseconds(rendered,finished));
         }
         LOGGING_PRINTLN_AT(3, "  "<<backend<<"/"<<scene.name
-            <<" sample="<<i+1u<<"/"<<repeats
+            <<"/"<<pass_name(pass)<<" sample="<<i+1u<<"/"<<repeats
             <<", render="<<milliseconds(initialized,rendered)<<" ms")
     }
 
@@ -361,7 +398,7 @@ Result benchmark(Options const& opts,std::string const& backend,
     const auto png=summarize(samples.export_png);
     const double throughput=rendering.median>0.0 ?
         1000.0*static_cast<double>(scene.primitives)/rendering.median : 0.0;
-    return {backend,scene.name,scene.primitives,scene.commands.size(),
+    return {backend,scene.name,pass,scene.primitives,scene.commands.size(),
             creation,initialisation,rendering,png,throughput};
 }
 
@@ -386,6 +423,8 @@ void print_table(Options const& opts,std::vector<Result> const& results) {
         {"p95 ms",8u,false},
         {"shapes/s",9u,false}
     };
+    if(opts.breakdown)
+        columns.insert(columns.begin()+2,{"pass",11u,true});
     if(opts.write_png) columns.push_back({"PNG ms",8u,false});
 
     std::vector<std::vector<std::string>> rows;
@@ -402,6 +441,8 @@ void print_table(Options const& opts,std::vector<Result> const& results) {
             fixed(result.rendering.p95),
             fixed(result.primitives_per_second,0)
         };
+        if(opts.breakdown)
+            row.insert(row.begin()+2,pass_name(result.pass));
         if(opts.write_png) row.push_back(fixed(result.png.median));
         for(std::size_t i=0;i<row.size();++i)
             columns[i].width=std::max(columns[i].width,row[i].size());
@@ -420,7 +461,11 @@ void print_table(Options const& opts,std::vector<Result> const& results) {
        <<" px | iterations: "<<opts.iterations
        <<" | warmup: "<<opts.warmup
        <<" | scene: "<<opts.scene<<"\n"
-       <<"Render excludes canvas creation, initialization and PNG I/O.\n\n";
+       <<"Render excludes canvas creation, initialization and PNG I/O.\n";
+    if(opts.breakdown)
+        out<<"Diagnostic passes disable fill/stroke paints, not path construction.\n"
+           <<"Times are separate end-to-end passes, not additive phase timings.\n";
+    out<<"\n";
     auto print_row=[&](std::vector<std::string> const& values) {
         for(std::size_t i=0;i<columns.size();++i) {
             if(i!=0) out<<std::string(spacing,' ');
@@ -460,13 +505,22 @@ int main(int argc,const char* argv[]) {
         // All input geometry is prepared outside the measured rendering.
         const auto scenes=make_scenes();
         std::vector<Result> results;
-        results.reserve(scenes.size()*(opts.backend=="both" ? 2u : 1u));
+        results.reserve(scenes.size()*(opts.backend=="both" ? 2u : 1u)*
+                        (opts.breakdown ? 4u : 1u));
+        const std::vector<RenderPass> passes=opts.breakdown ?
+            std::vector<RenderPass>{RenderPass::full,RenderPass::geometry,
+                                    RenderPass::fill_only,RenderPass::stroke_only} :
+            std::vector<RenderPass>{RenderPass::full};
         for(auto const& scene:scenes) {
             if(opts.scene!="all" && scene.name!=opts.scene) continue;
-            if(opts.backend=="embedded" || opts.backend=="both")
-                results.push_back(benchmark(opts,"embedded",scene));
-            if(opts.backend=="cairo" || opts.backend=="both")
-                results.push_back(benchmark(opts,"cairo",scene));
+            for(auto const& backend:{"embedded","cairo"}) {
+                if(opts.backend!="both" && opts.backend!=backend) continue;
+#ifndef ARIADNE_HAS_CAIRO
+                if(std::string(backend)=="cairo") continue;
+#endif
+                for(auto pass:passes)
+                    results.push_back(benchmark(opts,backend,scene,pass));
+            }
         }
         print_table(opts,results);
         return 0;

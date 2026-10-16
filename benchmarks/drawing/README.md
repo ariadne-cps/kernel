@@ -43,6 +43,24 @@ Optionally measure PNG generation and file I/O **separately**, by writing to
 ./build/benchmarks/drawing/benchmark_drawing --write-png --png-prefix /tmp/drawing-bench
 ```
 
+## Diagnostic breakdown
+
+Add `--breakdown` to run four independent passes for each selected scene:
+`full` (the unchanged benchmark), `geometry` (path construction and
+path lifecycle with both paints disabled), `fill-only` (fill enabled,
+stroke disabled), and `stroke-only` (fill disabled, stroke enabled).
+
+```sh
+./build/benchmarks/drawing/benchmark_drawing --backend both --scene rectangles --iterations 20 --warmup 3 --breakdown
+```
+
+The table gains a `pass` column. These are **separate end-to-end
+measurements**, not exclusive function-level profiles: geometry/path overhead
+is present in every pass and the passes should not be summed to reproduce
+`full`. In particular, fill-only can still execute zero-width stroke
+commands to maintain path lifecycle. The regular invocation (without
+`--breakdown`) remains unchanged; PNG output is optional in either mode.
+
 ## Scenarios
 
 | Scenario | Primitives | Purpose |
