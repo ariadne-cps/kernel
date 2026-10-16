@@ -34,6 +34,7 @@
 
 #include "drawing/default_graphics.hpp"
 #include "default_graphics_png.hpp"
+#include "default_graphics_golden.hpp"
 
 #ifdef ARIADNE_HAS_CAIRO
 #include <cairo.h>
@@ -302,7 +303,9 @@ int main() {
     try {
     DefaultGraphicsCanvas default_graphics(ImageSize2d(320u, 240u));
     render(default_graphics, "comparison-default_graphics.png");
-    verify_labels(DrawingTest::read_default_graphics_png("comparison-default_graphics.png"));
+    const auto figure_image=DrawingTest::read_default_graphics_png("comparison-default_graphics.png");
+    verify_labels(figure_image);
+    DrawingTest::require_golden_image(figure_image,"comparison-default_graphics.png");
 #ifdef ARIADNE_HAS_CAIRO
     CairoCanvas cairo(ImageSize2d(320u, 240u));
     render(cairo, "comparison-cairo.png");
@@ -312,6 +315,7 @@ int main() {
         std::string ename="comparison-scene"+std::to_string(scene)+"-default_graphics.png";
         geometry(e,ename.c_str(),scene);
         const auto generated=DrawingTest::read_default_graphics_png(ename);
+        DrawingTest::require_golden_image(generated,ename);
 
 #ifdef ARIADNE_HAS_CAIRO
         CairoCanvas c(ImageSize2d(320u,240u));

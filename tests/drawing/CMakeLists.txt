@@ -8,6 +8,10 @@ set(UNIT_TESTS
 foreach(TEST ${UNIT_TESTS})
     add_executable(${TEST} ${TEST}.cpp)
     target_link_libraries(${TEST} ariadne-kernel kernel)
+    if(TEST STREQUAL "test_backend_comparison")
+        target_compile_definitions(${TEST} PRIVATE
+            ARIADNE_DRAWING_GOLDEN_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/golden\")
+    endif()
     add_test(NAME ${TEST} COMMAND $<TARGET_FILE:${TEST}>)
     set_property(TEST ${TEST} PROPERTY LABELS "drawing")
 endforeach()

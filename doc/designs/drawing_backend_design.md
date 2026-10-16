@@ -330,6 +330,13 @@ Drawing regressions should preserve both **geometric semantics** and
   PNG fixtures for axis-label legibility, rectangular winding and clipping.
   When the optional reference backend is enabled, it also checks pixel
   parity in the plotting area.
+- The 11 immutable PNGs in `tests/drawing/golden/` provide pixel-exact
+  regression references covering entire rendered images, including labels,
+  margins, fills and strokes. The same standard-library-only C++ PNG reader
+  reads generated and reference images. Any RGB pixel mismatch fails CTest,
+  reports its location and intensity, and writes a PPM difference image.
+  References are updated only after explicit visual and semantic review;
+  tests never overwrite the golden PNGs.
 - The C++ `test_default_graphics_robustness` executable checks invalid
   dimensions, coordinate ranges, non-finite geometry, clipping and opacity.
 - Both C++ tests use the self-contained stored-block PNG decoder in
