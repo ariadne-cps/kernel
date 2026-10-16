@@ -166,7 +166,7 @@ class NonlinearProgrammingSolverBase
 #include "algebra/expansion.inl.hpp"
 
 namespace Ariadne {
-namespace nonlinear_programming_detail {
+namespace Detail {
 
 
 inline Sweeper<FloatDP> default_sweeper() { return Sweeper<FloatDP>(); }
@@ -591,7 +591,7 @@ inline ExactBoxType cast_exact_widen(ExactBoxType const& bx, RawFloatDP e) {
 
 typedef NonlinearProgrammingSolverBase::ValidatedVectorType ValidatedVectorType;
 
-} // namespace nonlinear_programming_detail
+} // namespace Detail
 } // namespace Ariadne
 
 #endif

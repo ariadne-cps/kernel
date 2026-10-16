@@ -28,7 +28,7 @@
 
 namespace Ariadne {
 
-using namespace nonlinear_programming_detail;
+using namespace Detail;
 
 const FloatDP NonlinearProgrammingSolverBase::zero = FloatDP(0,dp);
 const FloatDP NonlinearProgrammingSolverBase::one = FloatDP(1,dp);

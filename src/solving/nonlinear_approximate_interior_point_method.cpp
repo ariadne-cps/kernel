@@ -29,7 +29,7 @@
 
 namespace Ariadne {
 
-using namespace nonlinear_programming_detail;
+using namespace Detail;
 
 ValidatedKleenean ApproximateNonlinearInteriorPointSolver::
 feasible_zero(ExactBoxType D, ValidatedVectorMultivariateFunction h) const

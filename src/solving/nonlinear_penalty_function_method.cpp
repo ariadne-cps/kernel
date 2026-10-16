@@ -29,7 +29,7 @@
 
 namespace Ariadne {
 
-using namespace nonlinear_programming_detail;
+using namespace Detail;
 
 //------- NonlinearPenaltyFunctionSolver ------------------------------------------//
 

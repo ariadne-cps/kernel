@@ -29,7 +29,7 @@
 
 namespace Ariadne {
 
-using namespace nonlinear_programming_detail;
+using namespace Detail;
 
 // Solve equations y Dh(x) - 1/(x-xl) + 1/(xu-x) = 0; h(x) = 0
 ValidatedKleenean IntervalNonlinearInteriorPointSolver::
