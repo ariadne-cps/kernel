@@ -2,8 +2,8 @@
  * Ariadne - free software under the GNU General Public License version 3
  * or (at your option) any later version. No warranty.
  */
-#include "drawing/default_backend.hpp"
-#include "default_backend_png.hpp"
+#include "drawing/default_graphics.hpp"
+#include "default_graphics_png.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -55,7 +55,7 @@ int main() {
 
         DefaultGraphicsCanvas canvas(ImageSize2d(64u,48u));
         const double nan=std::numeric_limits<double>::quiet_NaN();
-        const double inf=std::numeric_limits<double>::infinity();
+        const double infinity=std::numeric_limits<double>::infinity();
         const double tiny=std::numeric_limits<double>::denorm_min();
         must_reject([&] {
             canvas.initialise("x","y",0,0,-1,1);
@@ -67,7 +67,7 @@ int main() {
             canvas.initialise("x","y",nan,1,-1,1);
         },"NaN endpoint accepted");
         must_reject([&] {
-            canvas.initialise("x","y",-1,1,-inf,1);
+            canvas.initialise("x","y",-1,1,-infinity,1);
         },"infinite endpoint accepted");
         must_reject([&] {
             canvas.initialise("x","y",-1e308,1e308,-1,1);
@@ -103,10 +103,10 @@ int main() {
         // Non-finite path coordinates/radii are ignored. An invalid stroke
         // width cannot accidentally rasterize the remaining path.
         canvas.move_to(nan,0.0);
-        canvas.line_to(inf,0.0);
+        canvas.line_to(infinity,0.0);
         canvas.stroke();
         canvas.circle(0.0,0.0,nan);
-        canvas.circle(inf,0.0,0.25);
+        canvas.circle(infinity,0.0,0.25);
         canvas.circle(0.0,0.0,-0.25);
         canvas.stroke();
         canvas.set_line_width(nan);
@@ -114,9 +114,9 @@ int main() {
         canvas.line_to(0.8,0.0);
         canvas.stroke();
 
-        canvas.write("default_backend-robustness.png");
-        const auto image=DrawingTest::read_default_backend_png(
-            "default_backend-robustness.png");
+        canvas.write("default_graphics-robustness.png");
+        const auto image=DrawingTest::read_default_graphics_png(
+            "default_graphics-robustness.png");
         DrawingTest::require(image.width==234 && image.height==98,
                              "Unexpected graphics image size");
         auto check=[&](double x,double y,std::array<unsigned char,3> expected,
@@ -135,7 +135,7 @@ int main() {
                              "Clipping modified the margin");
         return 0;
     } catch(const std::exception& exception) {
-        std::cerr<<"test_default_backend_robustness: "<<exception.what()<<'\n';
+        std::cerr<<"test_default_graphics_robustness: "<<exception.what()<<'\n';
         return 1;
     }
 }

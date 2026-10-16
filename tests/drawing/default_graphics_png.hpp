@@ -1,5 +1,5 @@
-#ifndef ARIADNE_TEST_DEFAULT_BACKEND_PNG_HPP
-#define ARIADNE_TEST_DEFAULT_BACKEND_PNG_HPP
+#ifndef ARIADNE_TEST_DEFAULT_GRAPHICS_PNG_HPP
+#define ARIADNE_TEST_DEFAULT_GRAPHICS_PNG_HPP
 
 #include <algorithm>
 #include <array>
@@ -41,7 +41,7 @@ inline std::uint32_t crc32(std::vector<unsigned char> const& b,
 
 // Read the self-contained Default graphics backend's stored-block PNG.
 // The optional comparison backend has a separate decoder via its own API.
-inline Image read_default_backend_png(std::string const& name) {
+inline Image read_default_graphics_png(std::string const& name) {
     std::ifstream file(name,std::ios::binary);
     if(!file) throw std::runtime_error("Cannot open "+name);
     std::vector<unsigned char> bytes((std::istreambuf_iterator<char>(file)),

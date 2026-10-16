@@ -27,7 +27,7 @@
 
 #include "function/function.hpp"
 #include "drawing/figure.hpp"
-#include "drawing/default_backend.hpp"
+#include "drawing/default_graphics.hpp"
 #ifdef ARIADNE_HAS_CAIRO
 #include "drawing/cairo.hpp"
 #endif
@@ -73,7 +73,7 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_figure_header_helpers())
         ARIADNE_TEST_CALL(test_graphics_interface())
         ARIADNE_TEST_CALL(test_graphics_base())
-        ARIADNE_TEST_CALL(test_default_backend())
+        ARIADNE_TEST_CALL(test_default_graphics())
 #ifdef ARIADNE_HAS_CAIRO
         ARIADNE_TEST_CALL(test_cairo())
 #endif
@@ -230,7 +230,7 @@ class TestGraphics {
         canvas.fill_boundary(boundary);
     }
 
-    void test_default_backend() {
+    void test_default_graphics() {
         ARIADNE_TEST_FAIL(ImageSize2d(0,1))
         ARIADNE_TEST_FAIL(ImageSize2d(1,0))
         DefaultGraphicsCanvas canvas(ImageSize2d(32u,32u));
@@ -240,7 +240,7 @@ class TestGraphics {
         canvas.dot(0.5,0.5);
         canvas.stroke();
         canvas.finalise();
-        canvas.write("test_default_backend-explicit.png");
+        canvas.write("test_default_graphics-explicit.png");
     }
 
 #ifdef ARIADNE_HAS_CAIRO

@@ -28,7 +28,7 @@
 
 #include "drawer.hpp"
 #include "graphics_manager.hpp"
-#include "embedded.hpp"
+#include "default_graphics.hpp"
 #ifdef ARIADNE_HAS_CAIRO
 #include "cairo.hpp"
 #endif
@@ -82,10 +82,10 @@ ArgumentParser make_graphics_argument_parser() {
     return make_valued_argument_parser(
         "g",
         "graphics",
-        "Choose the graphics backend as a <value> in [ embedded | cairo | none ], where cairo requires Cairo support (default: embedded)",
+        "Choose the graphics backend as a <value> in [ default_graphics | cairo | none ], where cairo requires Cairo support (default: default_graphics)",
         [](String const& value) -> VoidFunction {
-            if (value == "embedded") {
-                return [] { GraphicsManager::instance().set_backend(EmbeddedGraphicsBackend()); };
+            if (value == "default_graphics") {
+                return [] { GraphicsManager::instance().set_backend(DefaultGraphicsBackend()); };
             }
 #ifdef ARIADNE_HAS_CAIRO
             if (value == "cairo") {

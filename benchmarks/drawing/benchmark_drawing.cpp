@@ -11,7 +11,7 @@
 // is included in the measured rendering time.
 
 #include "drawing/command_line_interface.hpp"
-#include "drawing/default_backend.hpp"
+#include "drawing/default_graphics.hpp"
 #include "logging/logging.hpp"
 #ifdef ARIADNE_HAS_CAIRO
 #include "drawing/cairo.hpp"
@@ -71,7 +71,7 @@ struct Scene {
 struct Options {
     unsigned width=640, height=480;
     unsigned iterations=5, warmup=1;
-    std::string backend="default_backend", scene="all", png_prefix="benchmark-drawing";
+    std::string backend="default_graphics", scene="all", png_prefix="benchmark-drawing";
     bool write_png=false;
     bool breakdown=false;
 };
@@ -89,13 +89,13 @@ unsigned positive_integer(std::string const& text,unsigned limit) {
 List<ArgumentParser> benchmark_argument_parsers(Options& opts) {
     List<ArgumentParser> parsers;
     parsers.append(make_valued_argument_parser(
-        "", "backend", "Drawing backend: default_backend, cairo, or both (default: default_backend)",
+        "", "backend", "Drawing backend: default_graphics, cairo, or both (default: default_graphics)",
         [&opts](String const& input) -> VoidFunction {
             const std::string value=input;
-            if(value!="default_backend" && value!="cairo" && value!="both")
+            if(value!="default_graphics" && value!="cairo" && value!="both")
                 throw std::invalid_argument("invalid drawing backend: "+value);
 #ifndef ARIADNE_HAS_CAIRO
-            if(value!="default_backend")
+            if(value!="default_graphics")
                 throw std::invalid_argument("optional reference backend not compiled");
 #endif
             return [&opts,value] { opts.backend=value; };
@@ -318,7 +318,7 @@ void draw(CanvasInterface& canvas,Scene const& scene,
 
 SharedPointer<CanvasInterface> make_canvas(std::string const& backend,
                                            unsigned width,unsigned height) {
-    if(backend=="default_backend")
+    if(backend=="default_graphics")
         return DefaultGraphicsBackend().make_canvas("",width,height,false);
 #ifdef ARIADNE_HAS_CAIRO
     if(backend=="cairo")
@@ -513,7 +513,7 @@ int main(int argc,const char* argv[]) {
             std::vector<RenderPass>{RenderPass::full};
         for(auto const& scene:scenes) {
             if(opts.scene!="all" && scene.name!=opts.scene) continue;
-            for(auto const& backend:{"default_backend","cairo"}) {
+            for(auto const& backend:{"default_graphics","cairo"}) {
                 if(opts.backend!="both" && opts.backend!=backend) continue;
 #ifndef ARIADNE_HAS_CAIRO
                 if(std::string(backend)=="cairo") continue;

@@ -2,8 +2,8 @@
  * Ariadne - free software under the GNU General Public License version 3
  * or (at your option) any later version. No warranty.
  */
-#ifndef ARIADNE_DEFAULT_BACKEND_HPP
-#define ARIADNE_EMBEDDED_HPP
+#ifndef ARIADNE_DEFAULT_GRAPHICS_HPP
+#define ARIADNE_DEFAULT_GRAPHICS_HPP
 
 #include <array>
 #include <cstdint>
@@ -89,4 +89,4 @@ class DefaultGraphicsBackend : public GraphicsBackendInterface {
 };
 
 } // namespace Ariadne
-#endif // ARIADNE_EMBEDDED_HPP
+#endif // ARIADNE_DEFAULT_GRAPHICS_HPP

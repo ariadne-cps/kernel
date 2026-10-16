@@ -1,4 +1,4 @@
-#include "drawing/default_backend.hpp"
+#include "drawing/default_graphics.hpp"
 #ifdef ARIADNE_HAS_CAIRO
 #include "drawing/cairo.hpp"
 #endif
@@ -7,7 +7,7 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
-#include "default_backend_png.hpp"
+#include "default_graphics_png.hpp"
 #ifdef ARIADNE_HAS_CAIRO
 #include <cairo.h>
 #endif
@@ -224,7 +224,7 @@ static void verify_rectangles(DrawingTest::Image const& holes,
 
 #ifdef ARIADNE_HAS_CAIRO
 static void compare_optional_reference(std::string const& name,
-                                       DrawingTest::Image const& embedded) {
+                                       DrawingTest::Image const& default_graphics_image) {
     cairo_surface_t* surface=cairo_image_surface_create_from_png(name.c_str());
     if(cairo_surface_status(surface)!=CAIRO_STATUS_SUCCESS) {
         cairo_surface_destroy(surface);
@@ -232,20 +232,20 @@ static void compare_optional_reference(std::string const& name,
     }
     cairo_surface_flush(surface);
     DrawingTest::require(cairo_image_surface_get_width(surface)==
-                         static_cast<int>(embedded.width) &&
+                         static_cast<int>(default_graphics_image.width) &&
                          cairo_image_surface_get_height(surface)==
-                         static_cast<int>(embedded.height),
+                         static_cast<int>(default_graphics_image.height),
                          "Reference image dimensions differ");
-    const int stride=cairo_image_surface_get_stride(surface);
+    const auto stride=static_cast<std::size_t>(cairo_image_surface_get_stride(surface));
     const auto* data=cairo_image_surface_get_data(surface);
     double error=0;
     std::size_t outliers=0;
     std::size_t pixels=0;
-    for(unsigned y=10;y<embedded.height-40;++y)
-        for(unsigned x=160;x<embedded.width-10;++x) {
+    for(unsigned y=10;y<default_graphics_image.height-40;++y)
+        for(unsigned x=160;x<default_graphics_image.width-10;++x) {
             const auto* ref=data+static_cast<std::size_t>(y)*stride+
                             static_cast<std::size_t>(x)*4;
-            const auto colour=embedded.pixel(x,y);
+            const auto colour=default_graphics_image.pixel(x,y);
             const std::array<unsigned char,3> reference{ref[2],ref[1],ref[0]};
             int max_delta=0;
             for(int k=0;k<3;++k) {
@@ -267,18 +267,18 @@ static void compare_optional_reference(std::string const& name,
 
 int main() {
     try {
-    DefaultGraphicsCanvas default_backend(ImageSize2d(320u, 240u));
-    render(default_backend, "comparison-default_backend.png");
-    verify_labels(DrawingTest::read_default_backend_png("comparison-default_backend.png"));
+    DefaultGraphicsCanvas default_graphics(ImageSize2d(320u, 240u));
+    render(default_graphics, "comparison-default_graphics.png");
+    verify_labels(DrawingTest::read_default_graphics_png("comparison-default_graphics.png"));
 #ifdef ARIADNE_HAS_CAIRO
     CairoCanvas cairo(ImageSize2d(320u, 240u));
     render(cairo, "comparison-cairo.png");
 #endif
     for(int scene=0;scene<10;++scene) {
         DefaultGraphicsCanvas e(ImageSize2d(320u,240u));
-        std::string ename="comparison-scene"+std::to_string(scene)+"-default_backend.png";
+        std::string ename="comparison-scene"+std::to_string(scene)+"-default_graphics.png";
         geometry(e,ename.c_str(),scene);
-        const auto generated=DrawingTest::read_default_backend_png(ename);
+        const auto generated=DrawingTest::read_default_graphics_png(ename);
 
 #ifdef ARIADNE_HAS_CAIRO
         CairoCanvas c(ImageSize2d(320u,240u));
@@ -288,11 +288,11 @@ int main() {
 #endif
     }
     verify_rectangles(
-        DrawingTest::read_default_backend_png("comparison-scene7-default_backend.png"),
-        DrawingTest::read_default_backend_png("comparison-scene8-default_backend.png"));
+        DrawingTest::read_default_graphics_png("comparison-scene7-default_graphics.png"),
+        DrawingTest::read_default_graphics_png("comparison-scene8-default_graphics.png"));
     return 0;
     } catch(std::exception const& error) {
-        std::cerr<<"default graphics backend comparison: "<<error.what()<<'\\n';
+        std::cerr<<"default graphics backend comparison: "<<error.what()<<'\n';
         return 1;
     }
 }

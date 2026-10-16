@@ -27,7 +27,7 @@
 #include "drawing/graphics_manager.hpp"
 #include "drawing/figure.hpp"
 #include "drawing/geometry2d.hpp"
-#include "drawing/default_backend.hpp"
+#include "drawing/default_graphics.hpp"
 #ifdef ARIADNE_HAS_CAIRO
 #include "drawing/cairo.hpp"
 #endif
@@ -36,11 +36,11 @@
 
 namespace Ariadne {
 
-GraphicsBackend default_backend() {
+GraphicsBackend default_graphics() {
     return DefaultGraphicsBackend();
 }
 
-GraphicsManager::GraphicsManager() : _backend(default_backend()), _drawer(AffineDrawer(0)) {
+GraphicsManager::GraphicsManager() : _backend(default_graphics()), _drawer(AffineDrawer(0)) {
 }
 
 GraphicsManager& GraphicsManager::instance() {

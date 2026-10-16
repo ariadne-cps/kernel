@@ -2,7 +2,7 @@
  * Ariadne - free software under the GNU General Public License version 3
  * or (at your option) any later version. No warranty.
  */
-#include "drawing/default_backend.hpp"
+#include "drawing/default_graphics.hpp"
 #include "utility/stlio.hpp"
 #include "utility/standard.hpp"
 

@@ -32,11 +32,11 @@ The main design principles are:
 
 | File or interface | Responsibility |
 | --- | --- |
-| [`include/drawing/default_backend.hpp`](../../include/drawing/default_backend.hpp) | `DefaultGraphicsCanvas`, `DefaultGraphicsBackend`, path/paint types and raster state. |
-| [`src/drawing/default_backend.cpp`](../../src/drawing/default_backend.cpp) | Coordinate transformation, rasterization, blending, axis labels and PNG writer. |
+| [`include/drawing/default_graphics.hpp`](../../include/drawing/default_graphics.hpp) | `DefaultGraphicsCanvas`, `DefaultGraphicsBackend`, path/paint types and raster state. |
+| [`src/drawing/default_graphics.cpp`](../../src/drawing/default_graphics.cpp) | Coordinate transformation, rasterization, blending, axis labels and PNG writer. |
 | [`include/drawing/graphics_interface.hpp`](../../include/drawing/graphics_interface.hpp) | Backend-independent `CanvasInterface` contract. |
 | [`include/drawing/graphics_base.hpp`](../../include/drawing/graphics_base.hpp) | Shared `CanvasBase::fill_boundary()` implementation. |
-| [`src/drawing/graphics_manager.cpp`](../../src/drawing/graphics_manager.cpp) | Registration of the default_backend backend as the default. |
+| [`src/drawing/graphics_manager.cpp`](../../src/drawing/graphics_manager.cpp) | Registration of the Default graphics backend as the standard drawing backend. |
 | [`benchmarks/drawing/`](../../benchmarks/drawing/) | Independent absolute-performance measurements. |
 | [`tests/drawing/`](../../tests/drawing/) | Image regression fixtures and label-legibility checks. |
 
@@ -290,7 +290,7 @@ Example Release run:
 
 ```sh
 cmake --build build --target benchmark_drawing --parallel
-./build/benchmarks/drawing/benchmark_drawing --backend default_backend --iterations 10 --warmup 2
+./build/benchmarks/drawing/benchmark_drawing --backend default_graphics --iterations 10 --warmup 2
 ```
 
 The benchmark is independent of other backend implementations; its normal
@@ -314,24 +314,16 @@ Drawing regressions should preserve both **geometric semantics** and
   including touching contours that must use general filling.
   A separate fixture covers horizontal/vertical strokes with fractional
   widths and coordinates, short segments and clipped end caps.
-- Standalone default graphics backend-only regressions check the nested-rectangle winding
-  semantics and robustness of dimension/axis validation, clipping, opacity
-  and non-finite drawing inputs. They inspect generated PNG pixels without
-  needing an alternative renderer.
-- An default graphics backend-only robustness test checks invalid dimensions and coordinate
-  ranges, including numerical overflow/underflow, and verifies the resulting
-  PNG's clipping, transparency, clamped opacity and unchanged margins.
-  Its image assertions use the shared standard-library PNG reader.
-- The default_backend label regression test checks that axis text remains visible
-  and connected.
-- Image-comparison tests use a CTest fixture. The `test_backend_comparison`
-  executable produces the PNG inputs in the drawing test's binary directory
-  (normally `build/tests/drawing/`), and CTest runs it automatically when
-  a dependent comparison or label test is selected. The executable must
-  already have been built; CTest does not compile targets.
-- PNG checks and image comparisons must evaluate the plotting area
-  separately from the axis-label regions; large uniform backgrounds must
-  not conceal localized errors.
+- The C++ `test_backend_comparison` executable generates and inspects
+  PNG fixtures for axis-label legibility, rectangular winding and clipping.
+  When the optional reference backend is enabled, it also checks pixel
+  parity in the plotting area.
+- The C++ `test_default_graphics_robustness` executable checks invalid
+  dimensions, coordinate ranges, non-finite geometry, clipping and opacity.
+- Both C++ tests use the self-contained stored-block PNG decoder in
+  `tests/drawing/default_graphics_png.hpp`, requiring no Python test tools.
+  Each test produces and checks its own images; no CTest fixture is needed.
+- Plotting-area comparison is kept separate from axis-label checks.
 - The benchmark's scenario definitions should remain stable between
   optimization iterations to allow useful comparisons.
 - Optimizations must preserve the coverage-mask and single-compositing

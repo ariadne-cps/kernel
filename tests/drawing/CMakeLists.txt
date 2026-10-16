@@ -3,7 +3,7 @@ set(UNIT_TESTS
     test_command_line_interface
     test_null_graphics
     test_backend_comparison
-    test_default_backend_robustness
+    test_default_graphics_robustness
 )
 foreach(TEST ${UNIT_TESTS})
     add_executable(${TEST} ${TEST}.cpp)
@@ -15,5 +15,5 @@ add_dependencies(tests-cpp ${UNIT_TESTS})
 
 # C++ graphics regression tests create and inspect their own PNGs.
 # No Python interpreter, PNG comparison script or fixture ordering is needed.
-set_tests_properties(test_backend_comparison test_default_backend_robustness PROPERTIES
+set_tests_properties(test_backend_comparison test_default_graphics_robustness PROPERTIES
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
