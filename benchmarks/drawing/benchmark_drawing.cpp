@@ -13,9 +13,6 @@
 #include "drawing/command_line_interface.hpp"
 #include "drawing/default_graphics.hpp"
 #include "logging/logging.hpp"
-#ifdef ARIADNE_HAS_CAIRO
-#include "drawing/cairo.hpp"
-#endif
 
 #include <algorithm>
 #include <chrono>
@@ -71,7 +68,7 @@ struct Scene {
 struct Options {
     unsigned width=640, height=480;
     unsigned iterations=5, warmup=1;
-    std::string backend="default_graphics", scene="all", png_prefix="benchmark-drawing";
+    std::string scene="all", png_prefix="benchmark-drawing";
     bool write_png=false;
     bool breakdown=false;
 };
@@ -88,18 +85,6 @@ unsigned positive_integer(std::string const& text,unsigned limit) {
 
 List<ArgumentParser> benchmark_argument_parsers(Options& opts) {
     List<ArgumentParser> parsers;
-    parsers.append(make_valued_argument_parser(
-        "", "backend", "Drawing backend: default_graphics, cairo, or both (default: default_graphics)",
-        [&opts](String const& input) -> VoidFunction {
-            const std::string value=input;
-            if(value!="default_graphics" && value!="cairo" && value!="both")
-                throw std::invalid_argument("invalid drawing backend: "+value);
-#ifndef ARIADNE_HAS_CAIRO
-            if(value!="default_graphics")
-                throw std::invalid_argument("optional reference backend not compiled");
-#endif
-            return [&opts,value] { opts.backend=value; };
-        }));
     parsers.append(make_valued_argument_parser(
         "", "scene", "Scenario: rectangles, polylines, circles, polygons, winding, mixed, or all",
         [&opts](String const& input) -> VoidFunction {
@@ -316,17 +301,6 @@ void draw(CanvasInterface& canvas,Scene const& scene,
     }
 }
 
-SharedPointer<CanvasInterface> make_canvas(std::string const& backend,
-                                           unsigned width,unsigned height) {
-    if(backend=="default_graphics")
-        return DefaultGraphicsBackend().make_canvas("",width,height,false);
-#ifdef ARIADNE_HAS_CAIRO
-    if(backend=="cairo")
-        return CairoGraphicsBackend().make_canvas("",width,height,false);
-#endif
-    throw std::invalid_argument("unsupported backend: "+backend);
-}
-
 double milliseconds(Clock::time_point a,Clock::time_point b) {
     return std::chrono::duration<double,std::milli>(b-a).count();
 }
@@ -350,7 +324,6 @@ Statistics summarize(std::vector<double> values) {
 }
 
 struct Result {
-    std::string backend;
     std::string scene;
     RenderPass pass=RenderPass::full;
     std::size_t primitives=0, commands=0;
@@ -358,21 +331,22 @@ struct Result {
     double primitives_per_second=0.0;
 };
 
-Result benchmark(Options const& opts,std::string const& backend,
-                 Scene const& scene,RenderPass pass=RenderPass::full) {
+Result benchmark(Options const& opts,Scene const& scene,
+                 RenderPass pass=RenderPass::full) {
     Samples samples;
     const unsigned repeats=opts.warmup+opts.iterations;
     const std::string filename=
-        opts.png_prefix+"-"+backend+"-"+scene.name+
+        opts.png_prefix+"-"+scene.name+
         (pass==RenderPass::full ? "" : std::string("-")+pass_name(pass))+".png";
 
-    LOGGING_PRINTLN_AT(2, "Measuring backend="<<backend
-        <<", scene="<<scene.name<<", pass="<<pass_name(pass)
+    LOGGING_PRINTLN_AT(2, "Measuring scene="<<scene.name
+        <<", pass="<<pass_name(pass)
         <<", iterations="<<opts.iterations)
 
     for(unsigned i=0;i<repeats;++i) {
         const auto before=Clock::now();
-        auto canvas=make_canvas(backend,opts.width,opts.height);
+        auto canvas=DefaultGraphicsBackend().make_canvas(
+            "",opts.width,opts.height,false);
         const auto constructed=Clock::now();
         canvas->initialise("x","y",-1.0,1.0,-1.0,1.0);
         const auto initialized=Clock::now();
@@ -387,8 +361,8 @@ Result benchmark(Options const& opts,std::string const& backend,
             if(opts.write_png)
                 samples.export_png.push_back(milliseconds(rendered,finished));
         }
-        LOGGING_PRINTLN_AT(3, "  "<<backend<<"/"<<scene.name
-            <<"/"<<pass_name(pass)<<" sample="<<i+1u<<"/"<<repeats
+        LOGGING_PRINTLN_AT(3, "  "<<scene.name<<"/"<<pass_name(pass)
+            <<" sample="<<i+1u<<"/"<<repeats
             <<", render="<<milliseconds(initialized,rendered)<<" ms")
     }
 
@@ -398,7 +372,7 @@ Result benchmark(Options const& opts,std::string const& backend,
     const auto png=summarize(samples.export_png);
     const double throughput=rendering.median>0.0 ?
         1000.0*static_cast<double>(scene.primitives)/rendering.median : 0.0;
-    return {backend,scene.name,pass,scene.primitives,scene.commands.size(),
+    return {scene.name,pass,scene.primitives,scene.commands.size(),
             creation,initialisation,rendering,png,throughput};
 }
 
@@ -413,7 +387,6 @@ std::string fixed(double value,int precision=3) {
 void print_table(Options const& opts,std::vector<Result> const& results) {
     struct Column { std::string title; std::size_t width; bool left; };
     std::vector<Column> columns{
-        {"backend",7u,true},
         {"scene",10u,true},
         {"shapes",6u,false},
         {"commands",8u,false},
@@ -424,14 +397,13 @@ void print_table(Options const& opts,std::vector<Result> const& results) {
         {"shapes/s",9u,false}
     };
     if(opts.breakdown)
-        columns.insert(columns.begin()+2,{"pass",11u,true});
+        columns.insert(columns.begin()+1,{"pass",11u,true});
     if(opts.write_png) columns.push_back({"PNG ms",8u,false});
 
     std::vector<std::vector<std::string>> rows;
     rows.reserve(results.size());
     for(auto const& result:results) {
         std::vector<std::string> row{
-            result.backend,
             result.scene,
             std::to_string(result.primitives),
             std::to_string(result.commands),
@@ -442,7 +414,7 @@ void print_table(Options const& opts,std::vector<Result> const& results) {
             fixed(result.primitives_per_second,0)
         };
         if(opts.breakdown)
-            row.insert(row.begin()+2,pass_name(result.pass));
+            row.insert(row.begin()+1,pass_name(result.pass));
         if(opts.write_png) row.push_back(fixed(result.png.median));
         for(std::size_t i=0;i<row.size();++i)
             columns[i].width=std::max(columns[i].width,row[i].size());
@@ -456,7 +428,7 @@ void print_table(Options const& opts,std::vector<Result> const& results) {
     const std::string line(total_width,'-');
 
     std::ostringstream out;
-    out<<"Drawing backend benchmark\n"
+    out<<"Drawing performance benchmark\n"
        <<"Plot: "<<opts.width<<" x "<<opts.height
        <<" px | iterations: "<<opts.iterations
        <<" | warmup: "<<opts.warmup
@@ -505,22 +477,15 @@ int main(int argc,const char* argv[]) {
         // All input geometry is prepared outside the measured rendering.
         const auto scenes=make_scenes();
         std::vector<Result> results;
-        results.reserve(scenes.size()*(opts.backend=="both" ? 2u : 1u)*
-                        (opts.breakdown ? 4u : 1u));
+        results.reserve(scenes.size()*(opts.breakdown ? 4u : 1u));
         const std::vector<RenderPass> passes=opts.breakdown ?
             std::vector<RenderPass>{RenderPass::full,RenderPass::geometry,
                                     RenderPass::fill_only,RenderPass::stroke_only} :
             std::vector<RenderPass>{RenderPass::full};
         for(auto const& scene:scenes) {
             if(opts.scene!="all" && scene.name!=opts.scene) continue;
-            for(auto const& backend:{"default_graphics","cairo"}) {
-                if(opts.backend!="both" && opts.backend!=backend) continue;
-#ifndef ARIADNE_HAS_CAIRO
-                if(std::string(backend)=="cairo") continue;
-#endif
-                for(auto pass:passes)
-                    results.push_back(benchmark(opts,backend,scene,pass));
-            }
+            for(auto pass:passes)
+                results.push_back(benchmark(opts,scene,pass));
         }
         print_table(opts,results);
         return 0;

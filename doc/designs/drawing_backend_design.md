@@ -290,12 +290,12 @@ Example Release run:
 
 ```sh
 cmake --build build --target benchmark_drawing --parallel
-./build/benchmarks/drawing/benchmark_drawing --backend default_graphics --iterations 10 --warmup 2
+./build/benchmarks/drawing/benchmark_drawing --iterations 10 --warmup 2
 ```
 
-The benchmark is independent of other backend implementations; its normal
-operation and absolute timing metrics remain valid as the drawing module
-evolves. See [benchmark documentation](../../benchmarks/drawing/README.md)
+The benchmark measures only `DefaultGraphicsBackend`, with no backend
+selector, reference implementation or backend column in its terminal report.
+Its absolute timing metrics remain valid as the drawing module evolves. See [benchmark documentation](../../benchmarks/drawing/README.md)
 for available scenarios and options.
 
 Avoid recording a single machine's benchmark numbers as permanent design

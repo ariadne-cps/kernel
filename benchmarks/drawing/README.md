@@ -5,10 +5,7 @@ of the Geometry and Function modules. It calls `CanvasInterface` directly,
 using deterministically precomputed drawing commands, rather than constructing
 `Figure` objects or constrained image sets.
 
-**The Default graphics backend is the only required backend.** Cairo is accepted as
-an optional transition-time baseline when the library was built with
-`ARIADNE_WITH_CAIRO=ON`. Removing Cairo later requires no changes to the
-benchmark's default invocation or the build target.
+The benchmark measures the Default graphics renderer directly; no backend selection or reference renderer is involved.
 
 ## Build and run
 
@@ -23,13 +20,6 @@ cmake --build build --target benchmark_drawing --parallel
 The executable's location depends on the generator and build configuration.
 The existing project-wide `benchmarks` target also builds this benchmark.
 
-With Cairo available, compare identical commands without changing the
-absolute numbers reported:
-
-```sh
-./build/benchmarks/drawing/benchmark_drawing --backend both --iterations 7 --warmup 2
-```
-
 Select one scenario/size (for tracking performance across commits):
 
 ```sh
@@ -37,7 +27,7 @@ Select one scenario/size (for tracking performance across commits):
 ```
 
 Optionally measure PNG generation and file I/O **separately**, by writing to
-`benchmark-drawing-<backend>-<scene>.png` in the current directory:
+`benchmark-drawing-<scene>.png` in the current directory:
 
 ```sh
 ./build/benchmarks/drawing/benchmark_drawing --write-png --png-prefix /tmp/drawing-bench
@@ -51,7 +41,7 @@ path lifecycle with both paints disabled), `fill-only` (fill enabled,
 stroke disabled), and `stroke-only` (fill disabled, stroke enabled).
 
 ```sh
-./build/benchmarks/drawing/benchmark_drawing --backend both --scene rectangles --iterations 20 --warmup 3 --breakdown
+./build/benchmarks/drawing/benchmark_drawing --scene rectangles --iterations 20 --warmup 3 --breakdown
 ```
 
 The table gains a `pass` column. These are **separate end-to-end
@@ -73,8 +63,7 @@ commands to maintain path lifecycle. The regular invocation (without
 | mixed | 710 | Combination of all preceding scenes |
 
 The scene command buffers, including coordinates and trigonometric values,
-are prepared **outside the measured section** and are identical for Cairo
-and Default graphics. Every timed repetition creates a fresh canvas so no previous
+are prepared **outside the measured section**. Every timed repetition creates a fresh canvas so no previous
 frame can affect the next. Measurements use `steady_clock` and report
 median and nearest-rank p95 over the measured repetitions.
 
@@ -85,7 +74,7 @@ system (default verbosity 1); no CSV files or CSV output are generated.
 The benchmark extends `make_kernel_command_line_interface()` with a
 `drawing-benchmark` contribution, so the usual logging options
 (`--verbosity`, `--theme`, etc.) are available alongside the local
-`--backend`, `--scene`, `--width`, `--height`, `--iterations`,
+`--scene`, `--width`, `--height`, `--iterations`,
 `--warmup`, `--write-png` and `--png-prefix` arguments.
 
 The columns contain creation and initialization median times, pure drawing
@@ -95,6 +84,5 @@ logs each scene before measurement; verbosity 3 additionally logs individual
 samples. Logging is outside all measured time intervals.
 
 These measurements are not a correctness test. Continue to use the tests
-under `tests/drawing` for Cairo/Default graphics image comparisons and regression
-checks. Compare measurements only with the same build type, machine,
+under `tests/drawing` for drawing regression checks. Compare measurements only with the same build type, machine,
 compiler, size, scenario and iteration settings.
