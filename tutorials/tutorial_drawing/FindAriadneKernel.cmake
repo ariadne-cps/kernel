@@ -23,10 +23,8 @@ find_package_handle_standard_args(AriadneKernel DEFAULT_MSG
   ARIADNE_KERNEL_INCLUDE_DIR
   GMP_INCLUDE_DIR
   MPFR_INCLUDE_DIR
-  CAIRO_INCLUDE_DIR
   GMP_LIBRARY
   MPFR_LIBRARY
-  CAIRO_LIBRARY
 )
 
 if(AriadneKernel_FOUND)
@@ -43,7 +41,7 @@ if(AriadneKernel_FOUND)
     set_target_properties(AriadneKernel::ariadne-kernel PROPERTIES
       IMPORTED_LOCATION "${ARIADNE_KERNEL_LIBRARY}"
       INTERFACE_INCLUDE_DIRECTORIES "${ARIADNE_KERNEL_INCLUDE_DIRS}"
-      INTERFACE_LINK_LIBRARIES "${CAIRO_LIBRARY};${MPFR_LIBRARY};${GMP_LIBRARY};Threads::Threads"
+      INTERFACE_LINK_LIBRARIES "${MPFR_LIBRARY};${GMP_LIBRARY};Threads::Threads;${CAIRO_LIBRARY}"
     )
   endif()
 endif()
