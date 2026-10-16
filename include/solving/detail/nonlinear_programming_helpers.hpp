@@ -472,7 +472,7 @@ inline ExactBoxType cast_exact_widen(ExactBoxType const& bx, RawFloatDP e) {
     for(SizeType i=0; i!=bx.size(); ++i) {
         r[i]=ExactIntervalType(sub(down,bx[i].lower_bound(),e),add(up,bx[i].upper_bound(),e));
     }
-    return bx;
+    return r;
 }
 
 

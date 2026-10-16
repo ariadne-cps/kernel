@@ -204,6 +204,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
     NonlinearInfeasibleInteriorPointSolver optimiser;
   public:
     Void test() {
+        ARIADNE_TEST_CALL(test_common_point_feasibility_and_tolerance());
         ARIADNE_TEST_CALL(test_candidate_linear());
         ARIADNE_TEST_CALL(test_candidate_nonlinear());
         ARIADNE_TEST_CALL(test_candidate_equality());
@@ -217,6 +218,35 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_candidate_rank_deficient());
         ARIADNE_TEST_CALL(test_candidate_overdetermined());
         ARIADNE_TEST_CALL(test_candidate_deterministic());
+    }
+
+    Void test_common_point_feasibility_and_tolerance() {
+        // A point can be outside C but still satisfy the caller's
+        // explicitly requested tolerance. Domain membership remains exact.
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({x[0]});
+        ExactBoxType D({{0.0_x,1.0_x}});
+        ExactBoxType C({{0.25_x,0.75_x}});
+        FloatDPVector inside({0.5_x},dp);
+        FloatDPVector outside({0.875_x},dp);
+        FloatDPVector beyond_domain({1.5_x},dp);
+        FloatDPApproximationVector approx_inside({0.5_x},dp);
+        FloatDPApproximationVector approx_outside({0.875_x},dp);
+        FloatDPApproximationVector approx_beyond_domain({1.5_x},dp);
+        FloatDPApproximation zero_tolerance(0,dp);
+        FloatDPApproximation quarter_tolerance(0.25_x,dp);
+
+        ARIADNE_TEST_ASSERT(optimiser.is_feasible_point(D,g,C,inside));
+        ARIADNE_TEST_ASSERT(!optimiser.is_feasible_point(D,g,C,outside));
+        ARIADNE_TEST_ASSERT(!optimiser.is_feasible_point(D,g,C,beyond_domain));
+        ARIADNE_TEST_ASSERT(optimiser.almost_feasible_point(
+            D,g,C,approx_inside,zero_tolerance));
+        ARIADNE_TEST_ASSERT(!optimiser.almost_feasible_point(
+            D,g,C,approx_outside,zero_tolerance));
+        ARIADNE_TEST_ASSERT(optimiser.almost_feasible_point(
+            D,g,C,approx_outside,quarter_tolerance));
+        ARIADNE_TEST_ASSERT(!optimiser.almost_feasible_point(
+            D,g,C,approx_beyond_domain,quarter_tolerance));
     }
 
     Void test_candidate_linear() {
