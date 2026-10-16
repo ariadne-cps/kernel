@@ -46,6 +46,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_consistency_check_variable_types());
         ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
+        ARIADNE_TEST_CALL(test_compute_basis_singular_after_elimination());
         ARIADNE_TEST_CALL(test_compute_basis_nonunit_two_by_two());
         ARIADNE_TEST_CALL(test_compute_basis_column_pivoting());
     }
@@ -80,6 +81,14 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(B[1][0]==FloatDPBounds(-0.5_x,dp)));
         ARIADNE_TEST_ASSERT(definitely(B[1][1]==FloatDPBounds(1.0_x,dp)));
         ARIADNE_TEST_EXECUTE(solver.consistency_check(A,p,B));
+    }
+
+    Void test_compute_basis_singular_after_elimination() {
+        // The rows are linearly dependent, although both are nonzero.
+        // The second pivot must detect singularity after elimination.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x},{1.0_x,1.0_x}},dp);
+        ARIADNE_TEST_THROWS(solver.compute_basis(A),SingularLinearProgram);
     }
 
     Void test_compute_basis_nonunit_two_by_two() {
