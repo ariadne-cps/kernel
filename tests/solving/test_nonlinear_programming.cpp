@@ -271,6 +271,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_common_point_feasibility_and_tolerance());
         ARIADNE_TEST_CALL(test_base_validation());
         ARIADNE_TEST_CALL(test_feasible_box_without_equalities());
+        ARIADNE_TEST_CALL(test_feasible_box_rejections());
         ARIADNE_TEST_CALL(test_feasible_box_singular_equality());
         ARIADNE_TEST_CALL(test_base_infeasibility());
         ARIADNE_TEST_CALL(test_candidate_linear());
@@ -298,6 +299,32 @@ class TestNonlinearInfeasibleInteriorPointSolver
         FloatDPVector multiplier({1.0_x},dp);
         ARIADNE_TEST_ASSERT(optimiser.validate_infeasibility(D,g,far,centre,multiplier));
         ARIADNE_TEST_ASSERT(!optimiser.validate_infeasibility(D,g,overlap,centre,multiplier));
+    }
+
+    Void test_feasible_box_rejections() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({x[0]});
+        ExactBoxType D({{0.0_x,1.0_x}});
+        ExactBoxType wide({{-1.0_x,2.0_x}});
+        ExactBoxType disjoint({{2.0_x,3.0_x}});
+        ExactBoxType overlap({{0.5_x,2.0_x}});
+        FloatDPBoundsVector inside({{0.25_x,0.75_x}},dp);
+        FloatDPBoundsVector outside({{2.0_x,3.0_x}},dp);
+        FloatDPBoundsVector boundary({{0.75_x,1.25_x}},dp);
+
+        auto domain_disjoint=optimiser.contains_feasible_point(D,g,wide,outside);
+        ARIADNE_TEST_ASSERT(definitely(not domain_disjoint));
+
+        auto domain_partial=optimiser.contains_feasible_point(D,g,wide,boundary);
+        ARIADNE_TEST_ASSERT(!definitely(domain_partial));
+        ARIADNE_TEST_ASSERT(!definitely(not domain_partial));
+
+        auto constraint_disjoint=optimiser.contains_feasible_point(D,g,disjoint,inside);
+        ARIADNE_TEST_ASSERT(definitely(not constraint_disjoint));
+
+        auto constraint_overlap=optimiser.contains_feasible_point(D,g,overlap,inside);
+        ARIADNE_TEST_ASSERT(!definitely(constraint_overlap));
+        ARIADNE_TEST_ASSERT(!definitely(not constraint_overlap));
     }
 
     Void test_feasible_box_without_equalities() {
