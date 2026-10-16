@@ -24,7 +24,7 @@
 
 // See Hande Y. Benson, David F. Shanno, And Robert J. Vanderbei,
 // "Interior-point methods for nonconvex nonlinear programming: Jamming and comparative numerical testing"
-#include "solving/nonlinear_programming.hpp"
+#include "solving/nonlinear_programming.tpl.hpp"
 
 namespace Ariadne {
 
@@ -113,7 +113,7 @@ contains_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, E
     FloatDPBoundsMatrix ivlS = ivlA * cast_exact(fltL);
     LOGGING_PRINTLN("ivlS="<<ivlS);
 
-    FloatDPBoundsMatrix ivlR;
+    FloatDPBoundsMatrix ivlR(ivlS);
     try {
         ivlR=inverse(ivlS);
     }

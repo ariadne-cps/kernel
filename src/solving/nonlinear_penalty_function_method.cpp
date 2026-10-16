@@ -25,7 +25,7 @@
 // See Hande Y. Benson, David F. Shanno, And Robert J. Vanderbei,
 // "Interior-point methods for nonconvex nonlinear programming: Jamming and comparative numerical testing"
 #include "solving/nonlinear_penalty_function_method.hpp"
-#include "solving/nonlinear_programming.hpp"
+#include "solving/nonlinear_programming.tpl.hpp"
 
 namespace Ariadne {
 
