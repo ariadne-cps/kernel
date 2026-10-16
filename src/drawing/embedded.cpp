@@ -181,18 +181,31 @@ void EmbeddedCanvas::rectangle(int x0, int y0, int x1, int y1, Paint paint) {
             blend(x,y,paint,1);
 }
 
+// Antialiased vector strokes for the built-in axis-label glyphs.
+// The glyphs are specified as an internal 5x7 skeleton, but rendered as
+// geometric line segments instead of block-sized bitmap rectangles.
 void EmbeddedCanvas::text(double x, double y, StringType const& label) {
-    constexpr int scale = 3;
-    double advance = 6*scale;
-    for (char c : label) {
-        auto rows = glyph(c);
-        for (int row = 0; row != 7; ++row)
-            for (int col = 0; col != 5; ++col)
-                if (rows[static_cast<std::size_t>(row)] & (1u << (4-col)))
-                    rectangle(static_cast<int>(x+col*scale), static_cast<int>(y+row*scale),
-                              static_cast<int>(x+(col+1)*scale), static_cast<int>(y+(row+1)*scale),
-                              {0,0,0,1});
-        x += advance;
+    constexpr double cell=3.0;
+    constexpr double advance=18.0;
+    constexpr double stroke_width=2.5;
+    for(char c:label) {
+        auto rows=glyph(c);
+        for(std::size_t row=0;row<rows.size();++row) {
+            int col=0;
+            while(col<5) {
+                if(!(rows[row] & (1u << (4-col)))) { ++col; continue; }
+                int first=col;
+                while(col<5 && (rows[row] & (1u << (4-col)))) ++col;
+                double yy=y+(static_cast<double>(row)+0.5)*cell;
+                double x1=x+(static_cast<double>(first)+0.5)*cell;
+                double x2=x+(static_cast<double>(col)-0.5)*cell;
+                // Render one-cell strokes as a short line, not an empty path.
+                if(x2==x1) x2=x1+0.01;
+                rasterise_segment({x1,yy},{x2,yy},stroke_width);
+            }
+        }
+        composite_coverage({0,0,0,1});
+        x+=advance;
     }
 }
 
@@ -239,7 +252,11 @@ Void EmbeddedCanvas::circle(double x, double y, double radius) {
         !std::isfinite(radius) || radius<0) return;
     double rx = std::abs(radius*_sx), ry = std::abs(radius*_sy);
     if (!std::isfinite(rx) || !std::isfinite(ry)) return;
-    int n = static_cast<int>(std::clamp(std::ceil(PI*std::sqrt(std::max(rx,ry)+1.0)),24.0,1024.0));
+    constexpr double MAX_CHORD_ERROR = 0.10; // sagitta in device pixels
+    constexpr double MAX_SEGMENTS = 16384.0;
+    double R = std::max(rx,ry);
+    double half_angle = R>MAX_CHORD_ERROR ? std::acos(1.0-MAX_CHORD_ERROR/R) : PI;
+    int n = static_cast<int>(std::clamp(std::ceil(PI/half_angle),12.0,MAX_SEGMENTS));
     if (_paths.empty()) _paths.emplace_back();
     Path& path = _paths.back();
     path.points.reserve(path.points.size()+static_cast<std::size_t>(n)+1);
