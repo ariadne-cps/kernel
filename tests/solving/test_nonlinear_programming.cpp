@@ -268,6 +268,31 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_CALL(test_disjoint_constraint_minimisation());
         ARIADNE_TEST_CALL(test_relaxation_parameter());
         ARIADNE_TEST_CALL(test_initial_feasibility_state());
+        ARIADNE_TEST_CALL(test_stationary_minimisation_step());
+    }
+
+    Void test_stationary_minimisation_step() {
+        NonlinearInteriorPointSolver solver;
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(coordinates[0]-0.5_x);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ValidatedVectorMultivariateFunction h({coordinates[0]-0.5_x});
+        ExactBoxType D({{0.0_x,1.0_x}});
+        ExactBoxType C({{0.25_x,0.75_x}});
+        FloatDPApproximationVector x({0.5_x},dp);
+        FloatDPApproximationVector w({0.5_x},dp);
+        FloatDPApproximationVector kappa({0.0_x},dp);
+        FloatDPApproximationVector lambda({0.0_x},dp);
+        FloatDPApproximation mu(0.25_x,dp);
+
+        solver.minimisation_step(objective,D,g,C,h,x,w,kappa,lambda,mu);
+
+        ARIADNE_TEST_ASSERT(decide(x[0]==0.5_approx));
+        ARIADNE_TEST_ASSERT(decide(w[0]==0.5_approx));
+        ARIADNE_TEST_ASSERT(decide(kappa[0]==0.0_approx));
+        ARIADNE_TEST_ASSERT(decide(lambda[0]==0.0_approx));
+        ARIADNE_TEST_ASSERT(contains(D,exact_vector(x)));
+        ARIADNE_TEST_ASSERT(contains(C,exact_vector(w)));
     }
 
     Void test_initial_feasibility_state() {
