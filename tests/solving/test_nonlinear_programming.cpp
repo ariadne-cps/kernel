@@ -268,7 +268,54 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_CALL(test_disjoint_constraint_minimisation());
         ARIADNE_TEST_CALL(test_relaxation_parameter());
         ARIADNE_TEST_CALL(test_initial_feasibility_state());
+        ARIADNE_TEST_CALL(test_feasible_interior_minimisation());
+        ARIADNE_TEST_CALL(test_nonlinear_equality_minimisation_backtracking());
         ARIADNE_TEST_CALL(test_stationary_minimisation_step());
+    }
+
+    Void test_feasible_interior_minimisation() {
+        // The interior stationary point x=1/2 solves this constrained
+        // minimisation problem. Exercise the complete public driver,
+        // including its twelve penalty-reduction iterations.
+        NonlinearInteriorPointSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(coordinate[0]-0.5_x);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{0.25_x,0.75_x}});
+
+        auto optimum=solver.minimise(objective,domain,g,codomain);
+        ARIADNE_TEST_EQUAL(optimum.size(),1u);
+        ARIADNE_TEST_ASSERT(definitely(optimum[0]==FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(contains(domain,optimum)));
+        ARIADNE_TEST_ASSERT(definitely(contains(codomain,g(optimum))));
+    }
+
+    Void test_nonlinear_equality_minimisation_backtracking() {
+        // At x=1/8, linearising h(x)=x^2-1/4 predicts x=17/16,
+        // outside [0,1]. Backtracking must shorten the step, even
+        // though the nonlinear equality has a feasible root at 1/2.
+        NonlinearInteriorPointSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(coordinate[0]-0.5_x);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ValidatedVectorMultivariateFunction h({sqr(coordinate[0])-0.25_x});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{0.0_x,1.0_x}});
+        FloatDPApproximationVector x({0.125_x},dp);
+        FloatDPApproximationVector w({0.125_x},dp);
+        FloatDPApproximationVector kappa({0.125_x},dp);
+        FloatDPApproximationVector lambda({0.125_x},dp);
+        FloatDPApproximation mu(0.25_x,dp);
+
+        solver.minimisation_step(objective,domain,g,codomain,h,
+                                  x,w,kappa,lambda,mu);
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(x)));
+        ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(w)));
+        ARIADNE_TEST_ASSERT(decide(x[0]>0.5_approx));
+        ARIADNE_TEST_ASSERT(decide(x[0]<1.0_approx));
+        ARIADNE_TEST_EQUAL(kappa.size(),1u);
+        ARIADNE_TEST_EQUAL(lambda.size(),1u);
     }
 
     Void test_stationary_minimisation_step() {
@@ -377,6 +424,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_base_infeasibility());
         ARIADNE_TEST_CALL(test_unconstrained_infeasibility_certificate());
         ARIADNE_TEST_CALL(test_equality_solution_rechecks_inequalities());
+        ARIADNE_TEST_CALL(test_infeasible_minimisation_rejects_false_optima());
         ARIADNE_TEST_CALL(test_candidate_linear());
         ARIADNE_TEST_CALL(test_candidate_nonlinear());
         ARIADNE_TEST_CALL(test_candidate_equality());
@@ -525,6 +573,35 @@ class TestNonlinearInfeasibleInteriorPointSolver
             D,g,C,approx_outside,quarter_tolerance));
         ARIADNE_TEST_ASSERT(!optimiser.almost_feasible_point(
             D,g,C,approx_beyond_domain,quarter_tolerance));
+    }
+
+    Void test_infeasible_minimisation_rejects_false_optima() {
+        // g(x)=x takes values in [-1,1]. Neither codomain intersects
+        // g(D), so minimisation must not return a certified optimum.
+        // Both an infeasibility certificate and an indeterminate
+        // outcome are sound results for an iterative solver.
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(coordinates[0]);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType positive({{1.25_x,1.75_x}});
+        ExactBoxType negative({{-1.75_x,-1.25_x}});
+
+        ARIADNE_TEST_ASSERT(definitely(disjoint(Ariadne::apply(g,domain),positive)));
+        ARIADNE_TEST_ASSERT(definitely(disjoint(Ariadne::apply(g,domain),negative)));
+
+        for(SizeType i=0u; i!=2u; ++i) {
+            const ExactBoxType& codomain=(i==0u ? positive : negative);
+            bool rejected=false;
+            try {
+                (void)optimiser.minimise(objective,domain,g,codomain);
+            } catch(const InfeasibleProblemException&) {
+                rejected=true;
+            } catch(const IndeterminateFeasibilityException&) {
+                rejected=true;
+            }
+            ARIADNE_TEST_ASSERT(rejected);
+        }
     }
 
     Void test_candidate_linear() {
@@ -746,6 +823,126 @@ class TestNonlinearInfeasibleInteriorPointSolver
 
 };
 
+class TestNonlinearPenaltyFunctionSolver
+{
+  public:
+    Void test() {
+        ARIADNE_TEST_CALL(test_point_feasibility_with_inequalities());
+        ARIADNE_TEST_CALL(test_point_feasibility_with_equalities());
+        ARIADNE_TEST_CALL(test_stationary_feasibility());
+        ARIADNE_TEST_CALL(test_approximate_penalty_step());
+        ARIADNE_TEST_CALL(test_one_sided_codomain_feasibility());
+        ARIADNE_TEST_CALL(test_approximate_penalty_backtracking());
+    }
+
+    Void test_point_feasibility_with_inequalities() {
+        NonlinearPenaltyFunctionSolver solver;
+        std::unique_ptr<NonlinearPenaltyFunctionSolver> cloned(solver.clone());
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-0.5_x,0.5_x}});
+        FloatDPVector inside({0.0_x},dp);
+        FloatDPVector outside({0.75_x},dp);
+        FloatDPVector multipliers({0.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(definitely(solver.check_feasibility(
+            domain,g,codomain,inside,multipliers)));
+        ARIADNE_TEST_ASSERT(definitely(not cloned->check_feasibility(
+            domain,g,codomain,outside,multipliers)));
+    }
+
+    Void test_point_feasibility_with_equalities() {
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType interior_domain({{-1.0_x,1.0_x}});
+        ExactBoxType boundary_domain({{0.0_x,1.0_x}});
+        ExactBoxType equality({{0.0_x,0.0_x}});
+        FloatDPVector root({0.0_x},dp);
+        FloatDPVector multipliers({0.0_x},dp);
+
+        // The interval Newton inclusion certifies the interior root.
+        ARIADNE_TEST_ASSERT(definitely(solver.check_feasibility(
+            interior_domain,g,equality,root,multipliers)));
+
+        // A boundary root is feasible, but the symmetric inclusion box
+        // crosses the domain boundary: it must not be declared infeasible.
+        auto boundary_status=solver.check_feasibility(
+            boundary_domain,g,equality,root,multipliers);
+        ARIADNE_TEST_ASSERT(not definitely(not boundary_status));
+    }
+
+    Void test_stationary_feasibility() {
+        // The midpoint solves g(x)=0 strictly inside both boxes.
+        // The iterative penalty feasibility routine should preserve
+        // this exact stationary solution.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,codomain)));
+    }
+
+    Void test_one_sided_codomain_feasibility() {
+        // The initial slack point is chosen one unit inside the only
+        // finite codomain bound, avoiding an infinite midpoint.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType upper_only({{-inf,1.0_x}});
+        ExactBoxType lower_only({{-1.0_x,+inf}});
+
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,upper_only)));
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,lower_only)));
+    }
+
+    Void test_approximate_penalty_backtracking() {
+        // For g(x)=4x, x=1/4 and w=3/4, the full Newton update
+        // leaves the boxes [-1,1]. Backtracking must reduce the
+        // step to keep both updated components admissible.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({4*coordinates[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+        FloatDPApproximationVector point({0.25_x},dp);
+        FloatDPApproximationVector slack({0.75_x},dp);
+        FloatDPApproximation weight(1.0_x,dp);
+
+        solver.feasibility_step(domain,g,codomain,point,slack,weight);
+        ARIADNE_TEST_ASSERT(decide(weight==FloatDPApproximation(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(point)));
+        ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(slack)));
+        ARIADNE_TEST_ASSERT(decide(point[0]<FloatDPApproximation(0.25_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(slack[0]<FloatDPApproximation(0.0_x,dp)));
+    }
+
+    Void test_approximate_penalty_step() {
+        // A regular, one-dimensional problem has an invertible
+        // penalised Hessian. Its first step brings w to g(x) while
+        // preserving x and halves the penalty weight.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+        FloatDPApproximationVector point({0.25_x},dp);
+        FloatDPApproximationVector slack({0.0_x},dp);
+        FloatDPApproximation weight(1.0_x,dp);
+
+        solver.feasibility_step(domain,g,codomain,point,slack,weight);
+        ARIADNE_TEST_ASSERT(decide(weight==FloatDPApproximation(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(point)));
+        ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(slack)));
+        ARIADNE_TEST_ASSERT(decide(point[0]==FloatDPApproximation(0.25_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(slack[0]==FloatDPApproximation(0.25_x,dp)));
+    }
+};
+
 Int main(Int argc, const char* argv[]) {
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
@@ -755,6 +952,7 @@ Int main(Int argc, const char* argv[]) {
     TestNonlinearProgrammingSolver(nlio).test();
     TestNonlinearInfeasibleInteriorPointSolver().test();
     TestNonlinearInteriorPointSolverBasics().test();
+    TestNonlinearPenaltyFunctionSolver().test();
     return ARIADNE_TEST_FAILURES;
     NonlinearInteriorPointSolver nlo;
     TestNonlinearProgrammingSolver(nlo).test();
