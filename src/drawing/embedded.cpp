@@ -182,14 +182,16 @@ void EmbeddedCanvas::rectangle(int x0, int y0, int x1, int y1, Paint paint) {
     if (unit(paint.a)==1.0) {
         // The plot background is always opaque: write the RGB bytes directly
         // rather than invoking floating-point alpha blending for every pixel.
-        const auto red=channel(paint.r),green=channel(paint.g),blue=channel(paint.b);
+        const auto red_byte=channel(paint.r);
+        const auto green_byte=channel(paint.g);
+        const auto blue_byte=channel(paint.b);
         for(int y=top;y<bottom;++y) {
             std::size_t offset=(static_cast<std::size_t>(y)*_width+
                                 static_cast<std::size_t>(left))*4;
             for(int x=left;x<right;++x,offset+=4) {
-                _pixels[offset]=red;
-                _pixels[offset+1]=green;
-                _pixels[offset+2]=blue;
+                _pixels[offset]=red_byte;
+                _pixels[offset+1]=green_byte;
+                _pixels[offset+2]=blue_byte;
             }
         }
     } else {
@@ -319,28 +321,45 @@ void EmbeddedCanvas::composite_coverage(Paint paint) {
     if(_dirty_pixels.empty()) return;
     const Paint normalized{unit(paint.r),unit(paint.g),
                            unit(paint.b),unit(paint.a)};
-    if (!_blend_table_valid ||
-        normalized.r!=_cached_paint.r || normalized.g!=_cached_paint.g ||
-        normalized.b!=_cached_paint.b || normalized.a!=_cached_paint.a) {
-        // All coverage values are multiples of 1/16. A lookup indexed by
-        // coverage count and existing 8-bit channel is exactly equivalent to
-        // blend() for this paint, including rounding at the final 8-bit step.
+
+    BlendCacheEntry* entry=nullptr;
+    for(auto& candidate:_blend_cache) {
+        if(candidate.valid &&
+           candidate.paint.r==normalized.r && candidate.paint.g==normalized.g &&
+           candidate.paint.b==normalized.b && candidate.paint.a==normalized.a) {
+            entry=&candidate;
+            break;
+        }
+    }
+    if(entry==nullptr) {
+        // Prefer an unused slot, then replace the least recently used paint.
+        entry=&_blend_cache.front();
+        for(auto& candidate:_blend_cache) {
+            if(!candidate.valid) {
+                entry=&candidate;
+                break;
+            }
+            if(candidate.last_used<entry->last_used) entry=&candidate;
+        }
         const double source[3]={normalized.r,normalized.g,normalized.b};
         for(std::size_t n=0;n<=16;++n) {
             const double alpha=normalized.a*(static_cast<double>(n)/16.0);
             for(std::size_t color=0;color<3;++color)
                 for(std::size_t old=0;old<256;++old)
-                    _blend_table[n][color][old]=channel(
+                    entry->table[n][color][old]=channel(
                         (1.0-alpha)*(static_cast<double>(old)/255.0)+
                         alpha*source[color]);
         }
-        _cached_paint=normalized;
-        _blend_table_valid=true;
+        entry->paint=normalized;
+        entry->valid=true;
     }
-    for (auto index:_dirty_pixels) {
+    entry->last_used=++_blend_cache_clock;
+
+    for(auto index:_dirty_pixels) {
         const auto bits=_coverage[index];
         if(bits) {
-            const auto& table=_blend_table[std::popcount(bits)];
+            const auto& table=
+                entry->table[static_cast<std::size_t>(std::popcount(bits))];
             const std::size_t pos=index*4;
             _pixels[pos]=table[0][_pixels[pos]];
             _pixels[pos+1]=table[1][_pixels[pos+1]];

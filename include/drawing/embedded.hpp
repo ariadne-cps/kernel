@@ -55,13 +55,17 @@ class EmbeddedCanvas : public CanvasBase {
     Paint _fill{1.0, 1.0, 1.0, 1.0};
     bool _clipped = false;
 
-    // Lazily regenerated for the current paint; 17 coverage values (0..16),
-    // three RGB channels and 256 possible destination values. This preserves
-    // the exact quantization of blend(), avoiding repeated per-pixel rounding.
+    // Four-entry paint cache avoids regenerating 13,056 channel lookup values
+    // whenever fill and stroke colours alternate on successive primitives.
     using BlendTable = std::array<std::array<std::array<std::uint8_t,256>,3>,17>;
-    BlendTable _blend_table{};
-    Paint _cached_paint{0.0,0.0,0.0,0.0};
-    bool _blend_table_valid = false;
+    struct BlendCacheEntry {
+        BlendTable table{};
+        Paint paint{0.0,0.0,0.0,0.0};
+        std::uint64_t last_used=0;
+        bool valid=false;
+    };
+    std::array<BlendCacheEntry,4> _blend_cache{};
+    std::uint64_t _blend_cache_clock=0;
 
     Point transform(double x, double y) const;
     void blend(int x, int y, Paint paint, double coverage);

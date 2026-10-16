@@ -60,17 +60,21 @@ and Embedded. Every timed repetition creates a fresh canvas so no previous
 frame can affect the next. Measurements use `steady_clock` and report
 median and nearest-rank p95 over the measured repetitions.
 
-The output is CSV, with these columns:
+Results are presented as an **aligned terminal table**, in the style of
+the integration benchmarks. The report is printed through Ariadne's logging
+system (default verbosity 1); no CSV files or CSV output are generated.
 
-- `create_median_ms`: allocation/construction of the backend canvas.
-- `initialise_median_ms`: clearing, coordinate transformation, and axis labels.
-- `render_median_ms`, `render_p95_ms`: **only canvas drawing commands**,
-  including their immediate rasterization; no setup, labels, file encoding,
-  disk I/O, or external geometric algorithms.
-- `primitives_per_second`: number of shapes/path strokes divided by median
-  render time (a scenario-specific throughput metric).
-- `png_write_median_ms`: PNG encoding **and file write**, only when
-  `--write-png` is specified; empty otherwise.
+The benchmark extends `make_kernel_command_line_interface()` with a
+`drawing-benchmark` contribution, so the usual logging options
+(`--verbosity`, `--theme`, etc.) are available alongside the local
+`--backend`, `--scene`, `--width`, `--height`, `--iterations`,
+`--warmup`, `--write-png` and `--png-prefix` arguments.
+
+The columns contain creation and initialization median times, pure drawing
+median and nearest-rank p95 times, and shapes per second. When requested,
+the report also includes PNG encoding and file-write time. Verbosity 2
+logs each scene before measurement; verbosity 3 additionally logs individual
+samples. Logging is outside all measured time intervals.
 
 These measurements are not a correctness test. Continue to use the tests
 under `tests/drawing` for Cairo/Embedded image comparisons and regression
