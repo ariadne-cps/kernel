@@ -46,6 +46,8 @@ class EmbeddedCanvas : public CanvasBase {
     Nat _width, _height;
     std::vector<std::uint8_t> _pixels;
     std::vector<Path> _paths;
+    std::vector<std::uint16_t> _coverage;
+    std::vector<std::size_t> _dirty_pixels;
     double _sx = 1.0, _sy = 1.0, _tx = 0.0, _ty = 0.0;
     double _line_width = 1.0, _dot_radius = 1.0;
     Paint _line{0.0, 0.0, 0.0, 1.0};
@@ -55,8 +57,12 @@ class EmbeddedCanvas : public CanvasBase {
     Point transform(double x, double y) const;
     void blend(int x, int y, Paint paint, double coverage);
     void rectangle(int x0, int y0, int x1, int y1, Paint paint);
-    void segment(Point a, Point b, double width, Paint paint);
-    void polygon(Path const& path, Paint paint);
+    void mark_sample(int x, int y, int sx, int sy);
+    void composite_coverage(Paint paint);
+    void rasterise_segment(Point a, Point b, double width);
+    void rasterise_triangle(Point a, Point b, Point c);
+    void rasterise_join(Point a, Point b, Point c, double half_width);
+    void rasterise_fill();
     void text(double x, double y, StringType const& label);
 };
 

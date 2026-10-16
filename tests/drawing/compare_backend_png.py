@@ -68,14 +68,22 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("cairo")
     parser.add_argument("embedded")
-    parser.add_argument("--max-mean-error", type=float, default=0.18)
+    parser.add_argument("--max-mean-error", type=float, default=0.10)
+    parser.add_argument("--diff", help="Optional diagnostic RGB difference image (PPM)")
     args = parser.parse_args()
     a = read_png(args.cairo)
     b = read_png(args.embedded)
     assert a[:2] == b[:2], f"Canvas size differs: {a[:2]} != {b[:2]}"
     count = len(a[2])
     mean_error = sum(abs(i-j) for pa,pb in zip(a[2],b[2]) for i,j in zip(pa,pb)) / (count*3*255)
-    print(f"Cairo vs Embedded {a[0]}x{a[1]}: mean normalized RGB error {mean_error:.5f}")
+    differing = sum(any(abs(i-j)>32 for i,j in zip(pa,pb)) for pa,pb in zip(a[2],b[2]))
+    print(f"Cairo vs Embedded {a[0]}x{a[1]}: mean normalized RGB error {mean_error:.5f};"
+          f" significant differing pixels {differing}/{count} ({100*differing/count:.2f}%)")
+    if args.diff:
+        # Magnify RGB difference for visual diagnosis without external packages.
+        with open(args.diff, "wb") as f:
+            f.write(f"P6\\n{a[0]} {a[1]}\\n255\\n".encode("ascii"))
+            f.write(bytes(min(255,abs(i-j)*4) for pa,pb in zip(a[2],b[2]) for i,j in zip(pa,pb)))
     assert mean_error <= args.max_mean_error, f"Difference exceeds {args.max_mean_error}"
 
 

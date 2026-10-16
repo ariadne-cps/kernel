@@ -25,3 +25,17 @@ if(ARIADNE_WITH_CAIRO)
             LABELS "drawing")
     endif()
 endif()
+
+# Each scene is compared independently and emits a diagnostic image.
+if(ARIADNE_WITH_CAIRO AND Python3_Interpreter_FOUND)
+    foreach(SCENE RANGE 0 3)
+        add_test(NAME compare_drawing_scene_${SCENE}
+            COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/compare_backend_png.py"
+                "comparison-scene${SCENE}-cairo.png"
+                "comparison-scene${SCENE}-embedded.png"
+                --diff "comparison-scene${SCENE}-diff.ppm")
+        set_tests_properties(compare_drawing_scene_${SCENE} PROPERTIES
+            DEPENDS test_backend_comparison LABELS "drawing")
+    endforeach()
+endif()

@@ -7,6 +7,7 @@
 #include "utility/standard.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -151,6 +152,7 @@ EmbeddedCanvas::EmbeddedCanvas(ImageSize2d const& size)
         static_cast<std::uint64_t>(_width)*_height > 100000000ULL)
         throw std::invalid_argument("Invalid or excessively large Embedded canvas");
     _pixels.assign(static_cast<std::size_t>(_width)*_height*4, 255);
+    _coverage.assign(static_cast<std::size_t>(_width)*_height, 0);
 }
 
 ImageSize2d EmbeddedCanvas::size_in_pixels() const {
@@ -237,16 +239,16 @@ Void EmbeddedCanvas::circle(double x, double y, double radius) {
         !std::isfinite(radius) || radius<0) return;
     double rx = std::abs(radius*_sx), ry = std::abs(radius*_sy);
     if (!std::isfinite(rx) || !std::isfinite(ry)) return;
-    int n = std::clamp(static_cast<int>(std::ceil(PI*std::sqrt(std::max(rx,ry)+1.0))),24,1024);
-    Path path;
-    path.closed = true;
-    path.points.reserve(n);
-    for (int i=0; i<n; ++i) {
+    int n = static_cast<int>(std::clamp(std::ceil(PI*std::sqrt(std::max(rx,ry)+1.0)),24.0,1024.0));
+    if (_paths.empty()) _paths.emplace_back();
+    Path& path = _paths.back();
+    path.points.reserve(path.points.size()+static_cast<std::size_t>(n)+1);
+    for (int i=0; i<=n; ++i) {
         double theta = 2*PI*i/n;
         path.points.push_back({center.x+rx*std::cos(theta), center.y+ry*std::sin(theta)});
     }
-    _paths.push_back(std::move(path));
 }
+
 Void EmbeddedCanvas::dot(double x, double y) { circle(x,y,_dot_radius/1000.0); }
 Void EmbeddedCanvas::set_dot_radius(double radius) { _dot_radius = radius; }
 Void EmbeddedCanvas::set_line_width(double width) { _line_width = width; }
@@ -256,77 +258,144 @@ Void EmbeddedCanvas::set_fill_colour(double r,double g,double b) {
 }
 Void EmbeddedCanvas::set_fill_opacity(double opacity) { _fill.a=opacity; }
 
-// 4x4 subpixel coverage for device-space strokes, width measured in pixels.
-void EmbeddedCanvas::segment(Point a, Point b, double width, Paint paint) {
-    if (!(width>0) || !std::isfinite(width)) return;
-    double radius = width/2;
-    double dx=b.x-a.x, dy=b.y-a.y, length2=dx*dx+dy*dy;
-    if (!std::isfinite(length2)) return;
-    double xmin = std::min(a.x,b.x)-radius-1, xmax=std::max(a.x,b.x)+radius+1;
-    double ymin = std::min(a.y,b.y)-radius-1, ymax=std::max(a.y,b.y)+radius+1;
-    if (xmax<0 || ymax<0 || xmin>=_width || ymin>=_height) return;
-    int x0=std::max(0,static_cast<int>(std::floor(std::max(0.0,xmin))));
-    int x1=std::min(static_cast<int>(_width),static_cast<int>(std::ceil(std::min<double>(_width,xmax))));
-    int y0=std::max(0,static_cast<int>(std::floor(std::max(0.0,ymin))));
-    int y1=std::min(static_cast<int>(_height),static_cast<int>(std::ceil(std::min<double>(_height,ymax))));
-    for (int y=y0; y<y1; ++y)
-        for (int x=x0; x<x1; ++x) {
-            int covered=0;
-            for (int sy=0;sy<4;++sy) for (int sx=0;sx<4;++sx) {
-                double px=x+(sx+0.5)/4, py=y+(sy+0.5)/4;
-                double t=length2>0 ? std::clamp(((px-a.x)*dx+(py-a.y)*dy)/length2,0.0,1.0) : 0.0;
-                double ex=px-(a.x+t*dx), ey=py-(a.y+t*dy);
-                if (ex*ex+ey*ey <= radius*radius) ++covered;
-            }
-            if (covered) blend(x,y,paint,covered/16.0);
-        }
+// Coverage is the union of all path fragments, never a sum of their alpha.
+void EmbeddedCanvas::mark_sample(int x, int y, int sx, int sy) {
+    if (x<0 || y<0 || x>=static_cast<int>(_width) || y>=static_cast<int>(_height)) return;
+    if (_clipped && (x<LEFT || x>=static_cast<int>(_width)-RIGHT ||
+                     y<TOP || y>=static_cast<int>(_height)-BOTTOM)) return;
+    const auto index=static_cast<std::size_t>(y)*_width+static_cast<std::size_t>(x);
+    if (_coverage[index]==0) _dirty_pixels.push_back(index);
+    _coverage[index] |= static_cast<std::uint16_t>(1u << (sy*4+sx));
 }
-
-// Nonzero winding fill, using 4x4 supersampling and implicit closing edges.
-void EmbeddedCanvas::polygon(Path const& path, Paint paint) {
-    if (path.points.size()<3 || unit(paint.a)==0) return;
-    double minx=std::numeric_limits<double>::infinity(), maxx=-minx;
-    double miny=minx, maxy=-minx;
-    for (Point p: path.points) {
-        minx=std::min(minx,p.x); maxx=std::max(maxx,p.x);
-        miny=std::min(miny,p.y); maxy=std::max(maxy,p.y);
+void EmbeddedCanvas::composite_coverage(Paint paint) {
+    for (auto index : _dirty_pixels) {
+        auto bits=_coverage[index];
+        if (bits) blend(static_cast<int>(index%_width),static_cast<int>(index/_width),
+                        paint,std::popcount(bits)/16.0);
+        _coverage[index]=0;
     }
-    if (!std::isfinite(minx) || !std::isfinite(maxx) || !std::isfinite(miny) || !std::isfinite(maxy) ||
-        maxx<0 || maxy<0 || minx>=_width || miny>=_height) return;
-    int x0=static_cast<int>(std::max(0.0,std::floor(minx)));
-    int x1=static_cast<int>(std::min<double>(_width,std::ceil(maxx)));
-    int y0=static_cast<int>(std::max(0.0,std::floor(miny)));
-    int y1=static_cast<int>(std::min<double>(_height,std::ceil(maxy)));
-    for (int y=y0; y<y1; ++y)
-        for (int x=x0; x<x1; ++x) {
-            int covered=0;
-            for (int sy=0;sy<4;++sy) for (int sx=0;sx<4;++sx) {
-                double px=x+(sx+0.5)/4, py=y+(sy+0.5)/4;
-                int winding=0;
-                for (std::size_t i=0;i<path.points.size();++i) {
-                    Point p=path.points[i], q=path.points[(i+1)%path.points.size()];
-                    double cross=(q.x-p.x)*(py-p.y)-(q.y-p.y)*(px-p.x);
-                    if (p.y<=py && q.y>py && cross>0) ++winding;
-                    if (p.y>py && q.y<=py && cross<0) --winding;
-                }
-                if (winding) ++covered;
-            }
-            if (covered) blend(x,y,paint,covered/16.0);
+    _dirty_pixels.clear();
+}
+void EmbeddedCanvas::rasterise_segment(Point a, Point b, double width) {
+    if (!(width>0) || !std::isfinite(width)) return;
+    double dx=b.x-a.x, dy=b.y-a.y;
+    double length2=dx*dx+dy*dy;
+    if (!std::isfinite(length2) || length2<=0) return;
+    double radius=width/2;
+    double xmin=std::min(a.x,b.x)-radius-1,xmax=std::max(a.x,b.x)+radius+1;
+    double ymin=std::min(a.y,b.y)-radius-1,ymax=std::max(a.y,b.y)+radius+1;
+    if (!(xmax>=0 && ymax>=0 && xmin<_width && ymin<_height)) return;
+    int x0=static_cast<int>(std::max(0.0,std::floor(xmin)));
+    int x1=static_cast<int>(std::min<double>(_width,std::ceil(xmax)));
+    int y0=static_cast<int>(std::max(0.0,std::floor(ymin)));
+    int y1=static_cast<int>(std::min<double>(_height,std::ceil(ymax)));
+    for(int y=y0;y<y1;++y) for(int x=x0;x<x1;++x)
+        for(int sy=0;sy<4;++sy) for(int sx=0;sx<4;++sx) {
+            double px=x+(sx+0.5)/4,py=y+(sy+0.5)/4;
+            double t=((px-a.x)*dx+(py-a.y)*dy)/length2;
+            // Cairo's default cap style is BUTT, not round.
+            if(t<0 || t>1) continue;
+            double cross=(px-a.x)*dy-(py-a.y)*dx;
+            if(cross*cross<=radius*radius*length2) mark_sample(x,y,sx,sy);
         }
 }
-
+void EmbeddedCanvas::rasterise_triangle(Point a, Point b, Point c) {
+    const double xmin=std::min({a.x,b.x,c.x}),xmax=std::max({a.x,b.x,c.x});
+    const double ymin=std::min({a.y,b.y,c.y}),ymax=std::max({a.y,b.y,c.y});
+    if(!std::isfinite(xmin)||!std::isfinite(xmax)||!std::isfinite(ymin)||!std::isfinite(ymax) ||
+       xmax<0||ymax<0||xmin>=_width||ymin>=_height) return;
+    const double area=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+    if(std::abs(area)<1e-15) return;
+    const int x0=static_cast<int>(std::max(0.0,std::floor(xmin)));
+    const int x1=static_cast<int>(std::min<double>(_width,std::ceil(xmax)));
+    const int y0=static_cast<int>(std::max(0.0,std::floor(ymin)));
+    const int y1=static_cast<int>(std::min<double>(_height,std::ceil(ymax)));
+    for(int y=y0;y<y1;++y) for(int x=x0;x<x1;++x)
+        for(int sy=0;sy<4;++sy) for(int sx=0;sx<4;++sx) {
+            Point p{x+(sx+0.5)/4,y+(sy+0.5)/4};
+            double s1=(b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x);
+            double s2=(c.x-b.x)*(p.y-b.y)-(c.y-b.y)*(p.x-b.x);
+            double s3=(a.x-c.x)*(p.y-c.y)-(a.y-c.y)*(p.x-c.x);
+            if((s1>=0&&s2>=0&&s3>=0)||(s1<=0&&s2<=0&&s3<=0))
+                mark_sample(x,y,sx,sy);
+        }
+}
+void EmbeddedCanvas::rasterise_join(Point a,Point b,Point c,double half_width) {
+    double ux=b.x-a.x,uy=b.y-a.y,vx=c.x-b.x,vy=c.y-b.y;
+    double lu=std::hypot(ux,uy),lv=std::hypot(vx,vy);
+    if(lu==0||lv==0) return;
+    ux/=lu;uy/=lu;vx/=lv;vy/=lv;
+    double cross=ux*vy-uy*vx;
+    if(std::abs(cross)<1e-12) return;
+    double side=(cross>0 ? -1.0:1.0);
+    Point p{b.x+side*(-uy)*half_width,b.y+side*ux*half_width};
+    Point q{b.x+side*(-vy)*half_width,b.y+side*vx*half_width};
+    // Cairo defaults to a miter join, with miter limit 10.
+    double determinant=ux*(-vy)-(-vx)*uy;
+    if(std::abs(determinant)<1e-12) return;
+    double t=((q.x-p.x)*(-vy)-(-vx)*(q.y-p.y))/determinant;
+    Point m{p.x+t*ux,p.y+t*uy};
+    if(std::hypot(m.x-b.x,m.y-b.y) <= 10*half_width)
+        rasterise_triangle(p,m,q);
+    else
+        rasterise_triangle(p,b,q); // bevel at the miter limit
+}
+void EmbeddedCanvas::rasterise_fill() {
+    // Nonzero winding is computed across ALL subpaths, including holes.
+    double xmin=std::numeric_limits<double>::infinity(),xmax=-xmin,ymin=xmin,ymax=-xmin;
+    bool any=false;
+    for(auto const& path:_paths) for(auto p:path.points) {
+        if(!std::isfinite(p.x)||!std::isfinite(p.y)) continue;
+        any=true;xmin=std::min(xmin,p.x);xmax=std::max(xmax,p.x);
+        ymin=std::min(ymin,p.y);ymax=std::max(ymax,p.y);
+    }
+    if(!any||xmax<0||ymax<0||xmin>=_width||ymin>=_height) return;
+    const int x0=static_cast<int>(std::max(0.0,std::floor(xmin)));
+    const int x1=static_cast<int>(std::min<double>(_width,std::ceil(xmax)));
+    const int y0=static_cast<int>(std::max(0.0,std::floor(ymin)));
+    const int y1=static_cast<int>(std::min<double>(_height,std::ceil(ymax)));
+    for(int y=y0;y<y1;++y) for(int x=x0;x<x1;++x)
+        for(int sy=0;sy<4;++sy) for(int sx=0;sx<4;++sx) {
+            double px=x+(sx+0.5)/4,py=y+(sy+0.5)/4;
+            int winding=0;
+            for(auto const& path:_paths) {
+                auto n=path.points.size();
+                if(n<3) continue;
+                for(std::size_t i=0;i<n;++i) {
+                    Point p=path.points[i],q=path.points[(i+1)%n];
+                    double cross=(q.x-p.x)*(py-p.y)-(q.y-p.y)*(px-p.x);
+                    if(p.y<=py && q.y>py && cross>0) ++winding;
+                    if(p.y>py && q.y<=py && cross<0) --winding;
+                }
+            }
+            if(winding) mark_sample(x,y,sx,sy);
+        }
+}
 Void EmbeddedCanvas::stroke() {
-    for (auto const& path:_paths) {
-        for (std::size_t i=1;i<path.points.size();++i)
-            segment(path.points[i-1],path.points[i],_line_width,_line);
-        if (path.closed && path.points.size()>1)
-            segment(path.points.back(),path.points.front(),_line_width,_line);
+    if(_line_width>0 && std::isfinite(_line_width)) {
+        for(auto const& path:_paths) {
+            auto const& pts=path.points;
+            if(pts.size()<2) continue;
+            for(std::size_t i=1;i<pts.size();++i)
+                rasterise_segment(pts[i-1],pts[i],_line_width);
+            if(path.closed) rasterise_segment(pts.back(),pts.front(),_line_width);
+            for(std::size_t i=1;i+1<pts.size();++i)
+                rasterise_join(pts[i-1],pts[i],pts[i+1],_line_width/2);
+            if(path.closed) {
+                rasterise_join(pts[pts.size()-2],pts.back(),pts.front(),_line_width/2);
+                rasterise_join(pts.back(),pts.front(),pts[1],_line_width/2);
+            }
+        }
+        composite_coverage(_line);
     }
     _paths.clear();
 }
 Void EmbeddedCanvas::fill() {
-    for (auto const& path:_paths) polygon(path,_fill);
-    // Mirrors Cairo's cairo_fill_preserve() followed by stroke().
+    if(unit(_fill.a)>0) {
+        rasterise_fill();
+        composite_coverage(_fill);
+    }
+    // Equivalent to cairo_fill_preserve followed by cairo_stroke.
     stroke();
 }
 Void EmbeddedCanvas::finalise() {
