@@ -1,0 +1,3 @@
+add_executable(benchmark_drawing benchmark_drawing.cpp)
+target_link_libraries(benchmark_drawing PRIVATE ariadne-kernel kernel)
+add_dependencies(benchmarks benchmark_drawing)
