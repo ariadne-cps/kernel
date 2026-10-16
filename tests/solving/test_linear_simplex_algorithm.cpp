@@ -37,6 +37,8 @@ class TestLinearSimplexSolver
     Void test() {
         ARIADNE_TEST_CALL(test_slackness_output());
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
+        ARIADNE_TEST_CALL(test_validated_feasibility_upper_entry());
+        ARIADNE_TEST_CALL(test_degenerate_ratio_tie_breaking());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
         ARIADNE_TEST_CALL(test_validated_feasibility_bound_flip());
         ARIADNE_TEST_CALL(test_validated_feasibility_basis_exchange());
@@ -307,6 +309,86 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(solver.hotstarted_feasible(xl,xu,A,b,vt)));
         ARIADNE_TEST_EQUAL(vt[0],Slackness::BASIS);
         ARIADNE_TEST_EQUAL(vt[1],Slackness::LOWER);
+    }
+
+    Void test_validated_feasibility_upper_entry() {
+        // The initial basic x0=-1/2 is below its lower bound.
+        // Nonbasic x1 starts at UPPER and must decrease, exchanging
+        // with x0, which reaches its upper bound at x0=1.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({0.5_x},dp);
+        Vector<FloatDP> xl({0.0_x,-1.0_x},dp);
+        Vector<FloatDP> xu({1.0_x,1.0_x},dp);
+        Array<Slackness> vt(2u);
+        vt[0]=Slackness::BASIS;
+        vt[1]=Slackness::UPPER;
+        Array<SizeType> p(2u);
+        p[0]=0u;
+        p[1]=1u;
+
+        ARIADNE_TEST_ASSERT(!solver.validated_feasibility_step(xl,xu,A,b,vt,p));
+        ARIADNE_TEST_EQUAL(vt[0],Slackness::UPPER);
+        ARIADNE_TEST_EQUAL(vt[1],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(p[0],1u);
+        ARIADNE_TEST_EQUAL(p[1],0u);
+        auto x=solver.compute_x(xl,xu,A,b,vt);
+        ARIADNE_TEST_ASSERT(definitely(x[0]==FloatDPBounds(1.0_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(-0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(xl,xu,A,b,vt,p));
+        ARIADNE_TEST_ASSERT(definitely(solver.validated_feasible(xl,xu,A,b)));
+    }
+
+    Void test_degenerate_ratio_tie_breaking() {
+        // At x=(1,1,0), entering x2 makes both basic variables
+        // reach their lower bounds at t=1. The leaving variable
+        // must be x0 (smaller original index), independently of
+        // the order of the basis columns in p.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,0.0_x,1.0_x},
+                           {0.0_x,1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({1.0_x,1.0_x},dp);
+        Vector<FloatDP> xl({0.0_x,0.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({2.0_x,2.0_x,2.0_x},dp);
+
+        for(SizeType order=0u; order!=2u; ++order) {
+            Array<Slackness> vt(3u);
+            vt[0]=Slackness::BASIS;
+            vt[1]=Slackness::BASIS;
+            vt[2]=Slackness::LOWER;
+            Array<SizeType> p(3u);
+            Matrix<FloatDPBounds> B=Matrix<FloatDPBounds>::identity(2u,dp);
+            if(order==0u) {
+                p[0]=0u;
+                p[1]=1u;
+            } else {
+                p[0]=1u;
+                p[1]=0u;
+                B[0][0]=FloatDPBounds(0.0_x,dp);
+                B[0][1]=FloatDPBounds(1.0_x,dp);
+                B[1][0]=FloatDPBounds(1.0_x,dp);
+                B[1][1]=FloatDPBounds(0.0_x,dp);
+            }
+            p[2]=2u;
+            Vector<FloatDPBounds> x=solver.compute_x(xl,xu,A,b,vt);
+            ARIADNE_TEST_ASSERT(definitely(x[0]==FloatDPBounds(1.0_x,dp)));
+            ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(1.0_x,dp)));
+            ARIADNE_TEST_ASSERT(definitely(x[2]==FloatDPBounds(0.0_x,dp)));
+            ARIADNE_TEST_EXECUTE(solver.consistency_check(xl,xu,A,b,vt,p,B,x));
+
+            SizeType r=solver.lpstep(xl,xu,A,b,vt,p,B,x,2u);
+            ARIADNE_TEST_EQUAL(r,(order==0u ? 0u : 1u));
+            ARIADNE_TEST_EQUAL(vt[0],Slackness::LOWER);
+            ARIADNE_TEST_EQUAL(vt[1],Slackness::BASIS);
+            ARIADNE_TEST_EQUAL(vt[2],Slackness::BASIS);
+            ARIADNE_TEST_EQUAL(p[0],(order==0u ? 2u : 1u));
+            ARIADNE_TEST_EQUAL(p[1],(order==0u ? 1u : 2u));
+            ARIADNE_TEST_EQUAL(p[2],0u);
+            ARIADNE_TEST_ASSERT(definitely(x[0]==FloatDPBounds(0.0_x,dp)));
+            ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(0.0_x,dp)));
+            ARIADNE_TEST_ASSERT(definitely(x[2]==FloatDPBounds(1.0_x,dp)));
+            ARIADNE_TEST_EXECUTE(solver.consistency_check(xl,xu,A,b,vt,p,B,x));
+        }
     }
 
     Void test_validated_strict_feasibility() {
