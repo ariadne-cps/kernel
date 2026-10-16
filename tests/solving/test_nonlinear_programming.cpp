@@ -291,8 +291,8 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_ASSERT(decide(w[0]==0.5_approx));
         ARIADNE_TEST_ASSERT(decide(kappa[0]==0.0_approx));
         ARIADNE_TEST_ASSERT(decide(lambda[0]==0.0_approx));
-        ARIADNE_TEST_ASSERT(contains(D,exact_vector(x)));
-        ARIADNE_TEST_ASSERT(contains(C,exact_vector(w)));
+        ARIADNE_TEST_ASSERT(contains(D,cast_exact(x)));
+        ARIADNE_TEST_ASSERT(contains(C,cast_exact(w)));
     }
 
     Void test_initial_feasibility_state() {
