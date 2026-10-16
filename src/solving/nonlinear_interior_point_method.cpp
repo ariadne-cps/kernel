@@ -417,8 +417,8 @@ compute_mu(const ExactBoxType&, const ApproximateVectorMultivariateFunction& g, 
 
     for(SizeType i=0; i!=C.size(); ++i) {
         if(C[i].lower_bound()==C[i].upper_bound()) { }
-        else if(C[i].lower_bound()==-infty) { mu += lambda[i] * (gx[i] - C[i].upper_bound()); }
-        else if(C[i].upper_bound()==+infty) { mu += lambda[i] * (gx[i] - C[i].lower_bound()); }
+        else if(is_inf(C[i].lower_bound())) { mu += lambda[i] * (gx[i] - C[i].upper_bound()); }
+        else if(is_inf(C[i].upper_bound())) { mu += lambda[i] * (gx[i] - C[i].lower_bound()); }
         else { // std::cerr<<"FIXME: Compute mu for singleton constraint\n";
             if ( decide(lambda[i] <=0.0) ) { mu += lambda[i] * (gx[i] - C[i].upper_bound()); }
             else { mu += lambda[i] * (gx[i] - C[i].lower_bound()); }
