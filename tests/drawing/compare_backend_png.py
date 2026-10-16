@@ -98,7 +98,7 @@ def main():
           f"max channel difference={max_difference}; plot pixels={total}")
     if args.diff:
         with open(args.diff,"wb") as file:
-            file.write(f"P6\\n{width} {height}\\n255\\n".encode("ascii"))
+            file.write(f"P6\n{width} {height}\n255\n".encode("ascii"))
             file.write(bytes(min(255,abs(u-v)*4)
                 for pa,pb in zip(a[2],b[2]) for u,v in zip(pa,pb)))
     assert mean<=args.max_plot_error, f"Plot mean error {mean:.5f} > {args.max_plot_error}"
