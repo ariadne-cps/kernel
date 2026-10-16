@@ -169,7 +169,7 @@ void EmbeddedCanvas::blend(int x, int y, Paint paint, double coverage) {
                      y < TOP || y >= static_cast<int>(_height)-BOTTOM)) return;
     double alpha = unit(paint.a) * unit(coverage);
     if (alpha <= 0) return;
-    std::size_t index = (static_cast<std::size_t>(y)*_width+x)*4;
+    std::size_t index = (static_cast<std::size_t>(y)*_width+static_cast<std::size_t>(x))*4;
     _pixels[index] = channel((1-alpha)*(_pixels[index]/255.0)+alpha*unit(paint.r));
     _pixels[index+1] = channel((1-alpha)*(_pixels[index+1]/255.0)+alpha*unit(paint.g));
     _pixels[index+2] = channel((1-alpha)*(_pixels[index+2]/255.0)+alpha*unit(paint.b));
@@ -188,7 +188,7 @@ void EmbeddedCanvas::text(double x, double y, StringType const& label) {
         auto rows = glyph(c);
         for (int row = 0; row != 7; ++row)
             for (int col = 0; col != 5; ++col)
-                if (rows[row] & (1u << (4-col)))
+                if (rows[static_cast<std::size_t>(row)] & (1u << (4-col)))
                     rectangle(static_cast<int>(x+col*scale), static_cast<int>(y+row*scale),
                               static_cast<int>(x+(col+1)*scale), static_cast<int>(y+(row+1)*scale),
                               {0,0,0,1});
