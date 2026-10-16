@@ -21,6 +21,7 @@
  * along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <sstream>
 #include "macro/testing.hpp"
 #include "numeric/numeric.hpp"
 #include "algebra/vector.hpp"
@@ -34,6 +35,7 @@ class TestLinearSimplexSolver
 {
   public:
     Void test() {
+        ARIADNE_TEST_CALL(test_slackness_output());
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
         ARIADNE_TEST_CALL(test_validated_feasibility_bound_flip());
@@ -45,6 +47,18 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
         ARIADNE_TEST_CALL(test_compute_basis_nonunit_two_by_two());
         ARIADNE_TEST_CALL(test_compute_basis_column_pivoting());
+    }
+
+    Void test_slackness_output() {
+        // Exercise all named variable states and the documented fallback.
+        std::ostringstream stream;
+        stream << Slackness::BASIS << Slackness::LOWER
+               << Slackness::UPPER << Slackness::FIXED;
+        ARIADNE_TEST_EQUAL(stream.str(),std::string("BLUE"));
+
+        std::ostringstream unknown;
+        unknown << static_cast<Slackness>(3);
+        ARIADNE_TEST_EQUAL(unknown.str(),std::string("?"));
     }
 
     Void test_compute_basis_column_pivoting() {
