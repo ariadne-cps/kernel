@@ -937,7 +937,9 @@ LinearSimplexSolver<X>::validated_feasibility_step(const Vector<X>& xl, const Ve
     for(SizeType k=m; k!=n; ++k) {
         SizeType j=p[k];
         if(vt[j]==Slackness::LOWER) { if(possibly(z[j]<=0)) { feasible=indeterminate; if(definitely(z[j]<0)) { s=k; break; } } }
-        if(vt[j]==Slackness::UPPER) { if(possibly(z[j]>=0)) { feasible=indeterminate; if(definitely(z[j]>0)) { s=k; break; } } }
+        // For rigorous bounds, test a positive reduced cost by negating it.
+        // This avoids an inconclusive positive comparison in the UPPER case.
+        if(vt[j]==Slackness::UPPER) { if(possibly(-z[j]<=0)) { feasible=indeterminate; if(definitely(-z[j]<0)) { s=k; break; } } }
     }
     LOGGING_PRINTLN("s="<<s);
     if(definitely(!feasible)) { return true; }
