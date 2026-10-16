@@ -24,9 +24,11 @@
 
 // See Hande Y. Benson, David F. Shanno, And Robert J. Vanderbei,
 // "Interior-point methods for nonconvex nonlinear programming: Jamming and comparative numerical testing"
-#include "solving/detail/nonlinear_programming_helpers.hpp"
+#include "solving/nonlinear_programming.hpp"
 
 namespace Ariadne {
+
+using namespace nonlinear_programming_detail;
 
 const FloatDP NonlinearProgrammingSolverBase::zero = FloatDP(0,dp);
 const FloatDP NonlinearProgrammingSolverBase::one = FloatDP(1,dp);

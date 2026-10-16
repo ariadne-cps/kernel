@@ -24,9 +24,12 @@
 
 // See Hande Y. Benson, David F. Shanno, And Robert J. Vanderbei,
 // "Interior-point methods for nonconvex nonlinear programming: Jamming and comparative numerical testing"
-#include "solving/detail/nonlinear_programming_helpers.hpp"
+#include "solving/nonlinear_interior_point_method.hpp"
+#include "solving/nonlinear_programming.hpp"
 
 namespace Ariadne {
+
+using namespace nonlinear_programming_detail;
 
 // Solve equations y Dh(x) - 1/(x-xl) + 1/(xu-x) = 0; h(x) = 0
 ValidatedKleenean IntervalNonlinearInteriorPointSolver::
