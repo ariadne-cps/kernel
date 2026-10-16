@@ -149,6 +149,26 @@ static void geometry(CanvasInterface& c, const char* filename, int scene) {
             rectangle(-0.30,-0.90,0.30,-0.78,true);
             c.fill();
         }
+    } else if(scene == 9) {
+        // Fractional horizontal and vertical strokes: short segments, caps,
+        // thick lines and lines clipped by each edge of the plotting area.
+        for(int index=0;index<10;++index) {
+            const double offset=-0.94+index*0.21;
+            c.set_line_width(0.25+index*0.43);
+            c.move_to(-1.18,offset);
+            c.line_to(1.18,offset);
+            c.stroke();
+            c.move_to(offset,-1.20);
+            c.line_to(offset,1.20);
+            c.stroke();
+        }
+        c.set_line_width(4.0);
+        c.move_to(-0.95,-0.96);
+        c.line_to(-0.37,-0.96);
+        c.stroke();
+        c.move_to(0.77,0.94);
+        c.line_to(0.77,0.78);
+        c.stroke();
     }
     c.write(filename);
 }
@@ -160,7 +180,7 @@ int main() {
     CairoCanvas cairo(ImageSize2d(320u, 240u));
     render(cairo, "comparison-cairo.png");
 #endif
-    for(int scene=0;scene<9;++scene) {
+    for(int scene=0;scene<10;++scene) {
         EmbeddedCanvas e(ImageSize2d(320u,240u));
         std::string ename="comparison-scene"+std::to_string(scene)+"-embedded.png";
         geometry(e,ename.c_str(),scene);

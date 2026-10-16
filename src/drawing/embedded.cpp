@@ -416,6 +416,63 @@ void EmbeddedCanvas::rasterise_segment(Point a,Point b,double width) {
     const double radius=width/2.0;
     const double cross_limit=radius*std::sqrt(length2);
     if (!std::isfinite(cross_limit)) return;
+
+    if(dx==0.0 || dy==0.0) {
+        // A vertical or horizontal butt-capped segment is exactly a
+        // rectangle in device space. Build a single 4x4 pixel mask per
+        // scanline instead of intersecting half-planes four times per row.
+        // Boundaries are inclusive, just like the general segment rasterizer.
+        const double xmin=dy==0.0 ? std::min(a.x,b.x) : a.x-radius;
+        const double xmax=dy==0.0 ? std::max(a.x,b.x) : a.x+radius;
+        const double ymin=dx==0.0 ? std::min(a.y,b.y) : a.y-radius;
+        const double ymax=dx==0.0 ? std::max(a.y,b.y) : a.y+radius;
+        if(std::isfinite(xmin) && std::isfinite(xmax) &&
+           std::isfinite(ymin) && std::isfinite(ymax)) {
+            const double left=_clipped ? LEFT : 0;
+            const double right=_clipped ? static_cast<double>(_width)-RIGHT
+                                        : static_cast<double>(_width);
+            const double top=_clipped ? TOP : 0;
+            const double bottom=_clipped ? static_cast<double>(_height)-BOTTOM
+                                         : static_cast<double>(_height);
+            if(xmax<=left || xmin>=right || ymax<=top || ymin>=bottom)
+                return;
+            const double x_from=std::clamp(xmin,left,right);
+            const double x_to=std::clamp(xmax,left,right);
+            const int first=static_cast<int>(std::ceil(x_from*4.0-0.5));
+            const int last=static_cast<int>(std::floor(x_to*4.0-0.5)+1.0);
+            if(first>=last) return;
+            const int y0=static_cast<int>(std::floor(
+                std::clamp(ymin,top,bottom)));
+            const int y1=static_cast<int>(std::ceil(
+                std::clamp(ymax,top,bottom)));
+            const int x0=first/4;
+            const int x1=(last+3)/4;
+            for(int y=y0;y<y1;++y) {
+                unsigned vertical_mask=0;
+                for(int sy=0;sy<4;++sy) {
+                    const double sample_y=y+(sy+0.5)/4.0;
+                    if(sample_y>=ymin && sample_y<=ymax)
+                        vertical_mask|=0xfu<<(sy*4);
+                }
+                if(!vertical_mask) continue;
+                const std::size_t row=static_cast<std::size_t>(y)*_width;
+                for(int x=x0;x<x1;++x) {
+                    const int begin=std::clamp(first-4*x,0,4);
+                    const int end=std::clamp(last-4*x,0,4);
+                    const unsigned horizontal_mask=
+                        ((1u<<end)-1u)&~((1u<<begin)-1u);
+                    const auto mask=static_cast<std::uint16_t>(
+                        (horizontal_mask*0x1111u)&vertical_mask);
+                    if(!mask) continue;
+                    const auto index=row+static_cast<std::size_t>(x);
+                    if(_coverage[index]==0) _dirty_pixels.push_back(index);
+                    _coverage[index]|=mask;
+                }
+            }
+            return;
+        }
+    }
+
     const double bottom=std::min(a.y,b.y)-radius-1;
     const double top=std::max(a.y,b.y)+radius+1;
     const double clip_bottom=_clipped ? TOP : 0;

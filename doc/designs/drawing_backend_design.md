@@ -190,6 +190,14 @@ The implementation intersects those bounds **once per subpixel scanline**
 and ORs the corresponding range of coverage bits into the mask. This
 replaces 16 independent distance/projection tests for each candidate pixel.
 
+For **exactly horizontal or vertical segments**, the stroke is a rectangular
+region in device coordinates. A separate fast path computes horizontal and
+vertical 4x4 sample masks once per pixel row, including fractional boundaries
+and plot clipping, then merges the masks into the existing union buffer.
+This avoids the per-subpixel half-plane intersections for the four sides of
+axis-aligned rectangles. It preserves butt-end caps and leaves oblique
+segments on the general interval algorithm.
+
 Joining strokes use geometric triangles to fill the inner wedge and extend
 the outside to a miter tip, subject to the miter-length limit. Sharp joins
 fall back to a bevel. Small triangles and round dots still use localized
@@ -239,7 +247,8 @@ Implemented performance techniques include:
 2. Active-edge scanline filling for arbitrary compound polygons.
 3. Direct composition of single rectangles and strictly nested rectangular
    frames, with correct nonzero-winding semantics for holes.
-4. Interval-based stroke rasterization instead of per-sample distance tests.
+4. Interval-based stroke rasterization instead of per-sample distance tests,
+   and a row-mask fast path for horizontal and vertical strokes.
 5. Per-pixel bit masks and dirty-pixel tracking for single-pass compositing.
 6. Device-space, curvature-aware arc tessellation with a segment-count cap.
 7. Direct opaque background writes instead of per-pixel floating-point blending.
@@ -289,6 +298,8 @@ Drawing regressions should preserve both **geometric semantics** and
   strokes and concave polygons. Two additional scenes exercise nested
   rectangular paths of both winding directions and submission orders,
   including touching contours that must use general filling.
+  A separate fixture covers horizontal/vertical strokes with fractional
+  widths and coordinates, short segments and clipped end caps.
 - A standalone embedded-only regression checks interior pixels of the
   nested-rectangle scenes; it does not depend on a reference backend.
 - The embedded label regression test checks that axis text remains visible
