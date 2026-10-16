@@ -38,7 +38,7 @@ endif()
 
 # Each scene is compared independently and emits a diagnostic image.
 if(ARIADNE_WITH_CAIRO AND Python3_Interpreter_FOUND)
-    foreach(SCENE RANGE 0 3)
+    foreach(SCENE RANGE 0 6)
         add_test(NAME compare_drawing_scene_${SCENE}
             COMMAND "${Python3_EXECUTABLE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/compare_backend_png.py"

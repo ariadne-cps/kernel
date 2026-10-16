@@ -2,6 +2,7 @@
 #ifdef ARIADNE_HAS_CAIRO
 #include "drawing/cairo.hpp"
 #endif
+#include <cmath>
 #include <memory>
 #include <string>
 
@@ -58,12 +59,54 @@ static void geometry(CanvasInterface& c, const char* filename, int scene) {
         c.stroke();
         c.circle(0,0,0.6);
         c.fill();
-    } else {
+    } else if(scene == 3) {
         c.set_line_width(4.0);
         c.move_to(-0.8,0.0);
         c.circle(0.0,0.0,0.35);
         c.line_to(0.8,0.0);
         c.stroke();
+    } else if(scene == 4) {
+        // Both explicit and implicit closing edges, at fractional device
+        // coordinates. Also check winding direction and clipping at the edge.
+        c.set_line_width(0.8);
+        c.set_fill_opacity(0.4);
+        for(int row=0;row<7;++row) for(int col=0;col<10;++col) {
+            double x=-1.12+0.238*col;
+            double y=-1.08+0.336*row;
+            double w=0.192,h=0.271;
+            if((row+col)%2==0) {
+                c.move_to(x,y);
+                c.line_to(x+w,y);
+                c.line_to(x+w,y+h);
+                c.line_to(x,y+h);
+                c.line_to(x,y);  // Explicit closure.
+            } else {
+                c.move_to(x,y);
+                c.line_to(x,y+h);
+                c.line_to(x+w,y+h);
+                c.line_to(x+w,y); // Implicit closure on fill.
+            }
+            c.fill();
+        }
+    } else if(scene == 5) {
+        // Butt caps, subpixel-width strokes and clipped segments at
+        // multiple orientations, including exact horizontal/vertical lines.
+        for(int k=0;k<12;++k) {
+            c.set_line_width(0.75+0.28*(k%5));
+            double y=-0.90+0.16*k;
+            c.move_to(-1.2,y);
+            c.line_to(1.2,y+0.12*std::sin(k));
+            c.stroke();
+        }
+        c.set_line_width(3.25);
+        c.move_to(0.0,-1.2); c.line_to(0.0,1.2); c.stroke();
+        c.move_to(-1.2,0.0); c.line_to(1.2,0.0); c.stroke();
+    } else if(scene == 6) {
+        // Concave multi-edge fill must NOT take the rectangle fast path.
+        c.move_to(-0.8,-0.8); c.line_to(0.8,-0.8);
+        c.line_to(0.2,-0.2); c.line_to(0.8,0.8);
+        c.line_to(-0.8,0.8); c.line_to(-0.2,0.1);
+        c.fill();
     }
     c.write(filename);
 }
@@ -75,7 +118,7 @@ int main() {
     CairoCanvas cairo(ImageSize2d(320u, 240u));
     render(cairo, "comparison-cairo.png");
 #endif
-    for(int scene=0;scene<4;++scene) {
+    for(int scene=0;scene<7;++scene) {
         EmbeddedCanvas e(ImageSize2d(320u,240u));
         std::string ename="comparison-scene"+std::to_string(scene)+"-embedded.png";
         geometry(e,ename.c_str(),scene);

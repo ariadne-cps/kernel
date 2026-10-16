@@ -306,28 +306,79 @@ void EmbeddedCanvas::composite_coverage(Paint paint) {
     }
     _dirty_pixels.clear();
 }
-void EmbeddedCanvas::rasterise_segment(Point a, Point b, double width) {
+// Mark a half-open range of 4x4 subpixel samples in a scanline. Stroke
+// boundaries are closed (inclusive_end); fills use the original half-open
+// winding intervals, preserving the previous 4x4 antialiasing convention.
+void EmbeddedCanvas::rasterise_span(double from,double to,int y,int sy,
+                                    bool inclusive_end) {
+    const double left=_clipped ? LEFT : 0;
+    const double right=_clipped ? static_cast<double>(_width)-RIGHT : _width;
+    if (!std::isfinite(from) || !std::isfinite(to) ||
+        to<left || from>=right || y<0 || y>=static_cast<int>(_height))
+        return;
+    from=std::clamp(from,left,right);
+    to=std::clamp(to,left,right);
+    const int first=std::max(0,static_cast<int>(std::ceil(from*4.0-0.5)));
+    const int last=std::min(static_cast<int>(_width)*4,
+        static_cast<int>(inclusive_end ? std::floor(to*4.0-0.5)+1.0 :
+                                         std::ceil(to*4.0-0.5)));
+    for(int sample=first;sample<last;) {
+        const int x=sample/4;
+        const int stop=std::min(last,(x+1)*4);
+        const unsigned n=static_cast<unsigned>(stop-sample);
+        const unsigned shift=static_cast<unsigned>(sy*4+sample%4);
+        const auto bits=static_cast<std::uint16_t>(((1u<<n)-1u)<<shift);
+        const auto index=static_cast<std::size_t>(y)*_width+
+                         static_cast<std::size_t>(x);
+        if (_coverage[index]==0) _dirty_pixels.push_back(index);
+        _coverage[index]|=bits;
+        sample=stop;
+    }
+}
+
+// A butt-capped stroke is the intersection of two pairs of half-planes:
+//  0 <= dot(pixel-a,b-a) <= length_squared
+//  |cross(pixel-a,b-a)| <= (width/2)*length.
+// Each condition is linear in x for a fixed subpixel scanline y. Intersect
+// the intervals once per scanline instead of evaluating 16 predicates for
+// every candidate pixel. The subpixel mask remains bit-exact with the former
+// sampling rasterizer (apart from unavoidable floating-point boundary ties).
+void EmbeddedCanvas::rasterise_segment(Point a,Point b,double width) {
     if (!(width>0) || !std::isfinite(width)) return;
-    double dx=b.x-a.x, dy=b.y-a.y;
-    double length2=dx*dx+dy*dy;
+    const double dx=b.x-a.x,dy=b.y-a.y;
+    const double length2=dx*dx+dy*dy;
     if (!std::isfinite(length2) || length2<=0) return;
-    double radius=width/2;
-    double xmin=std::min(a.x,b.x)-radius-1,xmax=std::max(a.x,b.x)+radius+1;
-    double ymin=std::min(a.y,b.y)-radius-1,ymax=std::max(a.y,b.y)+radius+1;
-    if (!(xmax>=0 && ymax>=0 && xmin<_width && ymin<_height)) return;
-    int x0=static_cast<int>(std::max(0.0,std::floor(xmin)));
-    int x1=static_cast<int>(std::min<double>(_width,std::ceil(xmax)));
-    int y0=static_cast<int>(std::max(0.0,std::floor(ymin)));
-    int y1=static_cast<int>(std::min<double>(_height,std::ceil(ymax)));
-    for(int y=y0;y<y1;++y) for(int x=x0;x<x1;++x)
-        for(int sy=0;sy<4;++sy) for(int sx=0;sx<4;++sx) {
-            double px=x+(sx+0.5)/4,py=y+(sy+0.5)/4;
-            double t=((px-a.x)*dx+(py-a.y)*dy)/length2;
-            // Cairo's default cap style is BUTT, not round.
-            if(t<0 || t>1) continue;
-            double cross=(px-a.x)*dy-(py-a.y)*dx;
-            if(cross*cross<=radius*radius*length2) mark_sample(x,y,sx,sy);
-        }
+    const double radius=width/2.0;
+    const double cross_limit=radius*std::sqrt(length2);
+    if (!std::isfinite(cross_limit)) return;
+    const double bottom=std::min(a.y,b.y)-radius-1;
+    const double top=std::max(a.y,b.y)+radius+1;
+    const double clip_bottom=_clipped ? TOP : 0;
+    const double clip_top=_clipped ? static_cast<double>(_height)-BOTTOM : _height;
+    if (top<=clip_bottom || bottom>=clip_top) return;
+    const int y0=static_cast<int>(std::floor(std::clamp(bottom,clip_bottom,clip_top)));
+    const int y1=static_cast<int>(std::ceil(std::clamp(top,clip_bottom,clip_top)));
+    for (int y=y0;y<y1;++y) for (int sy=0;sy<4;++sy) {
+        const double py=y+(sy+0.5)/4.0;
+        double from=_clipped ? LEFT : 0;
+        double to=_clipped ? static_cast<double>(_width)-RIGHT : _width;
+        // Restrict x for coefficient*x+offset in [lower,upper].
+        auto restrict_x=[&](double coefficient,double offset,
+                            double lower,double upper) {
+            if(coefficient==0.0)
+                return offset>=lower && offset<=upper;
+            double lo=(lower-offset)/coefficient;
+            double hi=(upper-offset)/coefficient;
+            if(lo>hi) std::swap(lo,hi);
+            from=std::max(from,lo);
+            to=std::min(to,hi);
+            return from<=to;
+        };
+        if (!restrict_x(dx,dy*(py-a.y)-dx*a.x,0,length2) ||
+            !restrict_x(dy,-dy*a.x-dx*(py-a.y),-cross_limit,cross_limit))
+            continue;
+        rasterise_span(from,to,y,sy,true);
+    }
 }
 // Round endpoints restore readable glyph strokes while preserving the
 // butt caps expected by Cairo for ordinary drawing paths.
@@ -397,6 +448,86 @@ void EmbeddedCanvas::rasterise_join(Point a,Point b,Point c,double half_width) {
 // tested every edge for every subpixel, which was prohibitively expensive for
 // paving plots containing many polygons.
 void EmbeddedCanvas::rasterise_fill() {
+    // Fast path for a single axis-aligned rectangle (four corners, with
+    // optional repeated closing point). Composite once, as in the general
+    // nonzero winding scanline; all other paths use that algorithm unchanged.
+    if (_paths.size()==1) {
+        auto const& points=_paths.front().points;
+        const bool closing=points.size()==5 &&
+            points.front().x==points.back().x &&
+            points.front().y==points.back().y;
+        if (points.size()==4 || closing) {
+            double minx=std::numeric_limits<double>::infinity();
+            double miny=minx,maxx=-minx,maxy=-minx;
+            bool valid=true;
+            for (std::size_t i=0;i<4;++i) {
+                auto const p=points[i];
+                if (!std::isfinite(p.x)||!std::isfinite(p.y)) {
+                    valid=false;
+                    break;
+                }
+                minx=std::min(minx,p.x);maxx=std::max(maxx,p.x);
+                miny=std::min(miny,p.y);maxy=std::max(maxy,p.y);
+            }
+            if(valid && maxx>minx && maxy>miny) {
+                std::array<bool,4> corners{};
+                for(std::size_t i=0;i<4;++i) {
+                    auto const a=points[i],b=points[(i+1)%4];
+                    const bool horizontal=a.y==b.y && a.x!=b.x;
+                    const bool vertical=a.x==b.x && a.y!=b.y;
+                    const auto corner=static_cast<std::size_t>(
+                        (a.x==maxx ? 1 : 0)+(a.y==maxy ? 2 : 0));
+                    if ((!horizontal && !vertical) || corners[corner]) {
+                        valid=false;
+                        break;
+                    }
+                    corners[corner]=true;
+                }
+            } else valid=false;
+            if(valid) {
+                const double clip_left=_clipped ? LEFT : 0;
+                const double clip_right=_clipped ?
+                    static_cast<double>(_width)-RIGHT : _width;
+                const double clip_top=_clipped ? TOP : 0;
+                const double clip_bottom=_clipped ?
+                    static_cast<double>(_height)-BOTTOM : _height;
+                if(maxx<=clip_left||minx>=clip_right||
+                   maxy<=clip_top||miny>=clip_bottom) return;
+                const double left=std::clamp(minx,clip_left,clip_right);
+                const double right=std::clamp(maxx,clip_left,clip_right);
+                const int first=static_cast<int>(std::ceil(left*4.0-0.5));
+                const int last=static_cast<int>(std::ceil(right*4.0-0.5));
+                if(first>=last) return;
+                const int y0=static_cast<int>(std::floor(
+                    std::clamp(miny,clip_top,clip_bottom)));
+                const int y1=static_cast<int>(std::ceil(
+                    std::clamp(maxy,clip_top,clip_bottom)));
+                for(int y=y0;y<y1;++y) {
+                    unsigned vertical_mask=0;
+                    for(int sy=0;sy<4;++sy) {
+                        const double py=y+(sy+0.5)/4.0;
+                        if(py>=miny && py<maxy)
+                            vertical_mask|=0xfu<<(sy*4);
+                    }
+                    if(!vertical_mask) continue;
+                    for(int x=first/4;x<(last+3)/4;++x) {
+                        const int start=std::max(first,4*x)-4*x;
+                        const int stop=std::min(last,4*(x+1))-4*x;
+                        if(start>=stop) continue;
+                        const unsigned horizontal_mask=((1u<<(stop-start))-1u)
+                                                       <<start;
+                        const auto mask=static_cast<std::uint16_t>(
+                            (horizontal_mask*0x1111u)&vertical_mask);
+                        const auto index=static_cast<std::size_t>(y)*_width+
+                                         static_cast<std::size_t>(x);
+                        if(_coverage[index]==0) _dirty_pixels.push_back(index);
+                        _coverage[index]|=mask;
+                    }
+                }
+                return;
+            }
+        }
+    }
     struct Edge {
         double ymin, ymax, x_at_ymin, dx_dy;
         int delta;
@@ -435,27 +566,6 @@ void EmbeddedCanvas::rasterise_fill() {
     std::size_t next=0;
     // A single sample row contains 4 horizontally offset samples per pixel.
     // A contiguous interval maps to an OR of bitmasks, not 4 tests per pixel.
-    auto span=[this](double from,double to,int y,int sy) {
-        const double left=_clipped ? LEFT : 0;
-        const double right=_clipped ? static_cast<double>(_width)-RIGHT : _width;
-        if (to<=left || from>=right) return;
-        from=std::clamp(from,left,right);
-        to=std::clamp(to,left,right);
-        const int first=std::max(0,static_cast<int>(std::ceil(from*4.0-0.5)));
-        const int last=std::min(static_cast<int>(_width)*4,
-                               static_cast<int>(std::ceil(to*4.0-0.5)));
-        for (int sample=first; sample<last;) {
-            const int x=sample/4;
-            const int stop=std::min(last,(x+1)*4);
-            const unsigned n=static_cast<unsigned>(stop-sample);
-            const unsigned shift=static_cast<unsigned>(sy*4+sample%4);
-            const auto mask=static_cast<std::uint16_t>(((1u<<n)-1u)<<shift);
-            const auto index=static_cast<std::size_t>(y)*_width+static_cast<std::size_t>(x);
-            if (_coverage[index]==0) _dirty_pixels.push_back(index);
-            _coverage[index] |= mask;
-            sample=stop;
-        }
-    };
     for (int y=y0; y<y1; ++y) for (int sy=0;sy<4;++sy) {
         const double scan_y=y+(sy+0.5)/4.0;
         // Edges are active on the half-open vertical interval [ymin,ymax).
@@ -475,7 +585,7 @@ void EmbeddedCanvas::rasterise_fill() {
         for (std::size_t i=0;i+1<crossings.size();++i) {
             winding+=crossings[i].second;
             if (winding!=0 && crossings[i].first<crossings[i+1].first)
-                span(crossings[i].first,crossings[i+1].first,y,sy);
+                rasterise_span(crossings[i].first,crossings[i+1].first,y,sy,false);
         }
     }
 }
