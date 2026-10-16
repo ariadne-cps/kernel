@@ -12,6 +12,12 @@ foreach(TEST ${UNIT_TESTS})
 endforeach()
 add_dependencies(tests-cpp ${UNIT_TESTS})
 
+# Generate PNG inputs even when only a dependent comparison test is selected.
+# DEPENDS orders selected tests but does not automatically select the producer.
+set_tests_properties(test_backend_comparison PROPERTIES
+    FIXTURES_SETUP drawing_images
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+
 # The label legibility regression runs with either graphics configuration.
 find_package(Python3 COMPONENTS Interpreter QUIET)
 if(Python3_Interpreter_FOUND)
@@ -20,7 +26,9 @@ if(Python3_Interpreter_FOUND)
             "${CMAKE_CURRENT_SOURCE_DIR}/test_embedded_labels.py"
             "comparison-embedded.png")
     set_tests_properties(test_embedded_labels PROPERTIES
-        DEPENDS test_backend_comparison LABELS "drawing")
+        FIXTURES_REQUIRED drawing_images
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        LABELS "drawing")
 endif()
 
 # Compare matching raster fixtures rendered by both backends.
@@ -31,7 +39,8 @@ if(ARIADNE_WITH_CAIRO)
                 "${CMAKE_CURRENT_SOURCE_DIR}/compare_backend_png.py"
                 "comparison-cairo.png" "comparison-embedded.png")
         set_tests_properties(compare_drawing_backends PROPERTIES
-            DEPENDS test_backend_comparison
+            FIXTURES_REQUIRED drawing_images
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             LABELS "drawing")
     endif()
 endif()
@@ -46,6 +55,8 @@ if(ARIADNE_WITH_CAIRO AND Python3_Interpreter_FOUND)
                 "comparison-scene${SCENE}-embedded.png"
                 --diff "comparison-scene${SCENE}-diff.ppm")
         set_tests_properties(compare_drawing_scene_${SCENE} PROPERTIES
-            DEPENDS test_backend_comparison LABELS "drawing")
+            FIXTURES_REQUIRED drawing_images
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            LABELS "drawing")
     endforeach()
 endif()

@@ -267,6 +267,11 @@ Drawing regressions should preserve both **geometric semantics** and
   strokes and concave polygons.
 - The embedded label regression test checks that axis text remains visible
   and connected.
+- Image-comparison tests use a CTest fixture. The `test_backend_comparison`
+  executable produces the PNG inputs in the drawing test's binary directory
+  (normally `build/tests/drawing/`), and CTest runs it automatically when
+  a dependent comparison or label test is selected. The executable must
+  already have been built; CTest does not compile targets.
 - PNG checks and image comparisons must evaluate the plotting area
   separately from the axis-label regions; large uniform backgrounds must
   not conceal localized errors.
