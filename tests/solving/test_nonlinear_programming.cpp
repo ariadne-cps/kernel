@@ -822,8 +822,8 @@ class TestNonlinearPenaltyFunctionSolver
 
         solver.feasibility_step(domain,g,codomain,point,slack,weight);
         ARIADNE_TEST_ASSERT(decide(weight==FloatDPApproximation(0.5_x,dp)));
-        ARIADNE_TEST_ASSERT(contains(domain,exact_vector(point)));
-        ARIADNE_TEST_ASSERT(contains(codomain,exact_vector(slack)));
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(point)));
+        ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(slack)));
         ARIADNE_TEST_ASSERT(decide(point[0]==FloatDPApproximation(0.25_x,dp)));
         ARIADNE_TEST_ASSERT(decide(slack[0]==FloatDPApproximation(0.25_x,dp)));
     }
