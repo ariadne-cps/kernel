@@ -262,6 +262,51 @@ class TestNonlinearAdapterProbe {
     }
 };
 
+class TestNonlinearInteriorPointSolverBasics {
+  public:
+    Void test() {
+        ARIADNE_TEST_CALL(test_disjoint_constraint_minimisation());
+        ARIADNE_TEST_CALL(test_relaxation_parameter());
+    }
+
+    Void test_disjoint_constraint_minimisation() {
+        NonlinearInteriorPointSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(x[0]);
+        ValidatedVectorMultivariateFunction constraints({x[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{2.0_x,3.0_x}});
+        ARIADNE_TEST_THROWS(
+            solver.minimise(objective,domain,constraints,codomain),
+            InfeasibleProblemException);
+    }
+
+    Void test_relaxation_parameter() {
+        NonlinearInteriorPointSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction constraints({x[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        FloatDPApproximationVector point({0.5_x},dp);
+        FloatDPApproximationVector positive_multiplier({2.0_x},dp);
+        FloatDPApproximationVector negative_multiplier({-2.0_x},dp);
+        ExactBoxType equality({{0.5_x,0.5_x}});
+        ExactBoxType upper_bounded({{-inf,0.75_x}});
+        ExactBoxType lower_bounded({{0.25_x,inf}});
+        ExactBoxType bounded({{0.25_x,0.75_x}});
+
+        ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
+            domain,constraints,equality,point,positive_multiplier)==0.0_approx));
+        ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
+            domain,constraints,upper_bounded,point,positive_multiplier)==-0.5_approx));
+        ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
+            domain,constraints,lower_bounded,point,positive_multiplier)==0.5_approx));
+        ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
+            domain,constraints,bounded,point,negative_multiplier)==0.5_approx));
+        ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
+            domain,constraints,bounded,point,positive_multiplier)==0.5_approx));
+    }
+};
+
 class TestNonlinearInfeasibleInteriorPointSolver
 {
   private:
@@ -653,6 +698,7 @@ Int main(Int argc, const char* argv[]) {
     NonlinearInfeasibleInteriorPointSolver nlio;
     TestNonlinearProgrammingSolver(nlio).test();
     TestNonlinearInfeasibleInteriorPointSolver().test();
+    TestNonlinearInteriorPointSolverBasics().test();
     return ARIADNE_TEST_FAILURES;
     NonlinearInteriorPointSolver nlo;
     TestNonlinearProgrammingSolver(nlo).test();
