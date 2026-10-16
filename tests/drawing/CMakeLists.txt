@@ -31,6 +31,20 @@ if(Python3_Interpreter_FOUND)
         LABELS "drawing")
 endif()
 
+# Check nested rectangular contour semantics without relying on an
+# external reference renderer. The test reads scenes 7 and 8.
+if(Python3_Interpreter_FOUND)
+    add_test(NAME test_embedded_rectangles
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_embedded_rectangles.py"
+            "comparison-scene7-embedded.png"
+            "comparison-scene8-embedded.png")
+    set_tests_properties(test_embedded_rectangles PROPERTIES
+        FIXTURES_REQUIRED drawing_images
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        LABELS "drawing")
+endif()
+
 # Compare matching raster fixtures rendered by both backends.
 if(ARIADNE_WITH_CAIRO)
     if(Python3_Interpreter_FOUND)
@@ -47,7 +61,7 @@ endif()
 
 # Each scene is compared independently and emits a diagnostic image.
 if(ARIADNE_WITH_CAIRO AND Python3_Interpreter_FOUND)
-    foreach(SCENE RANGE 0 6)
+    foreach(SCENE RANGE 0 8)
         add_test(NAME compare_drawing_scene_${SCENE}
             COMMAND "${Python3_EXECUTABLE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/compare_backend_png.py"

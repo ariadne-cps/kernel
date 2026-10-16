@@ -317,11 +317,9 @@ void EmbeddedCanvas::mark_sample(int x, int y, int sx, int sy) {
     if (_coverage[index]==0) _dirty_pixels.push_back(index);
     _coverage[index] |= static_cast<std::uint16_t>(1u << (sy*4+sx));
 }
-void EmbeddedCanvas::composite_coverage(Paint paint) {
-    if(_dirty_pixels.empty()) return;
+EmbeddedCanvas::BlendTable const& EmbeddedCanvas::blend_table_for(Paint paint) {
     const Paint normalized{unit(paint.r),unit(paint.g),
                            unit(paint.b),unit(paint.a)};
-
     BlendCacheEntry* entry=nullptr;
     for(auto& candidate:_blend_cache) {
         if(candidate.valid &&
@@ -354,12 +352,16 @@ void EmbeddedCanvas::composite_coverage(Paint paint) {
         entry->valid=true;
     }
     entry->last_used=++_blend_cache_clock;
+    return entry->table;
+}
 
+void EmbeddedCanvas::composite_coverage(Paint paint) {
+    if(_dirty_pixels.empty()) return;
+    auto const& lookup=blend_table_for(paint);
     for(auto index:_dirty_pixels) {
         const auto bits=_coverage[index];
         if(bits) {
-            const auto& table=
-                entry->table[static_cast<std::size_t>(std::popcount(bits))];
+            const auto& table=lookup[static_cast<std::size_t>(std::popcount(bits))];
             const std::size_t pos=index*4;
             _pixels[pos]=table[0][_pixels[pos]];
             _pixels[pos+1]=table[1][_pixels[pos+1]];
@@ -511,84 +513,141 @@ void EmbeddedCanvas::rasterise_join(Point a,Point b,Point c,double half_width) {
 // tested every edge for every subpixel, which was prohibitively expensive for
 // paving plots containing many polygons.
 void EmbeddedCanvas::rasterise_fill() {
-    // Fast path for a single axis-aligned rectangle (four corners, with
-    // optional repeated closing point). Composite once, as in the general
-    // nonzero winding scanline; all other paths use that algorithm unchanged.
-    if (_paths.size()==1) {
-        auto const& points=_paths.front().points;
-        const bool closing=points.size()==5 &&
-            points.front().x==points.back().x &&
-            points.front().y==points.back().y;
-        if (points.size()==4 || closing) {
-            double minx=std::numeric_limits<double>::infinity();
-            double miny=minx,maxx=-minx,maxy=-minx;
-            bool valid=true;
-            for (std::size_t i=0;i<4;++i) {
-                auto const p=points[i];
-                if (!std::isfinite(p.x)||!std::isfinite(p.y)) {
-                    valid=false;
-                    break;
-                }
-                minx=std::min(minx,p.x);maxx=std::max(maxx,p.x);
-                miny=std::min(miny,p.y);maxy=std::max(maxy,p.y);
-            }
-            if(valid && maxx>minx && maxy>miny) {
-                std::array<bool,4> corners{};
-                for(std::size_t i=0;i<4;++i) {
-                    auto const a=points[i],b=points[(i+1)%4];
-                    const bool horizontal=a.y==b.y && a.x!=b.x;
-                    const bool vertical=a.x==b.x && a.y!=b.y;
-                    const auto corner=static_cast<std::size_t>(
-                        (a.x==maxx ? 1 : 0)+(a.y==maxy ? 2 : 0));
-                    if ((!horizontal && !vertical) || corners[corner]) {
-                        valid=false;
-                        break;
-                    }
-                    corners[corner]=true;
-                }
-            } else valid=false;
-            if(valid) {
-                const double clip_left=_clipped ? LEFT : 0;
-                const double clip_right=_clipped ?
-                    static_cast<double>(_width)-RIGHT : _width;
-                const double clip_top=_clipped ? TOP : 0;
-                const double clip_bottom=_clipped ?
-                    static_cast<double>(_height)-BOTTOM : _height;
-                if(maxx<=clip_left||minx>=clip_right||
-                   maxy<=clip_top||miny>=clip_bottom) return;
-                const double left=std::clamp(minx,clip_left,clip_right);
-                const double right=std::clamp(maxx,clip_left,clip_right);
-                const int first=static_cast<int>(std::ceil(left*4.0-0.5));
-                const int last=static_cast<int>(std::ceil(right*4.0-0.5));
-                if(first>=last) return;
-                const int y0=static_cast<int>(std::floor(
-                    std::clamp(miny,clip_top,clip_bottom)));
-                const int y1=static_cast<int>(std::ceil(
-                    std::clamp(maxy,clip_top,clip_bottom)));
-                for(int y=y0;y<y1;++y) {
-                    unsigned vertical_mask=0;
-                    for(int sy=0;sy<4;++sy) {
-                        const double py=y+(sy+0.5)/4.0;
-                        if(py>=miny && py<maxy)
-                            vertical_mask|=0xfu<<(sy*4);
-                    }
-                    if(!vertical_mask) continue;
-                    for(int x=first/4;x<(last+3)/4;++x) {
-                        const int start=std::max(first,4*x)-4*x;
-                        const int stop=std::min(last,4*(x+1))-4*x;
-                        if(start>=stop) continue;
-                        const unsigned horizontal_mask=((1u<<(stop-start))-1u)
-                                                       <<start;
-                        const auto mask=static_cast<std::uint16_t>(
-                            (horizontal_mask*0x1111u)&vertical_mask);
-                        const auto index=static_cast<std::size_t>(y)*_width+
-                                         static_cast<std::size_t>(x);
-                        if(_coverage[index]==0) _dirty_pixels.push_back(index);
-                        _coverage[index]|=mask;
-                    }
-                }
+    struct Rectangle {
+        double xmin, ymin, xmax, ymax;
+        bool positive_winding;
+    };
+    // Recognise only complete, strictly axis-aligned rectangles. A path may
+    // repeat its starting vertex, but must contain all four distinct corners
+    // exactly once. Concave and degenerate contours use the general scanline.
+    auto identify_rectangle=[](Path const& path,Rectangle& result) {
+        auto const& points=path.points;
+        if(points.size()!=4 && points.size()!=5) return false;
+        if(points.size()==5 &&
+           (points[0].x!=points[4].x || points[0].y!=points[4].y))
+            return false;
+        double xmin=std::numeric_limits<double>::infinity();
+        double ymin=xmin,xmax=-xmin,ymax=-xmin;
+        for(std::size_t i=0;i<4;++i) {
+            auto const p=points[i];
+            if(!std::isfinite(p.x) || !std::isfinite(p.y)) return false;
+            xmin=std::min(xmin,p.x);
+            xmax=std::max(xmax,p.x);
+            ymin=std::min(ymin,p.y);
+            ymax=std::max(ymax,p.y);
+        }
+        if(xmax<=xmin || ymax<=ymin) return false;
+        std::array<bool,4> corners{};
+        for(std::size_t i=0;i<4;++i) {
+            const auto a=points[i],b=points[(i+1)%4];
+            if(!((a.x==b.x && a.y!=b.y) ||
+                 (a.y==b.y && a.x!=b.x))) return false;
+            const auto index=static_cast<std::size_t>(
+                (a.x==xmax ? 1 : 0)+(a.y==ymax ? 2 : 0));
+            if(corners[index]) return false;
+            corners[index]=true;
+        }
+        const auto a=points[0],b=points[1],c=points[2];
+        const double cross=(b.x-a.x)*(c.y-b.y)-
+                           (b.y-a.y)*(c.x-b.x);
+        if(cross==0 || std::isnan(cross)) return false;
+        result={xmin,ymin,xmax,ymax,cross>0};
+        return true;
+    };
+
+    // A single rectangle and a strictly nested pair (filled frame) need no
+    // edge sorting. The second contour either creates a hole if its winding
+    // is opposite, or leaves the entire outer rectangle filled.
+    Rectangle outer{},inner{};
+    const bool one=_paths.size()==1 &&
+        identify_rectangle(_paths.front(),outer);
+    const bool two=_paths.size()==2 &&
+        identify_rectangle(_paths.front(),outer) &&
+        identify_rectangle(_paths.back(),inner);
+    if(one || two) {
+        if(two) {
+            // The same fill works regardless of subpath order.
+            const double outer_area=(outer.xmax-outer.xmin)*
+                                    (outer.ymax-outer.ymin);
+            const double inner_area=(inner.xmax-inner.xmin)*
+                                    (inner.ymax-inner.ymin);
+            if(inner_area>outer_area) std::swap(outer,inner);
+        }
+        const bool contained=!two ||
+            (inner.xmin>outer.xmin && inner.xmax<outer.xmax &&
+             inner.ymin>outer.ymin && inner.ymax<outer.ymax);
+        if(contained) {
+            const bool hole=two &&
+                outer.positive_winding!=inner.positive_winding;
+            const double clip_left=_clipped ? LEFT : 0;
+            const double clip_right=_clipped ?
+                static_cast<double>(_width)-RIGHT : _width;
+            const double clip_top=_clipped ? TOP : 0;
+            const double clip_bottom=_clipped ?
+                static_cast<double>(_height)-BOTTOM : _height;
+            if(outer.xmax<=clip_left || outer.xmin>=clip_right ||
+               outer.ymax<=clip_top || outer.ymin>=clip_bottom)
                 return;
+
+            // x sample positions are x+(sx+0.5)/4. Match the half-open
+            // ranges used by the general winding scanline.
+            auto sample_bounds=[clip_left,clip_right](Rectangle const& rect) {
+                const double left=std::clamp(rect.xmin,clip_left,clip_right);
+                const double right=std::clamp(rect.xmax,clip_left,clip_right);
+                return std::pair<int,int>{
+                    static_cast<int>(std::ceil(left*4.0-0.5)),
+                    static_cast<int>(std::ceil(right*4.0-0.5))
+                };
+            };
+            const auto [first,last]=sample_bounds(outer);
+            if(first>=last) return;
+            const auto [inner_first,inner_last]=sample_bounds(inner);
+            const int y0=static_cast<int>(std::floor(
+                std::clamp(outer.ymin,clip_top,clip_bottom)));
+            const int y1=static_cast<int>(std::ceil(
+                std::clamp(outer.ymax,clip_top,clip_bottom)));
+            auto horizontal_bits=[](int first_sample,int last_sample,int x) {
+                const int start=std::clamp(first_sample-4*x,0,4);
+                const int stop=std::clamp(last_sample-4*x,0,4);
+                return ((1u<<stop)-1u) & ~((1u<<start)-1u);
+            };
+
+            // Compose directly: a rectangle's final subpixel mask is known
+            // in one pass, so it need not be stored in the coverage/dirty
+            // buffers for a second traversal.
+            auto const& lookup=blend_table_for(_fill);
+            for(int y=y0;y<y1;++y) {
+                unsigned outer_vertical=0,inner_vertical=0;
+                for(int sy=0;sy<4;++sy) {
+                    const double sample_y=y+(sy+0.5)/4.0;
+                    if(sample_y>=outer.ymin && sample_y<outer.ymax)
+                        outer_vertical|=0xfu<<(sy*4);
+                    if(hole && sample_y>=inner.ymin && sample_y<inner.ymax)
+                        inner_vertical|=0xfu<<(sy*4);
+                }
+                if(!outer_vertical) continue;
+                for(int x=first/4;x<(last+3)/4;++x) {
+                    const unsigned outer_horizontal=
+                        horizontal_bits(first,last,x);
+                    const unsigned outside=outer_horizontal*0x1111u;
+                    unsigned mask=outside&outer_vertical;
+                    if(hole && mask && inner_vertical) {
+                        const unsigned inner_horizontal=
+                            horizontal_bits(inner_first,inner_last,x);
+                        mask&=~((inner_horizontal*0x1111u)&inner_vertical);
+                    }
+                    if(!mask) continue;
+                    const auto& table=lookup[
+                        static_cast<std::size_t>(std::popcount(mask))];
+                    const std::size_t offset=
+                        (static_cast<std::size_t>(y)*_width+
+                         static_cast<std::size_t>(x))*4;
+                    _pixels[offset]=table[0][_pixels[offset]];
+                    _pixels[offset+1]=table[1][_pixels[offset+1]];
+                    _pixels[offset+2]=table[2][_pixels[offset+2]];
+                }
             }
+            return;
         }
     }
     struct Edge {

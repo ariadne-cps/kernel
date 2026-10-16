@@ -153,16 +153,27 @@ which is particularly important for plots containing many polygons.
 
 ### 5.3 Fast path: axis-aligned rectangles
 
-A single contour with exactly four distinct axis-aligned corners (optionally
+A contour with exactly four distinct axis-aligned corners (optionally
 followed by its starting point) is recognized as a rectangle. The backend
-validates both the edge directions and the four unique corners before
-taking this path.
+validates both edge directions and all four unique corners before taking
+this path.
 
-The rectangle rasterizer clamps its bounds to the plot region and generates
-the horizontal and vertical 4x4 sample masks directly, including fractional
-pixel boundaries. It avoids general edge sorting, active lists and crossing
-calculations. Arbitrary quadrilaterals, concave polygons and compound paths
-retain the general algorithm.
+The specialized fill supports a single rectangle and **two strictly nested
+rectangles**. For a nested pair, contours with opposite winding leave a hole;
+contours with the same winding leave the entire outer rectangle filled. The
+order in which the contours were submitted does not matter. Touching,
+overlapping or disjoint rectangles, as well as arbitrary quadrilaterals,
+concave polygons and other compound paths, retain the general scanline
+algorithm.
+
+The rectangle renderer clamps its bounds to the plot region and generates
+horizontal and vertical 4x4 sample masks directly, including fractional
+pixel boundaries. For a nested pair it subtracts the inner subpixel mask
+only when the windings oppose. Since the complete per-pixel coverage is
+known immediately, it looks up the resulting RGB values in the paint cache
+and **composites directly**, without constructing dirty-pixel lists or a
+temporary coverage buffer. This avoids sorting edges, managing active-edge
+lists and traversing each rectangle's covered pixels a second time.
 
 ### 5.4 Stroke: half-plane intersections
 
@@ -226,7 +237,8 @@ Implemented performance techniques include:
 
 1. Clipping and bounding-region checks to avoid unnecessary off-screen work.
 2. Active-edge scanline filling for arbitrary compound polygons.
-3. A direct rectangle coverage path for common grid/paving figures.
+3. Direct composition of single rectangles and strictly nested rectangular
+   frames, with correct nonzero-winding semantics for holes.
 4. Interval-based stroke rasterization instead of per-sample distance tests.
 5. Per-pixel bit masks and dirty-pixel tracking for single-pass compositing.
 6. Device-space, curvature-aware arc tessellation with a segment-count cap.
@@ -274,7 +286,11 @@ Drawing regressions should preserve both **geometric semantics** and
 
 - The drawing fixtures cover compound paths with holes, joins, clipping,
   circular contours, fractional-coordinate rectangles, variable-width
-  strokes and concave polygons.
+  strokes and concave polygons. Two additional scenes exercise nested
+  rectangular paths of both winding directions and submission orders,
+  including touching contours that must use general filling.
+- A standalone embedded-only regression checks interior pixels of the
+  nested-rectangle scenes; it does not depend on a reference backend.
 - The embedded label regression test checks that axis text remains visible
   and connected.
 - Image-comparison tests use a CTest fixture. The `test_backend_comparison`

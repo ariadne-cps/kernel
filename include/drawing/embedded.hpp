@@ -71,6 +71,7 @@ class EmbeddedCanvas : public CanvasBase {
     void blend(int x, int y, Paint paint, double coverage);
     void rectangle(int x0, int y0, int x1, int y1, Paint paint);
     void mark_sample(int x, int y, int sx, int sy);
+    BlendTable const& blend_table_for(Paint paint);
     void composite_coverage(Paint paint);
     void rasterise_span(double from, double to, int y, int sy, bool inclusive_end);
     void rasterise_segment(Point a, Point b, double width);

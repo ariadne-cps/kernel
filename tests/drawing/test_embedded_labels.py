@@ -5,7 +5,7 @@ The previous renderer drew only horizontal glyph runs; 'x', '1', and other
 characters disappeared into isolated dots although geometry comparisons passed.
 """
 import sys
-from compare_backend_png import read_png
+from png_reader import read_png
 
 
 def ink(pixels, width, box):

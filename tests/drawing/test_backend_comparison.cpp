@@ -107,6 +107,48 @@ static void geometry(CanvasInterface& c, const char* filename, int scene) {
         c.line_to(0.2,-0.2); c.line_to(0.8,0.8);
         c.line_to(-0.8,0.8); c.line_to(-0.2,0.1);
         c.fill();
+    } else if(scene == 7 || scene == 8) {
+        // Nested rectangles: reversed subpath order, same/opposite winding,
+        // fractional coordinates and clipping. Also exercise the generic
+        // path when nested contours touch or otherwise fail the fast path.
+        c.set_line_width(1.25);
+        c.set_fill_opacity(0.55);
+        auto rectangle=[&c](double xl,double yl,double xu,double yu,
+                             bool reverse) {
+            if(reverse) {
+                c.move_to(xl,yl); c.line_to(xl,yu);
+                c.line_to(xu,yu); c.line_to(xu,yl);
+                c.line_to(xl,yl);
+            } else {
+                c.move_to(xl,yl); c.line_to(xu,yl);
+                c.line_to(xu,yu); c.line_to(xl,yu);
+                c.line_to(xl,yl);
+            }
+        };
+        if(scene == 7) {
+            // Opposite winding; both possible contour submission orders.
+            rectangle(-0.95,-0.69,-0.38,0.68,false);
+            rectangle(-0.81,-0.42,-0.52,0.39,true);
+            c.fill();
+            rectangle(-0.19,-0.41,0.13,0.42,true);
+            rectangle(-0.33,-0.69,0.27,0.68,false);
+            c.fill();
+            rectangle(0.43,-0.38,0.81,0.41,false);
+            rectangle(0.36,-0.69,0.96,0.68,true);
+            c.fill();
+        } else {
+            // Same winding fills the inner region too. Nested contours
+            // touching the outer boundary must instead use general filling.
+            rectangle(-1.08,-0.68,-0.17,0.65,false);
+            rectangle(-0.83,-0.41,-0.37,0.43,false);
+            c.fill();
+            rectangle(0.17,-0.68,1.08,0.65,false);
+            rectangle(0.44,-0.41,0.83,0.43,true);
+            c.fill();
+            rectangle(-0.52,-0.90,0.52,-0.75,false);
+            rectangle(-0.30,-0.90,0.30,-0.78,true);
+            c.fill();
+        }
     }
     c.write(filename);
 }
@@ -118,7 +160,7 @@ int main() {
     CairoCanvas cairo(ImageSize2d(320u, 240u));
     render(cairo, "comparison-cairo.png");
 #endif
-    for(int scene=0;scene<7;++scene) {
+    for(int scene=0;scene<9;++scene) {
         EmbeddedCanvas e(ImageSize2d(320u,240u));
         std::string ename="comparison-scene"+std::to_string(scene)+"-embedded.png";
         geometry(e,ename.c_str(),scene);
