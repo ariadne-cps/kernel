@@ -252,6 +252,7 @@ void draw(CanvasInterface& canvas,Scene const& scene) {
             case Operation::fill_colour:
                 canvas.set_fill_colour(command.a,command.b,command.c); break;
             case Operation::opacity: canvas.set_fill_opacity(command.a); break;
+            default: throw std::logic_error("invalid drawing benchmark command");
         }
     }
 }
