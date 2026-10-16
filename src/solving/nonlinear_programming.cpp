@@ -85,6 +85,9 @@ contains_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, E
         if(C[i].is_singleton()) { equality_constraints.append(i); }
     }
 
+    // Inequality-only constraints need no equality-constrained Newton step.
+    if(equality_constraints.empty()) { return true; }
+
     // Construct the function g_e(x) = g_{e_i}(x)
     ARIADNE_ASSERT(g.result_size()>0);
     ValidatedVectorMultivariateFunction ge(equality_constraints.size(),g.domain());
@@ -110,7 +113,7 @@ contains_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, E
     FloatDPBoundsMatrix ivlS = ivlA * cast_exact(fltL);
     LOGGING_PRINTLN("ivlS="<<ivlS);
 
-    FloatDPBoundsMatrix ivlR = inverse(ivlS);
+    FloatDPBoundsMatrix ivlR;
     try {
         ivlR=inverse(ivlS);
     }

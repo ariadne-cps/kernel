@@ -270,6 +270,8 @@ class TestNonlinearInfeasibleInteriorPointSolver
     Void test() {
         ARIADNE_TEST_CALL(test_common_point_feasibility_and_tolerance());
         ARIADNE_TEST_CALL(test_base_validation());
+        ARIADNE_TEST_CALL(test_feasible_box_without_equalities());
+        ARIADNE_TEST_CALL(test_feasible_box_singular_equality());
         ARIADNE_TEST_CALL(test_base_infeasibility());
         ARIADNE_TEST_CALL(test_candidate_linear());
         ARIADNE_TEST_CALL(test_candidate_nonlinear());
@@ -296,6 +298,26 @@ class TestNonlinearInfeasibleInteriorPointSolver
         FloatDPVector multiplier({1.0_x},dp);
         ARIADNE_TEST_ASSERT(optimiser.validate_infeasibility(D,g,far,centre,multiplier));
         ARIADNE_TEST_ASSERT(!optimiser.validate_infeasibility(D,g,overlap,centre,multiplier));
+    }
+
+    Void test_feasible_box_without_equalities() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({x[0]});
+        ExactBoxType D({{0.0_x,1.0_x}});
+        ExactBoxType C({{-1.0_x,2.0_x}});
+        FloatDPBoundsVector box({{0.25_x,0.75_x}},dp);
+        ARIADNE_TEST_ASSERT(definitely(optimiser.contains_feasible_point(D,g,C,box)));
+    }
+
+    Void test_feasible_box_singular_equality() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({x[0]-x[0]});
+        ExactBoxType D({{0.0_x,1.0_x}});
+        ExactBoxType C({{0.0_x,0.0_x}});
+        FloatDPBoundsVector box({{0.25_x,0.75_x}},dp);
+        auto status=optimiser.contains_feasible_point(D,g,C,box);
+        ARIADNE_TEST_ASSERT(!definitely(status));
+        ARIADNE_TEST_ASSERT(!definitely(not status));
     }
 
     Void test_base_validation() {
