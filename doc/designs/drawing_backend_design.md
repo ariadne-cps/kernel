@@ -96,8 +96,12 @@ downwards. Supplied axis bounds must be finite and strictly increasing.
 
 For robustness, construction rejects zero drawing dimensions, drawing
 dimensions above 16,384 in either axis, or a total allocated raster above
-100 million pixels (including margins). Invalid non-finite drawing inputs
-are ignored by relevant path operations.
+100 million pixels (including margins). Requested dimensions are validated
+**before** adding margins to prevent unsigned arithmetic wraparound.
+Initialization rejects axes whose finite endpoints nevertheless yield
+non-finite or non-positive/non-negative (respectively) scales, or non-finite
+translations; the mapping is validated before modifying the canvas.
+Invalid non-finite drawing inputs are ignored by relevant path operations.
 
 ## 5. Raster pipeline
 
@@ -312,6 +316,10 @@ Drawing regressions should preserve both **geometric semantics** and
   widths and coordinates, short segments and clipped end caps.
 - A standalone embedded-only regression checks interior pixels of the
   nested-rectangle scenes; it does not depend on a reference backend.
+- An embedded-only robustness test checks invalid dimensions and coordinate
+  ranges, including numerical overflow/underflow, and verifies the resulting
+  PNG's clipping, transparency, clamped opacity and unchanged margins.
+  Its image assertions use the shared standard-library PNG reader.
 - The embedded label regression test checks that axis text remains visible
   and connected.
 - Image-comparison tests use a CTest fixture. The `test_backend_comparison`

@@ -146,10 +146,15 @@ SharedPointer<CanvasInterface> EmbeddedGraphicsBackend::make_canvas(
 }
 
 EmbeddedCanvas::EmbeddedCanvas(ImageSize2d const& size)
-    : _width(size.nx + LEFT + RIGHT), _height(size.ny + TOP + BOTTOM) {
+    : _width(0), _height(0) {
+    // Validate the requested plot dimensions *before* adding margins: Nat
+    // arithmetic could otherwise wrap for pathological caller input.
     if (size.nx == 0 || size.ny == 0 ||
-        size.nx > 16384 || size.ny > 16384 ||
-        static_cast<std::uint64_t>(_width)*_height > 100000000ULL)
+        size.nx > 16384 || size.ny > 16384)
+        throw std::invalid_argument("Invalid or excessively large Embedded canvas");
+    _width=size.nx+static_cast<Nat>(LEFT+RIGHT);
+    _height=size.ny+static_cast<Nat>(TOP+BOTTOM);
+    if (static_cast<std::uint64_t>(_width)*_height > 100000000ULL)
         throw std::invalid_argument("Invalid or excessively large Embedded canvas");
     _pixels.assign(static_cast<std::size_t>(_width)*_height*4, 255);
     _coverage.assign(static_cast<std::size_t>(_width)*_height, 0);
@@ -247,11 +252,20 @@ Void EmbeddedCanvas::initialise(StringType text_x, StringType text_y,
     if (!(std::isfinite(xl) && std::isfinite(xu) && std::isfinite(yl) &&
           std::isfinite(yu) && xu>xl && yu>yl))
         throw std::invalid_argument("Embedded canvas requires finite nonempty axes");
+    const int w=static_cast<int>(_width)-LEFT-RIGHT;
+    const int h=static_cast<int>(_height)-TOP-BOTTOM;
+    const double sx=static_cast<double>(w)/(xu-xl);
+    const double sy=-static_cast<double>(h)/(yu-yl);
+    const double tx=LEFT-sx*xl;
+    const double ty=TOP-sy*yu;
+    if (!std::isfinite(sx) || !std::isfinite(sy) ||
+        !std::isfinite(tx) || !std::isfinite(ty) ||
+        sx<=0.0 || sy>=0.0)
+        throw std::invalid_argument("Embedded canvas requires finite axis mapping");
+
     std::fill(_pixels.begin(), _pixels.end(), 255);
     _clipped = false;
     _paths.clear();
-    int w = static_cast<int>(_width)-LEFT-RIGHT;
-    int h = static_cast<int>(_height)-TOP-BOTTOM;
     const auto xl_text = to_str(xl), xu_text = to_str(xu);
     const auto yl_text = to_str(yl), yu_text = to_str(yu);
     constexpr int step = 18, glyph_h = 21;
@@ -262,10 +276,10 @@ Void EmbeddedCanvas::initialise(StringType text_x, StringType text_y,
     text(LEFT-static_cast<int>(yu_text.size())*step-6, TOP+2, yu_text);
     text(LEFT-static_cast<int>(text_y.size())*step-6, TOP+h/2+2, text_y);
     rectangle(LEFT, TOP, LEFT+w, TOP+h, {0.97,0.97,0.97,1.0});
-    _sx = static_cast<double>(w)/(xu-xl);
-    _sy = -static_cast<double>(h)/(yu-yl);
-    _tx = LEFT - _sx*xl;
-    _ty = TOP - _sy*yu;
+    _sx=sx;
+    _sy=sy;
+    _tx=tx;
+    _ty=ty;
     _clipped = true;
 }
 
