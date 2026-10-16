@@ -424,6 +424,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_base_infeasibility());
         ARIADNE_TEST_CALL(test_unconstrained_infeasibility_certificate());
         ARIADNE_TEST_CALL(test_equality_solution_rechecks_inequalities());
+        ARIADNE_TEST_CALL(test_infeasible_minimisation_rejects_false_optima());
         ARIADNE_TEST_CALL(test_candidate_linear());
         ARIADNE_TEST_CALL(test_candidate_nonlinear());
         ARIADNE_TEST_CALL(test_candidate_equality());
@@ -572,6 +573,35 @@ class TestNonlinearInfeasibleInteriorPointSolver
             D,g,C,approx_outside,quarter_tolerance));
         ARIADNE_TEST_ASSERT(!optimiser.almost_feasible_point(
             D,g,C,approx_beyond_domain,quarter_tolerance));
+    }
+
+    Void test_infeasible_minimisation_rejects_false_optima() {
+        // g(x)=x takes values in [-1,1]. Neither codomain intersects
+        // g(D), so minimisation must not return a certified optimum.
+        // Both an infeasibility certificate and an indeterminate
+        // outcome are sound results for an iterative solver.
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(coordinates[0]);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType positive({{1.25_x,1.75_x}});
+        ExactBoxType negative({{-1.75_x,-1.25_x}});
+
+        ARIADNE_TEST_ASSERT(definitely(disjoint(apply(g,domain),positive)));
+        ARIADNE_TEST_ASSERT(definitely(disjoint(apply(g,domain),negative)));
+
+        for(SizeType i=0u; i!=2u; ++i) {
+            const ExactBoxType& codomain=(i==0u ? positive : negative);
+            bool rejected=false;
+            try {
+                (void)optimiser.minimise(objective,domain,g,codomain);
+            } catch(const InfeasibleProblemException&) {
+                rejected=true;
+            } catch(const IndeterminateFeasibilityException&) {
+                rejected=true;
+            }
+            ARIADNE_TEST_ASSERT(rejected);
+        }
     }
 
     Void test_candidate_linear() {
