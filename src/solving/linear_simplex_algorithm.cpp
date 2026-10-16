@@ -741,53 +741,35 @@ compute_rt(const Vector<FloatDP>& xl, const Vector<FloatDP>& xu, const Array<Sla
     const SizeType m=d.size();
     const SizeType n=x.size();
     SizeType r=n;
-    XX ds=XX(vt[p[s]]==Slackness::LOWER ? +1 : -1, pr);
+    Int ds=(vt[p[s]]==Slackness::LOWER ? +1 : -1);
     XX t=XX(xu[p[s]])-XX(xl[p[s]]);
     if(definitely(t<inf)) { r=s; }
     XX tk=XX(0,pr);
     LOGGING_PRINTLN("xl="<<xl<<" x="<<x<<" xu="<<xu);
     LOGGING_PRINTLN("vt="<<vt<<" p="<<p<<" d="<<d);
     LOGGING_PRINTLN("s="<<s<<" p[s]="<<p[s]<<" vt[p[s]]="<<vt[p[s]]<<" ds="<<ds<<" xl[p[s]]="<<xl[p[s]]<<" xu[p[s]]="<<xu[p[s]]<<" r="<<r<<" t[r]="<<t);
+    const bool entering_from_lower=(vt[p[s]]==Slackness::LOWER);
     for(SizeType k=0; k!=m; ++k) {
         SizeType j=p[k];
-        if( definitely(d[k]*ds<0) && definitely(x[j]>=xl[j]) && xl[j] != -inf) {
+        // Multiplying rigorous bounds by a negative step direction can
+        // leave its sign indeterminate, even when d[k]'s sign is certain.
+        // Test the direction before applying the sign of the entering step.
+        const bool decreases=definitely(d[k]<XX(0,pr));
+        const bool increases=definitely(-d[k]<XX(0,pr));
+        const bool towards_lower=entering_from_lower ? decreases : increases;
+        const bool towards_upper=entering_from_lower ? increases : decreases;
+        if(towards_lower && definitely(x[j]>=xl[j]) && xl[j] != -inf) {
             tk=(xl[j]-x[j])/(ds*d[k]);
-            //if( r==n || tk<t || (tk==t && p[k]<p[r]) ) { t=tk; r=k; }
-            if( definitely(tk<t) || definitely(tk==t && p[k]<p[r]) ) { t=tk; r=k; }
-        } else if( definitely(d[k]*ds>0) && definitely(x[j]<=xu[j]) && xu[j] != inf ) {
+            if(definitely(tk<t) || definitely(tk==t && p[k]<p[r])) { t=tk; r=k; }
+        } else if(towards_upper && definitely(x[j]<=xu[j]) && xu[j] != inf) {
             tk=(xu[j]-x[j])/(ds*d[k]);
-            //if( r==n || tk<t || (tk==t && p[k]<p[r])) { t=tk; r=k; }
-            if( definitely(tk<t) || definitely(tk==t && p[k]<p[r])) { t=tk; r=k; }
+            if(definitely(tk<t) || definitely(tk==t && p[k]<p[r])) { t=tk; r=k; }
         } else {
             tk=XX(inf,pr);
         }
         LOGGING_PRINTLN_AT(1,"k="<<k<<" j=p[k]="<<j<<" xl[j]="<<xl[j]<<" x[j]="<<x[j]<<" xu[j]="<<xu[j]<<" d[k]="<<d[k]<<" t[k]="<<tk<<" r="<<r<<" t[r]="<<t);
     }
     t*=ds;
-
-    // A full bound flip must preserve the bounds of every basic variable.
-    // Diagnose skipped limiting pivots instead of returning an invalid step.
-    if(r==s) {
-        for(SizeType k=0; k!=m; ++k) {
-            const SizeType j=p[k];
-            const XX next_x=x[j]+t*d[k];
-            if(definitely(next_x>xu[j]) || definitely(next_x<xl[j])) {
-                const XX signed_direction=ds*d[k];
-                const XX bound=(definitely(next_x>xu[j]) ? XX(xu[j]) : XX(xl[j]));
-                const XX candidate=(bound-x[j])/signed_direction;
-                ARIADNE_FAIL_MSG("Full bound flip would violate a basic variable: "
-                    <<"r="<<r<<", s="<<s<<", k="<<k<<", j="<<j
-                    <<", x="<<x<<", xl="<<xl<<", xu="<<xu<<", d="<<d
-                    <<", ds="<<ds<<", t="<<t<<", next_x="<<next_x
-                    <<", signed_direction="<<signed_direction
-                    <<", signed_direction_positive="<<definitely(signed_direction>0)
-                    <<", upper_admissible="<<definitely(x[j]<=xu[j])
-                    <<", upper_finite="<<(xu[j]!=inf)
-                    <<", candidate="<<candidate
-                    <<", candidate_below_full_width="<<definitely(candidate<(-t)));
-            }
-        }
-    }
 
     if(r==n) {
         // Problem is either highly degenerate or optimal do nothing.
@@ -1090,10 +1072,7 @@ LinearSimplexSolver<X>::lpstep(const Vector<X>& xl, const Vector<X>& xu, const M
             ARIADNE_ASSERT(decide(x[p[i]]>xl[p[i]]-BOUNDS_TOLERANCE));
             x[p[i]]=xl[p[i]];
         } else if(decide(x[p[i]]>xu[p[i]])) {
-            ARIADNE_ASSERT_MSG(decide(x[p[i]]<xu[p[i]]+BOUNDS_TOLERANCE),
-                "Upper bound exceeded after lpstep: x="<<x<<", xu="<<xu
-                <<", vt="<<vt<<", p="<<p<<", r="<<r<<", s="<<s
-                <<", d="<<d<<", t="<<t);
+            ARIADNE_ASSERT(decide(x[p[i]]<xu[p[i]]+BOUNDS_TOLERANCE));
             x[p[i]]=xu[p[i]];
         }
     }
