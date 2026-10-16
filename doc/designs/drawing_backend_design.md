@@ -40,6 +40,11 @@ The main design principles are:
 | [`benchmarks/drawing/`](../../benchmarks/drawing/) | Independent absolute-performance measurements. |
 | [`tests/drawing/`](../../tests/drawing/) | Image regression fixtures and label-legibility checks. |
 
+The command-line option `--graphics` (or `-g`) accepts `default` and `none`.
+The `default` value selects `DefaultGraphicsBackend`; the `none` value selects
+`NullGraphicsBackend`. These CLI values do not change the C++ backend class
+names or benchmark naming.
+
 `DefaultGraphicsBackend::make_canvas()` creates a canvas of the requested
 drawing-area size. The `DefaultGraphicsCanvas` owns the raster image and all temporary
 path and coverage buffers. Higher-level `Figure` and `Drawable2dInterface`

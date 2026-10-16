@@ -79,9 +79,9 @@ ArgumentParser make_graphics_argument_parser() {
     return make_valued_argument_parser(
         "g",
         "graphics",
-        "Choose the graphics backend as a <value> in [ default_graphics | none ] (default: default_graphics)",
+        "Choose the graphics backend as a <value> in [ default | none ] (default: default)",
         [](String const& value) -> VoidFunction {
-            if (value == "default_graphics") {
+            if (value == "default") {
                 return [] { GraphicsManager::instance().set_backend(DefaultGraphicsBackend()); };
             }
             if (value == "none") {
