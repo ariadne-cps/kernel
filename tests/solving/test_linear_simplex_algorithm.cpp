@@ -43,6 +43,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_hotstarted_basis_initialisation());
         ARIADNE_TEST_CALL(test_hotstarted_optimisation_from_alternate_basis());
         ARIADNE_TEST_CALL(test_hotstarted_minimise_partial_permutation());
+        ARIADNE_TEST_CALL(test_consistency_check_variable_types());
         ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
         ARIADNE_TEST_CALL(test_compute_basis_nonunit_two_by_two());
@@ -142,6 +143,43 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(reconstructed_x[0]==inferred_x[0]));
         ARIADNE_TEST_ASSERT(definitely(reconstructed_x[1]==inferred_x[1]));
         ARIADNE_TEST_ASSERT(definitely(reconstructed_B[0][0]==inferred_B[0][0]));
+    }
+
+    Void test_consistency_check_variable_types() {
+        // The permutation may list only basic variables or all variables;
+        // in either case the result is the number of basic variables.
+        LinearSimplexSolver<FloatDP> solver;
+        Array<Slackness> types(3u);
+        types[0]=Slackness::BASIS;
+        types[1]=Slackness::LOWER;
+        types[2]=Slackness::BASIS;
+
+        Array<SizeType> basic_only(2u);
+        basic_only[0]=2u;
+        basic_only[1]=0u;
+        ARIADNE_TEST_EQUAL(solver.consistency_check(types,basic_only),2u);
+
+        Array<SizeType> complete(3u);
+        complete[0]=2u;
+        complete[1]=0u;
+        complete[2]=1u;
+        ARIADNE_TEST_EQUAL(solver.consistency_check(types,complete),2u);
+
+        Array<Slackness> all_basic(2u);
+        all_basic[0]=Slackness::BASIS;
+        all_basic[1]=Slackness::BASIS;
+        Array<SizeType> all_basic_order(2u);
+        all_basic_order[0]=1u;
+        all_basic_order[1]=0u;
+        ARIADNE_TEST_EQUAL(solver.consistency_check(all_basic,all_basic_order),2u);
+
+        Array<Slackness> no_basic(2u);
+        no_basic[0]=Slackness::LOWER;
+        no_basic[1]=Slackness::UPPER;
+        Array<SizeType> no_basic_order(2u);
+        no_basic_order[0]=1u;
+        no_basic_order[1]=0u;
+        ARIADNE_TEST_EQUAL(solver.consistency_check(no_basic,no_basic_order),0u);
     }
 
     Void test_consistency_check_nonsquare_system() {

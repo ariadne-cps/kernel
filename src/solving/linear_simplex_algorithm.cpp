@@ -128,13 +128,13 @@ consistency_check(const Array<Slackness>& vt, const Array<SizeType>& p)
         return m;
     } else {
         const SizeType n=vt.size();
-        SizeType m=n;
-        for(SizeType i=0; i!=m; ++i) {
-            ARIADNE_ASSERT_MSG(p[i]<n, "vt="<<vt<<" p="<<p);
-            if(vt[p[i]]!=Slackness::BASIS) { m=n; break; }
+        SizeType m=0;
+        for(; m!=n; ++m) {
+            ARIADNE_ASSERT_MSG(p[m]<n, "vt="<<vt<<" p="<<p);
+            if(vt[p[m]]!=Slackness::BASIS) { break; }
         }
-        for(SizeType i=n; i!=n; ++i) {
-            ARIADNE_ASSERT_MSG(p[i]<n && vt[p[i]]==Slackness::BASIS, "vt="<<vt<<" p="<<p);
+        for(SizeType i=m; i!=n; ++i) {
+            ARIADNE_ASSERT_MSG(p[i]<n && vt[p[i]]!=Slackness::BASIS, "vt="<<vt<<" p="<<p);
         }
         return m;
     }
