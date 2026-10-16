@@ -27,7 +27,10 @@
 
 #include "function/function.hpp"
 #include "drawing/figure.hpp"
+#include "drawing/embedded.hpp"
+#ifdef ARIADNE_HAS_CAIRO
 #include "drawing/cairo.hpp"
+#endif
 #include "drawing/null_graphics.hpp"
 #include "drawing/drawer.hpp"
 #include "geometry/point.hpp"
@@ -70,7 +73,10 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_figure_header_helpers())
         ARIADNE_TEST_CALL(test_graphics_interface())
         ARIADNE_TEST_CALL(test_graphics_base())
+        ARIADNE_TEST_CALL(test_embedded())
+#ifdef ARIADNE_HAS_CAIRO
         ARIADNE_TEST_CALL(test_cairo())
+#endif
         ARIADNE_TEST_CALL(test_construct_figure())
         ARIADNE_TEST_CALL(test_figure_projection())
         ARIADNE_TEST_CALL(test_figure_public_api())
@@ -219,11 +225,24 @@ class TestGraphics {
     }
 
     void test_graphics_base() {
-        CairoCanvas canvas(ImageSize2d(32u,32u));
+        EmbeddedCanvas canvas(ImageSize2d(32u,32u));
         List<Point2d> boundary{Point2d(0.0,0.0)};
         canvas.fill_boundary(boundary);
     }
 
+    void test_embedded() {
+        ARIADNE_TEST_FAIL(ImageSize2d(0,1))
+        ARIADNE_TEST_FAIL(ImageSize2d(1,0))
+        EmbeddedCanvas canvas(ImageSize2d(32u,32u));
+        canvas.initialise("x","y",-1.0,1.0,-1.0,1.0);
+        canvas.set_dot_radius(4.0);
+        canvas.circle(0.0,0.0,0.25);
+        canvas.dot(0.5,0.5);
+        canvas.finalise();
+        canvas.write("test_embedded-explicit.png");
+    }
+
+#ifdef ARIADNE_HAS_CAIRO
     void test_cairo() {
         ARIADNE_TEST_FAIL(ImageSize2d(0,1))
         ARIADNE_TEST_FAIL(ImageSize2d(1,0))
@@ -236,6 +255,8 @@ class TestGraphics {
         canvas.finalise();
         canvas.write("test_cairo-explicit.png");
     }
+
+#endif
 
     void test_construct_figure() {
         GraphicsBoundingBoxType bx3({{FloatDPApproximation(0.0,dp),FloatDPApproximation(1.0,dp)},

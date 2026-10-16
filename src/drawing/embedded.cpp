@@ -3,6 +3,8 @@
  * or (at your option) any later version. No warranty.
  */
 #include "drawing/embedded.hpp"
+#include "utility/stlio.hpp"
+#include "utility/standard.hpp"
 
 #include <algorithm>
 #include <array>
