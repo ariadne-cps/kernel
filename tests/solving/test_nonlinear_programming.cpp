@@ -198,6 +198,70 @@ class TestNonlinearProgrammingSolver
 
 };
 
+class NonlinearAdapterProbe : public NonlinearProgrammingSolverBase {
+  public:
+    using NonlinearProgrammingSolverBase::minimise;
+    using NonlinearProgrammingSolverBase::feasible;
+
+    mutable SizeType minimise_calls=0u;
+    mutable SizeType feasible_calls=0u;
+    mutable Bool correct_constraints=false;
+
+    NonlinearProgrammingSolverInterface* clone() const override {
+        return new NonlinearAdapterProbe(*this);
+    }
+
+    Void record(ValidatedVectorMultivariateFunction g, ExactBoxType C) const {
+        auto values=g(FloatDPVector({0.5_x},dp));
+        correct_constraints = C.size()==2u && values.size()==2u
+            && C[0].lower_bound()==-inf && C[0].upper_bound()==0
+            && C[1].lower_bound()==0 && C[1].upper_bound()==0
+            && definitely(values[0]<FloatDPBounds(0,dp))
+            && definitely(values[1]>FloatDPBounds(1,dp));
+    }
+
+    Vector<ValidatedNumericType> minimise(
+        ValidatedScalarMultivariateFunction, ExactBoxType,
+        ValidatedVectorMultivariateFunction g, ExactBoxType C) const override {
+        ++minimise_calls;
+        record(g,C);
+        Vector<ValidatedNumericType> result(1u,dp);
+        result[0]=ValidatedNumericType(0.5_x,dp);
+        return result;
+    }
+
+    ValidatedKleenean feasible(
+        ExactBoxType, ValidatedVectorMultivariateFunction g, ExactBoxType C) const override {
+        ++feasible_calls;
+        record(g,C);
+        return true;
+    }
+};
+
+class TestNonlinearAdapterProbe {
+  public:
+    Void test() {
+        ARIADNE_TEST_CALL(test_standard_form());
+    }
+
+    Void test_standard_form() {
+        NonlinearAdapterProbe solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction f=sqr(x[0]);
+        ValidatedVectorMultivariateFunction g({x[0]-1});
+        ValidatedVectorMultivariateFunction h({x[0]+1});
+        ExactBoxType D({{0.0_x,1.0_x}});
+
+        auto result=solver.minimise(f,D,g,h);
+        ARIADNE_TEST_EQUAL(result.size(),1u);
+        ARIADNE_TEST_EQUAL(solver.minimise_calls,1u);
+        ARIADNE_TEST_ASSERT(solver.correct_constraints);
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(D,g,h)));
+        ARIADNE_TEST_EQUAL(solver.feasible_calls,1u);
+        ARIADNE_TEST_ASSERT(solver.correct_constraints);
+    }
+};
+
 class TestNonlinearInfeasibleInteriorPointSolver
 {
   private:
@@ -496,6 +560,8 @@ class TestNonlinearInfeasibleInteriorPointSolver
 
 Int main(Int argc, const char* argv[]) {
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
+
+    TestNonlinearAdapterProbe().test();
 
     NonlinearInfeasibleInteriorPointSolver nlio;
     TestNonlinearProgrammingSolver(nlio).test();
