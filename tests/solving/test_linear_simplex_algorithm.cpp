@@ -46,6 +46,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_consistency_check_variable_types());
         ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
+        ARIADNE_TEST_CALL(test_compute_basis_unit_columns());
         ARIADNE_TEST_CALL(test_compute_basis_singular_after_elimination());
         ARIADNE_TEST_CALL(test_compute_basis_nonunit_two_by_two());
         ARIADNE_TEST_CALL(test_compute_basis_column_pivoting());
@@ -79,6 +80,25 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(B[0][0]==FloatDPBounds(0.5_x,dp)));
         ARIADNE_TEST_ASSERT(definitely(B[0][1]==FloatDPBounds(0.0_x,dp)));
         ARIADNE_TEST_ASSERT(definitely(B[1][0]==FloatDPBounds(-0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(B[1][1]==FloatDPBounds(1.0_x,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,p,B));
+    }
+
+    Void test_compute_basis_unit_columns() {
+        // A unit pivot with no nonzero entries below it must be accepted.
+        // The identity matrix needs no column exchange or elimination.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,0.0_x},{0.0_x,1.0_x}},dp);
+
+        auto basis=solver.compute_basis(A);
+        const auto& p=basis.first;
+        const auto& B=basis.second;
+        ARIADNE_TEST_EQUAL(p.size(),2u);
+        ARIADNE_TEST_EQUAL(p[0],0u);
+        ARIADNE_TEST_EQUAL(p[1],1u);
+        ARIADNE_TEST_ASSERT(definitely(B[0][0]==FloatDPBounds(1.0_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(B[0][1]==FloatDPBounds(0.0_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(B[1][0]==FloatDPBounds(0.0_x,dp)));
         ARIADNE_TEST_ASSERT(definitely(B[1][1]==FloatDPBounds(1.0_x,dp)));
         ARIADNE_TEST_EXECUTE(solver.consistency_check(A,p,B));
     }
