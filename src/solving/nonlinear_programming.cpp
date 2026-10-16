@@ -60,7 +60,7 @@ contains_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, E
 
     // Now test if the (reduced) box X satisfies other constraints
     if(definitely(disjoint(Box<UpperIntervalType>(X),D))) { return false; }
-    if(definitely(not subset(Box<UpperIntervalType>(X),D))) { return indeterminate; }
+    if(!definitely(subset(Box<UpperIntervalType>(X),D))) { return indeterminate; }
 
     // Test inequality constraints
     ValidatedKleenean result = true;
@@ -71,7 +71,7 @@ contains_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, E
             return false;
         }
         if(!C[i].is_singleton()) {
-            if(definitely(not subset(UpperIntervalType(gx[i]),C[i]))) { result = indeterminate; }
+            if(!definitely(subset(UpperIntervalType(gx[i]),C[i]))) { result = indeterminate; }
         }
     }
 

@@ -319,6 +319,12 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_ASSERT(!definitely(domain_partial));
         ARIADNE_TEST_ASSERT(!definitely(not domain_partial));
 
+        // X overlaps D, but every point satisfying C lies outside D.
+        // A partial overlap cannot establish a feasible point in X.
+        ExactBoxType beyond_domain({{1.1_x,1.4_x}});
+        auto separated_inside_domain=optimiser.contains_feasible_point(D,g,beyond_domain,boundary);
+        ARIADNE_TEST_ASSERT(!definitely(separated_inside_domain));
+
         auto constraint_disjoint=optimiser.contains_feasible_point(D,g,disjoint,inside);
         ARIADNE_TEST_ASSERT(definitely(not constraint_disjoint));
 
