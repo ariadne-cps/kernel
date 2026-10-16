@@ -175,7 +175,7 @@ Vector<X> esqr(const Vector<X>& z) {
 }
 
 inline
-inline ExactIntervalType eivl(const RawFloatDPVector& x) {
+ExactIntervalType eivl(const RawFloatDPVector& x) {
     ARIADNE_ASSERT(x.size()>0); ExactIntervalType r=ExactIntervalType(FloatDP(x[0]));
     for(SizeType i=1; i!=x.size(); ++i) { r=hull(r,FloatDP(x[i])); } return r;
 }
