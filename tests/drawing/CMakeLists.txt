@@ -2,6 +2,7 @@ set(UNIT_TESTS
     test_figure
     test_command_line_interface
     test_null_graphics
+    test_backend_comparison
 )
 foreach(TEST ${UNIT_TESTS})
     add_executable(${TEST} ${TEST}.cpp)
@@ -18,9 +19,9 @@ if(ARIADNE_WITH_CAIRO)
         add_test(NAME compare_drawing_backends
             COMMAND "${Python3_EXECUTABLE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/compare_backend_png.py"
-                "test_cairo-explicit.png" "test_embedded-explicit.png")
+                "comparison-cairo.png" "comparison-embedded.png")
         set_tests_properties(compare_drawing_backends PROPERTIES
-            DEPENDS test_figure
+            DEPENDS test_backend_comparison
             LABELS "drawing")
     endif()
 endif()
