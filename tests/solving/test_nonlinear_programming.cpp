@@ -274,6 +274,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_feasible_box_rejections());
         ARIADNE_TEST_CALL(test_feasible_box_singular_equality());
         ARIADNE_TEST_CALL(test_base_infeasibility());
+        ARIADNE_TEST_CALL(test_unconstrained_infeasibility_certificate());
         ARIADNE_TEST_CALL(test_equality_solution_rechecks_inequalities());
         ARIADNE_TEST_CALL(test_candidate_linear());
         ARIADNE_TEST_CALL(test_candidate_nonlinear());
@@ -303,6 +304,21 @@ class TestNonlinearInfeasibleInteriorPointSolver
         // the validated equality solution.
         ARIADNE_TEST_ASSERT(optimiser.validate_feasibility(D,g,permissive,initial));
         ARIADNE_TEST_ASSERT(!optimiser.validate_feasibility(D,g,restrictive,initial));
+    }
+
+    Void test_unconstrained_infeasibility_certificate() {
+        ValidatedVectorMultivariateFunction g(0u,1u);
+        ExactBoxType C=ExactBoxType{};
+        ExactBoxType D({{0.0_x,1.0_x}});
+        ExactBoxType outside({{2.0_x,3.0_x}});
+        ExactBoxType empty_domain=intersection(D,outside);
+        FloatDPVector multipliers(0u,dp);
+
+        ARIADNE_TEST_ASSERT(!D.is_empty());
+        ARIADNE_TEST_ASSERT(empty_domain.is_empty());
+        ARIADNE_TEST_ASSERT(!optimiser.is_infeasibility_certificate(D,g,C,multipliers));
+        ARIADNE_TEST_ASSERT(optimiser.is_infeasibility_certificate(
+            empty_domain,g,C,multipliers));
     }
 
     Void test_base_infeasibility() {

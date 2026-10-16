@@ -34,7 +34,6 @@ using namespace Detail;
 //------- NonlinearInfeasibleInteriorPointSolver -------------------------//
 
 struct NonlinearInfeasibleInteriorPointSolver::PrimalDualData {
-    PrimalDualData() : PrimalDualData(0u,0u,dp) { }
     PrimalDualData(SizeType m, SizeType n, DP pr) : w(m,pr), x(n,pr), y(m,pr) { }
     FloatDPApproximationVector w,x,y;
 };
