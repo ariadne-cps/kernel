@@ -746,6 +746,89 @@ class TestNonlinearInfeasibleInteriorPointSolver
 
 };
 
+class TestNonlinearPenaltyFunctionSolver
+{
+  public:
+    Void test() {
+        ARIADNE_TEST_CALL(test_point_feasibility_with_inequalities());
+        ARIADNE_TEST_CALL(test_point_feasibility_with_equalities());
+        ARIADNE_TEST_CALL(test_stationary_feasibility());
+        ARIADNE_TEST_CALL(test_approximate_penalty_step());
+    }
+
+    Void test_point_feasibility_with_inequalities() {
+        NonlinearPenaltyFunctionSolver solver;
+        std::unique_ptr<NonlinearPenaltyFunctionSolver> cloned(solver.clone());
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-0.5_x,0.5_x}});
+        FloatDPVector inside({0.0_x},dp);
+        FloatDPVector outside({0.75_x},dp);
+        FloatDPVector multipliers({0.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(definitely(solver.check_feasibility(
+            domain,g,codomain,inside,multipliers)));
+        ARIADNE_TEST_ASSERT(definitely(not cloned->check_feasibility(
+            domain,g,codomain,outside,multipliers)));
+    }
+
+    Void test_point_feasibility_with_equalities() {
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType interior_domain({{-1.0_x,1.0_x}});
+        ExactBoxType boundary_domain({{0.0_x,1.0_x}});
+        ExactBoxType equality({{0.0_x,0.0_x}});
+        FloatDPVector root({0.0_x},dp);
+        FloatDPVector multipliers({0.0_x},dp);
+
+        // The interval Newton inclusion certifies the interior root.
+        ARIADNE_TEST_ASSERT(definitely(solver.check_feasibility(
+            interior_domain,g,equality,root,multipliers)));
+
+        // A boundary root is feasible, but the symmetric inclusion box
+        // crosses the domain boundary: it must not be declared infeasible.
+        auto boundary_status=solver.check_feasibility(
+            boundary_domain,g,equality,root,multipliers);
+        ARIADNE_TEST_ASSERT(not definitely(not boundary_status));
+    }
+
+    Void test_stationary_feasibility() {
+        // The midpoint solves g(x)=0 strictly inside both boxes.
+        // The iterative penalty feasibility routine should preserve
+        // this exact stationary solution.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,codomain)));
+    }
+
+    Void test_approximate_penalty_step() {
+        // A regular, one-dimensional problem has an invertible
+        // penalised Hessian. Its first step brings w to g(x) while
+        // preserving x and halves the penalty weight.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+        FloatDPApproximationVector point({0.25_x},dp);
+        FloatDPApproximationVector slack({0.0_x},dp);
+        FloatDPApproximation weight(1.0_x,dp);
+
+        solver.feasibility_step(domain,g,codomain,point,slack,weight);
+        ARIADNE_TEST_ASSERT(decide(weight==FloatDPApproximation(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(contains(domain,exact_vector(point)));
+        ARIADNE_TEST_ASSERT(contains(codomain,exact_vector(slack)));
+        ARIADNE_TEST_ASSERT(decide(point[0]==FloatDPApproximation(0.25_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(slack[0]==FloatDPApproximation(0.25_x,dp)));
+    }
+};
+
 Int main(Int argc, const char* argv[]) {
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
@@ -755,6 +838,7 @@ Int main(Int argc, const char* argv[]) {
     TestNonlinearProgrammingSolver(nlio).test();
     TestNonlinearInfeasibleInteriorPointSolver().test();
     TestNonlinearInteriorPointSolverBasics().test();
+    TestNonlinearPenaltyFunctionSolver().test();
     return ARIADNE_TEST_FAILURES;
     NonlinearInteriorPointSolver nlo;
     TestNonlinearProgrammingSolver(nlo).test();
