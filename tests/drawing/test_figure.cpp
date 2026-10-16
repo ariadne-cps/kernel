@@ -238,6 +238,7 @@ class TestGraphics {
         canvas.set_dot_radius(4.0);
         canvas.circle(0.0,0.0,0.25);
         canvas.dot(0.5,0.5);
+        canvas.stroke();
         canvas.finalise();
         canvas.write("test_embedded-explicit.png");
     }
