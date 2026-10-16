@@ -765,6 +765,30 @@ compute_rt(const Vector<FloatDP>& xl, const Vector<FloatDP>& xu, const Array<Sla
     }
     t*=ds;
 
+    // A full bound flip must preserve the bounds of every basic variable.
+    // Diagnose skipped limiting pivots instead of returning an invalid step.
+    if(r==s) {
+        for(SizeType k=0; k!=m; ++k) {
+            const SizeType j=p[k];
+            const XX next_x=x[j]+t*d[k];
+            if(definitely(next_x>xu[j]) || definitely(next_x<xl[j])) {
+                const XX signed_direction=ds*d[k];
+                const XX bound=(definitely(next_x>xu[j]) ? XX(xu[j]) : XX(xl[j]));
+                const XX candidate=(bound-x[j])/signed_direction;
+                ARIADNE_FAIL_MSG("Full bound flip would violate a basic variable: "
+                    <<"r="<<r<<", s="<<s<<", k="<<k<<", j="<<j
+                    <<", x="<<x<<", xl="<<xl<<", xu="<<xu<<", d="<<d
+                    <<", ds="<<ds<<", t="<<t<<", next_x="<<next_x
+                    <<", signed_direction="<<signed_direction
+                    <<", signed_direction_positive="<<definitely(signed_direction>0)
+                    <<", upper_admissible="<<definitely(x[j]<=xu[j])
+                    <<", upper_finite="<<(xu[j]!=inf)
+                    <<", candidate="<<candidate
+                    <<", candidate_below_full_width="<<definitely(candidate<(-t)));
+            }
+        }
+    }
+
     if(r==n) {
         // Problem is either highly degenerate or optimal do nothing.
         ARIADNE_WARN("LinearSimplexSolver<X>::compute_rt(...): "<<
