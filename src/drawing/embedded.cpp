@@ -401,7 +401,7 @@ void EmbeddedCanvas::rasterise_span(double from,double to,int y,int sy,
     }
 }
 
-// A butt-capped stroke is the intersection of two pairs of half-planes:
+// A butt-capped stroke is the intersection of nested_pair pairs of half-planes:
 //  0 <= dot(pixel-a,b-a) <= length_squared
 //  |cross(pixel-a,b-a)| <= (width/2)*length.
 // Each condition is linear in x for a fixed subpixel scanline y. Intersect
@@ -561,11 +561,11 @@ void EmbeddedCanvas::rasterise_fill() {
     Rectangle outer{},inner{};
     const bool one=_paths.size()==1 &&
         identify_rectangle(_paths.front(),outer);
-    const bool two=_paths.size()==2 &&
+    const bool nested_pair=_paths.size()==2 &&
         identify_rectangle(_paths.front(),outer) &&
         identify_rectangle(_paths.back(),inner);
-    if(one || two) {
-        if(two) {
+    if(one || nested_pair) {
+        if(nested_pair) {
             // The same fill works regardless of subpath order.
             const double outer_area=(outer.xmax-outer.xmin)*
                                     (outer.ymax-outer.ymin);
@@ -573,11 +573,11 @@ void EmbeddedCanvas::rasterise_fill() {
                                     (inner.ymax-inner.ymin);
             if(inner_area>outer_area) std::swap(outer,inner);
         }
-        const bool contained=!two ||
+        const bool contained=!nested_pair ||
             (inner.xmin>outer.xmin && inner.xmax<outer.xmax &&
              inner.ymin>outer.ymin && inner.ymax<outer.ymax);
         if(contained) {
-            const bool hole=two &&
+            const bool hole=nested_pair &&
                 outer.positive_winding!=inner.positive_winding;
             const double clip_left=_clipped ? LEFT : 0;
             const double clip_right=_clipped ?
