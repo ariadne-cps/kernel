@@ -5,7 +5,7 @@ of the Geometry and Function modules. It calls `CanvasInterface` directly,
 using deterministically precomputed drawing commands, rather than constructing
 `Figure` objects or constrained image sets.
 
-**Embedded is the default and only required backend.** Cairo is accepted as
+**The Default graphics backend is the only required backend.** Cairo is accepted as
 an optional transition-time baseline when the library was built with
 `ARIADNE_WITH_CAIRO=ON`. Removing Cairo later requires no changes to the
 benchmark's default invocation or the build target.
@@ -74,7 +74,7 @@ commands to maintain path lifecycle. The regular invocation (without
 
 The scene command buffers, including coordinates and trigonometric values,
 are prepared **outside the measured section** and are identical for Cairo
-and Embedded. Every timed repetition creates a fresh canvas so no previous
+and Default graphics. Every timed repetition creates a fresh canvas so no previous
 frame can affect the next. Measurements use `steady_clock` and report
 median and nearest-rank p95 over the measured repetitions.
 
@@ -95,6 +95,6 @@ logs each scene before measurement; verbosity 3 additionally logs individual
 samples. Logging is outside all measured time intervals.
 
 These measurements are not a correctness test. Continue to use the tests
-under `tests/drawing` for Cairo/Embedded image comparisons and regression
+under `tests/drawing` for Cairo/Default graphics image comparisons and regression
 checks. Compare measurements only with the same build type, machine,
 compiler, size, scenario and iteration settings.

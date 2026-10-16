@@ -2,7 +2,7 @@
  * Ariadne - free software under the GNU General Public License version 3
  * or (at your option) any later version. No warranty.
  */
-#include "drawing/embedded.hpp"
+#include "drawing/default_backend.hpp"
 #include "utility/stlio.hpp"
 #include "utility/standard.hpp"
 
@@ -140,18 +140,18 @@ std::vector<std::uint8_t> zlib_stored(std::vector<std::uint8_t> const& raw) {
 }
 } // namespace
 
-SharedPointer<CanvasInterface> EmbeddedGraphicsBackend::make_canvas(
+SharedPointer<CanvasInterface> DefaultGraphicsBackend::make_canvas(
         const char*, Nat width, Nat height, Bool) const {
-    return std::make_shared<EmbeddedCanvas>(ImageSize2d(width,height));
+    return std::make_shared<DefaultGraphicsCanvas>(ImageSize2d(width,height));
 }
 
-EmbeddedCanvas::EmbeddedCanvas(ImageSize2d const& size)
+DefaultGraphicsCanvas::DefaultGraphicsCanvas(ImageSize2d const& size)
     : _width(0), _height(0) {
     // Validate the requested plot dimensions *before* adding margins: Nat
     // arithmetic could otherwise wrap for pathological caller input.
     if (size.nx == 0 || size.ny == 0 ||
         size.nx > 16384 || size.ny > 16384)
-        throw std::invalid_argument("Invalid or excessively large Embedded canvas");
+        throw std::invalid_argument("Invalid or excessively large default graphics canvas");
     _width=size.nx+static_cast<Nat>(LEFT+RIGHT);
     _height=size.ny+static_cast<Nat>(TOP+BOTTOM);
     if (static_cast<std::uint64_t>(_width)*_height > 100000000ULL)
@@ -160,15 +160,15 @@ EmbeddedCanvas::EmbeddedCanvas(ImageSize2d const& size)
     _coverage.assign(static_cast<std::size_t>(_width)*_height, 0);
 }
 
-ImageSize2d EmbeddedCanvas::size_in_pixels() const {
+ImageSize2d DefaultGraphicsCanvas::size_in_pixels() const {
     return ImageSize2d(_width-LEFT-RIGHT, _height-TOP-BOTTOM);
 }
 
-EmbeddedCanvas::Point EmbeddedCanvas::transform(double x, double y) const {
+DefaultGraphicsCanvas::Point DefaultGraphicsCanvas::transform(double x, double y) const {
     return {_tx+_sx*x, _ty+_sy*y};
 }
 
-void EmbeddedCanvas::blend(int x, int y, Paint paint, double coverage) {
+void DefaultGraphicsCanvas::blend(int x, int y, Paint paint, double coverage) {
     if (x < 0 || y < 0 || x >= static_cast<int>(_width) || y >= static_cast<int>(_height)) return;
     if (_clipped && (x < LEFT || x >= static_cast<int>(_width)-RIGHT ||
                      y < TOP || y >= static_cast<int>(_height)-BOTTOM)) return;
@@ -180,7 +180,7 @@ void EmbeddedCanvas::blend(int x, int y, Paint paint, double coverage) {
     _pixels[index+2] = channel((1-alpha)*(_pixels[index+2]/255.0)+alpha*unit(paint.b));
 }
 
-void EmbeddedCanvas::rectangle(int x0, int y0, int x1, int y1, Paint paint) {
+void DefaultGraphicsCanvas::rectangle(int x0, int y0, int x1, int y1, Paint paint) {
     const int left=std::max(x0,0),right=std::min(x1,static_cast<int>(_width));
     const int top=std::max(y0,0),bottom=std::min(y1,static_cast<int>(_height));
     if (left>=right || top>=bottom) return;
@@ -210,7 +210,7 @@ void EmbeddedCanvas::rectangle(int x0, int y0, int x1, int y1, Paint paint) {
 // adjacent lit cells in both axes and along isolated diagonal chains. The
 // previous implementation drew only horizontal runs; e.g. 'x' and '1' lost
 // their vertical/diagonal strokes and degenerated into isolated dots.
-void EmbeddedCanvas::text(double x, double y, StringType const& label) {
+void DefaultGraphicsCanvas::text(double x, double y, StringType const& label) {
     constexpr double cell=3.0;
     constexpr double advance=18.0;
     constexpr double width=2.35;
@@ -247,11 +247,11 @@ void EmbeddedCanvas::text(double x, double y, StringType const& label) {
     }
 }
 
-Void EmbeddedCanvas::initialise(StringType text_x, StringType text_y,
+Void DefaultGraphicsCanvas::initialise(StringType text_x, StringType text_y,
                                 double xl, double xu, double yl, double yu) {
     if (!(std::isfinite(xl) && std::isfinite(xu) && std::isfinite(yl) &&
           std::isfinite(yu) && xu>xl && yu>yl))
-        throw std::invalid_argument("Embedded canvas requires finite nonempty axes");
+        throw std::invalid_argument("Default graphics canvas requires finite nonempty axes");
     const int w=static_cast<int>(_width)-LEFT-RIGHT;
     const int h=static_cast<int>(_height)-TOP-BOTTOM;
     const double sx=static_cast<double>(w)/(xu-xl);
@@ -261,7 +261,7 @@ Void EmbeddedCanvas::initialise(StringType text_x, StringType text_y,
     if (!std::isfinite(sx) || !std::isfinite(sy) ||
         !std::isfinite(tx) || !std::isfinite(ty) ||
         sx<=0.0 || sy>=0.0)
-        throw std::invalid_argument("Embedded canvas requires finite axis mapping");
+        throw std::invalid_argument("Default graphics canvas requires finite axis mapping");
 
     std::fill(_pixels.begin(), _pixels.end(), 255);
     _clipped = false;
@@ -283,17 +283,17 @@ Void EmbeddedCanvas::initialise(StringType text_x, StringType text_y,
     _clipped = true;
 }
 
-Void EmbeddedCanvas::move_to(double x, double y) {
+Void DefaultGraphicsCanvas::move_to(double x, double y) {
     Point p = transform(x,y);
     if (std::isfinite(p.x) && std::isfinite(p.y)) _paths.push_back({{p},false});
 }
-Void EmbeddedCanvas::line_to(double x, double y) {
+Void DefaultGraphicsCanvas::line_to(double x, double y) {
     Point p = transform(x,y);
     if (!std::isfinite(p.x) || !std::isfinite(p.y)) return;
     if (_paths.empty()) _paths.push_back({{p},false});
     else _paths.back().points.push_back(p);
 }
-Void EmbeddedCanvas::circle(double x, double y, double radius) {
+Void DefaultGraphicsCanvas::circle(double x, double y, double radius) {
     Point center = transform(x,y);
     if (!std::isfinite(center.x) || !std::isfinite(center.y) ||
         !std::isfinite(radius) || radius<0) return;
@@ -313,17 +313,17 @@ Void EmbeddedCanvas::circle(double x, double y, double radius) {
     }
 }
 
-Void EmbeddedCanvas::dot(double x, double y) { circle(x,y,_dot_radius/1000.0); }
-Void EmbeddedCanvas::set_dot_radius(double radius) { _dot_radius = radius; }
-Void EmbeddedCanvas::set_line_width(double width) { _line_width = width; }
-Void EmbeddedCanvas::set_line_colour(double r,double g,double b) { _line = {r,g,b,1}; }
-Void EmbeddedCanvas::set_fill_colour(double r,double g,double b) {
+Void DefaultGraphicsCanvas::dot(double x, double y) { circle(x,y,_dot_radius/1000.0); }
+Void DefaultGraphicsCanvas::set_dot_radius(double radius) { _dot_radius = radius; }
+Void DefaultGraphicsCanvas::set_line_width(double width) { _line_width = width; }
+Void DefaultGraphicsCanvas::set_line_colour(double r,double g,double b) { _line = {r,g,b,1}; }
+Void DefaultGraphicsCanvas::set_fill_colour(double r,double g,double b) {
     _fill.r=r; _fill.g=g; _fill.b=b;
 }
-Void EmbeddedCanvas::set_fill_opacity(double opacity) { _fill.a=opacity; }
+Void DefaultGraphicsCanvas::set_fill_opacity(double opacity) { _fill.a=opacity; }
 
 // Coverage is the union of all path fragments, never a sum of their alpha.
-void EmbeddedCanvas::mark_sample(int x, int y, int sx, int sy) {
+void DefaultGraphicsCanvas::mark_sample(int x, int y, int sx, int sy) {
     if (x<0 || y<0 || x>=static_cast<int>(_width) || y>=static_cast<int>(_height)) return;
     if (_clipped && (x<LEFT || x>=static_cast<int>(_width)-RIGHT ||
                      y<TOP || y>=static_cast<int>(_height)-BOTTOM)) return;
@@ -331,7 +331,7 @@ void EmbeddedCanvas::mark_sample(int x, int y, int sx, int sy) {
     if (_coverage[index]==0) _dirty_pixels.push_back(index);
     _coverage[index] |= static_cast<std::uint16_t>(1u << (sy*4+sx));
 }
-EmbeddedCanvas::BlendTable const& EmbeddedCanvas::blend_table_for(Paint paint) {
+DefaultGraphicsCanvas::BlendTable const& DefaultGraphicsCanvas::blend_table_for(Paint paint) {
     const Paint normalized{unit(paint.r),unit(paint.g),
                            unit(paint.b),unit(paint.a)};
     BlendCacheEntry* entry=nullptr;
@@ -369,7 +369,7 @@ EmbeddedCanvas::BlendTable const& EmbeddedCanvas::blend_table_for(Paint paint) {
     return entry->table;
 }
 
-void EmbeddedCanvas::composite_coverage(Paint paint) {
+void DefaultGraphicsCanvas::composite_coverage(Paint paint) {
     if(_dirty_pixels.empty()) return;
     auto const& lookup=blend_table_for(paint);
     for(auto index:_dirty_pixels) {
@@ -388,7 +388,7 @@ void EmbeddedCanvas::composite_coverage(Paint paint) {
 // Mark a half-open range of 4x4 subpixel samples in a scanline. Stroke
 // boundaries are closed (inclusive_end); fills use the original half-open
 // winding intervals, preserving the previous 4x4 antialiasing convention.
-void EmbeddedCanvas::rasterise_span(double from,double to,int y,int sy,
+void DefaultGraphicsCanvas::rasterise_span(double from,double to,int y,int sy,
                                     bool inclusive_end) {
     const double left=_clipped ? LEFT : 0;
     const double right=_clipped ? static_cast<double>(_width)-RIGHT : _width;
@@ -422,7 +422,7 @@ void EmbeddedCanvas::rasterise_span(double from,double to,int y,int sy,
 // the intervals once per scanline instead of evaluating 16 predicates for
 // every candidate pixel. The subpixel mask remains bit-exact with the former
 // sampling rasterizer (apart from unavoidable floating-point boundary ties).
-void EmbeddedCanvas::rasterise_segment(Point a,Point b,double width) {
+void DefaultGraphicsCanvas::rasterise_segment(Point a,Point b,double width) {
     if (!(width>0) || !std::isfinite(width)) return;
     const double dx=b.x-a.x,dy=b.y-a.y;
     const double length2=dx*dx+dy*dy;
@@ -518,7 +518,7 @@ void EmbeddedCanvas::rasterise_segment(Point a,Point b,double width) {
 }
 // Round endpoints restore readable glyph strokes while preserving the
 // butt caps expected by Cairo for ordinary drawing paths.
-void EmbeddedCanvas::rasterise_disc(Point center,double radius) {
+void DefaultGraphicsCanvas::rasterise_disc(Point center,double radius) {
     if (!(radius>0) || !std::isfinite(center.x) || !std::isfinite(center.y)) return;
     const double xmin=center.x-radius, xmax=center.x+radius;
     const double ymin=center.y-radius, ymax=center.y+radius;
@@ -536,7 +536,7 @@ void EmbeddedCanvas::rasterise_disc(Point center,double radius) {
         }
 }
 
-void EmbeddedCanvas::rasterise_triangle(Point a, Point b, Point c) {
+void DefaultGraphicsCanvas::rasterise_triangle(Point a, Point b, Point c) {
     const double xmin=std::min({a.x,b.x,c.x}),xmax=std::max({a.x,b.x,c.x});
     const double ymin=std::min({a.y,b.y,c.y}),ymax=std::max({a.y,b.y,c.y});
     if(!std::isfinite(xmin)||!std::isfinite(xmax)||!std::isfinite(ymin)||!std::isfinite(ymax) ||
@@ -557,7 +557,7 @@ void EmbeddedCanvas::rasterise_triangle(Point a, Point b, Point c) {
                 mark_sample(x,y,sx,sy);
         }
 }
-void EmbeddedCanvas::rasterise_join(Point a,Point b,Point c,double half_width) {
+void DefaultGraphicsCanvas::rasterise_join(Point a,Point b,Point c,double half_width) {
     double ux=b.x-a.x,uy=b.y-a.y,vx=c.x-b.x,vy=c.y-b.y;
     double lu=std::hypot(ux,uy),lv=std::hypot(vx,vy);
     if(lu==0||lv==0) return;
@@ -583,7 +583,7 @@ void EmbeddedCanvas::rasterise_join(Point a,Point b,Point c,double half_width) {
 // Maintain only edges intersecting the current row. The previous implementation
 // tested every edge for every subpixel, which was prohibitively expensive for
 // paving plots containing many polygons.
-void EmbeddedCanvas::rasterise_fill() {
+void DefaultGraphicsCanvas::rasterise_fill() {
     struct Rectangle {
         double xmin, ymin, xmax, ymax;
         bool positive_winding;
@@ -815,7 +815,7 @@ void EmbeddedCanvas::rasterise_fill() {
         }
     }
 }
-Void EmbeddedCanvas::stroke() {
+Void DefaultGraphicsCanvas::stroke() {
     if(_line_width>0 && std::isfinite(_line_width)) {
         for(auto const& path:_paths) {
             auto const& pts=path.points;
@@ -834,7 +834,7 @@ Void EmbeddedCanvas::stroke() {
     }
     _paths.clear();
 }
-Void EmbeddedCanvas::fill() {
+Void DefaultGraphicsCanvas::fill() {
     if(unit(_fill.a)>0) {
         rasterise_fill();
         composite_coverage(_fill);
@@ -842,7 +842,7 @@ Void EmbeddedCanvas::fill() {
     // Equivalent to cairo_fill_preserve followed by cairo_stroke.
     stroke();
 }
-Void EmbeddedCanvas::finalise() {
+Void DefaultGraphicsCanvas::finalise() {
     bool old_clip=_clipped;
     _clipped=false;
     _paths.clear();
@@ -853,7 +853,7 @@ Void EmbeddedCanvas::finalise() {
     stroke();
     _line_width=old_width; _line=old_line; _clipped=old_clip;
 }
-Void EmbeddedCanvas::write(const char* name) const {
+Void DefaultGraphicsCanvas::write(const char* name) const {
     if (!name) throw std::invalid_argument("Null PNG filename");
     std::string filename(name);
     if (filename.find('.')==std::string::npos) filename += ".png";
@@ -875,6 +875,6 @@ Void EmbeddedCanvas::write(const char* name) const {
     std::ofstream stream(filename,std::ios::binary);
     if (!stream || !stream.write(reinterpret_cast<const char*>(png.data()),
                                   static_cast<std::streamsize>(png.size())))
-        throw std::runtime_error("Unable to write Embedded PNG: "+filename);
+        throw std::runtime_error("Unable to write default graphics PNG: "+filename);
 }
 } // namespace Ariadne

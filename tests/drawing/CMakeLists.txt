@@ -3,7 +3,7 @@ set(UNIT_TESTS
     test_command_line_interface
     test_null_graphics
     test_backend_comparison
-    test_embedded_robustness
+    test_default_backend_robustness
 )
 foreach(TEST ${UNIT_TESTS})
     add_executable(${TEST} ${TEST}.cpp)
@@ -13,81 +13,7 @@ foreach(TEST ${UNIT_TESTS})
 endforeach()
 add_dependencies(tests-cpp ${UNIT_TESTS})
 
-# Generate PNG inputs even when only a dependent comparison test is selected.
-# DEPENDS orders selected tests but does not automatically select the producer.
-set_tests_properties(test_backend_comparison PROPERTIES
-    FIXTURES_SETUP drawing_images
+# C++ graphics regression tests create and inspect their own PNGs.
+# No Python interpreter, PNG comparison script or fixture ordering is needed.
+set_tests_properties(test_backend_comparison test_default_backend_robustness PROPERTIES
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
-
-# The label legibility regression runs with either graphics configuration.
-find_package(Python3 COMPONENTS Interpreter QUIET)
-if(Python3_Interpreter_FOUND)
-    add_test(NAME test_embedded_labels
-        COMMAND "${Python3_EXECUTABLE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/test_embedded_labels.py"
-            "comparison-embedded.png")
-    set_tests_properties(test_embedded_labels PROPERTIES
-        FIXTURES_REQUIRED drawing_images
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        LABELS "drawing")
-endif()
-
-# Check nested rectangular contour semantics without relying on an
-# external reference renderer. The test reads scenes 7 and 8.
-if(Python3_Interpreter_FOUND)
-    add_test(NAME test_embedded_rectangles
-        COMMAND "${Python3_EXECUTABLE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/test_embedded_rectangles.py"
-            "comparison-scene7-embedded.png"
-            "comparison-scene8-embedded.png")
-    set_tests_properties(test_embedded_rectangles PROPERTIES
-        FIXTURES_REQUIRED drawing_images
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        LABELS "drawing")
-endif()
-
-# Embedded-only robustness test creates its own PNG; fixtures select
-# its producer even when only the image assertion is requested.
-set_tests_properties(test_embedded_robustness PROPERTIES
-    FIXTURES_SETUP embedded_robustness_image
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
-if(Python3_Interpreter_FOUND)
-    add_test(NAME check_embedded_robustness
-        COMMAND "${Python3_EXECUTABLE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/test_embedded_robustness.py"
-            "embedded-robustness.png")
-    set_tests_properties(check_embedded_robustness PROPERTIES
-        FIXTURES_REQUIRED embedded_robustness_image
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        LABELS "drawing")
-endif()
-
-# Compare matching raster fixtures rendered by both backends.
-if(ARIADNE_WITH_CAIRO)
-    if(Python3_Interpreter_FOUND)
-        add_test(NAME compare_drawing_backends
-            COMMAND "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/compare_backend_png.py"
-                "comparison-cairo.png" "comparison-embedded.png")
-        set_tests_properties(compare_drawing_backends PROPERTIES
-            FIXTURES_REQUIRED drawing_images
-            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            LABELS "drawing")
-    endif()
-endif()
-
-# Each scene is compared independently and emits a diagnostic image.
-if(ARIADNE_WITH_CAIRO AND Python3_Interpreter_FOUND)
-    foreach(SCENE RANGE 0 9)
-        add_test(NAME compare_drawing_scene_${SCENE}
-            COMMAND "${Python3_EXECUTABLE}"
-                "${CMAKE_CURRENT_SOURCE_DIR}/compare_backend_png.py"
-                "comparison-scene${SCENE}-cairo.png"
-                "comparison-scene${SCENE}-embedded.png"
-                --diff "comparison-scene${SCENE}-diff.ppm")
-        set_tests_properties(compare_drawing_scene_${SCENE} PROPERTIES
-            FIXTURES_REQUIRED drawing_images
-            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            LABELS "drawing")
-    endforeach()
-endif()

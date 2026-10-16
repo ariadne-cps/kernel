@@ -1,10 +1,16 @@
-#include "drawing/embedded.hpp"
+#include "drawing/default_backend.hpp"
 #ifdef ARIADNE_HAS_CAIRO
 #include "drawing/cairo.hpp"
 #endif
 #include <cmath>
 #include <memory>
 #include <string>
+#include <iostream>
+#include <stdexcept>
+#include "default_backend_png.hpp"
+#ifdef ARIADNE_HAS_CAIRO
+#include <cairo.h>
+#endif
 
 using namespace Ariadne;
 
@@ -173,22 +179,120 @@ static void geometry(CanvasInterface& c, const char* filename, int scene) {
     c.write(filename);
 }
 
+
+static void verify_labels(DrawingTest::Image const& image) {
+    using DrawingTest::require;
+    auto dark=[&](int x0,int y0,int x1,int y1) {
+        unsigned count=0;
+        for(int y=y0;y<y1;++y) for(int x=x0;x<x1;++x) {
+            const auto colour=image.pixel(static_cast<unsigned>(x),
+                                           static_cast<unsigned>(y));
+            if(colour[0]<90 && colour[1]<90 && colour[2]<90) ++count;
+        }
+        return count;
+    };
+    const int width=static_cast<int>(image.width);
+    const int height=static_cast<int>(image.height);
+    const int plot_height=height-50;
+    const int x_center=160+(width-170)/2;
+    require(dark(x_center-25,height-37,x_center+15,height-2)>=45,
+            "Horizontal axis label is not legible");
+    require(dark(125,10+plot_height/2-4,159,10+plot_height/2+36)>=65,
+            "Vertical axis label is not legible");
+    require(dark(127,8,158,45)>=45,"Upper numeric axis label is not legible");
+}
+
+static void verify_rectangles(DrawingTest::Image const& holes,
+                               DrawingTest::Image const& mixed) {
+    using DrawingTest::require;
+    auto expect=[](DrawingTest::Image const& image,double x,double y,bool filled) {
+        const auto colour=DrawingTest::world_pixel(image,x,y);
+        const bool actual=colour[1]<210 && colour[2]<210;
+        DrawingTest::require(actual==filled,"Rectangular winding mismatch");
+    };
+    require(holes.width==490 && holes.height==290,"Scene dimensions changed");
+    require(mixed.width==490 && mixed.height==290,"Scene dimensions changed");
+    for(const double x:{-0.66,-0.03,0.62}) expect(holes,x,0,false);
+    expect(holes,-0.91,0,true);
+    expect(holes,-0.28,0,true);
+    expect(mixed,-0.60,0,true);
+    expect(mixed,0.64,0,false);
+    expect(mixed,0.94,0,true);
+    expect(mixed,0,-0.82,false);
+    expect(mixed,-0.45,-0.82,true);
+}
+
+#ifdef ARIADNE_HAS_CAIRO
+static void compare_optional_reference(std::string const& name,
+                                       DrawingTest::Image const& embedded) {
+    cairo_surface_t* surface=cairo_image_surface_create_from_png(name.c_str());
+    if(cairo_surface_status(surface)!=CAIRO_STATUS_SUCCESS) {
+        cairo_surface_destroy(surface);
+        throw std::runtime_error("Cannot read reference PNG: "+name);
+    }
+    cairo_surface_flush(surface);
+    DrawingTest::require(cairo_image_surface_get_width(surface)==
+                         static_cast<int>(embedded.width) &&
+                         cairo_image_surface_get_height(surface)==
+                         static_cast<int>(embedded.height),
+                         "Reference image dimensions differ");
+    const int stride=cairo_image_surface_get_stride(surface);
+    const auto* data=cairo_image_surface_get_data(surface);
+    double error=0;
+    std::size_t outliers=0;
+    std::size_t pixels=0;
+    for(unsigned y=10;y<embedded.height-40;++y)
+        for(unsigned x=160;x<embedded.width-10;++x) {
+            const auto* ref=data+static_cast<std::size_t>(y)*stride+
+                            static_cast<std::size_t>(x)*4;
+            const auto colour=embedded.pixel(x,y);
+            const std::array<unsigned char,3> reference{ref[2],ref[1],ref[0]};
+            int max_delta=0;
+            for(int k=0;k<3;++k) {
+                const int delta=std::abs(int(colour[static_cast<std::size_t>(k)])-
+                                         int(reference[static_cast<std::size_t>(k)]));
+                error+=delta;
+                max_delta=std::max(max_delta,delta);
+            }
+            if(max_delta>32) ++outliers;
+            ++pixels;
+        }
+    cairo_surface_destroy(surface);
+    const double mean=error/(3.0*255.0*static_cast<double>(pixels));
+    const double fraction=static_cast<double>(outliers)/static_cast<double>(pixels);
+    DrawingTest::require(mean<=0.015 && fraction<=0.035,
+                         "Reference backend pixel comparison failed");
+}
+#endif
+
 int main() {
-    EmbeddedCanvas embedded(ImageSize2d(320u, 240u));
-    render(embedded, "comparison-embedded.png");
+    try {
+    DefaultGraphicsCanvas default_backend(ImageSize2d(320u, 240u));
+    render(default_backend, "comparison-default_backend.png");
+    verify_labels(DrawingTest::read_default_backend_png("comparison-default_backend.png"));
 #ifdef ARIADNE_HAS_CAIRO
     CairoCanvas cairo(ImageSize2d(320u, 240u));
     render(cairo, "comparison-cairo.png");
 #endif
     for(int scene=0;scene<10;++scene) {
-        EmbeddedCanvas e(ImageSize2d(320u,240u));
-        std::string ename="comparison-scene"+std::to_string(scene)+"-embedded.png";
+        DefaultGraphicsCanvas e(ImageSize2d(320u,240u));
+        std::string ename="comparison-scene"+std::to_string(scene)+"-default_backend.png";
         geometry(e,ename.c_str(),scene);
+        const auto generated=DrawingTest::read_default_backend_png(ename);
+
 #ifdef ARIADNE_HAS_CAIRO
         CairoCanvas c(ImageSize2d(320u,240u));
         std::string cname="comparison-scene"+std::to_string(scene)+"-cairo.png";
         geometry(c,cname.c_str(),scene);
+        compare_optional_reference(cname,generated);
 #endif
     }
+    verify_rectangles(
+        DrawingTest::read_default_backend_png("comparison-scene7-default_backend.png"),
+        DrawingTest::read_default_backend_png("comparison-scene8-default_backend.png"));
     return 0;
+    } catch(std::exception const& error) {
+        std::cerr<<"default graphics backend comparison: "<<error.what()<<'\\n';
+        return 1;
+    }
 }

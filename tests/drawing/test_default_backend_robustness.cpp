@@ -2,7 +2,8 @@
  * Ariadne - free software under the GNU General Public License version 3
  * or (at your option) any later version. No warranty.
  */
-#include "drawing/embedded.hpp"
+#include "drawing/default_backend.hpp"
+#include "default_backend_png.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -23,7 +24,7 @@ void must_reject(Function function,const char* scenario) {
     throw std::runtime_error(scenario);
 }
 
-void rectangle(EmbeddedCanvas& canvas,double xl,double yl,
+void rectangle(DefaultGraphicsCanvas& canvas,double xl,double yl,
                double xu,double yu) {
     canvas.move_to(xl,yl);
     canvas.line_to(xu,yl);
@@ -39,20 +40,20 @@ int main() {
         // Invalid dimensions must be rejected before any margin arithmetic
         // or potentially huge raster-buffer allocation.
         must_reject([] {
-            EmbeddedCanvas canvas(ImageSize2d(0u,8u));
+            DefaultGraphicsCanvas canvas(ImageSize2d(0u,8u));
         },"zero plot width accepted");
         must_reject([] {
-            EmbeddedCanvas canvas(ImageSize2d(8u,0u));
+            DefaultGraphicsCanvas canvas(ImageSize2d(8u,0u));
         },"zero plot height accepted");
         must_reject([] {
-            EmbeddedCanvas canvas(ImageSize2d(
+            DefaultGraphicsCanvas canvas(ImageSize2d(
                 std::numeric_limits<Nat>::max(),8u));
         },"huge plot width accepted");
         must_reject([] {
-            EmbeddedCanvas canvas(ImageSize2d(12000u,12000u));
+            DefaultGraphicsCanvas canvas(ImageSize2d(12000u,12000u));
         },"excessive raster area accepted");
 
-        EmbeddedCanvas canvas(ImageSize2d(64u,48u));
+        DefaultGraphicsCanvas canvas(ImageSize2d(64u,48u));
         const double nan=std::numeric_limits<double>::quiet_NaN();
         const double inf=std::numeric_limits<double>::infinity();
         const double tiny=std::numeric_limits<double>::denorm_min();
@@ -113,10 +114,28 @@ int main() {
         canvas.line_to(0.8,0.0);
         canvas.stroke();
 
-        canvas.write("embedded-robustness.png");
+        canvas.write("default_backend-robustness.png");
+        const auto image=DrawingTest::read_default_backend_png(
+            "default_backend-robustness.png");
+        DrawingTest::require(image.width==234 && image.height==98,
+                             "Unexpected graphics image size");
+        auto check=[&](double x,double y,std::array<unsigned char,3> expected,
+                       const char* message) {
+            DrawingTest::require(DrawingTest::world_pixel(image,x,y)==expected,
+                                 message);
+        };
+        check(-0.73,0.0,{247,247,247},"Transparent fill changed background");
+        check(-0.25,0.0,{124,251,124},"Half-opacity fill incorrect");
+        check(0.30,0.0,{255,0,0},"Opaque fill incorrect");
+        check(0.75,0.0,{255,255,0},"Clamped opacity incorrect");
+        check(-0.90,-0.90,{0,0,255},"Clipping failed");
+        check(0.0,0.0,{247,247,247},"Invalid geometry changed background");
+        DrawingTest::require(image.pixel(230,25)==
+                             std::array<unsigned char,3>{255,255,255},
+                             "Clipping modified the margin");
         return 0;
     } catch(const std::exception& exception) {
-        std::cerr<<"test_embedded_robustness: "<<exception.what()<<'\n';
+        std::cerr<<"test_default_backend_robustness: "<<exception.what()<<'\n';
         return 1;
     }
 }

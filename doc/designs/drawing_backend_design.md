@@ -1,4 +1,4 @@
-# Embedded drawing backend design
+# Default graphics drawing backend design
 
 This document records the implementation and engineering decisions of the
 self-contained 2D drawing backend in Ariadne Kernel. It describes the **current
@@ -32,16 +32,16 @@ The main design principles are:
 
 | File or interface | Responsibility |
 | --- | --- |
-| [`include/drawing/embedded.hpp`](../../include/drawing/embedded.hpp) | `EmbeddedCanvas`, `EmbeddedGraphicsBackend`, path/paint types and raster state. |
-| [`src/drawing/embedded.cpp`](../../src/drawing/embedded.cpp) | Coordinate transformation, rasterization, blending, axis labels and PNG writer. |
+| [`include/drawing/default_backend.hpp`](../../include/drawing/default_backend.hpp) | `DefaultGraphicsCanvas`, `DefaultGraphicsBackend`, path/paint types and raster state. |
+| [`src/drawing/default_backend.cpp`](../../src/drawing/default_backend.cpp) | Coordinate transformation, rasterization, blending, axis labels and PNG writer. |
 | [`include/drawing/graphics_interface.hpp`](../../include/drawing/graphics_interface.hpp) | Backend-independent `CanvasInterface` contract. |
 | [`include/drawing/graphics_base.hpp`](../../include/drawing/graphics_base.hpp) | Shared `CanvasBase::fill_boundary()` implementation. |
-| [`src/drawing/graphics_manager.cpp`](../../src/drawing/graphics_manager.cpp) | Registration of the embedded backend as the default. |
+| [`src/drawing/graphics_manager.cpp`](../../src/drawing/graphics_manager.cpp) | Registration of the default_backend backend as the default. |
 | [`benchmarks/drawing/`](../../benchmarks/drawing/) | Independent absolute-performance measurements. |
 | [`tests/drawing/`](../../tests/drawing/) | Image regression fixtures and label-legibility checks. |
 
-`EmbeddedGraphicsBackend::make_canvas()` creates a canvas of the requested
-drawing-area size. The `EmbeddedCanvas` owns the raster image and all temporary
+`DefaultGraphicsBackend::make_canvas()` creates a canvas of the requested
+drawing-area size. The `DefaultGraphicsCanvas` owns the raster image and all temporary
 path and coverage buffers. Higher-level `Figure` and `Drawable2dInterface`
 objects access it only through the canvas abstraction.
 
@@ -290,7 +290,7 @@ Example Release run:
 
 ```sh
 cmake --build build --target benchmark_drawing --parallel
-./build/benchmarks/drawing/benchmark_drawing --backend embedded --iterations 10 --warmup 2
+./build/benchmarks/drawing/benchmark_drawing --backend default_backend --iterations 10 --warmup 2
 ```
 
 The benchmark is independent of other backend implementations; its normal
@@ -314,15 +314,15 @@ Drawing regressions should preserve both **geometric semantics** and
   including touching contours that must use general filling.
   A separate fixture covers horizontal/vertical strokes with fractional
   widths and coordinates, short segments and clipped end caps.
-- Standalone embedded-only regressions check the nested-rectangle winding
+- Standalone default graphics backend-only regressions check the nested-rectangle winding
   semantics and robustness of dimension/axis validation, clipping, opacity
   and non-finite drawing inputs. They inspect generated PNG pixels without
   needing an alternative renderer.
-- An embedded-only robustness test checks invalid dimensions and coordinate
+- An default graphics backend-only robustness test checks invalid dimensions and coordinate
   ranges, including numerical overflow/underflow, and verifies the resulting
   PNG's clipping, transparency, clamped opacity and unchanged margins.
   Its image assertions use the shared standard-library PNG reader.
-- The embedded label regression test checks that axis text remains visible
+- The default_backend label regression test checks that axis text remains visible
   and connected.
 - Image-comparison tests use a CTest fixture. The `test_backend_comparison`
   executable produces the PNG inputs in the drawing test's binary directory

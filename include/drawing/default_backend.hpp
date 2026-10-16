@@ -2,7 +2,7 @@
  * Ariadne - free software under the GNU General Public License version 3
  * or (at your option) any later version. No warranty.
  */
-#ifndef ARIADNE_EMBEDDED_HPP
+#ifndef ARIADNE_DEFAULT_BACKEND_HPP
 #define ARIADNE_EMBEDDED_HPP
 
 #include <array>
@@ -14,11 +14,11 @@
 
 namespace Ariadne {
 
-// Software rasterizer: no Cairo, external image or compression library required.
-class EmbeddedCanvas : public CanvasBase {
+// Default graphics backend: self-contained software rasterizer.
+class DefaultGraphicsCanvas : public CanvasBase {
   public:
-    explicit EmbeddedCanvas(const ImageSize2d& size);
-    ~EmbeddedCanvas() override = default;
+    explicit DefaultGraphicsCanvas(const ImageSize2d& size);
+    ~DefaultGraphicsCanvas() override = default;
 
     Void initialise(StringType x, StringType y, double xl, double xu,
                     double yl, double yu) override;
@@ -82,7 +82,7 @@ class EmbeddedCanvas : public CanvasBase {
     void text(double x, double y, StringType const& label);
 };
 
-class EmbeddedGraphicsBackend : public GraphicsBackendInterface {
+class DefaultGraphicsBackend : public GraphicsBackendInterface {
   public:
     SharedPointer<CanvasInterface> make_canvas(const char* filename, Nat width,
                                                Nat height, Bool animated) const override;

@@ -27,7 +27,7 @@
 
 #include "function/function.hpp"
 #include "drawing/figure.hpp"
-#include "drawing/embedded.hpp"
+#include "drawing/default_backend.hpp"
 #ifdef ARIADNE_HAS_CAIRO
 #include "drawing/cairo.hpp"
 #endif
@@ -73,7 +73,7 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_figure_header_helpers())
         ARIADNE_TEST_CALL(test_graphics_interface())
         ARIADNE_TEST_CALL(test_graphics_base())
-        ARIADNE_TEST_CALL(test_embedded())
+        ARIADNE_TEST_CALL(test_default_backend())
 #ifdef ARIADNE_HAS_CAIRO
         ARIADNE_TEST_CALL(test_cairo())
 #endif
@@ -225,22 +225,22 @@ class TestGraphics {
     }
 
     void test_graphics_base() {
-        EmbeddedCanvas canvas(ImageSize2d(32u,32u));
+        DefaultGraphicsCanvas canvas(ImageSize2d(32u,32u));
         List<Point2d> boundary{Point2d(0.0,0.0)};
         canvas.fill_boundary(boundary);
     }
 
-    void test_embedded() {
+    void test_default_backend() {
         ARIADNE_TEST_FAIL(ImageSize2d(0,1))
         ARIADNE_TEST_FAIL(ImageSize2d(1,0))
-        EmbeddedCanvas canvas(ImageSize2d(32u,32u));
+        DefaultGraphicsCanvas canvas(ImageSize2d(32u,32u));
         canvas.initialise("x","y",-1.0,1.0,-1.0,1.0);
         canvas.set_dot_radius(4.0);
         canvas.circle(0.0,0.0,0.25);
         canvas.dot(0.5,0.5);
         canvas.stroke();
         canvas.finalise();
-        canvas.write("test_embedded-explicit.png");
+        canvas.write("test_default_backend-explicit.png");
     }
 
 #ifdef ARIADNE_HAS_CAIRO
