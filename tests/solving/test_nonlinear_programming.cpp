@@ -252,8 +252,8 @@ class TestNonlinearAdapterProbe {
         ValidatedVectorMultivariateFunction h({x[0]+1});
         ExactBoxType D({{0.0_x,1.0_x}});
 
-        auto result=solver.minimise(f,D,g,h);
-        ARIADNE_TEST_EQUAL(result.size(),1u);
+        auto minimiser=solver.minimise(f,D,g,h);
+        ARIADNE_TEST_EQUAL(minimiser.size(),1u);
         ARIADNE_TEST_EQUAL(solver.minimise_calls,1u);
         ARIADNE_TEST_ASSERT(solver.correct_constraints);
         ARIADNE_TEST_ASSERT(definitely(solver.feasible(D,g,h)));
