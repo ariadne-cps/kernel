@@ -1,5 +1,5 @@
 /***************************************************************************
- *            solving/nonlinear_programming_internal.hpp
+ *            solving/detail/nonlinear_programming_helpers.hpp
  *
  *  Copyright  2010-20  Pieter Collins
  *
@@ -24,8 +24,8 @@
 
 // See Hande Y. Benson, David F. Shanno, And Robert J. Vanderbei,
 // "Interior-point methods for nonconvex nonlinear programming: Jamming and comparative numerical testing"
-#ifndef ARIADNE_NONLINEAR_PROGRAMMING_INTERNAL_HPP
-#define ARIADNE_NONLINEAR_PROGRAMMING_INTERNAL_HPP
+#ifndef ARIADNE_NONLINEAR_PROGRAMMING_HELPERS_HPP
+#define ARIADNE_NONLINEAR_PROGRAMMING_HELPERS_HPP
 
 #include "function/functional.hpp"
 #include <limits>
