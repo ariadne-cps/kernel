@@ -732,8 +732,7 @@ Pair<SizeType,RigorousNumericType<FloatDP>>
 compute_rt(const Vector<FloatDP>& xl, const Vector<FloatDP>& xu, const Array<Slackness>& vt, const Array<SizeType>& p, const Vector<RigorousNumericType<FloatDP>>& x, const Vector<RigorousNumericType<FloatDP>>& d, const SizeType s)
 {
     LOGGING_SCOPE_CREATE;
-    typedef FloatDP X;
-    typedef RigorousNumericType<X> XX;
+    typedef RigorousNumericType<FloatDP> XX;
     typedef DP PR;
     PR pr;
 
@@ -742,7 +741,7 @@ compute_rt(const Vector<FloatDP>& xl, const Vector<FloatDP>& xu, const Array<Sla
     const SizeType m=d.size();
     const SizeType n=x.size();
     SizeType r=n;
-    X ds=X(vt[p[s]]==Slackness::LOWER ? +1 : -1, pr);
+    XX ds=XX(vt[p[s]]==Slackness::LOWER ? +1 : -1, pr);
     XX t=XX(xu[p[s]])-XX(xl[p[s]]);
     if(definitely(t<inf)) { r=s; }
     XX tk=XX(0,pr);
@@ -1067,7 +1066,10 @@ LinearSimplexSolver<X>::lpstep(const Vector<X>& xl, const Vector<X>& xu, const M
             ARIADNE_ASSERT(decide(x[p[i]]>xl[p[i]]-BOUNDS_TOLERANCE));
             x[p[i]]=xl[p[i]];
         } else if(decide(x[p[i]]>xu[p[i]])) {
-            ARIADNE_ASSERT(decide(x[p[i]]<xu[p[i]]+BOUNDS_TOLERANCE));
+            ARIADNE_ASSERT_MSG(decide(x[p[i]]<xu[p[i]]+BOUNDS_TOLERANCE),
+                "Upper bound exceeded after lpstep: x="<<x<<", xu="<<xu
+                <<", vt="<<vt<<", p="<<p<<", r="<<r<<", s="<<s
+                <<", d="<<d<<", t="<<t);
             x[p[i]]=xu[p[i]];
         }
     }
