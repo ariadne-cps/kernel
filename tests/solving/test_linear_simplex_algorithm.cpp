@@ -37,6 +37,8 @@ class TestLinearSimplexSolver
     Void test() {
         ARIADNE_TEST_CALL(test_slackness_output());
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
+        ARIADNE_TEST_CALL(test_single_variable_infeasibility());
+        ARIADNE_TEST_CALL(test_lpstep_upper_bound_flip());
         ARIADNE_TEST_CALL(test_lpstep_upper_entry());
         ARIADNE_TEST_CALL(test_degenerate_ratio_tie_breaking());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
@@ -309,6 +311,56 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(solver.hotstarted_feasible(xl,xu,A,b,vt)));
         ARIADNE_TEST_EQUAL(vt[0],Slackness::BASIS);
         ARIADNE_TEST_EQUAL(vt[1],Slackness::LOWER);
+    }
+
+    Void test_single_variable_infeasibility() {
+        // Ax=b has exactly one solution. When it lies beyond either
+        // bound, there is no nonbasic variable to enter the basis,
+        // so both algorithms must certify infeasibility.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x}},dp);
+        Vector<FloatDP> xl({0.0_x},dp);
+        Vector<FloatDP> xu({1.0_x},dp);
+        Vector<FloatDP> above({2.0_x},dp);
+        Vector<FloatDP> below({-1.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(definitely(not solver.feasible(xl,xu,A,above)));
+        ARIADNE_TEST_ASSERT(definitely(not solver.validated_feasible(xl,xu,A,above)));
+        ARIADNE_TEST_ASSERT(definitely(not solver.feasible(xl,xu,A,below)));
+        ARIADNE_TEST_ASSERT(definitely(not solver.validated_feasible(xl,xu,A,below)));
+    }
+
+    Void test_lpstep_upper_bound_flip() {
+        // x0+x1=0.5, x0 in [-5,5] and x1 in [0,1].
+        // Decreasing x1 from UPPER to LOWER does not hit a bound on x0.
+        // The operation must flip the nonbasic bound without a pivot.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({0.5_x},dp);
+        Vector<FloatDP> xl({-5.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({5.0_x,1.0_x},dp);
+        Array<Slackness> vt(2u);
+        vt[0]=Slackness::BASIS;
+        vt[1]=Slackness::UPPER;
+        Array<SizeType> p(2u);
+        p[0]=0u;
+        p[1]=1u;
+        Matrix<FloatDPBounds> B=Matrix<FloatDPBounds>::identity(1u,dp);
+        Vector<FloatDPBounds> x=solver.compute_x(xl,xu,A,b,vt);
+
+        ARIADNE_TEST_ASSERT(definitely(x[0]==FloatDPBounds(-0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(1.0_x,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(xl,xu,A,b,vt,p,B,x));
+
+        SizeType r=solver.lpstep(xl,xu,A,b,vt,p,B,x,1u);
+        ARIADNE_TEST_EQUAL(r,1u);
+        ARIADNE_TEST_EQUAL(vt[0],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(vt[1],Slackness::LOWER);
+        ARIADNE_TEST_EQUAL(p[0],0u);
+        ARIADNE_TEST_EQUAL(p[1],1u);
+        ARIADNE_TEST_ASSERT(definitely(x[0]==FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(0.0_x,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(xl,xu,A,b,vt,p,B,x));
     }
 
     Void test_lpstep_upper_entry() {
