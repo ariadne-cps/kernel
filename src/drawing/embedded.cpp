@@ -181,27 +181,40 @@ void EmbeddedCanvas::rectangle(int x0, int y0, int x1, int y1, Paint paint) {
             blend(x,y,paint,1);
 }
 
-// Antialiased vector strokes for the built-in axis-label glyphs.
-// The glyphs are specified as an internal 5x7 skeleton, but rendered as
-// geometric line segments instead of block-sized bitmap rectangles.
+// Render the small embedded font as an antialiased stroke skeleton. Connect
+// adjacent lit cells in both axes and along isolated diagonal chains. The
+// previous implementation drew only horizontal runs; e.g. 'x' and '1' lost
+// their vertical/diagonal strokes and degenerated into isolated dots.
 void EmbeddedCanvas::text(double x, double y, StringType const& label) {
     constexpr double cell=3.0;
     constexpr double advance=18.0;
-    constexpr double stroke_width=2.5;
-    for(char c:label) {
-        auto rows=glyph(c);
-        for(std::size_t row=0;row<rows.size();++row) {
-            int col=0;
-            while(col<5) {
-                if(!(rows[row] & (1u << (4-col)))) { ++col; continue; }
-                int first=col;
-                while(col<5 && (rows[row] & (1u << (4-col)))) ++col;
-                double yy=y+(static_cast<double>(row)+0.5)*cell;
-                double x1=x+(static_cast<double>(first)+0.5)*cell;
-                double x2=x+(static_cast<double>(col)-0.5)*cell;
-                // Render one-cell strokes as a short line, not an empty path.
-                if(x2==x1) x2=x1+0.01;
-                rasterise_segment({x1,yy},{x2,yy},stroke_width);
+    constexpr double width=2.35;
+    constexpr double dot_radius=1.20;
+    for (char c:label) {
+        auto const rows=glyph(c);
+        auto has=[&rows](int row,int col) -> bool {
+            return row>=0 && row<7 && col>=0 && col<5
+                && (rows[static_cast<std::size_t>(row)] & (1u << (4-col)))!=0;
+        };
+        auto point=[x,y](int row,int col) -> Point {
+            return {x+(static_cast<double>(col)+0.5)*cell,
+                    y+(static_cast<double>(row)+0.5)*cell};
+        };
+        for (int row=0;row<7;++row) {
+            for (int col=0;col<5;++col) {
+                if (!has(row,col)) continue;
+                Point p=point(row,col);
+                rasterise_disc(p,dot_radius);
+                if (has(row,col+1))
+                    rasterise_segment(p,point(row,col+1),width);
+                if (has(row+1,col))
+                    rasterise_segment(p,point(row+1,col),width);
+                // Diagonals belong to the skeleton only when neither
+                // orthogonal neighbour already connects these cells.
+                if (has(row+1,col+1) && !has(row,col+1) && !has(row+1,col))
+                    rasterise_segment(p,point(row+1,col+1),width);
+                if (has(row+1,col-1) && !has(row,col-1) && !has(row+1,col))
+                    rasterise_segment(p,point(row+1,col-1),width);
             }
         }
         composite_coverage({0,0,0,1});
@@ -316,6 +329,26 @@ void EmbeddedCanvas::rasterise_segment(Point a, Point b, double width) {
             if(cross*cross<=radius*radius*length2) mark_sample(x,y,sx,sy);
         }
 }
+// Round endpoints restore readable glyph strokes while preserving the
+// butt caps expected by Cairo for ordinary drawing paths.
+void EmbeddedCanvas::rasterise_disc(Point center,double radius) {
+    if (!(radius>0) || !std::isfinite(center.x) || !std::isfinite(center.y)) return;
+    const double xmin=center.x-radius, xmax=center.x+radius;
+    const double ymin=center.y-radius, ymax=center.y+radius;
+    if (xmax<0 || ymax<0 || xmin>=_width || ymin>=_height) return;
+    const int x0=static_cast<int>(std::max(0.0,std::floor(xmin)));
+    const int x1=static_cast<int>(std::min<double>(_width,std::ceil(xmax)));
+    const int y0=static_cast<int>(std::max(0.0,std::floor(ymin)));
+    const int y1=static_cast<int>(std::min<double>(_height,std::ceil(ymax)));
+    for (int yy=y0;yy<y1;++yy) for (int xx=x0;xx<x1;++xx)
+        for (int sy=0;sy<4;++sy) for (int sx=0;sx<4;++sx) {
+            const double dx=xx+(sx+0.5)/4.0-center.x;
+            const double dy=yy+(sy+0.5)/4.0-center.y;
+            if (dx*dx+dy*dy<=radius*radius)
+                mark_sample(xx,yy,sx,sy);
+        }
+}
+
 void EmbeddedCanvas::rasterise_triangle(Point a, Point b, Point c) {
     const double xmin=std::min({a.x,b.x,c.x}),xmax=std::max({a.x,b.x,c.x});
     const double ymin=std::min({a.y,b.y,c.y}),ymax=std::max({a.y,b.y,c.y});

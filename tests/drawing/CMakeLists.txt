@@ -12,9 +12,19 @@ foreach(TEST ${UNIT_TESTS})
 endforeach()
 add_dependencies(tests-cpp ${UNIT_TESTS})
 
+# The label legibility regression runs with either graphics configuration.
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+    add_test(NAME test_embedded_labels
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_embedded_labels.py"
+            "comparison-embedded.png")
+    set_tests_properties(test_embedded_labels PROPERTIES
+        DEPENDS test_backend_comparison LABELS "drawing")
+endif()
+
 # Compare matching raster fixtures rendered by both backends.
 if(ARIADNE_WITH_CAIRO)
-    find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
         add_test(NAME compare_drawing_backends
             COMMAND "${Python3_EXECUTABLE}"

@@ -60,6 +60,7 @@ class EmbeddedCanvas : public CanvasBase {
     void mark_sample(int x, int y, int sx, int sy);
     void composite_coverage(Paint paint);
     void rasterise_segment(Point a, Point b, double width);
+    void rasterise_disc(Point center, double radius);
     void rasterise_triangle(Point a, Point b, Point c);
     void rasterise_join(Point a, Point b, Point c, double half_width);
     void rasterise_fill();
