@@ -81,7 +81,7 @@ int main() {
 
         DefaultGraphicsCanvas canvas(ImageSize2d(64u,48u));
         const double nan=std::numeric_limits<double>::quiet_NaN();
-        const double infinity=std::numeric_limits<double>::infinity();
+        const double nonfinite_coordinate=std::numeric_limits<double>::infinity();
         const double tiny=std::numeric_limits<double>::denorm_min();
         must_reject([&] {
             canvas.initialise("x","y",0,0,-1,1);
@@ -93,7 +93,7 @@ int main() {
             canvas.initialise("x","y",nan,1,-1,1);
         },"NaN endpoint accepted");
         must_reject([&] {
-            canvas.initialise("x","y",-1,1,-infinity,1);
+            canvas.initialise("x","y",-1,1,-nonfinite_coordinate,1);
         },"infinite endpoint accepted");
         must_reject([&] {
             canvas.initialise("x","y",-1e308,1e308,-1,1);
@@ -129,10 +129,10 @@ int main() {
         // Non-finite path coordinates/radii are ignored. An invalid stroke
         // width cannot accidentally rasterize the remaining path.
         canvas.move_to(nan,0.0);
-        canvas.line_to(infinity,0.0);
+        canvas.line_to(nonfinite_coordinate,0.0);
         canvas.stroke();
         canvas.circle(0.0,0.0,nan);
-        canvas.circle(infinity,0.0,0.25);
+        canvas.circle(nonfinite_coordinate,0.0,0.25);
         canvas.circle(0.0,0.0,-0.25);
         canvas.stroke();
         canvas.set_line_width(nan);
