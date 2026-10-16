@@ -335,41 +335,99 @@ void EmbeddedCanvas::rasterise_join(Point a,Point b,Point c,double half_width) {
     if(std::abs(determinant)<1e-12) return;
     double t=((q.x-p.x)*(-vy)-(-vx)*(q.y-p.y))/determinant;
     Point m{p.x+t*ux,p.y+t*uy};
+    // Bridge the ends of the adjoining butt-capped segments first.
+    // Without this triangle the outer miter tip is visually detached.
+    rasterise_triangle(p,b,q);
     if(std::hypot(m.x-b.x,m.y-b.y) <= 10*half_width)
         rasterise_triangle(p,m,q);
-    else
-        rasterise_triangle(p,b,q); // bevel at the miter limit
 }
+// Rasterise horizontal intervals selected by a nonzero-winding scanline.
+//
+// Maintain only edges intersecting the current row. The previous implementation
+// tested every edge for every subpixel, which was prohibitively expensive for
+// paving plots containing many polygons.
 void EmbeddedCanvas::rasterise_fill() {
-    // Nonzero winding is computed across ALL subpaths, including holes.
-    double xmin=std::numeric_limits<double>::infinity(),xmax=-xmin,ymin=xmin,ymax=-xmin;
-    bool any=false;
-    for(auto const& path:_paths) for(auto p:path.points) {
-        if(!std::isfinite(p.x)||!std::isfinite(p.y)) continue;
-        any=true;xmin=std::min(xmin,p.x);xmax=std::max(xmax,p.x);
-        ymin=std::min(ymin,p.y);ymax=std::max(ymax,p.y);
-    }
-    if(!any||xmax<0||ymax<0||xmin>=_width||ymin>=_height) return;
-    const int x0=static_cast<int>(std::max(0.0,std::floor(xmin)));
-    const int x1=static_cast<int>(std::min<double>(_width,std::ceil(xmax)));
-    const int y0=static_cast<int>(std::max(0.0,std::floor(ymin)));
-    const int y1=static_cast<int>(std::min<double>(_height,std::ceil(ymax)));
-    for(int y=y0;y<y1;++y) for(int x=x0;x<x1;++x)
-        for(int sy=0;sy<4;++sy) for(int sx=0;sx<4;++sx) {
-            double px=x+(sx+0.5)/4,py=y+(sy+0.5)/4;
-            int winding=0;
-            for(auto const& path:_paths) {
-                auto n=path.points.size();
-                if(n<3) continue;
-                for(std::size_t i=0;i<n;++i) {
-                    Point p=path.points[i],q=path.points[(i+1)%n];
-                    double cross=(q.x-p.x)*(py-p.y)-(q.y-p.y)*(px-p.x);
-                    if(p.y<=py && q.y>py && cross>0) ++winding;
-                    if(p.y>py && q.y<=py && cross<0) --winding;
-                }
-            }
-            if(winding) mark_sample(x,y,sx,sy);
+    struct Edge {
+        double ymin, ymax, x_at_ymin, dx_dy;
+        int delta;
+    };
+    std::vector<Edge> edges;
+    double ymin=std::numeric_limits<double>::infinity();
+    double ymax=-std::numeric_limits<double>::infinity();
+    for (auto const& path : _paths) {
+        if (path.points.size()<3) continue;
+        for (std::size_t i=0; i<path.points.size(); ++i) {
+            Point p=path.points[i];
+            Point q=path.points[(i+1)%path.points.size()];
+            if (p.y == q.y || !std::isfinite(p.x) || !std::isfinite(q.x) ||
+                !std::isfinite(p.y) || !std::isfinite(q.y)) continue;
+            int delta=1;
+            if (p.y>q.y) { std::swap(p,q); delta=-1; }
+            double slope=(q.x-p.x)/(q.y-p.y);
+            if (!std::isfinite(slope)) continue;
+            ymin=std::min(ymin,p.y);
+            ymax=std::max(ymax,q.y);
+            edges.push_back({p.y,q.y,p.x,slope,delta});
         }
+    }
+    if (edges.empty()) return;
+    double clip_top=_clipped ? TOP : 0;
+    double clip_bottom=_clipped ? static_cast<double>(_height)-BOTTOM : _height;
+    if (ymax<=clip_top || ymin>=clip_bottom) return;
+    const int y0=static_cast<int>(std::floor(std::clamp(ymin,clip_top,clip_bottom)));
+    const int y1=static_cast<int>(std::ceil(std::clamp(ymax,clip_top,clip_bottom)));
+    std::sort(edges.begin(),edges.end(),
+              [](Edge const& a,Edge const& b) { return a.ymin<b.ymin; });
+    std::vector<Edge const*> active;
+    std::vector<std::pair<double,int>> crossings;
+    active.reserve(edges.size());
+    crossings.reserve(edges.size());
+    std::size_t next=0;
+    // A single sample row contains 4 horizontally offset samples per pixel.
+    // A contiguous interval maps to an OR of bitmasks, not 4 tests per pixel.
+    auto span=[this](double from,double to,int y,int sy) {
+        const double left=_clipped ? LEFT : 0;
+        const double right=_clipped ? static_cast<double>(_width)-RIGHT : _width;
+        if (to<=left || from>=right) return;
+        from=std::clamp(from,left,right);
+        to=std::clamp(to,left,right);
+        const int first=std::max(0,static_cast<int>(std::ceil(from*4.0-0.5)));
+        const int last=std::min(static_cast<int>(_width)*4,
+                               static_cast<int>(std::ceil(to*4.0-0.5)));
+        for (int sample=first; sample<last;) {
+            const int x=sample/4;
+            const int stop=std::min(last,(x+1)*4);
+            const unsigned n=static_cast<unsigned>(stop-sample);
+            const unsigned shift=static_cast<unsigned>(sy*4+sample%4);
+            const auto mask=static_cast<std::uint16_t>(((1u<<n)-1u)<<shift);
+            const auto index=static_cast<std::size_t>(y)*_width+static_cast<std::size_t>(x);
+            if (_coverage[index]==0) _dirty_pixels.push_back(index);
+            _coverage[index] |= mask;
+            sample=stop;
+        }
+    };
+    for (int y=y0; y<y1; ++y) for (int sy=0;sy<4;++sy) {
+        const double scan_y=y+(sy+0.5)/4.0;
+        // Edges are active on the half-open vertical interval [ymin,ymax).
+        while(next<edges.size() && edges[next].ymin<=scan_y)
+            active.push_back(&edges[next++]);
+        active.erase(std::remove_if(active.begin(),active.end(),
+                       [scan_y](Edge const* edge){return scan_y>=edge->ymax;}),
+                     active.end());
+        crossings.clear();
+        for (Edge const* edge:active) {
+            double x=edge->x_at_ymin+(scan_y-edge->ymin)*edge->dx_dy;
+            if (std::isfinite(x)) crossings.emplace_back(x,edge->delta);
+        }
+        std::sort(crossings.begin(),crossings.end(),
+                  [](auto const& a,auto const& b){return a.first<b.first;});
+        int winding=0;
+        for (std::size_t i=0;i+1<crossings.size();++i) {
+            winding+=crossings[i].second;
+            if (winding!=0 && crossings[i].first<crossings[i+1].first)
+                span(crossings[i].first,crossings[i+1].first,y,sy);
+        }
+    }
 }
 Void EmbeddedCanvas::stroke() {
     if(_line_width>0 && std::isfinite(_line_width)) {
