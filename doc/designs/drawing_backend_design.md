@@ -121,7 +121,9 @@ result   = (1 - alpha) * existing_rgb + alpha * source_rgb
 ```
 
 The stroke uses opaque source alpha and fractional edge coverage. Colour
-channels are quantized to 8 bits after blending. This is an opaque RGB
+channels are quantized to 8 bits after blending. For repeated compositions
+with the same paint, the backend caches channel lookup tables indexed by
+coverage count and existing channel value, preserving the same quantization. This is an opaque RGB
 composition model stored in an RGBA buffer with alpha 255, not a general
 transparency-preserving image compositor.
 
@@ -227,6 +229,11 @@ Implemented performance techniques include:
 4. Interval-based stroke rasterization instead of per-sample distance tests.
 5. Per-pixel bit masks and dirty-pixel tracking for single-pass compositing.
 6. Device-space, curvature-aware arc tessellation with a segment-count cap.
+7. Direct opaque background writes instead of per-pixel floating-point blending.
+8. Per-paint lookup tables for the 17 possible 4x4 coverage counts and 256
+   destination values per RGB channel; these preserve 8-bit rounding and
+   are rebuilt only when the paint changes. The lookup tables live on the
+   canvas, not in global mutable state.
 
 The executable [`benchmark_drawing`](../../benchmarks/drawing/benchmark_drawing.cpp)
 under `benchmarks/drawing` is the **absolute-performance reference**. It

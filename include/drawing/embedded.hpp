@@ -5,6 +5,7 @@
 #ifndef ARIADNE_EMBEDDED_HPP
 #define ARIADNE_EMBEDDED_HPP
 
+#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -53,6 +54,14 @@ class EmbeddedCanvas : public CanvasBase {
     Paint _line{0.0, 0.0, 0.0, 1.0};
     Paint _fill{1.0, 1.0, 1.0, 1.0};
     bool _clipped = false;
+
+    // Lazily regenerated for the current paint; 17 coverage values (0..16),
+    // three RGB channels and 256 possible destination values. This preserves
+    // the exact quantization of blend(), avoiding repeated per-pixel rounding.
+    using BlendTable = std::array<std::array<std::array<std::uint8_t,256>,3>,17>;
+    BlendTable _blend_table{};
+    Paint _cached_paint{0.0,0.0,0.0,0.0};
+    bool _blend_table_valid = false;
 
     Point transform(double x, double y) const;
     void blend(int x, int y, Paint paint, double coverage);

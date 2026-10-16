@@ -176,9 +176,27 @@ void EmbeddedCanvas::blend(int x, int y, Paint paint, double coverage) {
 }
 
 void EmbeddedCanvas::rectangle(int x0, int y0, int x1, int y1, Paint paint) {
-    for (int y = std::max(y0,0); y < std::min(y1,static_cast<int>(_height)); ++y)
-        for (int x = std::max(x0,0); x < std::min(x1,static_cast<int>(_width)); ++x)
-            blend(x,y,paint,1);
+    const int left=std::max(x0,0),right=std::min(x1,static_cast<int>(_width));
+    const int top=std::max(y0,0),bottom=std::min(y1,static_cast<int>(_height));
+    if (left>=right || top>=bottom) return;
+    if (unit(paint.a)==1.0) {
+        // The plot background is always opaque: write the RGB bytes directly
+        // rather than invoking floating-point alpha blending for every pixel.
+        const auto red=channel(paint.r),green=channel(paint.g),blue=channel(paint.b);
+        for(int y=top;y<bottom;++y) {
+            std::size_t offset=(static_cast<std::size_t>(y)*_width+
+                                static_cast<std::size_t>(left))*4;
+            for(int x=left;x<right;++x,offset+=4) {
+                _pixels[offset]=red;
+                _pixels[offset+1]=green;
+                _pixels[offset+2]=blue;
+            }
+        }
+    } else {
+        for(int y=top;y<bottom;++y)
+            for(int x=left;x<right;++x)
+                blend(x,y,paint,1.0);
+    }
 }
 
 // Render the small embedded font as an antialiased stroke skeleton. Connect
@@ -298,10 +316,36 @@ void EmbeddedCanvas::mark_sample(int x, int y, int sx, int sy) {
     _coverage[index] |= static_cast<std::uint16_t>(1u << (sy*4+sx));
 }
 void EmbeddedCanvas::composite_coverage(Paint paint) {
-    for (auto index : _dirty_pixels) {
-        auto bits=_coverage[index];
-        if (bits) blend(static_cast<int>(index%_width),static_cast<int>(index/_width),
-                        paint,std::popcount(bits)/16.0);
+    if(_dirty_pixels.empty()) return;
+    const Paint normalized{unit(paint.r),unit(paint.g),
+                           unit(paint.b),unit(paint.a)};
+    if (!_blend_table_valid ||
+        normalized.r!=_cached_paint.r || normalized.g!=_cached_paint.g ||
+        normalized.b!=_cached_paint.b || normalized.a!=_cached_paint.a) {
+        // All coverage values are multiples of 1/16. A lookup indexed by
+        // coverage count and existing 8-bit channel is exactly equivalent to
+        // blend() for this paint, including rounding at the final 8-bit step.
+        const double source[3]={normalized.r,normalized.g,normalized.b};
+        for(std::size_t n=0;n<=16;++n) {
+            const double alpha=normalized.a*(static_cast<double>(n)/16.0);
+            for(std::size_t color=0;color<3;++color)
+                for(std::size_t old=0;old<256;++old)
+                    _blend_table[n][color][old]=channel(
+                        (1.0-alpha)*(static_cast<double>(old)/255.0)+
+                        alpha*source[color]);
+        }
+        _cached_paint=normalized;
+        _blend_table_valid=true;
+    }
+    for (auto index:_dirty_pixels) {
+        const auto bits=_coverage[index];
+        if(bits) {
+            const auto& table=_blend_table[std::popcount(bits)];
+            const std::size_t pos=index*4;
+            _pixels[pos]=table[0][_pixels[pos]];
+            _pixels[pos+1]=table[1][_pixels[pos+1]];
+            _pixels[pos+2]=table[2][_pixels[pos+2]];
+        }
         _coverage[index]=0;
     }
     _dirty_pixels.clear();
