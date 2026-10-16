@@ -267,6 +267,33 @@ class TestNonlinearInteriorPointSolverBasics {
     Void test() {
         ARIADNE_TEST_CALL(test_disjoint_constraint_minimisation());
         ARIADNE_TEST_CALL(test_relaxation_parameter());
+        ARIADNE_TEST_CALL(test_initial_feasibility_state());
+    }
+
+    Void test_initial_feasibility_state() {
+        NonlinearInteriorPointSolver solver;
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{0.25_x,0.75_x}});
+        FloatDPApproximationVector primal,dual;
+
+        solver.setup_feasibility(domain,g,codomain,primal,dual);
+        ARIADNE_TEST_EQUAL(primal.size(),4u);
+        ARIADNE_TEST_EQUAL(dual.size(),1u);
+        ARIADNE_TEST_ASSERT(decide(dual[0]==0.5_approx));
+        for(SizeType i=0u; i!=primal.size(); ++i) {
+            ARIADNE_TEST_ASSERT(decide(primal[i]==0.25_approx));
+        }
+
+        ValidatedVectorMultivariateFunction no_constraints(0u,1u);
+        solver.setup_feasibility(domain,no_constraints,ExactBoxType{},primal,dual);
+        ARIADNE_TEST_EQUAL(primal.size(),2u);
+        ARIADNE_TEST_EQUAL(dual.size(),1u);
+        ARIADNE_TEST_ASSERT(decide(dual[0]==0.5_approx));
+        for(SizeType i=0u; i!=primal.size(); ++i) {
+            ARIADNE_TEST_ASSERT(decide(primal[i]==0.5_approx));
+        }
     }
 
     Void test_disjoint_constraint_minimisation() {
