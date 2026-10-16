@@ -27,14 +27,17 @@
 #include "drawing/graphics_manager.hpp"
 #include "drawing/figure.hpp"
 #include "drawing/geometry2d.hpp"
+#include "drawing/embedded.hpp"
+#ifdef ARIADNE_HAS_CAIRO
 #include "drawing/cairo.hpp"
+#endif
 #include "drawing/drawer.hpp"
 #include "drawing/null_graphics.hpp"
 
 namespace Ariadne {
 
 GraphicsBackend default_backend() {
-    return CairoGraphicsBackend();
+    return EmbeddedGraphicsBackend();
 }
 
 GraphicsManager::GraphicsManager() : _backend(default_backend()), _drawer(AffineDrawer(0)) {

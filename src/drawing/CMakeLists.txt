@@ -1,6 +1,7 @@
 add_library(KERNEL_DRAWING_SRC OBJECT
     figure.cpp
-    cairo.cpp
+    embedded.cpp
+    $<$<BOOL:${ARIADNE_WITH_CAIRO}>:cairo.cpp>
     graphics_manager.cpp
     drawer.cpp
     command_line_interface.cpp

@@ -78,8 +78,13 @@ class TestCommandLineInterface {
     Void test_graphics_parsing() {
         auto command_line=make_kernel_command_line_interface();
 
+        ARIADNE_TEST_ASSERT(command_line.acquire({"","-g","embedded"}))
+#ifdef ARIADNE_HAS_CAIRO
         ARIADNE_TEST_ASSERT(command_line.acquire({"","-g","cairo"}))
         ARIADNE_TEST_ASSERT(command_line.acquire({"","--graphics","cairo"}))
+#else
+        ARIADNE_TEST_ASSERT(not command_line.acquire({"","-g","cairo"}))
+#endif
         ARIADNE_TEST_ASSERT(not command_line.acquire({"","-g","wrong"}))
         ARIADNE_TEST_ASSERT(command_line.acquire({"","-g","none"}))
         ARIADNE_TEST_ASSERT(not command_line.acquire({"","-g"}))

@@ -31,7 +31,7 @@ The repository has three Git submodules:
 
 CMake verifies that the direct Configuration revisions agree and that the Utility revision reached through Algebra matches the Utility revision reached through BDD and Threading.
 
-Cairo is a required external dependency of Ariadne Kernel.
+Drawing defaults to the built-in Embedded raster/PNG backend with no Cairo dependency.\nCairo is optional for reference testing: `-DARIADNE_WITH_CAIRO=ON` (default; auto-disabled if not found).\nUse `-DARIADNE_WITH_CAIRO=OFF` to build without Cairo, and `--graphics embedded|cairo|none` when running (Cairo only when compiled).
 
 ## Build
 

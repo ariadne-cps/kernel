@@ -82,7 +82,10 @@ Void drawing_submodule(pybind11::module& module)
 #include "drawing/graphics_interface.hpp"
 #include "drawing/graphics_manager.hpp"
 #include "drawing/drawer.hpp"
+#include "drawing/embedded.hpp"
+#ifdef ARIADNE_HAS_CAIRO
 #include "drawing/cairo.hpp"
+#endif
 #include "drawing/figure.hpp"
 #include "drawing/geometry2d.hpp"
 #include "geometry/point.hpp"
@@ -205,10 +208,15 @@ Void export_plot(pybind11::module& module)
 
 Void export_backend(pybind11::module& module) {
     pybind11::class_<GraphicsBackend> backend_class(module,"GraphicsBackend");
+    pybind11::class_<EmbeddedGraphicsBackend>(module,"EmbeddedGraphicsBackend").def(pybind11::init<>());
+    pybind11::implicitly_convertible<EmbeddedGraphicsBackend,GraphicsBackend>();
+    backend_class.def(pybind11::init<EmbeddedGraphicsBackend>());
+#ifdef ARIADNE_HAS_CAIRO
         pybind11::class_<CairoGraphicsBackend> cairo_backend_class(module,"CairoGraphicsBackend");
         cairo_backend_class.def(pybind11::init<>());
         pybind11::implicitly_convertible<CairoGraphicsBackend,GraphicsBackend>();
         backend_class.def(pybind11::init<CairoGraphicsBackend>());
+#endif
 }
 
 Void export_drawer(pybind11::module& module) {
