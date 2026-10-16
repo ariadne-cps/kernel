@@ -172,8 +172,13 @@ pixel boundaries. For a nested pair it subtracts the inner subpixel mask
 only when the windings oppose. Since the complete per-pixel coverage is
 known immediately, it looks up the resulting RGB values in the paint cache
 and **composites directly**, without constructing dirty-pixel lists or a
-temporary coverage buffer. This avoids sorting edges, managing active-edge
-lists and traversing each rectangle's covered pixels a second time.
+temporary coverage buffer. In rows where all four vertical subpixel
+positions are inside a solid rectangle (or a same-winding nested pair), the
+renderer uses the **16/16 coverage lookup directly** for strictly interior
+pixels; only the left and right edge pixels need horizontal masks and
+population counts. Rows with fractional vertical coverage and frames with
+holes retain full mask evaluation. This avoids sorting edges, managing
+active-edge lists and traversing each rectangle's covered pixels twice.
 
 ### 5.4 Stroke: half-plane intersections
 
@@ -246,7 +251,8 @@ Implemented performance techniques include:
 1. Clipping and bounding-region checks to avoid unnecessary off-screen work.
 2. Active-edge scanline filling for arbitrary compound polygons.
 3. Direct composition of single rectangles and strictly nested rectangular
-   frames, with correct nonzero-winding semantics for holes.
+   frames, with correct nonzero-winding semantics for holes. Fully interior
+   pixels bypass horizontal masking and population counts.
 4. Interval-based stroke rasterization instead of per-sample distance tests,
    and a row-mask fast path for horizontal and vertical strokes.
 5. Per-pixel bit masks and dirty-pixel tracking for single-pass compositing.

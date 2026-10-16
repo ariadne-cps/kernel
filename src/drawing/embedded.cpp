@@ -683,7 +683,41 @@ void EmbeddedCanvas::rasterise_fill() {
                         inner_vertical|=0xfu<<(sy*4);
                 }
                 if(!outer_vertical) continue;
-                for(int x=first/4;x<(last+3)/4;++x) {
+                const int x_begin=first/4;
+                const int x_end=(last+3)/4;
+                const std::size_t row_offset=
+                    static_cast<std::size_t>(y)*_width*4;
+
+                // Every sample of a strictly interior pixel in a full-height
+                // row is covered. Only the first and last pixels need a
+                // horizontal edge mask; avoid masking and popcount elsewhere.
+                if(!hole && outer_vertical==0xffffu && x_end-x_begin>=3) {
+                    auto blend_edge=[&](int x) {
+                        const unsigned horizontal=
+                            horizontal_bits(first,last,x)*0x1111u;
+                        if(!horizontal) return;
+                        const auto& table=lookup[
+                            static_cast<std::size_t>(std::popcount(horizontal))];
+                        const std::size_t offset=
+                            row_offset+static_cast<std::size_t>(x)*4;
+                        _pixels[offset]=table[0][_pixels[offset]];
+                        _pixels[offset+1]=table[1][_pixels[offset+1]];
+                        _pixels[offset+2]=table[2][_pixels[offset+2]];
+                    };
+                    blend_edge(x_begin);
+                    const auto& solid=lookup[16];
+                    std::size_t offset=
+                        row_offset+static_cast<std::size_t>(x_begin+1)*4;
+                    for(int x=x_begin+1;x<x_end-1;++x,offset+=4) {
+                        _pixels[offset]=solid[0][_pixels[offset]];
+                        _pixels[offset+1]=solid[1][_pixels[offset+1]];
+                        _pixels[offset+2]=solid[2][_pixels[offset+2]];
+                    }
+                    blend_edge(x_end-1);
+                    continue;
+                }
+
+                for(int x=x_begin;x<x_end;++x) {
                     const unsigned outer_horizontal=
                         horizontal_bits(first,last,x);
                     const unsigned outside=outer_horizontal*0x1111u;
@@ -697,8 +731,7 @@ void EmbeddedCanvas::rasterise_fill() {
                     const auto& table=lookup[
                         static_cast<std::size_t>(std::popcount(mask))];
                     const std::size_t offset=
-                        (static_cast<std::size_t>(y)*_width+
-                         static_cast<std::size_t>(x))*4;
+                        row_offset+static_cast<std::size_t>(x)*4;
                     _pixels[offset]=table[0][_pixels[offset]];
                     _pixels[offset+1]=table[1][_pixels[offset+1]];
                     _pixels[offset+2]=table[2][_pixels[offset+2]];
