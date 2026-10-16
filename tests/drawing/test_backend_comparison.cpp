@@ -1,19 +1,48 @@
-#include "drawing/default_graphics.hpp"
-#ifdef ARIADNE_HAS_CAIRO
-#include "drawing/cairo.hpp"
-#endif
+/***************************************************************************
+ *            tests/drawing/test_backend_comparison.cpp
+ *
+ *  Copyright  2026  Luca Geretti
+ *
+ ****************************************************************************/
+
+/*
+ *  This file is part of Ariadne.
+ *
+ *  Ariadne is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Ariadne is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*! \file tests/drawing/test_backend_comparison.cpp
+ *  \brief Graphics regression scenes and pixel-level consistency checks.
+ */
+
 #include <cmath>
-#include <memory>
-#include <string>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
+#include <string>
+
+#include "drawing/default_graphics.hpp"
 #include "default_graphics_png.hpp"
+
 #ifdef ARIADNE_HAS_CAIRO
 #include <cairo.h>
+#include "drawing/cairo.hpp"
 #endif
 
 using namespace Ariadne;
 
+//! \brief Render the standard cross-backend regression figure.
 static void render(CanvasInterface& canvas, const char* filename) {
     canvas.initialise("x", "y", -1.0, 1.0, -1.0, 1.0);
     canvas.set_line_width(2.0);
@@ -32,6 +61,7 @@ static void render(CanvasInterface& canvas, const char* filename) {
 }
 
 // Geometric regression cases: shared path winding, joins, clipping, arcs.
+//! \brief Render one of the ten geometric regression scenes.
 static void geometry(CanvasInterface& c, const char* filename, int scene) {
     c.initialise("x", "y", -1.0, 1.0, -1.0, 1.0);
     c.set_line_width(3.0);
@@ -180,6 +210,7 @@ static void geometry(CanvasInterface& c, const char* filename, int scene) {
 }
 
 
+//! \brief Check that axis text remains legible in the generated PNG.
 static void verify_labels(DrawingTest::Image const& image) {
     using DrawingTest::require;
     auto dark=[&](int x0,int y0,int x1,int y1) {
@@ -202,6 +233,7 @@ static void verify_labels(DrawingTest::Image const& image) {
     require(dark(127,8,158,45)>=45,"Upper numeric axis label is not legible");
 }
 
+//! \brief Check rectangular compound-path winding semantics.
 static void verify_rectangles(DrawingTest::Image const& holes,
                                DrawingTest::Image const& mixed) {
     using DrawingTest::require;
@@ -223,6 +255,7 @@ static void verify_rectangles(DrawingTest::Image const& holes,
 }
 
 #ifdef ARIADNE_HAS_CAIRO
+//! \brief Compare the rendered plot with the optional reference rasterizer.
 static void compare_optional_reference(std::string const& name,
                                        DrawingTest::Image const& default_graphics_image) {
     cairo_surface_t* surface=cairo_image_surface_create_from_png(name.c_str());

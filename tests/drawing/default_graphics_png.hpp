@@ -1,3 +1,31 @@
+/***************************************************************************
+ *            tests/drawing/default_graphics_png.hpp
+ *
+ *  Copyright  2026  Luca Geretti
+ *
+ ****************************************************************************/
+
+/*
+ *  This file is part of Ariadne.
+ *
+ *  Ariadne is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Ariadne is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*! \file tests/drawing/default_graphics_png.hpp
+ *  \brief Minimal C++ reader for PNGs emitted by the default graphics backend.
+ */
+
 #ifndef ARIADNE_TEST_DEFAULT_GRAPHICS_PNG_HPP
 #define ARIADNE_TEST_DEFAULT_GRAPHICS_PNG_HPP
 
@@ -11,23 +39,28 @@
 #include <string>
 #include <vector>
 
+//! \brief Helpers to verify rendered images in standalone C++ tests.
 namespace DrawingTest {
 
+//! \brief Decoded opaque RGB image for checking individual pixels.
 struct Image {
     unsigned width=0,height=0;
     std::vector<std::array<unsigned char,3>> pixels;
+    //! \brief Return one RGB pixel and validate its coordinates.
     std::array<unsigned char,3> pixel(unsigned x,unsigned y) const {
         if(x>=width||y>=height) throw std::runtime_error("PNG sample out of bounds");
         return pixels[static_cast<std::size_t>(y)*width+x];
     }
 };
 
+//! \brief Read a big-endian 32-bit integer from PNG bytes.
 inline std::uint32_t big32(std::vector<unsigned char> const& b,std::size_t p) {
     if(p+4>b.size()) throw std::runtime_error("Truncated PNG");
     return (std::uint32_t(b[p])<<24)|(std::uint32_t(b[p+1])<<16)|
            (std::uint32_t(b[p+2])<<8)|b[p+3];
 }
 
+//! \brief Compute the PNG chunk CRC-32.
 inline std::uint32_t crc32(std::vector<unsigned char> const& b,
                            std::size_t p,std::size_t n) {
     std::uint32_t crc=0xffffffffu;
@@ -41,6 +74,7 @@ inline std::uint32_t crc32(std::vector<unsigned char> const& b,
 
 // Read the self-contained Default graphics backend's stored-block PNG.
 // The optional comparison backend has a separate decoder via its own API.
+//! \brief Decode the stored-block RGBA8 PNG emitted by Default graphics.
 inline Image read_default_graphics_png(std::string const& name) {
     std::ifstream file(name,std::ios::binary);
     if(!file) throw std::runtime_error("Cannot open "+name);
@@ -112,6 +146,7 @@ inline Image read_default_graphics_png(std::string const& name) {
     return image;
 }
 
+//! \brief Sample the image at a point in normalized plot coordinates.
 inline std::array<unsigned char,3> world_pixel(Image const& image,
                                                  double x,double y) {
     const double width=static_cast<double>(image.width)-170;
@@ -121,6 +156,7 @@ inline std::array<unsigned char,3> world_pixel(Image const& image,
     return image.pixel(px,py);
 }
 
+//! \brief Report a failed graphics regression assertion.
 inline void require(bool condition,std::string const& message) {
     if(!condition) throw std::runtime_error(message);
 }

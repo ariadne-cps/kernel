@@ -1,7 +1,31 @@
+/***************************************************************************
+ *            src/drawing/default_graphics.cpp
+ *
+ *  Copyright  2026  Luca Geretti
+ *
+ ****************************************************************************/
+
 /*
- * Ariadne - free software under the GNU General Public License version 3
- * or (at your option) any later version. No warranty.
+ *  This file is part of Ariadne.
+ *
+ *  Ariadne is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Ariadne is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
+
+/*! \file src/drawing/default_graphics.cpp
+ *  \brief Default graphics rasterization, compositing, labels and PNG output.
+ */
+
 #include "drawing/default_graphics.hpp"
 #include "utility/stlio.hpp"
 #include "utility/standard.hpp"
@@ -18,6 +42,7 @@
 #include <vector>
 
 namespace Ariadne {
+
 namespace {
 constexpr int LEFT = 160;
 constexpr int RIGHT = 10;
@@ -140,6 +165,7 @@ std::vector<std::uint8_t> zlib_stored(std::vector<std::uint8_t> const& raw) {
 }
 } // namespace
 
+// Construct the default graphics canvas through the backend abstraction.
 SharedPointer<CanvasInterface> DefaultGraphicsBackend::make_canvas(
         const char*, Nat width, Nat height, Bool) const {
     return std::make_shared<DefaultGraphicsCanvas>(ImageSize2d(width,height));
@@ -287,12 +313,14 @@ Void DefaultGraphicsCanvas::move_to(double x, double y) {
     Point p = transform(x,y);
     if (std::isfinite(p.x) && std::isfinite(p.y)) _paths.push_back({{p},false});
 }
+
 Void DefaultGraphicsCanvas::line_to(double x, double y) {
     Point p = transform(x,y);
     if (!std::isfinite(p.x) || !std::isfinite(p.y)) return;
     if (_paths.empty()) _paths.push_back({{p},false});
     else _paths.back().points.push_back(p);
 }
+
 Void DefaultGraphicsCanvas::circle(double x, double y, double radius) {
     Point center = transform(x,y);
     if (!std::isfinite(center.x) || !std::isfinite(center.y) ||
@@ -314,12 +342,17 @@ Void DefaultGraphicsCanvas::circle(double x, double y, double radius) {
 }
 
 Void DefaultGraphicsCanvas::dot(double x, double y) { circle(x,y,_dot_radius/1000.0); }
+
 Void DefaultGraphicsCanvas::set_dot_radius(double radius) { _dot_radius = radius; }
+
 Void DefaultGraphicsCanvas::set_line_width(double width) { _line_width = width; }
+
 Void DefaultGraphicsCanvas::set_line_colour(double r,double g,double b) { _line = {r,g,b,1}; }
+
 Void DefaultGraphicsCanvas::set_fill_colour(double r,double g,double b) {
     _fill.r=r; _fill.g=g; _fill.b=b;
 }
+
 Void DefaultGraphicsCanvas::set_fill_opacity(double opacity) { _fill.a=opacity; }
 
 // Coverage is the union of all path fragments, never a sum of their alpha.
@@ -331,6 +364,7 @@ void DefaultGraphicsCanvas::mark_sample(int x, int y, int sx, int sy) {
     if (_coverage[index]==0) _dirty_pixels.push_back(index);
     _coverage[index] |= static_cast<std::uint16_t>(1u << (sy*4+sx));
 }
+
 DefaultGraphicsCanvas::BlendTable const& DefaultGraphicsCanvas::blend_table_for(Paint paint) {
     const Paint normalized{unit(paint.r),unit(paint.g),
                            unit(paint.b),unit(paint.a)};
@@ -557,6 +591,7 @@ void DefaultGraphicsCanvas::rasterise_triangle(Point a, Point b, Point c) {
                 mark_sample(x,y,sx,sy);
         }
 }
+
 void DefaultGraphicsCanvas::rasterise_join(Point a,Point b,Point c,double half_width) {
     double ux=b.x-a.x,uy=b.y-a.y,vx=c.x-b.x,vy=c.y-b.y;
     double lu=std::hypot(ux,uy),lv=std::hypot(vx,vy);
@@ -815,6 +850,7 @@ void DefaultGraphicsCanvas::rasterise_fill() {
         }
     }
 }
+
 Void DefaultGraphicsCanvas::stroke() {
     if(_line_width>0 && std::isfinite(_line_width)) {
         for(auto const& path:_paths) {
@@ -834,6 +870,7 @@ Void DefaultGraphicsCanvas::stroke() {
     }
     _paths.clear();
 }
+
 Void DefaultGraphicsCanvas::fill() {
     if(unit(_fill.a)>0) {
         rasterise_fill();
@@ -842,6 +879,7 @@ Void DefaultGraphicsCanvas::fill() {
     // Equivalent to cairo_fill_preserve followed by cairo_stroke.
     stroke();
 }
+
 Void DefaultGraphicsCanvas::finalise() {
     bool old_clip=_clipped;
     _clipped=false;
@@ -853,6 +891,7 @@ Void DefaultGraphicsCanvas::finalise() {
     stroke();
     _line_width=old_width; _line=old_line; _clipped=old_clip;
 }
+
 Void DefaultGraphicsCanvas::write(const char* name) const {
     if (!name) throw std::invalid_argument("Null PNG filename");
     std::string filename(name);

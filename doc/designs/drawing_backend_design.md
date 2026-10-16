@@ -302,6 +302,18 @@ Avoid recording a single machine's benchmark numbers as permanent design
 properties. Compare results only with the same resolution, command mix,
 compiler, optimization configuration and hardware.
 
+## 8. Source documentation and coding style
+
+The Default graphics implementation and its standalone C++ drawing tests
+follow the repository's standard copyright and GPLv3-or-later file headers
+(with Luca Geretti as author for the new files). Public headers include
+Doxygen `\\file` and `\\brief` declarations; exported graphics classes
+belong to `GraphicsModule`, and methods document their parameters and
+observable canvas semantics. Source and test files separate independent
+functions and logical blocks with blank lines. Comments explain rendering
+invariants, lifecycle details and the purpose of test fixtures rather than
+repeating trivial statements.
+
 ## 8. Verification and maintenance constraints
 
 Drawing regressions should preserve both **geometric semantics** and

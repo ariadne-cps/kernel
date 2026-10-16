@@ -1,10 +1,30 @@
 /***************************************************************************
  *            benchmarks/drawing/benchmark_drawing.cpp
  *
- *  Copyright 2026 Luca Geretti
+ *  Copyright  2026  Luca Geretti
  *
- *  This file is part of Ariadne, released under the GPL v3 or later.
- ***************************************************************************/
+ ****************************************************************************/
+
+/*
+ *  This file is part of Ariadne.
+ *
+ *  Ariadne is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Ariadne is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*! \file benchmarks/drawing/benchmark_drawing.cpp
+ *  \brief Deterministic standalone drawing performance measurements.
+ */
 
 // This benchmark deliberately drives CanvasInterface directly. In particular,
 // no Figure, Drawer, constrained set, approximation, or geometry computation
@@ -32,15 +52,18 @@ namespace {
 using Clock = std::chrono::steady_clock;
 constexpr double pi = 3.14159265358979323846;
 
+//! \brief A replayable canvas command, prepared before timing.
 enum class Operation {
     move, line, circle, fill, stroke, width, line_colour, fill_colour, opacity
 };
 
+//! \brief One graphics operation and up to three numerical arguments.
 struct Command {
     Operation op;
     double a=0.0, b=0.0, c=0.0;
 };
 
+//! \brief Precomputed drawing workload with its primitive count.
 struct Scene {
     std::string name;
     std::vector<Command> commands;
@@ -65,6 +88,7 @@ struct Scene {
     }
 };
 
+//! \brief Validated benchmark configuration from the Ariadne CLI.
 struct Options {
     unsigned width=640, height=480;
     unsigned iterations=5, warmup=1;
@@ -252,6 +276,7 @@ std::vector<Scene> make_scenes() {
     return scenes;
 }
 
+//! \brief Paint-suppression modes for non-additive diagnostic timing.
 enum class RenderPass {
     full, geometry, fill_only, stroke_only
 };
@@ -305,10 +330,12 @@ double milliseconds(Clock::time_point a,Clock::time_point b) {
     return std::chrono::duration<double,std::milli>(b-a).count();
 }
 
+//! \brief Independent samples for each timing category.
 struct Samples {
     std::vector<double> creation,initialisation,render,export_png;
 };
 
+//! \brief Median and nearest-rank 95th-percentile timing.
 struct Statistics {
     double median=0.0,p95=0.0;
 };
@@ -323,6 +350,7 @@ Statistics summarize(std::vector<double> values) {
     return {median,values[p95_index]};
 }
 
+//! \brief Reported results for a single scene and rendering pass.
 struct Result {
     std::string scene;
     RenderPass pass=RenderPass::full;

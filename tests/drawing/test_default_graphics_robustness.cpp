@@ -1,7 +1,31 @@
+/***************************************************************************
+ *            tests/drawing/test_default_graphics_robustness.cpp
+ *
+ *  Copyright  2026  Luca Geretti
+ *
+ ****************************************************************************/
+
 /*
- * Ariadne - free software under the GNU General Public License version 3
- * or (at your option) any later version. No warranty.
+ *  This file is part of Ariadne.
+ *
+ *  Ariadne is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Ariadne is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Ariadne.  If not, see <https://www.gnu.org/licenses/>.
  */
+
+/*! \file tests/drawing/test_default_graphics_robustness.cpp
+ *  \brief Regression checks for invalid input, opacity and plot clipping.
+ */
+
 #include "drawing/default_graphics.hpp"
 #include "default_graphics_png.hpp"
 
@@ -14,6 +38,7 @@ using namespace Ariadne;
 
 namespace {
 
+//! \brief Require the supplied operation to reject an invalid argument.
 template<class Function>
 void must_reject(Function function,const char* scenario) {
     try {
@@ -24,6 +49,7 @@ void must_reject(Function function,const char* scenario) {
     throw std::runtime_error(scenario);
 }
 
+//! \brief Append and fill a rectangular contour in plot coordinates.
 void rectangle(DefaultGraphicsCanvas& canvas,double xl,double yl,
                double xu,double yu) {
     canvas.move_to(xl,yl);
