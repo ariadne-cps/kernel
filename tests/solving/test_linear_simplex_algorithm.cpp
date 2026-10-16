@@ -44,6 +44,8 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_lpstep_upper_bound_flip());
         ARIADNE_TEST_CALL(test_lpstep_upper_entry());
         ARIADNE_TEST_CALL(test_degenerate_ratio_tie_breaking());
+        ARIADNE_TEST_CALL(test_validated_upper_entry_bound_flip());
+        ARIADNE_TEST_CALL(test_validated_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
         ARIADNE_TEST_CALL(test_validated_feasibility_bound_flip());
         ARIADNE_TEST_CALL(test_validated_feasibility_basis_exchange());
@@ -533,6 +535,62 @@ class TestLinearSimplexSolver
             ARIADNE_TEST_ASSERT(definitely(x[2]==FloatDPBounds(1.0_x,dp)));
             ARIADNE_TEST_EXECUTE(solver.consistency_check(xl,xu,A,b,vt,p,B,x));
         }
+    }
+
+    Void test_validated_upper_entry_bound_flip() {
+        // x0-x1=1.5 starts at x=(2.5,1), with x0 above its upper
+        // bound and nonbasic x1 at UPPER. Moving x1 down to LOWER
+        // reaches a strictly feasible basic x0 without a basis change.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,-1.0_x}},dp);
+        Vector<FloatDP> b({1.5_x},dp);
+        Vector<FloatDP> xl({0.0_x,-1.0_x},dp);
+        Vector<FloatDP> xu({1.0_x,1.0_x},dp);
+        Array<Slackness> vt(2u);
+        vt[0]=Slackness::BASIS;
+        vt[1]=Slackness::UPPER;
+        Array<SizeType> p(2u);
+        p[0]=0u;
+        p[1]=1u;
+
+        ARIADNE_TEST_ASSERT(!solver.validated_feasibility_step(xl,xu,A,b,vt,p));
+        ARIADNE_TEST_EQUAL(vt[0],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(vt[1],Slackness::LOWER);
+        ARIADNE_TEST_EQUAL(p[0],0u);
+        ARIADNE_TEST_EQUAL(p[1],1u);
+        auto x=solver.compute_x(xl,xu,A,b,vt);
+        ARIADNE_TEST_ASSERT(definitely(x[0]==FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(-1.0_x,dp)));
+        ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(xl,xu,A,b,vt,p));
+        ARIADNE_TEST_ASSERT(definitely(solver.verify_feasibility(xl,xu,A,b,vt)));
+    }
+
+    Void test_validated_upper_entry_basis_exchange() {
+        // Wider bounds for x1 force x0 to hit LOWER before x1
+        // reaches its lower bound. The UPPER entry must exchange
+        // x1 into the basis with the resulting point (0,-1.5).
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,-1.0_x}},dp);
+        Vector<FloatDP> b({1.5_x},dp);
+        Vector<FloatDP> xl({0.0_x,-5.0_x},dp);
+        Vector<FloatDP> xu({1.0_x,1.0_x},dp);
+        Array<Slackness> vt(2u);
+        vt[0]=Slackness::BASIS;
+        vt[1]=Slackness::UPPER;
+        Array<SizeType> p(2u);
+        p[0]=0u;
+        p[1]=1u;
+
+        ARIADNE_TEST_ASSERT(!solver.validated_feasibility_step(xl,xu,A,b,vt,p));
+        ARIADNE_TEST_EQUAL(vt[0],Slackness::LOWER);
+        ARIADNE_TEST_EQUAL(vt[1],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(p[0],1u);
+        ARIADNE_TEST_EQUAL(p[1],0u);
+        auto x=solver.compute_x(xl,xu,A,b,vt);
+        ARIADNE_TEST_ASSERT(definitely(x[0]==FloatDPBounds(0.0_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(-1.5_x,dp)));
+        ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(xl,xu,A,b,vt,p));
+        ARIADNE_TEST_ASSERT(definitely(solver.verify_feasibility(xl,xu,A,b,vt)));
     }
 
     Void test_validated_strict_feasibility() {
