@@ -268,7 +268,54 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_CALL(test_disjoint_constraint_minimisation());
         ARIADNE_TEST_CALL(test_relaxation_parameter());
         ARIADNE_TEST_CALL(test_initial_feasibility_state());
+        ARIADNE_TEST_CALL(test_feasible_interior_minimisation());
+        ARIADNE_TEST_CALL(test_nonlinear_equality_minimisation_backtracking());
         ARIADNE_TEST_CALL(test_stationary_minimisation_step());
+    }
+
+    Void test_feasible_interior_minimisation() {
+        // The interior stationary point x=1/2 solves this constrained
+        // minimisation problem. Exercise the complete public driver,
+        // including its twelve penalty-reduction iterations.
+        NonlinearInteriorPointSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(coordinate[0]-0.5_x);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{0.25_x,0.75_x}});
+
+        auto optimum=solver.minimise(objective,domain,g,codomain);
+        ARIADNE_TEST_EQUAL(optimum.size(),1u);
+        ARIADNE_TEST_ASSERT(definitely(optimum[0]==FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(contains(domain,optimum)));
+        ARIADNE_TEST_ASSERT(definitely(contains(codomain,g(optimum))));
+    }
+
+    Void test_nonlinear_equality_minimisation_backtracking() {
+        // At x=1/8, linearising h(x)=x^2-1/4 predicts x=17/16,
+        // outside [0,1]. Backtracking must shorten the step, even
+        // though the nonlinear equality has a feasible root at 1/2.
+        NonlinearInteriorPointSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(coordinate[0]-0.5_x);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ValidatedVectorMultivariateFunction h({sqr(coordinate[0])-0.25_x});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{0.0_x,1.0_x}});
+        FloatDPApproximationVector x({0.125_x},dp);
+        FloatDPApproximationVector w({0.125_x},dp);
+        FloatDPApproximationVector kappa({0.125_x},dp);
+        FloatDPApproximationVector lambda({0.125_x},dp);
+        FloatDPApproximation mu(0.25_x,dp);
+
+        solver.minimisation_step(objective,domain,g,codomain,h,
+                                  x,w,kappa,lambda,mu);
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(x)));
+        ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(w)));
+        ARIADNE_TEST_ASSERT(decide(x[0]>0.5_approx));
+        ARIADNE_TEST_ASSERT(decide(x[0]<1.0_approx));
+        ARIADNE_TEST_EQUAL(kappa.size(),1u);
+        ARIADNE_TEST_EQUAL(lambda.size(),1u);
     }
 
     Void test_stationary_minimisation_step() {
