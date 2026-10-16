@@ -53,10 +53,14 @@ feasible(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactBoxType C) 
 
     FloatDPApproximationVector x=midpoint(D);
 
-    FloatDPApproximationVector w=midpoint(C);
+    // Do not take the midpoint of an unbounded interval:
+    // it can be NaN before the slack variable is initialised.
+    FloatDPApproximationVector w(C.size(),zero);
     for(SizeType i=0; i!=C.size(); ++i) {
-        if(C[i].upper_bound()==+infty) { w[i]=C[i].lower_bound()+one; }
-        else if(C[i].lower_bound()==-infty) { w[i]=C[i].upper_bound()-one; }
+        if(is_inf(C[i].upper_bound()) && is_inf(C[i].lower_bound())) { w[i]=zero; }
+        else if(is_inf(C[i].upper_bound())) { w[i]=C[i].lower_bound()+one; }
+        else if(is_inf(C[i].lower_bound())) { w[i]=C[i].upper_bound()-one; }
+        else { w[i]=midpoint(C[i]); }
     }
 
     FloatDPApproximationVector y(C.size(),zero);
@@ -231,9 +235,9 @@ feasibility_step(ExactBoxType const& D, ApproximateVectorMultivariateFunction co
     // Avoid taking reciprocals of infinite distances, which can produce NaNs.
     Vector<ApproximateNumericType> recwu(m,dp),recwl(m,dp);
     for(SizeType j=0; j!=m; ++j) {
-        if(C[j].upper_bound()==+infty) { recwu[j]=zero; }
+        if(is_inf(C[j].upper_bound())) { recwu[j]=zero; }
         else { recwu[j]=rec(cu[j]-w[j]); }
-        if(C[j].lower_bound()==-infty) { recwl[j]=zero; }
+        if(is_inf(C[j].lower_bound())) { recwl[j]=zero; }
         else { recwl[j]=rec(w[j]-cl[j]); }
     }
     Vector<ApproximateNumericType> recxu=du-x; recxu=erec(recxu);
