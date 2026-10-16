@@ -587,8 +587,8 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ExactBoxType positive({{1.25_x,1.75_x}});
         ExactBoxType negative({{-1.75_x,-1.25_x}});
 
-        ARIADNE_TEST_ASSERT(definitely(disjoint(apply(g,domain),positive)));
-        ARIADNE_TEST_ASSERT(definitely(disjoint(apply(g,domain),negative)));
+        ARIADNE_TEST_ASSERT(definitely(disjoint(Ariadne::apply(g,domain),positive)));
+        ARIADNE_TEST_ASSERT(definitely(disjoint(Ariadne::apply(g,domain),negative)));
 
         for(SizeType i=0u; i!=2u; ++i) {
             const ExactBoxType& codomain=(i==0u ? positive : negative);
