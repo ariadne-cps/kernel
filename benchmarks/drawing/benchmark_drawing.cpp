@@ -445,7 +445,7 @@ void print_table(Options const& opts,std::vector<Result> const& results) {
 
 } // namespace
 
-int main(int argc,char const* const* argv) {
+int main(int argc,const char* argv[]) {
     Logger::instance().configuration().set_verbosity(1u);
 
     Options opts;
