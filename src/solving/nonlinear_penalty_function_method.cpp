@@ -227,8 +227,15 @@ feasibility_step(ExactBoxType const& D, ApproximateVectorMultivariateFunction co
     }
     LOGGING_PRINTLN("Y.D2g(x)="<<YH);
 
-    Vector<ApproximateNumericType> recwu=cu-w; recwu=erec(recwu);
-    Vector<ApproximateNumericType> recwl=w-cl; recwl=erec(recwl);
+    // An absent bound contributes no logarithmic barrier term.
+    // Avoid taking reciprocals of infinite distances, which can produce NaNs.
+    Vector<ApproximateNumericType> recwu(m,dp),recwl(m,dp);
+    for(SizeType j=0; j!=m; ++j) {
+        if(C[j].upper_bound()==+infty) { recwu[j]=zero; }
+        else { recwu[j]=rec(cu[j]-w[j]); }
+        if(C[j].lower_bound()==-infty) { recwl[j]=zero; }
+        else { recwl[j]=rec(w[j]-cl[j]); }
+    }
     Vector<ApproximateNumericType> recxu=du-x; recxu=erec(recxu);
     Vector<ApproximateNumericType> recxl=x-dl; recxl=erec(recxl);
 
