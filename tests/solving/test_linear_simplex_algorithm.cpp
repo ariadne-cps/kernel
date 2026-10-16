@@ -37,7 +37,7 @@ class TestLinearSimplexSolver
     Void test() {
         ARIADNE_TEST_CALL(test_slackness_output());
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
-        ARIADNE_TEST_CALL(test_validated_feasibility_upper_entry());
+        ARIADNE_TEST_CALL(test_lpstep_upper_entry());
         ARIADNE_TEST_CALL(test_degenerate_ratio_tie_breaking());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
         ARIADNE_TEST_CALL(test_validated_feasibility_bound_flip());
@@ -311,13 +311,12 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_EQUAL(vt[1],Slackness::LOWER);
     }
 
-    Void test_validated_feasibility_upper_entry() {
-        // The initial basic x0=-1/2 is below its lower bound.
-        // Nonbasic x1 starts at UPPER and must decrease, exchanging
-        // with x0, which reaches its upper bound at x0=1.
+    Void test_lpstep_upper_entry() {
+        // Start with a feasible basis: x0=0.5, x1=1 (UPPER).
+        // Decreasing x1 reaches the upper bound of x0 at 1.
         LinearSimplexSolver<FloatDP> solver;
         Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
-        Vector<FloatDP> b({0.5_x},dp);
+        Vector<FloatDP> b({1.5_x},dp);
         Vector<FloatDP> xl({0.0_x,-1.0_x},dp);
         Vector<FloatDP> xu({1.0_x,1.0_x},dp);
         Array<Slackness> vt(2u);
@@ -326,17 +325,22 @@ class TestLinearSimplexSolver
         Array<SizeType> p(2u);
         p[0]=0u;
         p[1]=1u;
+        Matrix<FloatDPBounds> B=Matrix<FloatDPBounds>::identity(1u,dp);
+        Vector<FloatDPBounds> x=solver.compute_x(xl,xu,A,b,vt);
 
-        ARIADNE_TEST_ASSERT(!solver.validated_feasibility_step(xl,xu,A,b,vt,p));
+        ARIADNE_TEST_ASSERT(definitely(x[0]==FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(1.0_x,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(xl,xu,A,b,vt,p,B,x));
+
+        SizeType r=solver.lpstep(xl,xu,A,b,vt,p,B,x,1u);
+        ARIADNE_TEST_EQUAL(r,0u);
         ARIADNE_TEST_EQUAL(vt[0],Slackness::UPPER);
         ARIADNE_TEST_EQUAL(vt[1],Slackness::BASIS);
         ARIADNE_TEST_EQUAL(p[0],1u);
         ARIADNE_TEST_EQUAL(p[1],0u);
-        auto x=solver.compute_x(xl,xu,A,b,vt);
         ARIADNE_TEST_ASSERT(definitely(x[0]==FloatDPBounds(1.0_x,dp)));
-        ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(-0.5_x,dp)));
-        ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(xl,xu,A,b,vt,p));
-        ARIADNE_TEST_ASSERT(definitely(solver.validated_feasible(xl,xu,A,b)));
+        ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(xl,xu,A,b,vt,p,B,x));
     }
 
     Void test_degenerate_ratio_tie_breaking() {
