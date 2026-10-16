@@ -326,10 +326,10 @@ Drawing regressions should preserve both **geometric semantics** and
   including touching contours that must use general filling.
   A separate fixture covers horizontal/vertical strokes with fractional
   widths and coordinates, short segments and clipped end caps.
-- The C++ `test_backend_comparison` executable generates and inspects
+- The C++ `test_default_graphics_regression` executable generates and inspects
   PNG fixtures for axis-label legibility, rectangular winding and clipping.
-  When the optional reference backend is enabled, it also checks pixel
-  parity in the plotting area.
+  Every generated image is checked against the approved full-image golden
+  PNG; there is no optional alternate rasterizer or conditional comparison.
 - The 11 immutable PNGs in `tests/drawing/golden/` provide pixel-exact
   regression references covering entire rendered images, including labels,
   margins, fills and strokes. The same standard-library-only C++ PNG reader
@@ -342,7 +342,8 @@ Drawing regressions should preserve both **geometric semantics** and
 - Both C++ tests use the self-contained stored-block PNG decoder in
   `tests/drawing/default_graphics_png.hpp`, requiring no Python test tools.
   Each test produces and checks its own images; no CTest fixture is needed.
-- Plotting-area comparison is kept separate from axis-label checks.
+- Full-image golden comparison includes both plotting area and axis labels;
+  focused semantic tests remain independent to diagnose rendering behaviour.
 - The benchmark's scenario definitions should remain stable between
   optimization iterations to allow useful comparisons.
 - Optimizations must preserve the coverage-mask and single-compositing

@@ -36,13 +36,13 @@ jobs:
 
     - name: Set Up macOS Dependencies
       if: runner.os == 'macOS'
-      run: brew install ninja gmp mpfr cairo pkg-config gnupg
+      run: brew install ninja gmp mpfr pkg-config gnupg
 
     - name: Set Up Linux Dependencies
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake ninja-build pkg-config lcov g++-13 libgmp-dev libmpfr-dev libcairo2-dev
+        sudo apt-get install -y cmake ninja-build pkg-config lcov g++-13 libgmp-dev libmpfr-dev
 
     - name: Create Build Environment
       run: cmake -E make_directory ${{ runner.workspace }}/build

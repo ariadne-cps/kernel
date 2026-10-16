@@ -551,7 +551,7 @@ void DefaultGraphicsCanvas::rasterise_segment(Point a,Point b,double width) {
     }
 }
 // Round endpoints restore readable glyph strokes while preserving the
-// butt caps expected by Cairo for ordinary drawing paths.
+// butt caps of ordinary drawing paths.
 void DefaultGraphicsCanvas::rasterise_disc(Point center,double radius) {
     if (!(radius>0) || !std::isfinite(center.x) || !std::isfinite(center.y)) return;
     const double xmin=center.x-radius, xmax=center.x+radius;
@@ -602,7 +602,7 @@ void DefaultGraphicsCanvas::rasterise_join(Point a,Point b,Point c,double half_w
     double side=(cross>0 ? -1.0:1.0);
     Point p{b.x+side*(-uy)*half_width,b.y+side*ux*half_width};
     Point q{b.x+side*(-vy)*half_width,b.y+side*vx*half_width};
-    // Cairo defaults to a miter join, with miter limit 10.
+    // Use miter joins with a limit of 10.
     double determinant=ux*(-vy)-(-vx)*uy;
     if(std::abs(determinant)<1e-12) return;
     double t=((q.x-p.x)*(-vy)-(-vx)*(q.y-p.y))/determinant;
@@ -876,7 +876,7 @@ Void DefaultGraphicsCanvas::fill() {
         rasterise_fill();
         composite_coverage(_fill);
     }
-    // Equivalent to cairo_fill_preserve followed by cairo_stroke.
+    // Preserve the path through filling, then stroke and consume it.
     stroke();
 }
 

@@ -28,9 +28,6 @@
 #include "drawing/figure.hpp"
 #include "drawing/geometry2d.hpp"
 #include "drawing/default_graphics.hpp"
-#ifdef ARIADNE_HAS_CAIRO
-#include "drawing/cairo.hpp"
-#endif
 #include "drawing/drawer.hpp"
 #include "drawing/null_graphics.hpp"
 

@@ -3,7 +3,7 @@
 These 11 PNGs were supplied from a successful local build of `DefaultGraphicsBackend`
 on 16 October 2026, using a 320 x 240 drawing area (490 x 290 pixels including
 plot margins). They are versioned, read-only pixel-exact regression references
-for `test_backend_comparison`.
+for `test_default_graphics_regression`.
 
 The C++ test generates the corresponding images again and uses the existing
 self-contained PNG reader on both generated and reference files. All RGB

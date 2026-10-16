@@ -33,15 +33,6 @@ endif()
 setup_project()
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-option(ARIADNE_WITH_CAIRO "Build optional Cairo reference backend" ON)
-if(ARIADNE_WITH_CAIRO)
-    find_package(Cairo QUIET)
-    if(NOT Cairo_FOUND AND NOT CAIRO_FOUND)
-        message(STATUS "Cairo unavailable: building Embedded backend only")
-        set(ARIADNE_WITH_CAIRO OFF)
-    endif()
-endif()
-
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
 add_subdirectory(ss)
@@ -52,10 +43,6 @@ target_include_directories(kernel INTERFACE
     $<INSTALL_INTERFACE:include/ariadne-kernel>
 )
 target_link_libraries(kernel INTERFACE algebra bdd)
-if(ARIADNE_WITH_CAIRO)
-    target_link_libraries(kernel INTERFACE Cairo::Cairo)
-    target_compile_definitions(kernel INTERFACE ARIADNE_HAS_CAIRO=1)
-endif()
 
 add_subdirectory(src)
 foreach(target

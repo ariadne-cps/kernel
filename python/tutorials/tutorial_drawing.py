@@ -49,7 +49,7 @@ def tutorial_drawing():
     section("Graphics backend and drawer policy")
 
     manager = GraphicsManager.instance()
-    manager.set_backend(CairoGraphicsBackend())
+    manager.set_backend(DefaultGraphicsBackend())
     manager.set_drawer(AffineDrawer(1))
     show("current drawer", manager.drawer())
 
@@ -165,7 +165,7 @@ def tutorial_drawing():
     print("GraphicsProperties / Colour: control line, fill and opacity independently of geometry.")
     print("GraphicsManager: choose the rendering backend and nonlinear-set drawer globally.")
     print("BoxDrawer / AffineDrawer / GridDrawer: trade rendering cost for geometric detail.")
-    print("CairoGraphicsBackend: materialise figures as PNG files.")
+    print("DefaultGraphicsBackend: materialise figures as PNG files.")
 
 
 if __name__ == "__main__":

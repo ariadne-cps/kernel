@@ -73,7 +73,6 @@ inline std::uint32_t crc32(std::vector<unsigned char> const& b,
 }
 
 // Read the self-contained Default graphics backend's stored-block PNG.
-// The optional comparison backend has a separate decoder via its own API.
 //! \brief Decode the stored-block RGBA8 PNG emitted by Default graphics.
 inline Image read_default_graphics_png(std::string const& name) {
     std::ifstream file(name,std::ios::binary);

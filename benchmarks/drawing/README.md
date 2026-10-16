@@ -12,7 +12,7 @@ The benchmark measures the Default graphics renderer directly; no backend select
 Build a Release configuration, since Debug benchmarks are misleading:
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DARIADNE_WITH_CAIRO=OFF
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target benchmark_drawing --parallel
 ./build/benchmarks/drawing/benchmark_drawing --iterations 7 --warmup 2
 ```
