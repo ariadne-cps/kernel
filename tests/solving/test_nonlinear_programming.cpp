@@ -754,6 +754,8 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_point_feasibility_with_equalities());
         ARIADNE_TEST_CALL(test_stationary_feasibility());
         ARIADNE_TEST_CALL(test_approximate_penalty_step());
+        ARIADNE_TEST_CALL(test_one_sided_codomain_feasibility());
+        ARIADNE_TEST_CALL(test_approximate_penalty_backtracking());
     }
 
     Void test_point_feasibility_with_inequalities() {
@@ -805,6 +807,41 @@ class TestNonlinearPenaltyFunctionSolver
         ExactBoxType codomain({{-1.0_x,1.0_x}});
 
         ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,codomain)));
+    }
+
+    Void test_one_sided_codomain_feasibility() {
+        // The initial slack point is chosen one unit inside the only
+        // finite codomain bound, avoiding an infinite midpoint.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType upper_only({{-inf,1.0_x}});
+        ExactBoxType lower_only({{-1.0_x,+inf}});
+
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,upper_only)));
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,lower_only)));
+    }
+
+    Void test_approximate_penalty_backtracking() {
+        // For g(x)=4x, x=1/4 and w=3/4, the full Newton update
+        // leaves the boxes [-1,1]. Backtracking must reduce the
+        // step to keep both updated components admissible.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({4*coordinates[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+        FloatDPApproximationVector point({0.25_x},dp);
+        FloatDPApproximationVector slack({0.75_x},dp);
+        FloatDPApproximation weight(1.0_x,dp);
+
+        solver.feasibility_step(domain,g,codomain,point,slack,weight);
+        ARIADNE_TEST_ASSERT(decide(weight==FloatDPApproximation(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(point)));
+        ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(slack)));
+        ARIADNE_TEST_ASSERT(decide(point[0]<FloatDPApproximation(0.25_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(slack[0]<FloatDPApproximation(0.0_x,dp)));
     }
 
     Void test_approximate_penalty_step() {
