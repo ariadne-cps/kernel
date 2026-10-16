@@ -297,7 +297,7 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
             domain,constraints,equality,point,positive_multiplier)==0.0_approx));
         ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
-            domain,constraints,upper_bounded,point,positive_multiplier)==-0.5_approx));
+            domain,constraints,upper_bounded,point,negative_multiplier)==0.5_approx));
         ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
             domain,constraints,lower_bounded,point,positive_multiplier)==0.5_approx));
         ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
