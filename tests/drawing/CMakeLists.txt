@@ -4,6 +4,7 @@ set(UNIT_TESTS
     test_null_graphics
     test_backend_comparison
     test_embedded_robustness
+    test_embedded_robustness
 )
 foreach(TEST ${UNIT_TESTS})
     add_executable(${TEST} ${TEST}.cpp)
@@ -55,6 +56,22 @@ if(Python3_Interpreter_FOUND)
     set_tests_properties(test_embedded_robustness PROPERTIES
         FIXTURES_SETUP embedded_robustness_image
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    set_tests_properties(check_embedded_robustness PROPERTIES
+        FIXTURES_REQUIRED embedded_robustness_image
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        LABELS "drawing")
+endif()
+
+# Embedded-only robustness test creates its own PNG; fixtures select
+# its producer even when only the image assertion is requested.
+set_tests_properties(test_embedded_robustness PROPERTIES
+    FIXTURES_SETUP embedded_robustness_image
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+if(Python3_Interpreter_FOUND)
+    add_test(NAME check_embedded_robustness
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_embedded_robustness.py"
+            "embedded-robustness.png")
     set_tests_properties(check_embedded_robustness PROPERTIES
         FIXTURES_REQUIRED embedded_robustness_image
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"

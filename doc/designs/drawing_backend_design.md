@@ -314,8 +314,10 @@ Drawing regressions should preserve both **geometric semantics** and
   including touching contours that must use general filling.
   A separate fixture covers horizontal/vertical strokes with fractional
   widths and coordinates, short segments and clipped end caps.
-- A standalone embedded-only regression checks interior pixels of the
-  nested-rectangle scenes; it does not depend on a reference backend.
+- Standalone embedded-only regressions check the nested-rectangle winding
+  semantics and robustness of dimension/axis validation, clipping, opacity
+  and non-finite drawing inputs. They inspect generated PNG pixels without
+  needing an alternative renderer.
 - An embedded-only robustness test checks invalid dimensions and coordinate
   ranges, including numerical overflow/underflow, and verifies the resulting
   PNG's clipping, transparency, clamped opacity and unchanged margins.
