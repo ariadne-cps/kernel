@@ -274,6 +274,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_feasible_box_rejections());
         ARIADNE_TEST_CALL(test_feasible_box_singular_equality());
         ARIADNE_TEST_CALL(test_base_infeasibility());
+        ARIADNE_TEST_CALL(test_equality_solution_rechecks_inequalities());
         ARIADNE_TEST_CALL(test_candidate_linear());
         ARIADNE_TEST_CALL(test_candidate_nonlinear());
         ARIADNE_TEST_CALL(test_candidate_equality());
@@ -287,6 +288,21 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_candidate_rank_deficient());
         ARIADNE_TEST_CALL(test_candidate_overdetermined());
         ARIADNE_TEST_CALL(test_candidate_deterministic());
+    }
+
+    Void test_equality_solution_rechecks_inequalities() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({x[0]-0.5_x,x[0]});
+        ExactBoxType D({{0.0_x,1.0_x}});
+        ExactBoxType permissive({{0.0_x,0.0_x},{0.0_x,0.75_x}});
+        ExactBoxType restrictive({{0.0_x,0.0_x},{0.0_x,0.375_x}});
+        FloatDPVector initial({0.25_x},dp);
+
+        // The equality has its only root at x=0.5. Both inequality
+        // codomains accept the initial guess, but only one accepts
+        // the validated equality solution.
+        ARIADNE_TEST_ASSERT(optimiser.validate_feasibility(D,g,permissive,initial));
+        ARIADNE_TEST_ASSERT(!optimiser.validate_feasibility(D,g,restrictive,initial));
     }
 
     Void test_base_infeasibility() {
