@@ -533,6 +533,12 @@ int main() {
             const ImageSize2d invalid(8,-1);
             (void)invalid;
         },"negative signed plot height accepted");
+        // The signed overload must also accept valid dimensions and preserve
+        // both coordinates, instead of merely rejecting invalid inputs.
+        const ImageSize2d valid_signed_size(Int(13),Int(29));
+        DrawingTest::require(
+            valid_signed_size.nx==Nat(13) && valid_signed_size.ny==Nat(29),
+            "Signed image dimensions were not preserved");
         must_reject([] {
             DefaultGraphicsCanvas canvas(ImageSize2d(
                 std::numeric_limits<Nat>::max(),8u));
