@@ -301,6 +301,37 @@ void test_degenerate_fills_leave_pixels_unchanged() {
                          "Degenerate path unexpectedly painted the canvas");
 }
 
+//! \brief Distinct paint colours retain their values after cache eviction.
+void test_paint_cache_survives_eviction() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.set_line_width(0.0);
+    canvas.set_fill_opacity(1.0);
+    const std::array<std::array<double,3>,8> colours{{
+        {{1.0,0.0,0.0}}, {{0.0,1.0,0.0}}, {{0.0,0.0,1.0}},
+        {{1.0,1.0,0.0}}, {{1.0,0.0,1.0}}, {{0.0,1.0,1.0}},
+        {{1.0,0.0,0.0}}, {{0.0,0.0,1.0}}
+    }};
+    for(std::size_t i=0;i<colours.size();++i) {
+        const double cx=-0.84+0.24*static_cast<double>(i);
+        canvas.set_fill_colour(colours[i][0],colours[i][1],colours[i][2]);
+        rectangle(canvas,cx-0.08,-0.5,cx+0.08,0.5);
+    }
+    canvas.write("default_graphics-paint-cache.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-paint-cache.png");
+    for(std::size_t i=0;i<colours.size();++i) {
+        const double cx=-0.84+0.24*static_cast<double>(i);
+        const std::array<unsigned char,3> expected{{
+            static_cast<unsigned char>(255.0*colours[i][0]),
+            static_cast<unsigned char>(255.0*colours[i][1]),
+            static_cast<unsigned char>(255.0*colours[i][2])
+        }};
+        DrawingTest::require(DrawingTest::world_pixel(image,cx,0.0)==expected,
+                             "Cached paint colour changed at index "+std::to_string(i));
+    }
+}
+
 } // namespace
 
 int main() {
@@ -404,6 +435,7 @@ int main() {
         test_overlapping_rectangular_contours();
         test_rectangle_fast_path_matches_generic_fill();
         test_degenerate_fills_leave_pixels_unchanged();
+        test_paint_cache_survives_eviction();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
