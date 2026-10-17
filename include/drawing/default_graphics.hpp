@@ -143,11 +143,8 @@ class DefaultGraphicsCanvas : public CanvasBase {
     //! \brief Apply the current world-to-device mapping.
     Point transform(double x, double y) const;
 
-    //! \brief Blend a partially covered pixel in the opaque raster.
-    void blend(int x, int y, Paint paint, double coverage);
-
-    //! \brief Paint an integer bounding box, used for backgrounds.
-    void rectangle(int x0, int y0, int x1, int y1, Paint paint);
+    //! \brief Paint the opaque background over the full plotting area.
+    void paint_plot_background();
 
     //! \brief Mark one of sixteen samples covered by the current operation.
     void mark_sample(int x, int y, int sx, int sy);

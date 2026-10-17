@@ -204,41 +204,18 @@ DefaultGraphicsCanvas::Point DefaultGraphicsCanvas::transform(double x, double y
     return {_tx+_sx*x, _ty+_sy*y};
 }
 
-void DefaultGraphicsCanvas::blend(int x, int y, Paint paint, double coverage) {
-    if (x < 0 || y < 0 || x >= static_cast<int>(_width) || y >= static_cast<int>(_height)) return;
-    if (_clipped && (x < LEFT || x >= static_cast<int>(_width)-RIGHT ||
-                     y < TOP || y >= static_cast<int>(_height)-BOTTOM)) return;
-    double alpha = unit(paint.a) * unit(coverage);
-    if (alpha <= 0) return;
-    std::size_t index = (static_cast<std::size_t>(y)*_width+static_cast<std::size_t>(x))*4;
-    _pixels[index] = composite_channel(_pixels[index],255.0*unit(paint.r),alpha);
-    _pixels[index+1] = composite_channel(_pixels[index+1],255.0*unit(paint.g),alpha);
-    _pixels[index+2] = composite_channel(_pixels[index+2],255.0*unit(paint.b),alpha);
-}
-
-void DefaultGraphicsCanvas::rectangle(int x0, int y0, int x1, int y1, Paint paint) {
-    const int left=std::max(x0,0),right=std::min(x1,static_cast<int>(_width));
-    const int top=std::max(y0,0),bottom=std::min(y1,static_cast<int>(_height));
-    if (left>=right || top>=bottom) return;
-    if (unit(paint.a)==1.0) {
-        // The plot background is always opaque: write the RGB bytes directly
-        // rather than invoking floating-point alpha blending for every pixel.
-        const auto red_byte=channel(paint.r);
-        const auto green_byte=channel(paint.g);
-        const auto blue_byte=channel(paint.b);
-        for(int y=top;y<bottom;++y) {
-            std::size_t offset=(static_cast<std::size_t>(y)*_width+
-                                static_cast<std::size_t>(left))*4;
-            for(int x=left;x<right;++x,offset+=4) {
-                _pixels[offset]=red_byte;
-                _pixels[offset+1]=green_byte;
-                _pixels[offset+2]=blue_byte;
-            }
+// Only initialise() paints the rectangular plot background.  It is always
+// opaque and covers the entire (strictly positive) plotting area.  All other
+// rectangles are regular paths handled by rasterise_fill().
+void DefaultGraphicsCanvas::paint_plot_background() {
+    const auto shade=channel(0.97);
+    for(int y=TOP; y<static_cast<int>(_height)-BOTTOM; ++y) {
+        auto offset=(static_cast<std::size_t>(y)*_width+LEFT)*4;
+        for(int x=LEFT; x<static_cast<int>(_width)-RIGHT; ++x,offset+=4) {
+            _pixels[offset]=shade;
+            _pixels[offset+1]=shade;
+            _pixels[offset+2]=shade;
         }
-    } else {
-        for(int y=top;y<bottom;++y)
-            for(int x=left;x<right;++x)
-                blend(x,y,paint,1.0);
     }
 }
 
@@ -311,7 +288,7 @@ Void DefaultGraphicsCanvas::initialise(StringType text_x, StringType text_y,
     text(LEFT-static_cast<int>(yl_text.size())*step-6, TOP+h+2-glyph_h, yl_text);
     text(LEFT-static_cast<int>(yu_text.size())*step-6, TOP+2, yu_text);
     text(LEFT-static_cast<int>(text_y.size())*step-6, TOP+h/2+2, text_y);
-    rectangle(LEFT, TOP, LEFT+w, TOP+h, {0.97,0.97,0.97,1.0});
+    paint_plot_background();
     _sx=sx;
     _sy=sy;
     _tx=tx;
