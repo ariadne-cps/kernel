@@ -33,6 +33,7 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <string>
 
 using namespace Ariadne;
 
@@ -59,6 +60,54 @@ void rectangle(DefaultGraphicsCanvas& canvas,double xl,double yl,
     canvas.fill();
 }
 
+//! \brief Verify that each embedded font glyph is visibly rendered.
+void test_embedded_axis_glyphs() {
+    constexpr unsigned plot_width=520u;
+    constexpr unsigned plot_height=100u;
+    constexpr int advance=18;
+    const auto render_label=[=](std::string const& label,const char* filename) {
+        DefaultGraphicsCanvas canvas(ImageSize2d(plot_width,plot_height));
+        canvas.initialise(label,"",-1.0,1.0,-1.0,1.0);
+        canvas.write(filename);
+        return DrawingTest::read_default_graphics_png(filename);
+    };
+    const auto verify_cells=[=](DrawingTest::Image const& text,
+                                DrawingTest::Image const& blank,
+                                std::string const& label) {
+        const int x0=160+static_cast<int>(plot_width)/2-
+                     static_cast<int>(label.size())*advance/2-3;
+        const int y0=10+static_cast<int>(plot_height)+4;
+        for(std::size_t i=0;i<label.size();++i) {
+            bool painted=false;
+            for(int y=y0;y<y0+21;++y)
+                for(int x=x0+static_cast<int>(i)*advance;
+                    x<x0+static_cast<int>(i)*advance+15;++x)
+                    if(text.pixel(static_cast<unsigned>(x),static_cast<unsigned>(y)) !=
+                       blank.pixel(static_cast<unsigned>(x),static_cast<unsigned>(y)))
+                        painted=true;
+            DrawingTest::require(painted==(label[i]!=' '),
+                                 "Embedded font glyph missing at index "+std::to_string(i));
+        }
+    };
+
+    const std::string lower="abcdefghijklmnopqrstuvwxyz";
+    const std::string upper="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const auto blank_letters=render_label(std::string(lower.size(),' '),
+                                          "default_graphics-blank-letters.png");
+    const auto lower_image=render_label(lower,"default_graphics-lowercase.png");
+    const auto upper_image=render_label(upper,"default_graphics-uppercase.png");
+    verify_cells(lower_image,blank_letters,lower);
+    DrawingTest::require(lower_image.pixels==upper_image.pixels,
+                         "Uppercase and lowercase glyphs render differently");
+
+    // Digits, punctuation, whitespace and unsupported '?' fallback.
+    const std::string symbols="0123456789+-.,:_/()? ";
+    const auto blank_symbols=render_label(std::string(symbols.size(),' '),
+                                          "default_graphics-blank-symbols.png");
+    const auto symbol_image=render_label(symbols,"default_graphics-symbols.png");
+    verify_cells(symbol_image,blank_symbols,symbols);
+}
+
 } // namespace
 
 int main() {
@@ -80,6 +129,9 @@ int main() {
         },"excessive raster area accepted");
 
         DefaultGraphicsCanvas canvas(ImageSize2d(64u,48u));
+        const auto drawing_size=canvas.size_in_pixels();
+        DrawingTest::require(drawing_size.nx==64u && drawing_size.ny==48u,
+                             "Canvas reported incorrect drawable dimensions");
         const double nan=std::numeric_limits<double>::quiet_NaN();
         const double nonfinite_coordinate=std::numeric_limits<double>::infinity();
         const double tiny=std::numeric_limits<double>::denorm_min();
@@ -140,6 +192,19 @@ int main() {
         canvas.line_to(0.8,0.0);
         canvas.stroke();
 
+        // Invalid PNG destinations must report failure.
+        must_reject([&] { canvas.write(nullptr); },
+                    "Null PNG filename accepted");
+        bool rejected_missing_directory=false;
+        try {
+            canvas.write("default_graphics_missing_parent/invalid.png");
+        } catch(const std::runtime_error&) {
+            rejected_missing_directory=true;
+        }
+        DrawingTest::require(rejected_missing_directory,
+                             "PNG writing succeeded in a nonexistent directory");
+
+        test_embedded_axis_glyphs();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
