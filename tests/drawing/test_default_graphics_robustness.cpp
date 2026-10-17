@@ -433,6 +433,15 @@ int main() {
             DefaultGraphicsCanvas canvas(ImageSize2d(8u,0u));
         },"zero plot height accepted");
         must_reject([] {
+            DefaultGraphicsCanvas canvas(ImageSize2d(8u,16385u));
+        },"excessive plot height accepted");
+        must_reject([] {
+            DefaultGraphicsCanvas canvas(ImageSize2d(-1,8));
+        },"negative signed plot width accepted");
+        must_reject([] {
+            DefaultGraphicsCanvas canvas(ImageSize2d(8,-1));
+        },"negative signed plot height accepted");
+        must_reject([] {
             DefaultGraphicsCanvas canvas(ImageSize2d(
                 std::numeric_limits<Nat>::max(),8u));
         },"huge plot width accepted");
@@ -441,6 +450,18 @@ int main() {
         },"excessive raster area accepted");
 
         DefaultGraphicsCanvas canvas(ImageSize2d(64u,48u));
+        const double nan_axes=std::numeric_limits<double>::quiet_NaN();
+        const double infinite_axes=std::numeric_limits<double>::infinity();
+        must_reject([&] {
+            canvas.initialise("x","y",-1,nan_axes,-1,1);
+        },"NaN upper x axis endpoint accepted");
+        must_reject([&] {
+            canvas.initialise("x","y",-1,1,-1,infinite_axes);
+        },"Infinite upper y axis endpoint accepted");
+        must_reject([&] {
+            canvas.initialise("x","y",-1,1,1,1);
+        },"Empty y interval accepted");
+
         const auto drawing_size=canvas.size_in_pixels();
         DrawingTest::require(drawing_size.nx==64u && drawing_size.ny==48u,
                              "Canvas reported incorrect drawable dimensions");
@@ -496,6 +517,10 @@ int main() {
         canvas.line_to(nonfinite_coordinate,0.0);
         canvas.stroke();
         canvas.circle(0.0,0.0,nan);
+        canvas.move_to(0.0,nonfinite_coordinate);
+        canvas.line_to(0.0,nonfinite_coordinate);
+        canvas.circle(0.0,nonfinite_coordinate,0.25);
+
         canvas.circle(nonfinite_coordinate,0.0,0.25);
         canvas.circle(0.0,0.0,-0.25);
         canvas.stroke();
