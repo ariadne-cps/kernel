@@ -953,6 +953,56 @@ void test_offscreen_miter_join_triangles() {
                          "Offscreen join triangles unexpectedly painted the canvas");
 }
 
+//! \brief A valid anisotropic mapping can overflow only the vertical
+//! device-space circle radius; such a circle must be ignored safely.
+void test_anisotropic_circle_radius_overflow() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1e-200,1e-200);
+    canvas.write("default_graphics-anisotropic-radius-baseline.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-anisotropic-radius-baseline.png");
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    // Horizontal radius remains finite, but the much greater vertical
+    // scale makes its radius non-finite.
+    canvas.circle(0.0,0.0,1e107);
+    canvas.fill();
+    canvas.write("default_graphics-anisotropic-radius.png");
+    const auto actual=DrawingTest::read_default_graphics_png(
+        "default_graphics-anisotropic-radius.png");
+    DrawingTest::require(actual.pixels==blank.pixels,
+                         "Overflowed vertical circle radius painted the image");
+}
+
+//! \brief Join vertices can overflow in each coordinate direction even
+//! when the original path coordinates and stroke width remain finite.
+void test_nonfinite_join_triangle_bounds() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.write("default_graphics-nonfinite-joins-baseline.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-nonfinite-joins-baseline.png");
+    canvas.set_line_colour(1.0,0.0,0.0);
+    canvas.set_line_width(1.7e308);
+    const auto join=[&](double ax,double ay,double bx,double by,
+                        double cx,double cy) {
+        canvas.move_to(ax,ay);
+        canvas.line_to(bx,by);
+        canvas.line_to(cx,cy);
+        canvas.stroke();
+    };
+    // The individual coordinates are finite; the external join offset
+    // crosses the maximum finite double on +x, -x, +y and -y.
+    join(1.1e308,1.1e308,1.3e308,1.1e308,1.3e308,1.3e308);
+    join(-1.1e308,1.1e308,-1.3e308,1.1e308,-1.3e308,1.3e308);
+    join(-1.1e308,1.1e308,-1.1e308,1.3e308,-1.3e308,1.3e308);
+    join(1.1e308,-1.1e308,1.1e308,-1.3e308,1.3e308,-1.3e308);
+    canvas.write("default_graphics-nonfinite-join-bounds.png");
+    const auto actual=DrawingTest::read_default_graphics_png(
+        "default_graphics-nonfinite-join-bounds.png");
+    DrawingTest::require(actual.pixels==blank.pixels,
+                         "Overflowed join triangle bounds painted the image");
+}
+
 } // namespace
 
 int main() {
@@ -1114,6 +1164,8 @@ int main() {
         test_segment_arithmetic_overflow();
         test_extreme_axial_strokes_on_all_sides();
         test_offscreen_miter_join_triangles();
+        test_anisotropic_circle_radius_overflow();
+        test_nonfinite_join_triangle_bounds();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
