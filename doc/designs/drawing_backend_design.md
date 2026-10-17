@@ -130,7 +130,12 @@ result   = (1 - alpha) * existing_rgb + alpha * source_rgb
 ```
 
 The stroke uses opaque source alpha and fractional edge coverage. Colour
-channels are quantized to 8 bits after blending. For repeated compositions with the same paint, the backend caches channel
+channels are quantized to 8 bits after blending. Each channel is now
+composited directly in byte space with an explicit fused multiply-add:
+`round(previous + alpha * (255 * source - previous))`. This avoids
+platform-dependent half-integer rounding caused by dividing a destination
+byte by 255 and multiplying it back after normalised blending. The same
+operation is used for direct blending and coverage lookup-table generation. For repeated compositions with the same paint, the backend caches channel
 lookup tables indexed by coverage count and existing channel value,
 preserving the same quantization. A four-entry least-recently-used cache
 avoids recreating the tables when fill and outline colours alternate. This is an opaque RGB

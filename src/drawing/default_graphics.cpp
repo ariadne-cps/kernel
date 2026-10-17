@@ -58,6 +58,16 @@ std::uint8_t channel(double value) {
     return static_cast<std::uint8_t>(std::lround(255.0 * unit(value)));
 }
 
+// Blend in 8-bit channel space with one explicitly rounded operation.
+// The normalized expression (old/255)*(1-alpha)+source*alpha can land
+// just below an exact half-integer on some targets (e.g. 150.49999999999997
+// instead of 150.5), producing different PNG bytes across toolchains.
+std::uint8_t composite_channel(std::uint8_t previous, double source_byte, double alpha) {
+    const double old_byte=static_cast<double>(previous);
+    const double result=std::fma(alpha,source_byte-old_byte,old_byte);
+    return static_cast<std::uint8_t>(std::lround(result));
+}
+
 // A minimal, built-in 5x7 font. Rows are bit masks, high bit at the left.
 std::array<std::uint8_t,7> glyph(char ch) {
     switch (ch) {
@@ -201,9 +211,9 @@ void DefaultGraphicsCanvas::blend(int x, int y, Paint paint, double coverage) {
     double alpha = unit(paint.a) * unit(coverage);
     if (alpha <= 0) return;
     std::size_t index = (static_cast<std::size_t>(y)*_width+static_cast<std::size_t>(x))*4;
-    _pixels[index] = channel((1-alpha)*(_pixels[index]/255.0)+alpha*unit(paint.r));
-    _pixels[index+1] = channel((1-alpha)*(_pixels[index+1]/255.0)+alpha*unit(paint.g));
-    _pixels[index+2] = channel((1-alpha)*(_pixels[index+2]/255.0)+alpha*unit(paint.b));
+    _pixels[index] = composite_channel(_pixels[index],255.0*unit(paint.r),alpha);
+    _pixels[index+1] = composite_channel(_pixels[index+1],255.0*unit(paint.g),alpha);
+    _pixels[index+2] = composite_channel(_pixels[index+2],255.0*unit(paint.b),alpha);
 }
 
 void DefaultGraphicsCanvas::rectangle(int x0, int y0, int x1, int y1, Paint paint) {
@@ -387,14 +397,15 @@ DefaultGraphicsCanvas::BlendTable const& DefaultGraphicsCanvas::blend_table_for(
             }
             if(candidate.last_used<entry->last_used) entry=&candidate;
         }
-        const double source[3]={normalized.r,normalized.g,normalized.b};
+        const double source_byte[3]={
+            255.0*normalized.r,255.0*normalized.g,255.0*normalized.b
+        };
         for(std::size_t n=0;n<=16;++n) {
             const double alpha=normalized.a*(static_cast<double>(n)/16.0);
             for(std::size_t color=0;color<3;++color)
                 for(std::size_t old=0;old<256;++old)
-                    entry->table[n][color][old]=channel(
-                        (1.0-alpha)*(static_cast<double>(old)/255.0)+
-                        alpha*source[color]);
+                    entry->table[n][color][old]=composite_channel(
+                        static_cast<std::uint8_t>(old),source_byte[color],alpha);
         }
         entry->paint=normalized;
         entry->valid=true;

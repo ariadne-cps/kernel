@@ -258,6 +258,10 @@ int main() {
     render(default_graphics, "comparison-default_graphics.png");
     const auto figure_image=DrawingTest::read_default_graphics_png("comparison-default_graphics.png");
     verify_labels(figure_image);
+    // At (329,89), 11/16 green stroke coverage over a 145 channel
+    // and a 153 source gives exactly 150.5; rounding must yield 151.
+    DrawingTest::require(figure_image.pixel(329u,89u)[1]==151u,
+                         "Halfway alpha composite rounded inconsistently");
     DrawingTest::require_golden_image(figure_image,"comparison-default_graphics.png");
     for(int scene=0;scene<10;++scene) {
         DefaultGraphicsCanvas e(ImageSize2d(320u,240u));
