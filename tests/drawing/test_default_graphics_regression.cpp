@@ -31,6 +31,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "drawing/default_graphics.hpp"
 #include "default_graphics_png.hpp"
@@ -254,26 +255,41 @@ static void verify_rectangles(DrawingTest::Image const& holes,
 
 int main() {
     try {
-    DefaultGraphicsCanvas default_graphics(ImageSize2d(320u, 240u));
-    render(default_graphics, "comparison-default_graphics.png");
-    const auto figure_image=DrawingTest::read_default_graphics_png("comparison-default_graphics.png");
-    verify_labels(figure_image);
-    // At (329,89), 11/16 green stroke coverage over a 145 channel
-    // and a 153 source gives exactly 150.5; rounding must yield 151.
-    DrawingTest::require(figure_image.pixel(329u,89u)[1]==151u,
-                         "Halfway alpha composite rounded inconsistently");
-    DrawingTest::require_golden_image(figure_image,"comparison-default_graphics.png");
-    for(int scene=0;scene<10;++scene) {
-        DefaultGraphicsCanvas e(ImageSize2d(320u,240u));
-        std::string ename="comparison-scene"+std::to_string(scene)+"-default_graphics.png";
-        geometry(e,ename.c_str(),scene);
-        const auto generated=DrawingTest::read_default_graphics_png(ename);
-        DrawingTest::require_golden_image(generated,ename);
-    }
-    verify_rectangles(
-        DrawingTest::read_default_graphics_png("comparison-scene7-default_graphics.png"),
-        DrawingTest::read_default_graphics_png("comparison-scene8-default_graphics.png"));
-    return 0;
+        DefaultGraphicsCanvas default_graphics(ImageSize2d(320u,240u));
+        render(default_graphics,"comparison-default_graphics.png");
+        const auto figure_image=DrawingTest::read_default_graphics_png(
+            "comparison-default_graphics.png");
+        verify_labels(figure_image);
+
+        // At (329,89), 11/16 green stroke coverage over a 145 channel
+        // and a 153 source gives exactly 150.5; rounding must yield 151.
+        DrawingTest::require(figure_image.pixel(329u,89u)[1]==151u,
+                             "Halfway alpha composite rounded inconsistently");
+
+        // Generate and decode every scene before comparing any golden fixture.
+        // A golden mismatch must not prevent collecting the other images for
+        // cross-platform diagnostics or an explicitly reviewed baseline update.
+        std::vector<DrawingTest::Image> scenes;
+        scenes.reserve(10);
+        for(int scene=0;scene<10;++scene) {
+            DefaultGraphicsCanvas canvas(ImageSize2d(320u,240u));
+            const std::string name="comparison-scene"+std::to_string(scene)+
+                                   "-default_graphics.png";
+            geometry(canvas,name.c_str(),scene);
+            scenes.push_back(DrawingTest::read_default_graphics_png(name));
+        }
+
+        verify_rectangles(scenes[7],scenes[8]);
+
+        DrawingTest::require_golden_image(
+            figure_image,"comparison-default_graphics.png");
+        for(int scene=0;scene<10;++scene) {
+            const std::string name="comparison-scene"+std::to_string(scene)+
+                                   "-default_graphics.png";
+            DrawingTest::require_golden_image(
+                scenes[static_cast<std::size_t>(scene)],name);
+        }
+        return 0;
     } catch(std::exception const& error) {
         std::cerr<<"default graphics regression: "<<error.what()<<'\n';
         return 1;
