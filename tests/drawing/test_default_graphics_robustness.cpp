@@ -510,6 +510,108 @@ void test_acute_stroke_miter_limit() {
         "Near-reversing join exceeded the miter length limit");
 }
 
+//! \brief Degenerate rectangle-like paths must not gain artificial area.
+void test_rectangle_recognition_rejects_degenerate_contours() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-rectangle-degenerate-baseline.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-rectangle-degenerate-baseline.png");
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    rectangle(canvas,-0.5,0.0,0.5,0.0);
+    rectangle(canvas,0.0,-0.5,0.0,0.5);
+
+    // The second and fourth vertices coincide.  A four-corner fast path
+    // must not treat this retraced contour as an ordinary rectangle.
+    canvas.move_to(-0.7,-0.7);
+    canvas.line_to(0.7,-0.7);
+    canvas.line_to(0.7,0.7);
+    canvas.line_to(0.7,-0.7);
+    canvas.fill();
+    canvas.write("default_graphics-rectangle-degenerate.png");
+    const auto actual=DrawingTest::read_default_graphics_png(
+        "default_graphics-rectangle-degenerate.png");
+    DrawingTest::require(actual.pixels==blank.pixels,
+                         "Degenerate or retraced contour unexpectedly filled");
+}
+
+//! \brief Non-axis quadrilaterals and mixed subpaths use the general filler.
+void test_mixed_nonrectangular_contours() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    canvas.set_line_width(0.0);
+    canvas.move_to(-0.8,-0.4);
+    canvas.line_to(-0.2,-0.4);
+    canvas.line_to(-0.2,0.4);
+    canvas.line_to(-0.8,0.4);
+    canvas.move_to(0.15,-0.5);
+    canvas.line_to(0.85,-0.5);
+    canvas.line_to(0.5,0.5);
+    canvas.fill();
+    canvas.write("default_graphics-mixed-subpaths.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-mixed-subpaths.png");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,-0.5,0.0)==
+            std::array<unsigned char,3>{255,0,0},
+        "Rectangle in mixed path was not filled");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.5,-0.2)==
+            std::array<unsigned char,3>{255,0,0},
+        "Triangular subpath was not filled");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.0,0.7)==
+            std::array<unsigned char,3>{247,247,247},
+        "Mixed subpaths filled outside their contours");
+}
+
+//! \brief The paint-cache key includes opacity, even for identical RGB.
+void test_same_rgb_different_opacity() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    canvas.set_fill_opacity(0.25);
+    rectangle(canvas,-0.8,-0.5,-0.2,0.5);
+    canvas.set_fill_opacity(0.75);
+    rectangle(canvas,0.2,-0.5,0.8,0.5);
+    canvas.write("default_graphics-opacity-cache.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-opacity-cache.png");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,-0.5,0.0)==
+            std::array<unsigned char,3>{249,185,185},
+        "Quarter-opacity red used an incorrect cached paint");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.5,0.0)==
+            std::array<unsigned char,3>{253,62,62},
+        "Three-quarter-opacity red reused the wrong cached paint");
+}
+
+//! \brief Empty paths and invalid widths cannot paint a stroke.
+void test_empty_and_nonfinite_strokes() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-empty-stroke-baseline.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-empty-stroke-baseline.png");
+    canvas.set_line_colour(1.0,0.0,0.0);
+    canvas.set_line_width(3.0);
+    canvas.move_to(0.0,0.0);
+    canvas.stroke(); // One point is insufficient to form a segment.
+    canvas.set_line_width(std::numeric_limits<double>::infinity());
+    canvas.move_to(-0.8,0.0);
+    canvas.line_to(0.8,0.0);
+    canvas.stroke();
+    canvas.write("default_graphics-empty-stroke.png");
+    const auto actual=DrawingTest::read_default_graphics_png(
+        "default_graphics-empty-stroke.png");
+    DrawingTest::require(actual.pixels==blank.pixels,
+                         "An empty path or infinite width painted a stroke");
+}
+
 } // namespace
 
 int main() {
@@ -654,6 +756,10 @@ int main() {
         test_clipped_strokes_outside_plot();
         test_clipped_rectangle_matches_plot_bounds();
         test_acute_stroke_miter_limit();
+        test_rectangle_recognition_rejects_degenerate_contours();
+        test_mixed_nonrectangular_contours();
+        test_same_rgb_different_opacity();
+        test_empty_and_nonfinite_strokes();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
