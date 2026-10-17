@@ -368,6 +368,58 @@ void test_overflowed_circle_geometry() {
                          "Overflowed circle geometry unexpectedly painted");
 }
 
+//! \brief Non-finite paint channels and opacity have defined, safe semantics.
+void test_nonfinite_paint_values() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.set_line_width(0.0);
+    const double nan=std::numeric_limits<double>::quiet_NaN();
+    const double infinity=std::numeric_limits<double>::infinity();
+
+    // Undefined or infinite colour channels normalize to zero.
+    canvas.set_fill_colour(nan,infinity,1.0);
+    canvas.set_fill_opacity(1.0);
+    rectangle(canvas,-0.8,-0.5,-0.2,0.5);
+
+    // An undefined alpha contributes zero coverage.
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    canvas.set_fill_opacity(nan);
+    rectangle(canvas,0.2,-0.5,0.8,0.5);
+    canvas.write("default_graphics-nonfinite-paint.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-nonfinite-paint.png");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,-0.5,0.0)==
+            std::array<unsigned char,3>{0,0,255},
+        "Non-finite RGB channels were not normalized to zero");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.5,0.0)==
+            std::array<unsigned char,3>{247,247,247},
+        "Non-finite fill opacity painted the background");
+}
+
+//! \brief The first line_to starts a path when move_to has not been called.
+void test_line_to_without_move_to() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.set_line_width(3.0);
+    canvas.set_line_colour(1.0,0.0,0.0);
+    canvas.line_to(-0.75,0.0);
+    canvas.line_to(0.75,0.0);
+    canvas.stroke();
+    canvas.write("default_graphics-line-without-move.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-line-without-move.png");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.0,0.0)==
+            std::array<unsigned char,3>{255,0,0},
+        "line_to failed to start and extend an empty path");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.0,0.75)==
+            std::array<unsigned char,3>{247,247,247},
+        "line_to painted pixels outside its stroke");
+}
+
 } // namespace
 
 int main() {
@@ -474,6 +526,8 @@ int main() {
         test_paint_cache_survives_eviction();
         test_subpixel_empty_rectangle();
         test_overflowed_circle_geometry();
+        test_nonfinite_paint_values();
+        test_line_to_without_move_to();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
