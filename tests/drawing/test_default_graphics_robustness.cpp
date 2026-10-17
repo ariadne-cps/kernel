@@ -822,6 +822,51 @@ void test_extreme_thin_triangle_fill() {
                          "Subpixel-thin triangle unexpectedly painted the raster");
 }
 
+//! \brief Repeating a consecutive vertex does not change a triangle fill.
+void test_duplicate_consecutive_vertices_preserve_fill() {
+    const auto render=[](int duplicate,const char* filename) {
+        DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+        canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+        canvas.set_line_width(0.0);
+        canvas.set_fill_colour(1.0,0.0,0.0);
+        canvas.move_to(-0.7,-0.6);
+        if(duplicate==1) canvas.line_to(-0.7,-0.6);
+        canvas.line_to(0.7,-0.6);
+        if(duplicate==2) canvas.line_to(0.7,-0.6);
+        canvas.line_to(0.0,0.7);
+        canvas.fill();
+        canvas.write(filename);
+        return DrawingTest::read_default_graphics_png(filename);
+    };
+    const auto triangle=render(0,"default_graphics-triangle-original.png");
+    const auto repeat_first=render(1,"default_graphics-triangle-repeat-first.png");
+    const auto repeat_second=render(2,"default_graphics-triangle-repeat-second.png");
+    DrawingTest::require(triangle.pixels==repeat_first.pixels &&
+                         triangle.pixels==repeat_second.pixels,
+                         "A repeated consecutive vertex changed the filled triangle");
+    DrawingTest::require(
+        DrawingTest::world_pixel(triangle,0.0,0.0)==
+            std::array<unsigned char,3>{255,0,0},
+        "Reference triangle did not fill its interior");
+}
+
+//! \brief Subpixel-small device rectangles remain empty even if their
+//! exact positive area underflows in floating-point cross products.
+void test_subnormal_rectangle_cross_underflow() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.write("default_graphics-underflow-blank.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-underflow-blank.png");
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    canvas.set_line_width(0.0);
+    rectangle(canvas,0.0,0.0,1e-200,1e-200);
+    canvas.write("default_graphics-underflow-rectangle.png");
+    const auto result=DrawingTest::read_default_graphics_png(
+        "default_graphics-underflow-rectangle.png");
+    DrawingTest::require(result.pixels==blank.pixels,
+                         "An unresolvable subpixel rectangle changed the image");
+}
+
 } // namespace
 
 int main() {
@@ -978,6 +1023,8 @@ int main() {
         test_uninitialised_canvas_fill_and_reset();
         test_slanted_quadrilateral_edge_orientations();
         test_extreme_thin_triangle_fill();
+        test_duplicate_consecutive_vertices_preserve_fill();
+        test_subnormal_rectangle_cross_underflow();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
