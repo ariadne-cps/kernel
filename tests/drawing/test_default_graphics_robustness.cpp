@@ -176,6 +176,131 @@ void test_nonrectangular_five_vertex_fill() {
         "Five-vertex contour incorrectly used the rectangle fast path");
 }
 
+//! \brief Rectangles entirely beyond each plot edge must not paint pixels.
+void test_clipped_rectangles_on_all_sides() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-clipped-blank.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-clipped-blank.png");
+
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    const auto rectangle=[&](double xl,double yl,double xu,double yu) {
+        canvas.move_to(xl,yl);
+        canvas.line_to(xu,yl);
+        canvas.line_to(xu,yu);
+        canvas.line_to(xl,yu);
+        canvas.fill();
+    };
+    rectangle(-2.0,-0.4,-1.2,0.4); // Left.
+    rectangle(1.2,-0.4,2.0,0.4);   // Right.
+    rectangle(-0.4,-2.0,0.4,-1.2); // Bottom.
+    rectangle(-0.4,1.2,0.4,2.0);   // Top.
+    canvas.write("default_graphics-clipped-all-sides.png");
+    const auto clipped=DrawingTest::read_default_graphics_png(
+        "default_graphics-clipped-all-sides.png");
+    DrawingTest::require(clipped.pixels==blank.pixels,
+                         "Off-screen rectangles unexpectedly painted the canvas");
+}
+
+//! \brief Two overlapping rectangles must retain the nonzero winding fill.
+void test_overlapping_rectangular_contours() {
+    struct Overlap {
+        double xl,yl,xu,yu;
+        double probe_x,probe_y;
+    };
+    const std::array<Overlap,4> cases{{
+        {-0.8,-0.25,-0.2,0.25,-0.7,0.0}, // Inner extends left.
+        {0.2,-0.25,0.8,0.25,0.7,0.0},    // Inner extends right.
+        {-0.25,-0.8,0.25,-0.2,0.0,-0.7}, // Inner extends below.
+        {-0.25,0.2,0.25,0.8,0.0,0.7}     // Inner extends above.
+    }};
+    for(std::size_t i=0;i<cases.size();++i) {
+        DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+        canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+        canvas.set_line_width(0.0);
+        canvas.set_fill_colour(1.0,0.0,0.0);
+        canvas.set_fill_opacity(1.0);
+        const auto contour=[&](double xl,double yl,double xu,double yu) {
+            canvas.move_to(xl,yl);
+            canvas.line_to(xu,yl);
+            canvas.line_to(xu,yu);
+            canvas.line_to(xl,yu);
+        };
+        contour(-0.6,-0.6,0.6,0.6);
+        const auto& r=cases[i];
+        contour(r.xl,r.yl,r.xu,r.yu);
+        canvas.fill();
+        const auto filename="default_graphics-overlap-"+std::to_string(i)+".png";
+        canvas.write(filename.c_str());
+        const auto image=DrawingTest::read_default_graphics_png(filename);
+        DrawingTest::require(
+            DrawingTest::world_pixel(image,r.probe_x,r.probe_y)==
+                std::array<unsigned char,3>{255,0,0},
+            "Overlapping nonzero-winding contours lost the outside portion");
+        DrawingTest::require(
+            DrawingTest::world_pixel(image,0.0,0.0)==
+                std::array<unsigned char,3>{255,0,0},
+            "Overlapping nonzero-winding contours lost the outer interior");
+        DrawingTest::require(
+            DrawingTest::world_pixel(image,0.95,0.95)==
+                std::array<unsigned char,3>{247,247,247},
+            "Overlapping contours painted beyond their geometry");
+    }
+}
+
+//! \brief A redundant collinear vertex must not change a nested-hole fill.
+void test_rectangle_fast_path_matches_generic_fill() {
+    const auto render=[](bool redundant_vertex,const char* filename) {
+        DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+        canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+        canvas.set_line_width(0.0);
+        canvas.set_fill_colour(1.0,0.0,0.0);
+        canvas.set_fill_opacity(1.0);
+        canvas.move_to(-0.75,-0.75);
+        if(redundant_vertex) canvas.line_to(0.0,-0.75);
+        canvas.line_to(0.75,-0.75);
+        canvas.line_to(0.75,0.75);
+        canvas.line_to(-0.75,0.75);
+        canvas.move_to(-0.25,-0.25);
+        canvas.line_to(-0.25,0.25);
+        canvas.line_to(0.25,0.25);
+        canvas.line_to(0.25,-0.25);
+        canvas.fill();
+        canvas.write(filename);
+        return DrawingTest::read_default_graphics_png(filename);
+    };
+    const auto fast=render(false,"default_graphics-hole-fast.png");
+    const auto generic=render(true,"default_graphics-hole-general.png");
+    DrawingTest::require(fast.pixels==generic.pixels,
+                         "Nested-hole fill changed when using the generic rasterizer");
+}
+
+//! \brief Empty, two-point and collinear contours never cover an area.
+void test_degenerate_fills_leave_pixels_unchanged() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-degenerate-blank.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-degenerate-blank.png");
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    canvas.fill();
+    canvas.move_to(-0.5,-0.5);
+    canvas.line_to(0.5,0.5);
+    canvas.fill();
+    canvas.move_to(-0.6,0.0);
+    canvas.line_to(0.0,0.0);
+    canvas.line_to(0.6,0.0);
+    canvas.fill();
+    canvas.write("default_graphics-degenerate-fills.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-degenerate-fills.png");
+    DrawingTest::require(image.pixels==blank.pixels,
+                         "Degenerate path unexpectedly painted the canvas");
+}
+
 } // namespace
 
 int main() {
@@ -275,6 +400,10 @@ int main() {
         test_embedded_axis_glyphs();
         test_canvas_reset_and_offscreen_geometry();
         test_nonrectangular_five_vertex_fill();
+        test_clipped_rectangles_on_all_sides();
+        test_overlapping_rectangular_contours();
+        test_rectangle_fast_path_matches_generic_fill();
+        test_degenerate_fills_leave_pixels_unchanged();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
