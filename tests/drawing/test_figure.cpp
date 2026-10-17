@@ -74,6 +74,7 @@ class TestGraphics {
         ARIADNE_TEST_CALL(test_construct_figure())
         ARIADNE_TEST_CALL(test_figure_projection())
         ARIADNE_TEST_CALL(test_figure_public_api())
+        ARIADNE_TEST_CALL(test_subclassed_graphics_construction())
         ARIADNE_TEST_CALL(test_figure_edge_paths())
         ARIADNE_TEST_CALL(test_default_drawer())
     }
@@ -265,6 +266,40 @@ class TestGraphics {
         ARIADNE_TEST_FAIL(f.set_projection_map(Projection2d(4,0,1)))
         ARIADNE_TEST_EXECUTE(f.set_projection_map(Projection2d(3,0,1)))
         ARIADNE_TEST_PRINT(f.get_2d_projection_map())
+    }
+
+    void test_subclassed_graphics_construction() {
+        // Figures and colours are extensible public types.  Verify that
+        // derived instances delegate construction and retain the normal
+        // graphics interface, including both projection constructors.
+        struct DerivedColour : Colour {
+            DerivedColour() : Colour() { }
+        };
+        struct DerivedFigure : Figure {
+            DerivedFigure(GraphicsBoundingBoxType const& box,
+                          DimensionType x,DimensionType y) : Figure(box,x,y) { }
+            DerivedFigure(GraphicsBoundingBoxType const& box,
+                          Pair<DimensionType,DimensionType> xy) : Figure(box,xy) { }
+        };
+        DerivedColour no_paint;
+        ARIADNE_TEST_EQUALS(no_paint.opacity,0.0)
+        ARIADNE_TEST_EQUALS(no_paint.red,1.0)
+
+        GraphicsBoundingBoxType box({{
+            FloatDPApproximation(-1.0,dp),FloatDPApproximation(1.0,dp)
+        },{
+            FloatDPApproximation(-2.0,dp),FloatDPApproximation(2.0,dp)
+        }});
+        DerivedFigure from_coordinates(box,DimensionType(0),DimensionType(1));
+        DerivedFigure from_pair(box,Pair<DimensionType,DimensionType>{0,1});
+        ARIADNE_TEST_EQUALS(from_coordinates.get_bounding_box().dimension(),2u)
+        ARIADNE_TEST_EQUALS(from_pair.get_bounding_box().dimension(),2u)
+
+        from_coordinates.set_axis_labels("derived x","derived y");
+        RecordingCanvas canvas;
+        from_coordinates._paint_all(canvas);
+        ARIADNE_TEST_EQUALS(canvas.x_label,StringType("derived x"))
+        ARIADNE_TEST_EQUALS(canvas.y_label,StringType("derived y"))
     }
 
     void test_figure_public_api() {
