@@ -1,6 +1,6 @@
 add_library(KERNEL_DRAWING_SRC OBJECT
     figure.cpp
-    cairo.cpp
+    default_graphics.cpp
     graphics_manager.cpp
     drawer.cpp
     command_line_interface.cpp

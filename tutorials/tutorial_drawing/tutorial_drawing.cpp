@@ -36,7 +36,7 @@ int main() {
     // GraphicsManager owns the process-wide backend and the strategy used to
     // draw nonlinear validated sets.
     GraphicsManager& manager = GraphicsManager::instance();
-    manager.set_backend(CairoGraphicsBackend());
+    manager.set_backend(DefaultGraphicsBackend());
     manager.set_drawer(AffineDrawer(1));
 
     show("current drawer", manager.drawer());
@@ -173,7 +173,7 @@ int main() {
         << "GraphicsProperties / Colour: control line, fill and opacity independently of geometry.\n"
         << "GraphicsManager: choose the rendering backend and nonlinear-set drawer globally.\n"
         << "BoxDrawer / AffineDrawer / GridDrawer: trade rendering cost for geometric detail.\n"
-        << "CairoGraphicsBackend: materialise figures as PNG files.\n";
+        << "DefaultGraphicsBackend: materialise figures as PNG files.\n";
 
     return 0;
 }

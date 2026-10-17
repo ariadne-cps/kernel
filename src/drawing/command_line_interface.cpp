@@ -28,7 +28,7 @@
 
 #include "drawer.hpp"
 #include "graphics_manager.hpp"
-#include "cairo.hpp"
+#include "default_graphics.hpp"
 #include "null_graphics.hpp"
 #include "command_line_interface.hpp"
 
@@ -79,13 +79,10 @@ ArgumentParser make_graphics_argument_parser() {
     return make_valued_argument_parser(
         "g",
         "graphics",
-        "Choose the graphics backend as a <value> in [ cairo | none ], where none disables writing to file (default: cairo)",
+        "Choose the graphics backend as a <value> in [ default | none ] (default: default)",
         [](String const& value) -> VoidFunction {
-            if (value == "cairo") {
-                return [] {
-                    GraphicsManager::instance().set_backend(
-                        CairoGraphicsBackend());
-                };
+            if (value == "default") {
+                return [] { GraphicsManager::instance().set_backend(DefaultGraphicsBackend()); };
             }
             if (value == "none") {
                 return [] {

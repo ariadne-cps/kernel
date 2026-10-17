@@ -33,8 +33,6 @@ endif()
 setup_project()
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-find_package(Cairo REQUIRED)
-
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
 add_subdirectory(ss)
@@ -44,7 +42,7 @@ target_include_directories(kernel INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include/ariadne-kernel>
 )
-target_link_libraries(kernel INTERFACE algebra bdd Cairo::Cairo)
+target_link_libraries(kernel INTERFACE algebra bdd)
 
 add_subdirectory(src)
 foreach(target

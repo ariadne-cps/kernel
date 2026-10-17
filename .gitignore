@@ -1,3 +1,4 @@
+.DS_Store
 build*
 python/tests/__pycache__/
 /python/tests/default.profraw

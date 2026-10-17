@@ -31,7 +31,7 @@ The repository has three Git submodules:
 
 CMake verifies that the direct Configuration revisions agree and that the Utility revision reached through Algebra matches the Utility revision reached through BDD and Threading.
 
-Cairo is a required external dependency of Ariadne Kernel.
+Drawing uses the self-contained `DefaultGraphicsBackend` to render PNG files without an external graphics library. Select `--graphics default|none` at runtime.
 
 ## Build
 

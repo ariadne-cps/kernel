@@ -36,7 +36,7 @@
 
 #include "drawing/figure.hpp"
 #include "drawing/drawer.hpp"
-#include "drawing/cairo.hpp"
+#include "drawing/default_graphics.hpp"
 #include "drawing/graphics_manager.hpp"
 #include "drawing/command_line_interface.hpp"
 
