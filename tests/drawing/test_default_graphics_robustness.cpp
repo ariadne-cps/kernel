@@ -50,6 +50,22 @@ void must_reject(Function function,const char* scenario) {
     throw std::runtime_error(scenario);
 }
 
+//! \brief Signed image dimensions must fail the ImageSize2d precondition.
+template<class Function>
+void must_fail_precondition(Function function,const char* scenario) {
+    try {
+        function();
+    } catch(const std::runtime_error& error) {
+        // Other runtime failures are not evidence that the size guard ran.
+        const std::string message=error.what();
+        if(message.find("Precondition")!=std::string::npos &&
+           message.find("x > 0 && y > 0")!=std::string::npos)
+            return;
+        throw;
+    }
+    throw std::runtime_error(scenario);
+}
+
 //! \brief Append and fill a rectangular contour in plot coordinates.
 void rectangle(DefaultGraphicsCanvas& canvas,double xl,double yl,
                double xu,double yu) {
@@ -435,11 +451,13 @@ int main() {
         must_reject([] {
             DefaultGraphicsCanvas canvas(ImageSize2d(8u,16385u));
         },"excessive plot height accepted");
-        must_reject([] {
-            DefaultGraphicsCanvas canvas(ImageSize2d(-1,8));
+        must_fail_precondition([] {
+            const ImageSize2d invalid(-1,8);
+            (void)invalid;
         },"negative signed plot width accepted");
-        must_reject([] {
-            DefaultGraphicsCanvas canvas(ImageSize2d(8,-1));
+        must_fail_precondition([] {
+            const ImageSize2d invalid(8,-1);
+            (void)invalid;
         },"negative signed plot height accepted");
         must_reject([] {
             DefaultGraphicsCanvas canvas(ImageSize2d(
