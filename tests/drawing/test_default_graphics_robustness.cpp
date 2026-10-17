@@ -664,6 +664,78 @@ void test_extreme_axial_stroke_clipping() {
                          "Extreme finite axial stroke incorrectly painted the plot");
 }
 
+//! \brief Long labels may cross both raster bounds, but never the plot.
+void test_long_axis_labels_clip_safely() {
+    const auto render=[](StringType const& x_label,const char* filename) {
+        DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+        canvas.initialise(x_label,"",-1.0,1.0,-1.0,1.0);
+        canvas.write(filename);
+        return DrawingTest::read_default_graphics_png(filename);
+    };
+    const auto blank=render("","default_graphics-short-label.png");
+    const auto wide=render(std::string(64,'W'),
+                           "default_graphics-overlong-label.png");
+    DrawingTest::require(wide.width==blank.width &&
+                         wide.height==blank.height,
+                         "Long axis labels changed the PNG dimensions");
+    DrawingTest::require(wide.pixels!=blank.pixels,
+                         "Long axis label was not rendered in the margin");
+    for(unsigned y=10;y<106;++y)
+        for(unsigned x=160;x<288;++x)
+            DrawingTest::require(wide.pixel(x,y)==blank.pixel(x,y),
+                                 "Long axis label unexpectedly painted inside the plot");
+}
+
+//! \brief Repeated vertices and circles of zero radius have no stroke area.
+void test_zero_length_strokes_are_empty() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-zero-stroke-blank.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-zero-stroke-blank.png");
+    canvas.set_line_width(4.0);
+    canvas.set_line_colour(1.0,0.0,0.0);
+    canvas.move_to(0.0,0.0);
+    canvas.line_to(0.0,0.0);
+    canvas.line_to(0.0,0.0);
+    canvas.stroke();
+    canvas.circle(0.0,0.0,0.0);
+    canvas.stroke();
+    canvas.set_dot_radius(0.0);
+    canvas.dot(0.0,0.0);
+    canvas.stroke();
+    canvas.write("default_graphics-zero-strokes.png");
+    const auto actual=DrawingTest::read_default_graphics_png(
+        "default_graphics-zero-strokes.png");
+    DrawingTest::require(actual.pixels==blank.pixels,
+                         "Zero-length strokes unexpectedly changed the image");
+}
+
+//! \brief A slanted quadrilateral must use nonzero-winding rasterisation.
+void test_slanted_quadrilateral_fill() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    canvas.set_fill_opacity(1.0);
+    canvas.move_to(-0.8,0.0);
+    canvas.line_to(0.0,0.8);
+    canvas.line_to(0.8,0.0);
+    canvas.line_to(0.0,-0.8);
+    canvas.fill();
+    canvas.write("default_graphics-slanted-quad.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-slanted-quad.png");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.0,0.0)==
+            std::array<unsigned char,3>{255,0,0},
+        "Slanted quadrilateral did not fill its interior");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.9,0.9)==
+            std::array<unsigned char,3>{247,247,247},
+        "Slanted quadrilateral incorrectly filled its exterior");
+}
+
 } // namespace
 
 int main() {
@@ -814,6 +886,9 @@ int main() {
         test_empty_and_nonfinite_strokes();
         test_offscreen_generic_fill_spans();
         test_extreme_axial_stroke_clipping();
+        test_long_axis_labels_clip_safely();
+        test_zero_length_strokes_are_empty();
+        test_slanted_quadrilateral_fill();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
