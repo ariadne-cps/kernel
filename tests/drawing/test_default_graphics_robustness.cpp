@@ -867,6 +867,92 @@ void test_subnormal_rectangle_cross_underflow() {
                          "An unresolvable subpixel rectangle changed the image");
 }
 
+//! \brief Separate overflow in a segment's squared length from overflow
+//! in its cross-product limit; neither invalid intermediate may paint.
+void test_segment_arithmetic_overflow() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-segment-overflow-baseline.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-segment-overflow-baseline.png");
+    canvas.set_line_colour(1.0,0.0,0.0);
+
+    // Endpoints are finite, but squaring the device-space displacement
+    // overflows. There is no representable segment length to rasterize.
+    canvas.set_line_width(3.0);
+    canvas.move_to(-1e154,-1e154);
+    canvas.line_to(1e154,1e154);
+    canvas.stroke();
+
+    // Here length squared remains finite, but half-width times length
+    // overflows; this is a separate early exit in the segment rasterizer.
+    canvas.set_line_width(1e240);
+    canvas.move_to(1e98,-0.001);
+    canvas.line_to(2e98,0.001);
+    canvas.stroke();
+
+    canvas.write("default_graphics-segment-overflows.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-segment-overflows.png");
+    DrawingTest::require(image.pixels==blank.pixels,
+                         "Overflowed segment intermediates changed the image");
+}
+
+//! \brief Finite axial segments can overflow each rectangle bound while
+//! remaining far outside the plot. They must be safely clipped.
+void test_extreme_axial_strokes_on_all_sides() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-axial-extreme-baseline.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-axial-extreme-baseline.png");
+    canvas.set_line_colour(1.0,0.0,0.0);
+    canvas.set_line_width(1.78e308);
+    const auto segment=[&](double x0,double y0,double x1,double y1) {
+        canvas.move_to(x0,y0);
+        canvas.line_to(x1,y1);
+        canvas.stroke();
+    };
+    // A short axis-aligned segment keeps its cross-product limit finite,
+    // but its width overflows xmin, xmax, ymin or ymax respectively.
+    segment(-2.35e306,-0.01,-2.35e306,0.01);
+    segment(2.35e306,-0.01,2.35e306,0.01);
+    segment(-0.01,3.13e306,0.01,3.13e306);
+    segment(-0.01,-3.13e306,0.01,-3.13e306);
+    canvas.write("default_graphics-axial-extreme-four-sides.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-axial-extreme-four-sides.png");
+    DrawingTest::require(image.pixels==blank.pixels,
+                         "Extreme axial strokes painted outside their clip");
+}
+
+//! \brief Offscreen joins exercise triangular clipping in four directions.
+void test_offscreen_miter_join_triangles() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-offscreen-joins-baseline.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-offscreen-joins-baseline.png");
+    canvas.set_line_colour(1.0,0.0,0.0);
+    canvas.set_line_width(6.0);
+    const auto join=[&](double ax,double ay,double bx,double by,
+                        double cx,double cy) {
+        canvas.move_to(ax,ay);
+        canvas.line_to(bx,by);
+        canvas.line_to(cx,cy);
+        canvas.stroke();
+    };
+    join(-4.0,0.0,-3.0,0.0,-3.0,0.7);
+    join(3.0,0.0,4.0,0.0,4.0,0.7);
+    join(0.0,3.0,0.7,3.0,0.7,4.0);
+    join(0.0,-3.0,0.7,-3.0,0.7,-4.0);
+    canvas.write("default_graphics-offscreen-miter-joins.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-offscreen-miter-joins.png");
+    DrawingTest::require(image.pixels==blank.pixels,
+                         "Offscreen join triangles unexpectedly painted the canvas");
+}
+
 } // namespace
 
 int main() {
@@ -1025,6 +1111,9 @@ int main() {
         test_extreme_thin_triangle_fill();
         test_duplicate_consecutive_vertices_preserve_fill();
         test_subnormal_rectangle_cross_underflow();
+        test_segment_arithmetic_overflow();
+        test_extreme_axial_strokes_on_all_sides();
+        test_offscreen_miter_join_triangles();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
