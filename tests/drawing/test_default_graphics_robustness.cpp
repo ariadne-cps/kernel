@@ -494,14 +494,20 @@ void test_acute_stroke_miter_limit() {
     canvas.write("default_graphics-bounded-miter.png");
     const auto image=DrawingTest::read_default_graphics_png(
         "default_graphics-bounded-miter.png");
+    // Butt caps end at the geometric vertex (device x=224), while the
+    // first subpixel sample in that column lies at x=224.125. Check
+    // fully covered stroke interior instead of requiring an opaque endpoint.
     DrawingTest::require(
-        DrawingTest::world_pixel(image,0.0,0.0)==
+        DrawingTest::world_pixel(image,-0.1,0.0)==
             std::array<unsigned char,3>{255,0,0},
-        "Near-reversing join failed to paint its stroke vertex");
+        "Near-reversing join lost the stroke approaching its vertex");
+
+    // For this nearly reversed path the unlimited miter would project
+    // horizontally to the right, not vertically above the vertex.
     DrawingTest::require(
-        DrawingTest::world_pixel(image,0.0,0.8)==
+        DrawingTest::world_pixel(image,0.8,0.0)==
             std::array<unsigned char,3>{247,247,247},
-        "Excessive miter spike extended beyond the stroke");
+        "Near-reversing join exceeded the miter length limit");
 }
 
 } // namespace
