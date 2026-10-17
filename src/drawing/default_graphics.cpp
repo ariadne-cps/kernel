@@ -344,7 +344,8 @@ Void DefaultGraphicsCanvas::set_fill_opacity(double opacity) { _fill.a=opacity; 
 
 // Coverage is the union of all path fragments, never a sum of their alpha.
 void DefaultGraphicsCanvas::mark_sample(int x, int y, int sx, int sy) {
-    if (x<0 || y<0 || x>=static_cast<int>(_width) || y>=static_cast<int>(_height)) return;
+    // Both callers iterate over pixel ranges clamped to the raster bounds.
+    // Plot clipping below is still required after initialise().
     if (_clipped && (x<LEFT || x>=static_cast<int>(_width)-RIGHT ||
                      y<TOP || y>=static_cast<int>(_height)-BOTTOM)) return;
     const auto index=static_cast<std::size_t>(y)*_width+static_cast<std::size_t>(x);
@@ -395,14 +396,13 @@ void DefaultGraphicsCanvas::composite_coverage(Paint paint) {
     if(_dirty_pixels.empty()) return;
     auto const& lookup=blend_table_for(paint);
     for(auto index:_dirty_pixels) {
+        // Every dirty pixel has a nonzero accumulated subpixel mask.
         const auto bits=_coverage[index];
-        if(bits) {
-            const auto& table=lookup[static_cast<std::size_t>(std::popcount(bits))];
-            const std::size_t pos=index*4;
-            _pixels[pos]=table[0][_pixels[pos]];
-            _pixels[pos+1]=table[1][_pixels[pos+1]];
-            _pixels[pos+2]=table[2][_pixels[pos+2]];
-        }
+        const auto& table=lookup[static_cast<std::size_t>(std::popcount(bits))];
+        const std::size_t pos=index*4;
+        _pixels[pos]=table[0][_pixels[pos]];
+        _pixels[pos+1]=table[1][_pixels[pos+1]];
+        _pixels[pos+2]=table[2][_pixels[pos+2]];
         _coverage[index]=0;
     }
     _dirty_pixels.clear();
@@ -497,9 +497,10 @@ void DefaultGraphicsCanvas::rasterise_segment(Point a,Point b,double width) {
                     const int end=std::clamp(last-4*x,0,4);
                     const unsigned horizontal_mask=
                         ((1u<<end)-1u)&~((1u<<begin)-1u);
+                    // This pixel has a horizontal sample, and the vertical
+                    // sample mask is already known to be nonzero.
                     const auto mask=static_cast<std::uint16_t>(
                         (horizontal_mask*0x1111u)&vertical_mask);
-                    if(!mask) continue;
                     const auto index=row+static_cast<std::size_t>(x);
                     if(_coverage[index]==0) _dirty_pixels.push_back(index);
                     _coverage[index]|=mask;
@@ -590,9 +591,9 @@ void DefaultGraphicsCanvas::rasterise_join(Point a,Point b,Point c,double half_w
     double side=(cross>0 ? -1.0:1.0);
     Point p{b.x+side*(-uy)*half_width,b.y+side*ux*half_width};
     Point q{b.x+side*(-vy)*half_width,b.y+side*vx*half_width};
-    // Use miter joins with a limit of 10.
+    // The determinant equals -cross: the earlier parallel-segment check
+    // already rules out a vanishing denominator. Limit miter joins to 10.
     double determinant=ux*(-vy)-(-vx)*uy;
-    if(std::abs(determinant)<1e-12) return;
     double t=((q.x-p.x)*(-vy)-(-vx)*(q.y-p.y))/determinant;
     Point m{p.x+t*ux,p.y+t*uy};
     // Bridge the ends of the adjoining butt-capped segments first.
