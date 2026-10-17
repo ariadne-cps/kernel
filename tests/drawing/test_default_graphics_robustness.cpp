@@ -436,6 +436,74 @@ void test_line_to_without_move_to() {
         "line_to painted pixels outside its stroke");
 }
 
+//! \brief Strokes entirely outside any of the four plot edges paint nothing.
+void test_clipped_strokes_outside_plot() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-stroke-blank.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-stroke-blank.png");
+    canvas.set_line_colour(1.0,0.0,0.0);
+    canvas.set_line_width(4.0);
+    const auto segment=[&](double x0,double y0,double x1,double y1) {
+        canvas.move_to(x0,y0);
+        canvas.line_to(x1,y1);
+        canvas.stroke();
+    };
+    segment(-4.0,-0.8,-3.0,0.8);
+    segment(3.0,-0.8,4.0,0.8);
+    segment(-0.8,3.0,0.8,4.0);
+    segment(-0.8,-3.0,0.8,-4.0);
+    segment(-3.0,-0.5,-3.0,0.5);
+    segment(-0.5,3.0,0.5,3.0);
+    canvas.write("default_graphics-stroke-offscreen.png");
+    const auto actual=DrawingTest::read_default_graphics_png(
+        "default_graphics-stroke-offscreen.png");
+    DrawingTest::require(actual.pixels==blank.pixels,
+                         "Completely off-screen strokes changed the raster");
+}
+
+//! \brief Filling across every boundary is equivalent to filling its clip.
+void test_clipped_rectangle_matches_plot_bounds() {
+    const auto render=[](double low,double high,const char* file) {
+        DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+        canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+        canvas.set_line_width(0.0);
+        canvas.set_fill_colour(0.2,0.6,0.9);
+        canvas.set_fill_opacity(0.65);
+        rectangle(canvas,low,low,high,high);
+        canvas.write(file);
+        return DrawingTest::read_default_graphics_png(file);
+    };
+    const auto clipped=render(-3.0,3.0,"default_graphics-rectangle-overflow.png");
+    const auto bounded=render(-1.0,1.0,"default_graphics-rectangle-bounded.png");
+    DrawingTest::require(clipped.pixels==bounded.pixels,
+                         "Rectangular fill clipping changes interior or margins");
+}
+
+//! \brief A near-reversing stroke must obey the bounded miter limit.
+void test_acute_stroke_miter_limit() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.set_line_width(8.0);
+    canvas.set_line_colour(1.0,0.0,0.0);
+    canvas.move_to(-0.7,0.0);
+    canvas.line_to(0.0,0.0);
+    canvas.line_to(-0.7,0.02);
+    canvas.stroke();
+    canvas.write("default_graphics-bounded-miter.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-bounded-miter.png");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.0,0.0)==
+            std::array<unsigned char,3>{255,0,0},
+        "Near-reversing join failed to paint its stroke vertex");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.0,0.8)==
+            std::array<unsigned char,3>{247,247,247},
+        "Excessive miter spike extended beyond the stroke");
+}
+
 } // namespace
 
 int main() {
@@ -571,6 +639,9 @@ int main() {
         test_overflowed_circle_geometry();
         test_nonfinite_paint_values();
         test_line_to_without_move_to();
+        test_clipped_strokes_outside_plot();
+        test_clipped_rectangle_matches_plot_bounds();
+        test_acute_stroke_miter_limit();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
