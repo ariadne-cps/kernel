@@ -374,10 +374,10 @@ void test_nonfinite_paint_values() {
     canvas.initialise("","",-1.0,1.0,-1.0,1.0);
     canvas.set_line_width(0.0);
     const double nan=std::numeric_limits<double>::quiet_NaN();
-    const double infinity=std::numeric_limits<double>::infinity();
+    const double positive_infinity=std::numeric_limits<double>::infinity();
 
     // Undefined or infinite colour channels normalize to zero.
-    canvas.set_fill_colour(nan,infinity,1.0);
+    canvas.set_fill_colour(nan,positive_infinity,1.0);
     canvas.set_fill_opacity(1.0);
     rectangle(canvas,-0.8,-0.5,-0.2,0.5);
 
