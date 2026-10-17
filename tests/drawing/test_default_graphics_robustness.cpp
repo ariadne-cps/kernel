@@ -108,6 +108,74 @@ void test_embedded_axis_glyphs() {
     verify_cells(symbol_image,blank_symbols,symbols);
 }
 
+//! \brief Reinitialising must erase pixels and pending drawing paths.
+void test_canvas_reset_and_offscreen_geometry() {
+    DefaultGraphicsCanvas reused(ImageSize2d(64u,48u));
+    reused.initialise("","",-1.0,1.0,-1.0,1.0);
+    reused.set_fill_colour(1.0,0.0,0.0);
+    reused.move_to(-0.8,-0.8);
+    reused.line_to(0.8,-0.8);
+    reused.line_to(0.8,0.8);
+    reused.line_to(-0.8,0.8);
+    reused.fill();
+    // An unconsumed path must also be discarded on reinitialisation.
+    reused.move_to(-0.9,-0.9);
+    reused.line_to(0.9,0.9);
+    reused.initialise("","",-1.0,1.0,-1.0,1.0);
+
+    DefaultGraphicsCanvas clean(ImageSize2d(64u,48u));
+    clean.initialise("","",-1.0,1.0,-1.0,1.0);
+    clean.write("default_graphics-clean-canvas.png");
+    const auto expected=DrawingTest::read_default_graphics_png(
+        "default_graphics-clean-canvas.png");
+
+    // Rectangle fast path and generic polygon path must both clip away
+    // completely off-screen geometry, without modifying the plot or margins.
+    reused.set_line_width(0.0);
+    reused.move_to(2.0,2.0);
+    reused.line_to(3.0,2.0);
+    reused.line_to(3.0,3.0);
+    reused.line_to(2.0,3.0);
+    reused.fill();
+    reused.move_to(2.0,2.0);
+    reused.line_to(3.0,2.5);
+    reused.line_to(2.5,3.0);
+    reused.fill();
+    reused.write("default_graphics-reset-and-clipped.png");
+    const auto actual=DrawingTest::read_default_graphics_png(
+        "default_graphics-reset-and-clipped.png");
+    DrawingTest::require(actual.pixels==expected.pixels,
+                         "Canvas reinitialisation or off-screen fill changed pixels");
+}
+
+//! \brief A five-vertex contour is not a rectangle with implicit closure.
+void test_nonrectangular_five_vertex_fill() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(120u,100u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    canvas.set_fill_opacity(1.0);
+    // The fifth vertex cuts away a wedge from the left of the rectangle.
+    // Treating the first four vertices as a rectangle would paint that wedge.
+    canvas.move_to(-0.8,-0.8);
+    canvas.line_to(0.8,-0.8);
+    canvas.line_to(0.8,0.8);
+    canvas.line_to(-0.8,0.8);
+    canvas.line_to(0.0,0.0);
+    canvas.fill();
+    canvas.write("default_graphics-five-vertex-fill.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-five-vertex-fill.png");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,0.4,-0.5)==
+            std::array<unsigned char,3>{255,0,0},
+        "Five-vertex contour failed to fill the interior");
+    DrawingTest::require(
+        DrawingTest::world_pixel(image,-0.7,0.0)==
+            std::array<unsigned char,3>{247,247,247},
+        "Five-vertex contour incorrectly used the rectangle fast path");
+}
+
 } // namespace
 
 int main() {
@@ -205,6 +273,8 @@ int main() {
                              "PNG writing succeeded in a nonexistent directory");
 
         test_embedded_axis_glyphs();
+        test_canvas_reset_and_offscreen_geometry();
+        test_nonrectangular_five_vertex_fill();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
