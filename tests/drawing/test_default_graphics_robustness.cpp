@@ -612,6 +612,58 @@ void test_empty_and_nonfinite_strokes() {
                          "An empty path or infinite width painted a stroke");
 }
 
+//! \brief General scanline spans outside either horizontal clip boundary
+//! must leave the raster unmodified even when vertically visible.
+void test_offscreen_generic_fill_spans() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-offscreen-span-blank.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-offscreen-span-blank.png");
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    const auto triangle=[&](double x0,double x1,double x2,
+                            double y0,double y1,double y2) {
+        canvas.move_to(x0,y0);
+        canvas.line_to(x1,y1);
+        canvas.line_to(x2,y2);
+        canvas.fill();
+    };
+    triangle(-3.0,-2.0,-2.5,-0.4,-0.4,0.4);
+    triangle(2.0,3.0,2.5,-0.4,-0.4,0.4);
+    triangle(-0.4,0.4,0.0,-3.0,-3.0,-2.0);
+    canvas.write("default_graphics-offscreen-spans.png");
+    const auto actual=DrawingTest::read_default_graphics_png(
+        "default_graphics-offscreen-spans.png");
+    DrawingTest::require(actual.pixels==blank.pixels,
+                         "Offscreen scanline spans painted the plot");
+}
+
+//! \brief Finite extreme stroke widths must not overflow the axial fast path
+//! into an incorrect image or unsafe memory access.
+void test_extreme_axial_stroke_clipping() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-extreme-stroke-blank.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-extreme-stroke-blank.png");
+
+    // The transformed vertical line has device x near 9.6e307. Its
+    // 8.9e307 half-width makes xmax overflow to infinity, while the
+    // segment length and cross-product bound remain finite. The generic
+    // rasterizer must still reject the segment as horizontally offscreen.
+    canvas.set_line_colour(1.0,0.0,0.0);
+    canvas.set_line_width(1.78e308);
+    canvas.move_to(1.5e306,-0.015);
+    canvas.line_to(1.5e306,0.015);
+    canvas.stroke();
+    canvas.write("default_graphics-extreme-stroke.png");
+    const auto actual=DrawingTest::read_default_graphics_png(
+        "default_graphics-extreme-stroke.png");
+    DrawingTest::require(actual.pixels==blank.pixels,
+                         "Extreme finite axial stroke incorrectly painted the plot");
+}
+
 } // namespace
 
 int main() {
@@ -760,6 +812,8 @@ int main() {
         test_mixed_nonrectangular_contours();
         test_same_rgb_different_opacity();
         test_empty_and_nonfinite_strokes();
+        test_offscreen_generic_fill_spans();
+        test_extreme_axial_stroke_clipping();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
