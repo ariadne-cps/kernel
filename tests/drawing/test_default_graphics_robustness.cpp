@@ -736,6 +736,92 @@ void test_slanted_quadrilateral_fill() {
         "Slanted quadrilateral incorrectly filled its exterior");
 }
 
+//! \brief Before initialise(), raster coordinates are not clipped to the
+//! plotting area, and a later initialise() must reset those pixels.
+void test_uninitialised_canvas_fill_and_reset() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    rectangle(canvas,30.0,20.0,90.0,55.0);
+    canvas.write("default_graphics-before-initialise.png");
+    const auto preinit=DrawingTest::read_default_graphics_png(
+        "default_graphics-before-initialise.png");
+    DrawingTest::require(
+        preinit.pixel(60u,35u)==std::array<unsigned char,3>{255,0,0},
+        "Uninitialised canvas failed to paint in device coordinates");
+    DrawingTest::require(
+        preinit.pixel(120u,35u)==std::array<unsigned char,3>{255,255,255},
+        "Uninitialised canvas incorrectly painted outside its rectangle");
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    DefaultGraphicsCanvas fresh(ImageSize2d(128u,96u));
+    fresh.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-preinit-reset.png");
+    fresh.write("default_graphics-preinit-fresh.png");
+    DrawingTest::require(
+        DrawingTest::read_default_graphics_png(
+            "default_graphics-preinit-reset.png").pixels==
+        DrawingTest::read_default_graphics_png(
+            "default_graphics-preinit-fresh.png").pixels,
+        "Initialise did not clear pre-initialisation pixels");
+}
+
+//! \brief Horizontal-first and vertical-first slanted quadrilaterals
+//! must be treated as general nonzero-winding contours.
+void test_slanted_quadrilateral_edge_orientations() {
+    const auto render=[](bool vertical_first,const char* filename) {
+        DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+        canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+        canvas.set_line_width(0.0);
+        canvas.set_fill_colour(1.0,0.0,0.0);
+        canvas.move_to(-0.8,-0.6);
+        if(vertical_first) {
+            canvas.line_to(-0.8,0.6);
+            canvas.line_to(0.5,0.8);
+            canvas.line_to(0.5,-0.8);
+        } else {
+            canvas.line_to(0.5,-0.6);
+            canvas.line_to(0.8,0.6);
+            canvas.line_to(-0.5,0.6);
+        }
+        canvas.fill();
+        canvas.write(filename);
+        return DrawingTest::read_default_graphics_png(filename);
+    };
+    const auto horizontal=render(false,"default_graphics-slanted-hfirst.png");
+    const auto vertical=render(true,"default_graphics-slanted-vfirst.png");
+    for(auto const* image:{&horizontal,&vertical}) {
+        DrawingTest::require(
+            DrawingTest::world_pixel(*image,0.0,0.0)==
+                std::array<unsigned char,3>{255,0,0},
+            "Slanted quadrilateral failed to paint the interior");
+        DrawingTest::require(
+            DrawingTest::world_pixel(*image,0.9,0.9)==
+                std::array<unsigned char,3>{247,247,247},
+            "Slanted quadrilateral painted the exterior");
+    }
+}
+
+//! \brief A nearly horizontal triangle with enormous finite x coordinates
+//! must not generate an infinite-slope edge or paint unrepresented samples.
+void test_extreme_thin_triangle_fill() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-thin-triangle-baseline.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-thin-triangle-baseline.png");
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    canvas.move_to(-1e306,0.0);
+    canvas.line_to(1e306,1e-14);
+    canvas.line_to(0.0,2e-14);
+    canvas.fill();
+    canvas.write("default_graphics-thin-triangle.png");
+    const auto actual=DrawingTest::read_default_graphics_png(
+        "default_graphics-thin-triangle.png");
+    DrawingTest::require(actual.pixels==blank.pixels,
+                         "Subpixel-thin triangle unexpectedly painted the raster");
+}
+
 } // namespace
 
 int main() {
@@ -889,6 +975,9 @@ int main() {
         test_long_axis_labels_clip_safely();
         test_zero_length_strokes_are_empty();
         test_slanted_quadrilateral_fill();
+        test_uninitialised_canvas_fill_and_reset();
+        test_slanted_quadrilateral_edge_orientations();
+        test_extreme_thin_triangle_fill();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
