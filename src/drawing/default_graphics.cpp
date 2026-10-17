@@ -231,7 +231,8 @@ void DefaultGraphicsCanvas::text(double x, double y, StringType const& label) {
     for (char c:label) {
         auto const rows=glyph(c);
         auto has=[&rows](int row,int col) -> bool {
-            return row>=0 && row<7 && col>=0 && col<5
+            // Callers use row in [0,7]; only column offsets may be negative.
+            return row<7 && col>=0 && col<5
                 && (rows[static_cast<std::size_t>(row)] & (1u << (4-col)))!=0;
         };
         auto point=[x,y](int row,int col) -> Point {
@@ -414,8 +415,10 @@ void DefaultGraphicsCanvas::rasterise_span(double from,double to,int y,int sy,
                                     bool inclusive_end) {
     const double left=_clipped ? LEFT : 0;
     const double right=_clipped ? static_cast<double>(_width)-RIGHT : _width;
+    // All callers iterate y within the raster; horizontal intervals may
+    // still be off-screen or numerically non-finite.
     if (!std::isfinite(from) || !std::isfinite(to) ||
-        to<left || from>=right || y<0 || y>=static_cast<int>(_height))
+        to<left || from>=right)
         return;
     from=std::clamp(from,left,right);
     to=std::clamp(to,left,right);
@@ -445,7 +448,7 @@ void DefaultGraphicsCanvas::rasterise_span(double from,double to,int y,int sy,
 // every candidate pixel. The subpixel mask remains bit-exact with the former
 // sampling rasterizer (apart from unavoidable floating-point boundary ties).
 void DefaultGraphicsCanvas::rasterise_segment(Point a,Point b,double width) {
-    if (!(width>0) || !std::isfinite(width)) return;
+    // stroke() checks positive finite widths; text() uses a fixed positive width.
     const double dx=b.x-a.x,dy=b.y-a.y;
     const double length2=dx*dx+dy*dy;
     if (!std::isfinite(length2) || length2<=0) return;
@@ -542,7 +545,7 @@ void DefaultGraphicsCanvas::rasterise_segment(Point a,Point b,double width) {
 // Round endpoints restore readable glyph strokes while preserving the
 // butt caps of ordinary drawing paths.
 void DefaultGraphicsCanvas::rasterise_disc(Point center,double radius) {
-    if (!(radius>0) || !std::isfinite(center.x) || !std::isfinite(center.y)) return;
+    // Called only by text() with finite glyph centers and a fixed positive radius.
     const double xmin=center.x-radius, xmax=center.x+radius;
     const double ymin=center.y-radius, ymax=center.y+radius;
     if (xmax<0 || ymax<0 || xmin>=_width || ymin>=_height) return;
@@ -623,9 +626,10 @@ void DefaultGraphicsCanvas::rasterise_fill() {
             return false;
         double xmin=std::numeric_limits<double>::infinity();
         double ymin=xmin,xmax=-xmin,ymax=-xmin;
+        // Candidate four-vertex paths originate in move_to()/line_to(), which
+        // discard non-finite transformed points. Circles have >= 13 vertices.
         for(std::size_t i=0;i<4;++i) {
             auto const p=points[i];
-            if(!std::isfinite(p.x) || !std::isfinite(p.y)) return false;
             xmin=std::min(xmin,p.x);
             xmax=std::max(xmax,p.x);
             ymin=std::min(ymin,p.y);
@@ -733,7 +737,8 @@ void DefaultGraphicsCanvas::rasterise_fill() {
                     auto blend_edge=[&](int x) {
                         const unsigned horizontal=
                             horizontal_bits(first,last,x)*0x1111u;
-                        if(!horizontal) return;
+                        // A boundary pixel in [first,last) necessarily
+                        // contains at least one selected horizontal sample.
                         const auto& table=lookup[
                             static_cast<std::size_t>(std::popcount(horizontal))];
                         const std::size_t offset=
@@ -760,7 +765,9 @@ void DefaultGraphicsCanvas::rasterise_fill() {
                         horizontal_bits(first,last,x);
                     const unsigned outside=outer_horizontal*0x1111u;
                     unsigned mask=outside&outer_vertical;
-                    if(hole && mask && inner_vertical) {
+                    // outer_horizontal and outer_vertical are nonzero in this
+                    // iteration; only the hole mask may remove samples.
+                    if(hole && inner_vertical) {
                         const unsigned inner_horizontal=
                             horizontal_bits(inner_first,inner_last,x);
                         mask&=~((inner_horizontal*0x1111u)&inner_vertical);
