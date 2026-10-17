@@ -332,6 +332,42 @@ void test_paint_cache_survives_eviction() {
     }
 }
 
+//! \brief A rectangle narrower than the subpixel sampling grid paints nothing.
+void test_subpixel_empty_rectangle() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-subpixel-baseline.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-subpixel-baseline.png");
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    rectangle(canvas,-0.00002,-0.5,0.00002,0.5);
+    canvas.write("default_graphics-subpixel-empty.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-subpixel-empty.png");
+    DrawingTest::require(image.pixels==blank.pixels,
+                         "Rectangle with no subpixel samples unexpectedly painted");
+}
+
+//! \brief Overflowed device-space circle geometry is ignored.
+void test_overflowed_circle_geometry() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-overflow-baseline.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-overflow-baseline.png");
+    canvas.circle(0.0,0.0,std::numeric_limits<double>::max());
+    canvas.circle(std::numeric_limits<double>::max(),0.0,0.25);
+    canvas.set_dot_radius(-1.0);
+    canvas.dot(0.0,0.0);
+    canvas.stroke();
+    canvas.write("default_graphics-overflow-circle.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-overflow-circle.png");
+    DrawingTest::require(image.pixels==blank.pixels,
+                         "Overflowed circle geometry unexpectedly painted");
+}
+
 } // namespace
 
 int main() {
@@ -436,6 +472,8 @@ int main() {
         test_rectangle_fast_path_matches_generic_fill();
         test_degenerate_fills_leave_pixels_unchanged();
         test_paint_cache_survives_eviction();
+        test_subpixel_empty_rectangle();
+        test_overflowed_circle_geometry();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
