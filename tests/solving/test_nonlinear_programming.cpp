@@ -423,6 +423,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_validation_dimension_preconditions());
         ARIADNE_TEST_CALL(test_feasible_box_without_equalities());
         ARIADNE_TEST_CALL(test_feasible_box_rejections());
+        ARIADNE_TEST_CALL(test_feasible_box_dimension_preconditions());
         ARIADNE_TEST_CALL(test_feasible_box_singular_equality());
         ARIADNE_TEST_CALL(test_base_infeasibility());
         ARIADNE_TEST_CALL(test_unconstrained_infeasibility_certificate());
@@ -483,6 +484,26 @@ class TestNonlinearInfeasibleInteriorPointSolver
         FloatDPVector multiplier({1.0_x},dp);
         ARIADNE_TEST_ASSERT(optimiser.validate_infeasibility(D,g,far,centre,multiplier));
         ARIADNE_TEST_ASSERT(!optimiser.validate_infeasibility(D,g,overlap,centre,multiplier));
+    }
+
+    Void test_feasible_box_dimension_preconditions() {
+        // These are public API contracts: an invalid dimension must be
+        // rejected before indexing g(X) or constructing the Newton step.
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{0.0_x,1.0_x}});
+        ExactBoxType wrong_domain({{0.0_x,1.0_x},{0.0_x,1.0_x}});
+        ExactBoxType wrong_codomain({{0.0_x,1.0_x},{0.0_x,1.0_x}});
+        FloatDPBoundsVector box({{0.25_x,0.75_x}},dp);
+        FloatDPBoundsVector wrong_box({{0.25_x,0.75_x},{0.25_x,0.75_x}},dp);
+
+        ARIADNE_TEST_FAIL(optimiser.contains_feasible_point(
+            wrong_domain,g,codomain,box));
+        ARIADNE_TEST_FAIL(optimiser.contains_feasible_point(
+            domain,g,wrong_codomain,box));
+        ARIADNE_TEST_FAIL(optimiser.contains_feasible_point(
+            domain,g,codomain,wrong_box));
     }
 
     Void test_feasible_box_rejections() {

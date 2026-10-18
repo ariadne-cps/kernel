@@ -55,6 +55,9 @@ is_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactBo
 ValidatedKleenean NonlinearProgrammingSolverBase::
 contains_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactBoxType C, ValidatedVectorType X) const
 {
+    ARIADNE_PRECONDITION(D.size()==g.argument_size());
+    ARIADNE_PRECONDITION(C.size()==g.result_size());
+    ARIADNE_PRECONDITION(X.size()==D.size());
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN("D="<<D<<", g="<<g<<", C="<<C<<", X="<<X);
 
@@ -88,8 +91,8 @@ contains_feasible_point(ExactBoxType D, ValidatedVectorMultivariateFunction g, E
     // Inequality-only constraints need no equality-constrained Newton step.
     if(equality_constraints.empty()) { return true; }
 
-    // Construct the function g_e(x) = g_{e_i}(x)
-    ARIADNE_ASSERT(g.result_size()>0);
+    // Nonempty equality_constraints and C.size()==g.result_size()
+    // guarantee that the constraint function has an output component.
     ValidatedVectorMultivariateFunction ge(equality_constraints.size(),g.domain());
     ExactBoxType ce(equality_constraints.size());
     for(SizeType i=0; i!=ge.result_size(); ++i) {
