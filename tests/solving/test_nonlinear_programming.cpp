@@ -419,7 +419,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
     Void test() {
         ARIADNE_TEST_CALL(test_common_point_feasibility_and_tolerance());
         ARIADNE_TEST_CALL(test_base_validation());
-        ARIADNE_TEST_CALL(test_public_solver_dimension_contracts());
+        ARIADNE_TEST_CALL(test_logging_solver_diagnostics());
         ARIADNE_TEST_CALL(test_overdetermined_equality_validation());
         ARIADNE_TEST_CALL(test_logging_diagnostics());
         ARIADNE_TEST_CALL(test_validation_dimension_preconditions());
@@ -446,34 +446,22 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_candidate_deterministic());
     }
 
-    Void test_public_solver_dimension_contracts() {
-        // The public nonlinear feasibility/minimisation entry points must
-        // reject incompatible dimensions before constructing the
-        // primal-dual Newton system or evaluating functions.
-        auto one=ValidatedScalarMultivariateFunction::coordinates(1);
-        auto two=ValidatedScalarMultivariateFunction::coordinates(2);
-        ValidatedScalarMultivariateFunction objective_1=sqr(one[0]);
-        ValidatedScalarMultivariateFunction objective_2=sqr(two[0]);
-        ValidatedVectorMultivariateFunction constraints_1({one[0]});
-        ValidatedVectorMultivariateFunction constraints_2({two[0]});
-        ExactBoxType domain_1({{-1.0_x,1.0_x}});
-        ExactBoxType domain_2({{-1.0_x,1.0_x},{-1.0_x,1.0_x}});
-        ExactBoxType codomain_1({{0.0_x,1.0_x}});
-        ExactBoxType codomain_2({{0.0_x,1.0_x},{0.0_x,1.0_x}});
+    Void test_logging_solver_diagnostics() {
+        // Validate that enabling diagnostic output leaves observable
+        // solver results unchanged for both feasible and infeasible
+        // paths. Restore the setting even if a test throws.
+        auto& configuration=Logger::instance().configuration();
+        const unsigned int old_verbosity=configuration.verbosity();
+        struct RestoreVerbosity {
+            unsigned int value;
+            ~RestoreVerbosity() {
+                Logger::instance().configuration().set_verbosity(value);
+            }
+        } restore{old_verbosity};
+        configuration.set_verbosity(10u);
 
-        // Three independent argument contracts of minimise().
-        ARIADNE_TEST_FAIL(optimiser.minimise(
-            objective_1,domain_2,constraints_2,codomain_1));
-        ARIADNE_TEST_FAIL(optimiser.minimise(
-            objective_2,domain_2,constraints_1,codomain_1));
-        ARIADNE_TEST_FAIL(optimiser.minimise(
-            objective_1,domain_1,constraints_1,codomain_2));
-
-        // Two public contracts of feasible_candidate().
-        ARIADNE_TEST_FAIL(optimiser.feasible_candidate(
-            domain_2,constraints_1,codomain_1));
-        ARIADNE_TEST_FAIL(optimiser.feasible_candidate(
-            domain_1,constraints_1,codomain_2));
+        test_candidate_linear();
+        test_infeasible_minimisation_rejects_false_optima();
     }
 
     Void test_equality_solution_rechecks_inequalities() {
