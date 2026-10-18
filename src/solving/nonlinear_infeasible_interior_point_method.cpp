@@ -55,9 +55,9 @@ minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorM
     static const double STATE_TOLERANCE=1e-8;
     static const CounterType MAXIMUM_STEPS=24;
 
-    ARIADNE_ASSERT(f.argument_size()==D.size());
-    ARIADNE_ASSERT(g.argument_size()==D.size());
-    ARIADNE_ASSERT(g.result_size()==C.size());
+    ARIADNE_PRECONDITION(f.argument_size()==D.size());
+    ARIADNE_PRECONDITION(g.argument_size()==D.size());
+    ARIADNE_PRECONDITION(g.result_size()==C.size());
     StepData v;
     FloatDPApproximationVector& x=cast_approximate(v.x);
     FloatDPApproximationVector& y=cast_approximate(v.y);
@@ -109,8 +109,8 @@ feasible_candidate(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactB
     LOGGING_SCOPE_CREATE
     LOGGING_PRINTLN("D="<<D<<", g="<<g<<", C="<<C);
 
-    ARIADNE_ASSERT(g.argument_size()==D.size());
-    ARIADNE_ASSERT(g.result_size()==C.size());
+    ARIADNE_PRECONDITION(g.argument_size()==D.size());
+    ARIADNE_PRECONDITION(g.result_size()==C.size());
 
     StepData v;
     FloatDPApproximationVector& x=cast_approximate(v.x);
