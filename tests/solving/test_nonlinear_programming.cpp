@@ -841,10 +841,10 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ExactBoxType domain({{0.0_x,1.0_x}});
         ExactBoxType contradictory({{0.0_x,0.0_x},{1.0_x,1.0_x}});
 
-        auto result=optimiser.feasible_candidate(domain,g,contradictory);
-        ARIADNE_TEST_ASSERT(!definitely(result.first));
-        ARIADNE_TEST_EQUAL(result.second.size(),domain.dimension());
-        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(result.second)));
+        auto candidate_result=optimiser.feasible_candidate(domain,g,contradictory);
+        ARIADNE_TEST_ASSERT(!definitely(candidate_result.first));
+        ARIADNE_TEST_EQUAL(candidate_result.second.size(),domain.dimension());
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(candidate_result.second)));
     }
 
     Void test_candidate_infeasible() {
