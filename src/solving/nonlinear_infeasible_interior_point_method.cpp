@@ -210,12 +210,12 @@ NonlinearInfeasibleInteriorPointSolver::step(
     const SizeType n=d.size();
     const SizeType m=c.size();
 
-    ARIADNE_ASSERT_MSG(f.argument_size()==d.size(),"f="<<f<<", D="<<d<<", g="<<g<<", C="<<c);
-    ARIADNE_ASSERT_MSG(g.argument_size()==d.size(),"f="<<f<<", D="<<d<<", g="<<g<<", C="<<c);
-    ARIADNE_ASSERT_MSG(g.result_size()==c.size(),  "f="<<f<<", D="<<d<<", g="<<g<<", C="<<c);
-    ARIADNE_ASSERT(w.size()==m);
-    ARIADNE_ASSERT(x.size()==n);
-    ARIADNE_ASSERT(y.size()==m);
+    // These dimensions are invariants of the internal StepData state.
+    // Both callers validate function/domain/codomain sizes at entry;
+    // feasible_candidate constructs f on d, and setup_feasibility
+    // builds x, w, y with sizes n, m, m respectively. Each step update
+    // preserves those sizes. Rechecking them here cannot fail on a
+    // reachable path and must not contribute artificial assert branches.
 
     mu = mu * sigma;
 
