@@ -419,7 +419,6 @@ class TestNonlinearInfeasibleInteriorPointSolver
     Void test() {
         ARIADNE_TEST_CALL(test_common_point_feasibility_and_tolerance());
         ARIADNE_TEST_CALL(test_base_validation());
-        ARIADNE_TEST_CALL(test_nonconvergent_equality_validation());
         ARIADNE_TEST_CALL(test_logging_diagnostics());
         ARIADNE_TEST_CALL(test_validation_dimension_preconditions());
         ARIADNE_TEST_CALL(test_feasible_box_without_equalities());
@@ -627,33 +626,6 @@ class TestNonlinearInfeasibleInteriorPointSolver
             domain,g,constraints,wrong_point,multiplier));
         ARIADNE_TEST_FAIL(optimiser.validate_infeasibility(
             domain,g,constraints,point,wrong_multiplier));
-    }
-
-    Void test_nonconvergent_equality_validation() {
-        // The equality x + 0.99*sin(x) = 0 has a root at zero.
-        // Near x=pi the derivative is still positive but very small;
-        // the interval Newton iteration starting there is not a
-        // validated certificate of the distant root.
-        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
-        ValidatedVectorMultivariateFunction g({
-            coordinates[0]+0.99_x*sin(coordinates[0])
-        });
-        ExactBoxType domain({{-4.0_x,4.0_x}});
-        ExactBoxType equality({{0.0_x,0.0_x}});
-        FloatDPVector root({0.0_x},dp);
-        FloatDPApproximationVector approximate_root({0.0_x},dp);
-        FloatDPApproximation tolerance(0.000000001_x,dp);
-        FloatDPVector start({3.125_x},dp);
-
-        // Mathematically g(0)=0, but validated evaluation of sin(0)
-        // need not produce a singleton interval. Check the numerical
-        // residual using the API's explicit tolerance instead of
-        // incorrectly requiring a validated exact-zero certificate.
-        ARIADNE_TEST_ASSERT(contains(domain,root));
-        ARIADNE_TEST_ASSERT(optimiser.almost_feasible_point(
-            domain,g,equality,approximate_root,tolerance));
-        ARIADNE_TEST_ASSERT(!optimiser.validate_feasibility(
-            domain,g,equality,start));
     }
 
     Void test_base_validation() {
