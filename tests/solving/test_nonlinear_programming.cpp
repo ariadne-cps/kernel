@@ -419,6 +419,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
     Void test() {
         ARIADNE_TEST_CALL(test_common_point_feasibility_and_tolerance());
         ARIADNE_TEST_CALL(test_base_validation());
+        ARIADNE_TEST_CALL(test_validation_dimension_preconditions());
         ARIADNE_TEST_CALL(test_feasible_box_without_equalities());
         ARIADNE_TEST_CALL(test_feasible_box_rejections());
         ARIADNE_TEST_CALL(test_feasible_box_singular_equality());
@@ -533,6 +534,37 @@ class TestNonlinearInfeasibleInteriorPointSolver
         auto status=optimiser.contains_feasible_point(D,g,C,box);
         ARIADNE_TEST_ASSERT(!definitely(status));
         ARIADNE_TEST_ASSERT(!definitely(not status));
+    }
+
+    Void test_validation_dimension_preconditions() {
+        // Each public dimension contract rejects a different malformed
+        // caller input before evaluating the objective or its derivatives.
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType constraints({{0.0_x,1.0_x}});
+        ExactBoxType wrong_domain({{0.0_x,1.0_x},{0.0_x,1.0_x}});
+        ExactBoxType wrong_constraints({{0.0_x,1.0_x},{0.0_x,1.0_x}});
+        FloatDPVector point({0.5_x},dp);
+        FloatDPVector wrong_point({0.5_x,0.5_x},dp);
+        FloatDPVector multiplier({1.0_x},dp);
+        FloatDPVector wrong_multiplier({1.0_x,1.0_x},dp);
+
+        ARIADNE_TEST_FAIL(optimiser.validate_feasibility(
+            wrong_domain,g,constraints,point));
+        ARIADNE_TEST_FAIL(optimiser.validate_feasibility(
+            domain,g,wrong_constraints,point));
+        ARIADNE_TEST_FAIL(optimiser.validate_feasibility(
+            domain,g,constraints,wrong_point));
+
+        ARIADNE_TEST_FAIL(optimiser.validate_infeasibility(
+            wrong_domain,g,constraints,point,multiplier));
+        ARIADNE_TEST_FAIL(optimiser.validate_infeasibility(
+            domain,g,wrong_constraints,point,multiplier));
+        ARIADNE_TEST_FAIL(optimiser.validate_infeasibility(
+            domain,g,constraints,wrong_point,multiplier));
+        ARIADNE_TEST_FAIL(optimiser.validate_infeasibility(
+            domain,g,constraints,point,wrong_multiplier));
     }
 
     Void test_base_validation() {
