@@ -270,10 +270,13 @@ Void DefaultGraphicsCanvas::initialise(StringType text_x, StringType text_y,
     const int h=static_cast<int>(_height)-TOP-BOTTOM;
     const double sx=static_cast<double>(w)/(xu-xl);
     const double sy=-static_cast<double>(h)/(yu-yl);
+    // For distinct finite IEEE-754 endpoints, their separation is at
+    // least one ULP at the larger magnitude. Once the scale is finite,
+    // its product with either endpoint is bounded by roughly 2^53*w
+    // (respectively 2^53*h), so neither translation can overflow.
     const double tx=LEFT-sx*xl;
     const double ty=TOP-sy*yu;
     if (!std::isfinite(sx) || !std::isfinite(sy) ||
-        !std::isfinite(tx) || !std::isfinite(ty) ||
         sx<=0.0 || sy>=0.0)
         throw std::invalid_argument("Default graphics canvas requires finite axis mapping");
 
@@ -415,10 +418,11 @@ void DefaultGraphicsCanvas::rasterise_span(double from,double to,int y,int sy,
                                     bool inclusive_end) {
     const double left=_clipped ? LEFT : 0;
     const double right=_clipped ? static_cast<double>(_width)-RIGHT : _width;
-    // All callers iterate y within the raster; horizontal intervals may
-    // still be off-screen or numerically non-finite.
-    if (!std::isfinite(from) || !std::isfinite(to) ||
-        to<left || from>=right)
+    // The fill caller passes only finite scanline crossings. The stroke
+    // caller starts from finite clip bounds and returns early if restricting
+    // them produces an infinite bound; NaN candidates never replace the
+    // finite bounds in std::min/std::max. Hence both endpoints are finite.
+    if (to<left || from>=right)
         return;
     from=std::clamp(from,left,right);
     to=std::clamp(to,left,right);
@@ -545,10 +549,13 @@ void DefaultGraphicsCanvas::rasterise_segment(Point a,Point b,double width) {
 // Round endpoints restore readable glyph strokes while preserving the
 // butt caps of ordinary drawing paths.
 void DefaultGraphicsCanvas::rasterise_disc(Point center,double radius) {
-    // Called only by text() with finite glyph centers and a fixed positive radius.
+    // Called only by text() with finite glyph centers and a fixed positive
+    // radius. The lowest glyph lies at least 15 device pixels above the
+    // image bottom, so ymin>=_height is impossible. Small plots can still
+    // clip glyphs against the upper edge.
     const double xmin=center.x-radius, xmax=center.x+radius;
     const double ymin=center.y-radius, ymax=center.y+radius;
-    if (xmax<0 || ymax<0 || xmin>=_width || ymin>=_height) return;
+    if (xmax<0 || ymax<0 || xmin>=_width) return;
     const int x0=static_cast<int>(std::max(0.0,std::floor(xmin)));
     const int x1=static_cast<int>(std::min<double>(_width,std::ceil(xmax)));
     const int y0=static_cast<int>(std::max(0.0,std::floor(ymin)));
@@ -647,9 +654,12 @@ void DefaultGraphicsCanvas::rasterise_fill() {
             corners[index]=true;
         }
         const auto a=points[0],b=points[1],c=points[2];
+        // Distinct axis-aligned rectangle corners give perpendicular
+        // adjacent edges: one cross-product term is exactly zero, and the
+        // other is nonzero or may underflow to zero, but cannot be NaN.
         const double cross=(b.x-a.x)*(c.y-b.y)-
                            (b.y-a.y)*(c.x-b.x);
-        if(cross==0 || std::isnan(cross)) return false;
+        if(cross==0) return false;
         result={xmin,ymin,xmax,ymax,cross>0};
         return true;
     };
@@ -908,8 +918,15 @@ Void DefaultGraphicsCanvas::write(const char* name) const {
     chunk(png,"IDAT",zlib_stored(raw));
     chunk(png,"IEND",{});
     std::ofstream stream(filename,std::ios::binary);
-    if (!stream || !stream.write(reinterpret_cast<const char*>(png.data()),
-                                  static_cast<std::streamsize>(png.size())))
+    if (stream) {
+        stream.write(reinterpret_cast<const char*>(png.data()),
+                     static_cast<std::streamsize>(png.size()));
+        // A buffered write can succeed even when the filesystem rejects the
+        // data. Check the stream after flushing and closing it as well.
+        stream.flush();
+        stream.close();
+    }
+    if (!stream)
         throw std::runtime_error("Unable to write default graphics PNG: "+filename);
 }
 } // namespace Ariadne

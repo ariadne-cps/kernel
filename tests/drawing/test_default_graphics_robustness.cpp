@@ -34,6 +34,11 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#if defined(__APPLE__) || defined(__linux__)
+#include <csignal>
+#include <cstdio>
+#include <sys/resource.h>
+#endif
 
 using namespace Ariadne;
 
@@ -1060,6 +1065,67 @@ void test_png_write_failure_after_open() {
 #endif
 }
 
+//! \brief An actual regular file can fail after opening when the
+//! process reaches a POSIX file-size limit. Exercise this on macOS too.
+void test_png_write_failure_with_file_size_limit() {
+#if defined(__APPLE__) || defined(__linux__)
+    struct rlimit saved{};
+    if (::getrlimit(RLIMIT_FSIZE,&saved)!=0)
+        throw std::runtime_error("Unable to query file-size limit");
+
+    const auto previous=std::signal(SIGXFSZ,SIG_IGN);
+    if (previous==SIG_ERR)
+        throw std::runtime_error("Unable to suppress SIGXFSZ");
+
+    struct RestoreLimits {
+        struct rlimit original;
+        void (*previous_handler)(int);
+        ~RestoreLimits() {
+            ::setrlimit(RLIMIT_FSIZE,&original);
+            std::signal(SIGXFSZ,previous_handler);
+        }
+    } restore{saved,previous};
+
+    struct rlimit limited=saved;
+    if (limited.rlim_cur>static_cast<rlim_t>(64))
+        limited.rlim_cur=static_cast<rlim_t>(64);
+    if (::setrlimit(RLIMIT_FSIZE,&limited)!=0)
+        throw std::runtime_error("Unable to set file-size limit");
+
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    const char* filename="default_graphics-size-limit.png";
+    bool rejected=false;
+    try {
+        canvas.write(filename);
+    } catch(const std::runtime_error& error) {
+        rejected=std::string(error.what()).find(
+            "Unable to write default graphics PNG")!=std::string::npos;
+    }
+    std::remove(filename);
+    DrawingTest::require(rejected,
+                         "PNG writer ignored the file-size limit");
+#endif
+}
+
+//! \brief Widely separated magnitudes and adjacent large axis endpoints
+//! must retain a finite, valid affine transform.
+void test_valid_large_axis_translations() {
+    const double largest=1e300;
+    const double adjacent=std::nextafter(
+        largest,std::numeric_limits<double>::infinity());
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.initialise("","",largest,adjacent,-adjacent,-largest);
+    canvas.write("default_graphics-large-valid-axes.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-large-valid-axes.png");
+    DrawingTest::require(
+        image.width==298u && image.height==146u,
+        "Valid large-magnitude axis endpoints were not accepted");
+    DrawingTest::require(
+        image.pixel(160u,10u)==std::array<unsigned char,3>{247,247,247},
+        "Valid large-magnitude axis transform corrupted the plot");
+}
+
 } // namespace
 
 int main() {
@@ -1226,6 +1292,8 @@ int main() {
         test_one_pixel_high_plot_labels();
         test_circle_generated_nonfinite_fill_vertices();
         test_png_write_failure_after_open();
+        test_png_write_failure_with_file_size_limit();
+        test_valid_large_axis_translations();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
