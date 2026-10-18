@@ -344,7 +344,6 @@ Void hotstarted_constraint_adjoin_outer_approximation_recursion(
     // Set up the classes used for constraint propagation and
     // optimisation using the Kuhn-Tucker conditions
     ConstraintSolver solver;
-    NonlinearInteriorPointSolver optimiser;
     ValidatedVectorMultivariateFunction fg=join(f,g);
 
     const SizeType m=fg.argument_size();
@@ -381,28 +380,10 @@ Void hotstarted_constraint_adjoin_outer_approximation_recursion(
     }
 
 
-    // Relax x away from boundary
-    optimiser.compute_tz(d,fg,bx,ay,at,az);
-    LOGGING_PRINTLN_AT(1,"z0="<<az<<", t0="<<at);
-    for(SizeType i=0; i!=12; ++i) {
-        LOGGING_PRINTLN_AT(2,"t="<<at);
-        //optimiser.linearised_feasibility_step(d,fg,bx,x,y,z,t);
-        try {
-            optimiser.feasibility_step(d,fg,bx,ax,ay,az,at);
-        }
-        catch(const NearBoundaryOfFeasibleDomainException&) {
-            break;
-        }
-        catch(const std::runtime_error& err) {
-            ARIADNE_FAIL_MSG(""<<err.what());
-            break;
-        }
-        update_exact_values();
-        LOGGING_PRINTLN_AT(2,"x="<<ax<<", y="<<ay<<", z="<<az);
-        LOGGING_PRINTLN_AT(2,"x.z="<<emulrng(x,z));
-        if(t>0) { break; }
-        if(definitely(emulrng(x,z).upper_bound()<XZMIN)) { break; }
-    }
+    // The former interior-point calls were no-ops: they neither
+    // initialised the dual variables nor performed a feasibility step.
+    // Preserve the pre-existing initial state before the subsequent
+    // domain/cell split and any validated constraint reduction.
     update_exact_values();
     LOGGING_PRINTLN_AT(1,"t="<<t<<", y="<<y<<", x="<<x<<", z="<<z);
 
@@ -515,7 +496,6 @@ Void hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(PavingIn
     LOGGING_PRINTLN_AT(1,"dom="<<d<<" cnst="<<c<<" cell="<<b.box()<<" dpth="<<b.depth()<<" e="<<e);
 
     ConstraintSolver solver;
-    NonlinearInteriorPointSolver optimiser;
 
     FloatDP t{pr};
     FloatDPPoint z(x.size(),dp);
@@ -537,13 +517,9 @@ Void hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(PavingIn
 
     ExactBoxType bx=product(static_cast<const ExactBoxType&>(b.box()),static_cast<const ExactBoxType&>(c));
 
-    optimiser.compute_tz(d,fg,bx,ay,at,az);
-    for(SizeType i=0; i!=12; ++i) {
-        LOGGING_PRINTLN_AT(2,"t="<<t);
-        optimiser.linearised_feasibility_step(d,fg,bx,ax,ay,az,at);
-        update_exact_values();
-        if(t>0) { break; }
-    }
+    // The former interior-point initialisation and iteration were
+    // no-ops. Keep the unchanged initial values for the validated
+    // checks and paving recursion below.
     update_exact_values();
     LOGGING_PRINTLN_AT(1,"t="<<t<<", y="<<y<<", x="<<x<<", z="<<z);
 
