@@ -480,6 +480,20 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_ASSERT(definitely(contains(domain,optimum)));
         ARIADNE_TEST_ASSERT(definitely(contains(codomain,g(optimum))));
         ARIADNE_TEST_ASSERT(definitely(optimum[0]==FloatDPBounds(0.5_x,dp)));
+
+        // Each malformed input violates exactly one of the public
+        // dimension preconditions and must be rejected before setup
+        // or any numerical iteration.
+        ExactBoxType wrong_domain({{0.0_x,1.0_x},{0.0_x,1.0_x}});
+        ValidatedVectorMultivariateFunction wrong_arguments(0u,2u);
+        ExactBoxType wrong_codomain({{0.25_x,0.75_x},{0.25_x,0.75_x}});
+
+        ARIADNE_TEST_FAIL(optimiser.minimise(
+            objective,wrong_domain,g,codomain));
+        ARIADNE_TEST_FAIL(optimiser.minimise(
+            objective,domain,wrong_arguments,codomain));
+        ARIADNE_TEST_FAIL(optimiser.minimise(
+            objective,domain,g,wrong_codomain));
     }
 
     Void test_equality_solution_rechecks_inequalities() {
