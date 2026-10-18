@@ -462,6 +462,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
 
         test_candidate_linear();
         test_candidate_infeasible();
+        test_candidate_conflicting_equalities();
         test_candidate_boundary();
         test_candidate_rank_deficient();
         test_candidate_narrow_codomain();
@@ -828,6 +829,22 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_ASSERT(definitely(candidate_result.first));
         ARIADNE_TEST_ASSERT(optimiser.validate_feasibility(
             D,g,C,cast_exact(candidate_result.second)));
+    }
+
+    Void test_candidate_conflicting_equalities() {
+        // Both constraints evaluate to the same coordinate, yet their
+        // singleton target intervals are disjoint. No feasible point
+        // exists. The iterative method may establish infeasibility or
+        // return indeterminate, but must never claim feasibility.
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0],coordinate[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType contradictory({{0.0_x,0.0_x},{1.0_x,1.0_x}});
+
+        auto result=optimiser.feasible_candidate(domain,g,contradictory);
+        ARIADNE_TEST_ASSERT(!definitely(result.first));
+        ARIADNE_TEST_EQUAL(result.second.size(),domain.dimension());
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(result.second)));
     }
 
     Void test_candidate_infeasible() {
