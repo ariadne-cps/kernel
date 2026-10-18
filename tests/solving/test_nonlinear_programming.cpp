@@ -762,6 +762,15 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_ASSERT(definitely(candidate_result.first));
         ARIADNE_TEST_ASSERT(optimiser.validate_feasibility(
             D,g,C,cast_exact(candidate_result.second)));
+
+        // Independent public contracts of feasible_candidate():
+        // the function input dimension must match D, and its output
+        // dimension must match C. Reuse the already validated problem
+        // to avoid introducing additional numerical trajectories.
+        ExactBoxType wrong_domain({{0.0_x,1.0_x}});
+        ExactBoxType wrong_codomain({{0.19_pr,0.21_pr},{0.19_pr,0.21_pr}});
+        ARIADNE_TEST_FAIL(optimiser.feasible_candidate(wrong_domain,g,C));
+        ARIADNE_TEST_FAIL(optimiser.feasible_candidate(D,g,wrong_codomain));
     }
 
     Void test_candidate_nonlinear() {
