@@ -427,6 +427,11 @@ Void test_equation_solver_header_contracts()
     ARIADNE_TEST_ASSERT(low<high);
     ARIADNE_TEST_ASSERT(!(high<low));
     ARIADNE_TEST_ASSERT(!(low<low));
+    // The Bounds instantiation used by the solver must cover unequal sizes.
+    FloatDPBoundsVector shorter_bounds({FloatDPBounds(0,1,dp)});
+    FloatDPBoundsVector longer_bounds({FloatDPBounds(0,1,dp),FloatDPBounds(1,2,dp)});
+    ARIADNE_TEST_ASSERT(shorter_bounds<longer_bounds);
+    ARIADNE_TEST_ASSERT(!(longer_bounds<shorter_bounds));
 }
 
 #include "algebra/differential.hpp"

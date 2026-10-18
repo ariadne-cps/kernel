@@ -1021,11 +1021,52 @@ Void test_nonlinear_template_feasibility_products()
     ARIADNE_TEST_EQUAL(divided[1].raw(),X(0.5_x,dp).raw());
 }
 
+// Verify the exact interval hull of scalar samples, including a singleton.
+Void test_nonlinear_header_interval_hull()
+{
+    RawFloatDPVector samples(3u,FloatDP(0.0_x,dp));
+    samples[0]=FloatDP(4.0_x,dp);
+    samples[1]=FloatDP(-3.0_x,dp);
+    samples[2]=FloatDP(2.0_x,dp);
+    ARIADNE_TEST_ASSERT(definitely(
+        Detail::eivl(samples)==ExactIntervalType(-3.0_x,4.0_x)));
+
+    RawFloatDPVector singleton(1u,FloatDP(2.0_x,dp));
+    ARIADNE_TEST_ASSERT(definitely(
+        Detail::eivl(singleton)==ExactIntervalType(2.0_x,2.0_x)));
+}
+
+// Symmetric A^T D A must accumulate, and reject incorrect dimensions.
+Void test_nonlinear_header_atda()
+{
+    using X=FloatDPApproximation;
+    const X zero(0.0_x,dp);
+    Matrix<X> A(1u,1u,zero);
+    A[0][0]=X(2.0_x,dp);
+    Vector<X> diagonal(1u,dp);
+    diagonal[0]=X(3.0_x,dp);
+    Matrix<X> result(1u,1u,zero);
+    result[0][0]=X(5.0_x,dp);
+    Detail::atda(result,A,diagonal);
+    ARIADNE_TEST_EQUAL(result[0][0].raw(),X(17.0_x,dp).raw());
+
+    Matrix<X> nonsquare(1u,2u,zero);
+    Matrix<X> wrong_columns(2u,2u,zero);
+    Vector<X> wrong_diagonal(2u,dp);
+    wrong_diagonal[0]=X(1.0_x,dp);
+    wrong_diagonal[1]=X(2.0_x,dp);
+    ARIADNE_TEST_FAIL(Detail::atda(nonsquare,A,diagonal));
+    ARIADNE_TEST_FAIL(Detail::atda(wrong_columns,A,diagonal));
+    ARIADNE_TEST_FAIL(Detail::atda(result,A,wrong_diagonal));
+}
+
 Int main(Int argc, const char* argv[]) {
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
     ARIADNE_TEST_CALL(test_nonlinear_header_contracts());
     ARIADNE_TEST_CALL(test_nonlinear_template_feasibility_products());
+    ARIADNE_TEST_CALL(test_nonlinear_header_interval_hull());
+    ARIADNE_TEST_CALL(test_nonlinear_header_atda());
     TestNonlinearAdapterProbe().test();
 
     NonlinearInfeasibleInteriorPointSolver nlio;
