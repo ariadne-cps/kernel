@@ -1060,6 +1060,41 @@ Void test_nonlinear_header_atda()
     ARIADNE_TEST_FAIL(Detail::atda(result,A,wrong_diagonal));
 }
 
+// Reject invalid dimensions before constructing augmented feasibility
+// vectors and normal matrices; each failure protects a different index.
+Void test_nonlinear_header_feasibility_preconditions()
+{
+    using X=FloatDPApproximation;
+    const X zero(0.0_x,dp);
+    RawFloatDPVector empty_samples(0u,FloatDP(0.0_x,dp));
+    ARIADNE_TEST_FAIL(Detail::eivl(empty_samples));
+
+    Matrix<X> A(1u,1u,zero);
+    A[0][0]=X(2.0_x,dp);
+    Vector<X> short_primal(3u,dp);
+    Vector<X> long_primal(5u,dp);
+    // One equation and one variable require four primal coordinates.
+    ARIADNE_TEST_FAIL(Detail::feasibility_mul(A,short_primal));
+    ARIADNE_TEST_FAIL(Detail::feasibility_mul(A,long_primal));
+
+    Vector<X> short_dual(1u,dp);
+    Vector<X> long_dual(3u,dp);
+    // The transpose takes one multiplier plus the final scalar.
+    ARIADNE_TEST_FAIL(Detail::feasibility_trmul(A,short_dual));
+    ARIADNE_TEST_FAIL(Detail::feasibility_trmul(A,long_dual));
+
+    Matrix<X> H(1u,1u,zero);
+    Matrix<X> wrong_rows(2u,1u,zero);
+    Matrix<X> wrong_columns(1u,2u,zero);
+    Vector<X> valid_diagonal(4u,dp);
+    Vector<X> short_diagonal(3u,dp);
+    // The augmented normal matrix requires a square m-by-m H and
+    // exactly 2*(m+n) diagonal elements. Check independently.
+    ARIADNE_TEST_FAIL(Detail::feasibility_adat(wrong_rows,A,valid_diagonal));
+    ARIADNE_TEST_FAIL(Detail::feasibility_adat(wrong_columns,A,valid_diagonal));
+    ARIADNE_TEST_FAIL(Detail::feasibility_adat(H,A,short_diagonal));
+}
+
 Int main(Int argc, const char* argv[]) {
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
@@ -1067,6 +1102,7 @@ Int main(Int argc, const char* argv[]) {
     ARIADNE_TEST_CALL(test_nonlinear_template_feasibility_products());
     ARIADNE_TEST_CALL(test_nonlinear_header_interval_hull());
     ARIADNE_TEST_CALL(test_nonlinear_header_atda());
+    ARIADNE_TEST_CALL(test_nonlinear_header_feasibility_preconditions());
     TestNonlinearAdapterProbe().test();
 
     NonlinearInfeasibleInteriorPointSolver nlio;
