@@ -947,9 +947,9 @@ class TestNonlinearPenaltyFunctionSolver
 
 Void test_nonlinear_header_contracts()
 {
-    const IndeterminateFeasibilityException indeterminate;
+    const IndeterminateFeasibilityException indeterminate_exception;
     const DegenerateNonlinearFeasibilityProblemException degenerate;
-    ARIADNE_TEST_EQUAL(std::string(indeterminate.what()),std::string("IndeterminateFeasibilityException"));
+    ARIADNE_TEST_EQUAL(std::string(indeterminate_exception.what()),std::string("IndeterminateFeasibilityException"));
     ARIADNE_TEST_EQUAL(std::string(degenerate.what()),std::string("DegenerateNonlinearFeasibilityProblemException"));
 
     // Clone through the public solver interface to check dynamic dispatch,
@@ -958,8 +958,10 @@ Void test_nonlinear_header_contracts()
     ApproximateNonlinearInteriorPointSolver approximate;
     IntervalNonlinearInteriorPointSolver interval;
     std::unique_ptr<NonlinearProgrammingSolverInterface> c0(interior.clone());
-    std::unique_ptr<NonlinearProgrammingSolverInterface> c1(approximate.clone());
-    std::unique_ptr<NonlinearProgrammingSolverInterface> c2(interval.clone());
+    std::unique_ptr<NonlinearProgrammingSolverInterface> c1(
+        static_cast<const NonlinearProgrammingSolverInterface&>(approximate).clone());
+    std::unique_ptr<NonlinearProgrammingSolverInterface> c2(
+        static_cast<const NonlinearProgrammingSolverInterface&>(interval).clone());
     ARIADNE_TEST_ASSERT(dynamic_cast<NonlinearInteriorPointSolver*>(c0.get())!=nullptr);
     ARIADNE_TEST_ASSERT(dynamic_cast<ApproximateNonlinearInteriorPointSolver*>(c1.get())!=nullptr);
     ARIADNE_TEST_ASSERT(dynamic_cast<IntervalNonlinearInteriorPointSolver*>(c2.get())!=nullptr);
