@@ -1003,6 +1003,63 @@ void test_nonfinite_join_triangle_bounds() {
                          "Overflowed join triangle bounds painted the image");
 }
 
+//! \brief A one-pixel plot can put the lower tick label partly above the
+//! raster. The embedded font must clip its uppermost dots safely.
+void test_one_pixel_high_plot_labels() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,1u));
+    canvas.initialise("","",-1.0,1.0,-1.0,1.0);
+    canvas.write("default_graphics-one-pixel-high.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-one-pixel-high.png");
+    DrawingTest::require(image.width==298u && image.height==51u,
+                         "Tiny plot produced incorrect raster dimensions");
+    DrawingTest::require(
+        image.pixel(160u,10u)==std::array<unsigned char,3>{247,247,247},
+        "Tiny plot labels modified the one-pixel plotting area");
+}
+
+//! \brief A finite circle center plus a finite radius can overflow one
+//! coordinate of generated polygon vertices. The generic fill must ignore
+//! invalid edges without painting the unrelated raster.
+void test_circle_generated_nonfinite_fill_vertices() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    canvas.write("default_graphics-overflow-vertices-blank.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-overflow-vertices-blank.png");
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+    const auto outside_circle=[&](double x,double y) {
+        canvas.circle(x,y,7e307);
+        canvas.fill();
+    };
+    outside_circle(1.5e308,0.0);
+    outside_circle(-1.5e308,0.0);
+    outside_circle(0.0,1.5e308);
+    outside_circle(0.0,-1.5e308);
+    canvas.write("default_graphics-overflow-fill-vertices.png");
+    const auto image=DrawingTest::read_default_graphics_png(
+        "default_graphics-overflow-fill-vertices.png");
+    DrawingTest::require(image.pixels==blank.pixels,
+                         "Overflowed circle-generated fill vertices changed the image");
+}
+
+//! \brief On Linux, /dev/full opens successfully but rejects writes with
+//! ENOSPC. This exercises a genuine I/O failure after file creation.
+void test_png_write_failure_after_open() {
+#if defined(__linux__)
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    bool rejected=false;
+    try {
+        canvas.write("/dev/full");
+    } catch(const std::runtime_error& error) {
+        rejected=std::string(error.what()).find(
+            "Unable to write default graphics PNG")!=std::string::npos;
+    }
+    DrawingTest::require(rejected,
+                         "Writing to /dev/full did not report the output failure");
+#endif
+}
+
 } // namespace
 
 int main() {
@@ -1166,6 +1223,9 @@ int main() {
         test_offscreen_miter_join_triangles();
         test_anisotropic_circle_radius_overflow();
         test_nonfinite_join_triangle_bounds();
+        test_one_pixel_high_plot_labels();
+        test_circle_generated_nonfinite_fill_vertices();
+        test_png_write_failure_after_open();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
