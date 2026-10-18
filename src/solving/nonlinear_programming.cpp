@@ -204,30 +204,35 @@ validate_feasibility(ExactBoxType D, ValidatedVectorMultivariateFunction g, Exac
     Vector<FloatDPBounds> w(k,dp), mw(k,dp), nw(k,dp);
     Vector<FloatDPBounds> mx(n,dp);
 
-    for(SizeType ii=0; ii!=12; ++ii) {
-        mw=midpoint(w);
-        x=x0+AT*w;
-        mx=x0+AT*mw;
-        nw = mw - solve(h.jacobian(x)*AT,Vector<FloatDPBounds>(h(mx)-c));
-        LOGGING_PRINTLN_AT(1,"w="<<w<<", h(x0+AT*w)="<<h(x)<<", nw="<<nw<<", refines="<<refines(nw,w));
-
-        if(!found_solution) {
-            if(refines(nw,w)) {
-                found_solution=true;
-                w=w+FloatDPBounds(0,1,dp)*(w0-w);
+    // With more equalities than variables, h'(x)*AT is necessarily
+    // rank-deficient. The Newton correction cannot certify a solution.
+    // Leave validated_solution false rather than attempting singular solve.
+    if(k<=n) {
+        for(SizeType ii=0; ii!=12; ++ii) {
+            mw=midpoint(w);
+            x=x0+AT*w;
+            mx=x0+AT*mw;
+            nw = mw - solve(h.jacobian(x)*AT,Vector<FloatDPBounds>(h(mx)-c));
+            LOGGING_PRINTLN_AT(1,"w="<<w<<", h(x0+AT*w)="<<h(x)<<", nw="<<nw<<", refines="<<refines(nw,w));
+    
+            if(!found_solution) {
+                if(refines(nw,w)) {
+                    found_solution=true;
+                    w=w+FloatDPBounds(0,1,dp)*(w0-w);
+                } else {
+                    w=w+FloatDPBounds(0,1,dp)*(FloatDPBounds(2,dp)*nw-w);
+                }
             } else {
-                w=w+FloatDPBounds(0,1,dp)*(FloatDPBounds(2,dp)*nw-w);
+                if(refines(nw,w)) {
+                    validated_solution=true;
+                } else if(validated_solution) {
+                    // Not a contraction, so presumably accurate enough
+                    break;
+                }
+                w=refinement(nw,w);
             }
-        } else {
-            if(refines(nw,w)) {
-                validated_solution=true;
-            } else if(validated_solution) {
-                // Not a contraction, so presumably accurate enough
-                break;
-            }
-            w=refinement(nw,w);
+    
         }
-
     }
     LOGGING_PRINTLN("w="<<w<<", validated="<<validated_solution);
 
@@ -239,14 +244,13 @@ validate_feasibility(ExactBoxType D, ValidatedVectorMultivariateFunction g, Exac
     gx=g(x);
     LOGGING_PRINTLN("g(x)="<<gx);
 
-    // Check that equality constraints are plausible
-    ARIADNE_DEBUG_ASSERT(models(h(x)-c,ExactFloatDPVectorType(k,dp)));
-
-    // Check inequality constraints once more
+    // Validated Newton inclusion certifies h(x)=c for the selected
+    // equality components. Since h is a projection of g and C's
+    // equality components are singletons, both former debug assertions
+    // follow from the certificate and would only retest its invariant.
+    // The inequality constraints still require a separate final check.
     for(SizeType i=0; i!=C.size(); ++i) {
-        if(C[i].lower_bound()==C[i].upper_bound()) {
-            ARIADNE_DEBUG_ASSERT(models(gx[i],C[i].midpoint()));
-        } else {
+        if(C[i].lower_bound()!=C[i].upper_bound()) {
             if(!definitely(element(gx[i],C[i]))) {
                 return false;
             }

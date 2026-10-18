@@ -419,6 +419,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
     Void test() {
         ARIADNE_TEST_CALL(test_common_point_feasibility_and_tolerance());
         ARIADNE_TEST_CALL(test_base_validation());
+        ARIADNE_TEST_CALL(test_overdetermined_equality_validation());
         ARIADNE_TEST_CALL(test_logging_diagnostics());
         ARIADNE_TEST_CALL(test_validation_dimension_preconditions());
         ARIADNE_TEST_CALL(test_feasible_box_without_equalities());
@@ -626,6 +627,21 @@ class TestNonlinearInfeasibleInteriorPointSolver
             domain,g,constraints,wrong_point,multiplier));
         ARIADNE_TEST_FAIL(optimiser.validate_infeasibility(
             domain,g,constraints,point,wrong_multiplier));
+    }
+
+    Void test_overdetermined_equality_validation() {
+        // Two distinct equality constraints on one variable cannot
+        // both hold. The Newton system has two rows but rank at most one.
+        // Failure to certify must return false, not throw on a singular
+        // correction matrix or report a spurious feasible point.
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinates[0],coordinates[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType equalities({{0.0_x,0.0_x},{1.0_x,1.0_x}});
+        FloatDPVector initial({0.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(!optimiser.validate_feasibility(
+            domain,g,equalities,initial));
     }
 
     Void test_base_validation() {
