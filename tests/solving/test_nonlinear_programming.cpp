@@ -462,6 +462,24 @@ class TestNonlinearInfeasibleInteriorPointSolver
 
         test_candidate_linear();
         test_infeasible_minimisation_rejects_false_optima();
+        test_stationary_minimisation();
+    }
+
+    Void test_stationary_minimisation() {
+        // The initial midpoint is a stationary constrained minimiser.
+        // Check the complete public driver, not just a Newton step;
+        // the solver must return a certified feasible candidate.
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(coordinates[0]-0.5_x);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{0.25_x,0.75_x}});
+
+        auto optimum=optimiser.minimise(objective,domain,g,codomain);
+        ARIADNE_TEST_EQUAL(optimum.size(),1u);
+        ARIADNE_TEST_ASSERT(definitely(contains(domain,optimum)));
+        ARIADNE_TEST_ASSERT(definitely(contains(codomain,g(optimum))));
+        ARIADNE_TEST_ASSERT(definitely(optimum[0]==FloatDPBounds(0.5_x,dp)));
     }
 
     Void test_equality_solution_rechecks_inequalities() {
