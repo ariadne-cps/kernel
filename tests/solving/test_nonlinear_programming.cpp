@@ -470,6 +470,11 @@ class TestNonlinearInfeasibleInteriorPointSolver
         // established semantic contracts with diagnostic output on.
         test_candidate_anisotropic_domain();
         test_candidate_multiple_constraints();
+        // These two existing regression cases can return indeterminate
+        // after all candidate iterations. Run them with logging active
+        // to exercise diagnostics on that legitimate return path.
+        test_candidate_nonlinear();
+        test_candidate_seven_dimensional();
         test_candidate_nonlinear_seven_dimensional();
         test_candidate_overdetermined();
         test_infeasible_minimisation_rejects_false_optima();
