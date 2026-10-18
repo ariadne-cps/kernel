@@ -33,6 +33,7 @@
 #include "function/taylor_model.hpp"
 #include "function/formula.hpp"
 #include "solving/nonlinear_programming.hpp"
+#include "solving/nonlinear_programming.tpl.hpp"
 #include "solving/nonlinear_interior_point_method.hpp"
 #include "solving/nonlinear_penalty_function_method.hpp"
 #include "geometry/box.hpp"
@@ -943,9 +944,86 @@ class TestNonlinearPenaltyFunctionSolver
     }
 };
 
+
+Void test_nonlinear_header_contracts()
+{
+    const IndeterminateFeasibilityException indeterminate;
+    const DegenerateNonlinearFeasibilityProblemException degenerate;
+    ARIADNE_TEST_EQUAL(std::string(indeterminate.what()),std::string("IndeterminateFeasibilityException"));
+    ARIADNE_TEST_EQUAL(std::string(degenerate.what()),std::string("DegenerateNonlinearFeasibilityProblemException"));
+
+    // Clone through the public solver interface to check dynamic dispatch,
+    // concrete type preservation and independent ownership.
+    NonlinearInteriorPointSolver interior;
+    ApproximateNonlinearInteriorPointSolver approximate;
+    IntervalNonlinearInteriorPointSolver interval;
+    std::unique_ptr<NonlinearProgrammingSolverInterface> c0(interior.clone());
+    std::unique_ptr<NonlinearProgrammingSolverInterface> c1(approximate.clone());
+    std::unique_ptr<NonlinearProgrammingSolverInterface> c2(interval.clone());
+    ARIADNE_TEST_ASSERT(dynamic_cast<NonlinearInteriorPointSolver*>(c0.get())!=nullptr);
+    ARIADNE_TEST_ASSERT(dynamic_cast<ApproximateNonlinearInteriorPointSolver*>(c1.get())!=nullptr);
+    ARIADNE_TEST_ASSERT(dynamic_cast<IntervalNonlinearInteriorPointSolver*>(c2.get())!=nullptr);
+}
+
+Void test_nonlinear_template_feasibility_products()
+{
+    using X=FloatDPApproximation;
+    Matrix<X> A(1u,1u,X(0.0_x,dp));
+    A[0][0]=X(2.0_x,dp);
+    Vector<X> v(4u,dp);
+    v[0]=X(1.0_x,dp);
+    v[1]=X(2.0_x,dp);
+    v[2]=X(3.0_x,dp);
+    v[3]=X(4.0_x,dp);
+
+    // [A -A I -I; 1 1 1 1] * [1 2 3 4] = [-3,10].
+    auto result=Detail::feasibility_mul(A,v);
+    ARIADNE_TEST_EQUAL(result.size(),2u);
+    ARIADNE_TEST_EQUAL(result[0].raw(),X(-3.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(result[1].raw(),X(10.0_x,dp).raw());
+
+    Vector<X> w(2u,dp);
+    w[0]=X(3.0_x,dp);
+    w[1]=X(5.0_x,dp);
+    // Transpose product = [11,-1,8,2].
+    auto transposed=Detail::feasibility_trmul(A,w);
+    ARIADNE_TEST_EQUAL(transposed.size(),4u);
+    ARIADNE_TEST_EQUAL(transposed[0].raw(),X(11.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(transposed[1].raw(),X(-1.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(transposed[2].raw(),X(8.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(transposed[3].raw(),X(2.0_x,dp).raw());
+
+    Matrix<X> H(1u,1u,X(7.0_x,dp));
+    // With D=[1,2,3,4], the symmetric augmented product is
+    // [26,-3; -3,10].
+    auto augmented=Detail::feasibility_adat(H,A,v);
+    ARIADNE_TEST_EQUAL(augmented.row_size(),2u);
+    ARIADNE_TEST_EQUAL(augmented.column_size(),2u);
+    ARIADNE_TEST_EQUAL(augmented[0][0].raw(),X(26.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(augmented[0][1].raw(),X(-3.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(augmented[1][0].raw(),X(-3.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(augmented[1][1].raw(),X(10.0_x,dp).raw());
+
+    // Elementwise helpers implement the same arithmetic on each component.
+    Vector<X> x(2u,dp),d(2u,dp);
+    x[0]=X(2.0_x,dp); x[1]=X(4.0_x,dp);
+    d[0]=X(4.0_x,dp); d[1]=X(8.0_x,dp);
+    auto shifted=Detail::esub(x,X(1.0_x,dp));
+    auto multiplied=Detail::emul(x,d);
+    auto divided=Detail::ediv(x,d);
+    ARIADNE_TEST_EQUAL(shifted[0].raw(),X(1.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(shifted[1].raw(),X(3.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(multiplied[0].raw(),X(8.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(multiplied[1].raw(),X(32.0_x,dp).raw());
+    ARIADNE_TEST_EQUAL(divided[0].raw(),X(0.5_x,dp).raw());
+    ARIADNE_TEST_EQUAL(divided[1].raw(),X(0.5_x,dp).raw());
+}
+
 Int main(Int argc, const char* argv[]) {
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
+    ARIADNE_TEST_CALL(test_nonlinear_header_contracts());
+    ARIADNE_TEST_CALL(test_nonlinear_template_feasibility_products());
     TestNonlinearAdapterProbe().test();
 
     NonlinearInfeasibleInteriorPointSolver nlio;

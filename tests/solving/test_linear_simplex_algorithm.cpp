@@ -27,6 +27,7 @@
 #include "algebra/vector.hpp"
 #include "algebra/matrix.hpp"
 #include "solving/linear_simplex_algorithm.hpp"
+#include "solving/linear_programming.hpp"
 #include "drawing/command_line_interface.hpp"
 
 using namespace Ariadne;
@@ -35,6 +36,7 @@ class TestLinearSimplexSolver
 {
   public:
     Void test() {
+        ARIADNE_TEST_CALL(test_linear_programming_exception_contracts());
         ARIADNE_TEST_CALL(test_slackness_output());
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
         ARIADNE_TEST_CALL(test_verify_feasibility_basic_statuses());
@@ -63,6 +65,18 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_compute_basis_singular_after_elimination());
         ARIADNE_TEST_CALL(test_compute_basis_nonunit_two_by_two());
         ARIADNE_TEST_CALL(test_compute_basis_column_pivoting());
+    }
+
+
+    Void test_linear_programming_exception_contracts() {
+        const DegenerateFeasibilityProblemException degenerate;
+        const UnboundedLinearProgram unbounded(StringType("unbounded programme"));
+        const InfeasibleLinearProgram infeasible(StringType("infeasible programme"));
+        ARIADNE_TEST_EQUAL(std::string(degenerate.what()),std::string(""));
+        ARIADNE_TEST_EQUAL(std::string(unbounded.what()),std::string("unbounded programme"));
+        ARIADNE_TEST_EQUAL(std::string(infeasible.what()),std::string("infeasible programme"));
+        const std::runtime_error& base=infeasible;
+        ARIADNE_TEST_EQUAL(std::string(base.what()),std::string("infeasible programme"));
     }
 
     Void test_slackness_output() {

@@ -392,12 +392,50 @@ Void test_krawczyk_logging_paths()
     configuration.set_verbosity(previous_verbosity);
 }
 
+
+// Exercise the public inline accessors and the exception overloads directly.
+Void test_equation_solver_header_contracts()
+{
+    TestEquationSolverBase solver(TestEquationSolverBase::StepMode::Identity);
+    solver.set_maximum_error(ApproximateDouble(0.125));
+    ARIADNE_TEST_EQUAL(solver.maximum_error(),cast_exact(ApproximateDouble(0.125)));
+    solver.set_maximum_number_of_steps(17u);
+    ARIADNE_TEST_EQUAL(solver.maximum_number_of_steps(),17u);
+
+    ARIADNE_TEST_EQUAL(std::string(EquationSolverException("equation").what()),std::string("equation"));
+    ARIADNE_TEST_EQUAL(std::string(UnknownSolutionException("unknown").what()),std::string("unknown"));
+    ARIADNE_TEST_EQUAL(std::string(NoSolutionException("no solution").what()),std::string("no solution"));
+    ARIADNE_TEST_EQUAL(std::string(SingularJacobianException("singular").what()),std::string("singular"));
+
+    // A generic equation solver exception must also catch the specialised cases.
+    try {
+        throw SingularJacobianException("singular Jacobian");
+    } catch(const EquationSolverException& error) {
+        ARIADNE_TEST_EQUAL(std::string(error.what()),std::string("singular Jacobian"));
+    }
+
+    // Lexicographic ordering must first check dimensions, then compare
+    // the first differing component; equal vectors are not less-than.
+    FloatDPApproximationVector shorter(1u,dp), longer(2u,dp);
+    ARIADNE_TEST_ASSERT(shorter<longer);
+    ARIADNE_TEST_ASSERT(!(longer<shorter));
+    FloatDPApproximationVector low(2u,dp), high(2u,dp);
+    low[0]=FloatDPApproximation(1.0_x,dp);
+    high[0]=FloatDPApproximation(1.0_x,dp);
+    low[1]=FloatDPApproximation(2.0_x,dp);
+    high[1]=FloatDPApproximation(3.0_x,dp);
+    ARIADNE_TEST_ASSERT(low<high);
+    ARIADNE_TEST_ASSERT(!(high<low));
+    ARIADNE_TEST_ASSERT(!(low<low));
+}
+
 #include "algebra/differential.hpp"
 
 Int main(Int argc, const char **argv) {
 
     if (not kernel_command_line_interface().acquire(argc,argv)) return -1;
 
+    ARIADNE_TEST_CALL(test_equation_solver_header_contracts());
     ARIADNE_TEST_CALL(test_equation_solver_base_paths());
     ARIADNE_TEST_CALL(test_interval_newton_paths());
     ARIADNE_TEST_CALL(test_krawczyk_logging_paths());
