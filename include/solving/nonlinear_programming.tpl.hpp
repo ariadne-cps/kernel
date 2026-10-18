@@ -73,21 +73,9 @@ inline Vector<FloatDP> exact_vector(Vector<FloatDPApproximation> const& v) {
 
 Matrix<ApproximateNumericType> join(Matrix<ApproximateNumericType> const&, Matrix<ApproximateNumericType> const&, Matrix<ApproximateNumericType> const&);
 
-inline Vector<Differential<RawFloatDP>>const& cast_raw(Vector<Differential<FloatDPApproximation>>const& v) {
-    return reinterpret_cast<Vector<Differential<RawFloatDP>>const&>(v);
-}
-
-inline Vector<FloatDPApproximation>& cast_approximate(Vector<RawFloatDP>& v) {
-    return reinterpret_cast<Vector<FloatDPApproximation>&>(v);
-}
-
 inline Vector<FloatDPApproximation>& cast_approximate(Vector<FloatDPApproximation>& v) {
     return v;
 }
-inline Vector<Differential<FloatDPApproximation>>const& cast_approximate(Vector<Differential<RawFloatDP>>const& v) {
-    return reinterpret_cast<Vector<Differential<FloatDPApproximation>>const&>(v);
-}
-
 inline UpperIntervalType dot(Vector<UpperIntervalType> const& bx1, Vector<ExactIntervalType> const& bx2) {
     return dot(bx1,Vector<UpperIntervalType>(bx2));
 }
