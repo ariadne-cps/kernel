@@ -52,13 +52,6 @@ inline Pair<SizeType,FloatDPError> lipschitz_index_and_error(const ValidatedVect
 
 namespace {
 
-UpperIntervalType emulrng(const FloatDPVector& x, const FloatDPVector& z) {
-    UpperIntervalType r=make_interval(mul(x[0],z[0]));
-    for(SizeType i=0; i!=x.size(); ++i) { r=hull(mul(x[i],z[i]),r); }
-    return r;
-}
-
-
 PositiveFloatDPUpperBound average_width(const UpperBoxType& bx) {
     PositiveFloatDPUpperBound res(0u,double_precision);
     for(SizeType i=0; i!=bx.size(); ++i) {
@@ -337,7 +330,6 @@ Void hotstarted_constraint_adjoin_outer_approximation_recursion(
     // This constant shows how far away from zero the points are
     static const FloatDP XSIGMA { 0.125_x,dp };
     static const FloatDP TERR { ExactDouble(-1.0/((1<<e)*1024.0)),dp };
-    static const FloatDP XZMIN { ExactDouble(1.0/(1<<16)),dp };
     static const ExactDouble exact_infinity(Ariadne::inf.get_d());
     DoublePrecision pr;
 
