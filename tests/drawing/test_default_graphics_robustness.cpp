@@ -1126,6 +1126,52 @@ void test_valid_large_axis_translations() {
         "Valid large-magnitude axis transform corrupted the plot");
 }
 
+//! \brief Finite edge endpoints and a finite slope can still overflow
+//! the computed scanline crossing near the largest representable double.
+//! Such fully offscreen polygons must not corrupt the raster.
+void test_overflowed_finite_scanline_crossings() {
+    DefaultGraphicsCanvas canvas(ImageSize2d(128u,96u));
+    // Before initialise(), drawing coordinates are device coordinates:
+    // this avoids overflow in the world-to-device transform itself.
+    canvas.write("default_graphics-crossing-overflow-blank.png");
+    const auto blank=DrawingTest::read_default_graphics_png(
+        "default_graphics-crossing-overflow-blank.png");
+    canvas.set_line_width(0.0);
+    canvas.set_fill_colour(1.0,0.0,0.0);
+
+    const double left_y=-1e308;
+    const double upper_y=20.12500000001;
+    const double right_x=std::numeric_limits<double>::max();
+    // Each of these finite lower-edge x coordinates has been verified to
+    // overflow the interpolation at sample y=20.125 with IEEE binary64.
+    constexpr double starts[]={
+        6.277862360983739e307,5.2349087295109371e307,
+        7.7983141484944835e307,7.0604324965748558e307,
+        6.6870515728021555e307,7.615818421969064e307
+    };
+    bool saw_overflow=false;
+    for(double start_x:starts) {
+        const double slope=(right_x-start_x)/(upper_y-left_y);
+        const double crossing=start_x+(20.125-left_y)*slope;
+        DrawingTest::require(std::isfinite(slope),
+                             "Scanline regression requires a finite edge slope");
+        saw_overflow=saw_overflow || !std::isfinite(crossing);
+        for(double direction:{1.0,-1.0}) {
+            canvas.move_to(direction*start_x,left_y);
+            canvas.line_to(direction*right_x,upper_y);
+            canvas.line_to(direction*start_x,upper_y);
+            canvas.fill();
+        }
+    }
+    DrawingTest::require(saw_overflow,
+                         "Finite-edge scanline overflow precondition was not met");
+    canvas.write("default_graphics-finite-crossing-overflow.png");
+    const auto result=DrawingTest::read_default_graphics_png(
+        "default_graphics-finite-crossing-overflow.png");
+    DrawingTest::require(result.pixels==blank.pixels,
+                         "Finite but offscreen edges changed the canvas");
+}
+
 } // namespace
 
 int main() {
@@ -1294,6 +1340,7 @@ int main() {
         test_png_write_failure_after_open();
         test_png_write_failure_with_file_size_limit();
         test_valid_large_axis_translations();
+        test_overflowed_finite_scanline_crossings();
         canvas.write("default_graphics-robustness.png");
         const auto image=DrawingTest::read_default_graphics_png(
             "default_graphics-robustness.png");
