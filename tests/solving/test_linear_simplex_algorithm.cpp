@@ -37,6 +37,7 @@ class TestLinearSimplexSolver
   public:
     Void test() {
         ARIADNE_TEST_CALL(test_linear_programming_exception_contracts());
+        ARIADNE_TEST_CALL(test_public_simplex_input_contracts());
         ARIADNE_TEST_CALL(test_slackness_output());
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
         ARIADNE_TEST_CALL(test_verify_feasibility_basic_statuses());
@@ -67,6 +68,66 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_compute_basis_column_pivoting());
     }
 
+
+    Void test_public_simplex_input_contracts() {
+        // A single independent equality in two bounded variables has a
+        // valid basis, so each malformed input below violates exactly one
+        // documented dimension or basis invariant.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b({0.5_x},dp);
+        Vector<FloatDP> c({1.0_x,2.0_x},dp);
+        Vector<FloatDP> xl({0.0_x,0.0_x},dp);
+        Vector<FloatDP> xu({1.0_x,1.0_x},dp);
+        Vector<FloatDP> short_vector({0.0_x},dp);
+        Vector<FloatDP> long_vector({0.0_x,0.0_x,0.0_x},dp);
+
+        ARIADNE_TEST_FAIL(solver.feasible(xl,xu,A,long_vector));
+        ARIADNE_TEST_FAIL(solver.feasible(short_vector,xu,A,b));
+        ARIADNE_TEST_FAIL(solver.feasible(xl,short_vector,A,b));
+        Array<Slackness> types(2u);
+        types[0]=Slackness::BASIS;
+        types[1]=Slackness::LOWER;
+        ARIADNE_TEST_FAIL(solver.hotstarted_feasible(xl,xu,A,long_vector,types));
+        ARIADNE_TEST_FAIL(solver.hotstarted_feasible(short_vector,xu,A,b,types));
+        ARIADNE_TEST_FAIL(solver.hotstarted_feasible(xl,short_vector,A,b,types));
+
+        ARIADNE_TEST_FAIL(solver.minimise(c,xl,xu,A,long_vector));
+        ARIADNE_TEST_FAIL(solver.minimise(short_vector,xl,xu,A,b));
+        ARIADNE_TEST_FAIL(solver.minimise(c,short_vector,xu,A,b));
+        ARIADNE_TEST_FAIL(solver.minimise(c,xl,short_vector,A,b));
+
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,xl,xu,A,long_vector,types));
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(short_vector,xl,xu,A,b,types));
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,short_vector,xu,A,b,types));
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,xl,short_vector,A,b,types));
+        Array<Slackness> wrong_size(1u);
+        wrong_size[0]=Slackness::BASIS;
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,xl,xu,A,b,wrong_size));
+        Array<Slackness> no_basis(2u);
+        no_basis[0]=Slackness::LOWER;
+        no_basis[1]=Slackness::UPPER;
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,xl,xu,A,b,no_basis));
+
+        Array<SizeType> permutation(2u);
+        permutation[0]=0u;
+        permutation[1]=1u;
+        Matrix<FloatDPBounds> inverse=Matrix<FloatDPBounds>::identity(1u,dp);
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,xl,xu,A,long_vector,types,permutation,inverse));
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(short_vector,xl,xu,A,b,types,permutation,inverse));
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,short_vector,xu,A,b,types,permutation,inverse));
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,xl,short_vector,A,b,types,permutation,inverse));
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,xl,xu,A,b,wrong_size,permutation,inverse));
+        Array<SizeType> wrong_permutation(3u);
+        wrong_permutation[0]=0u;
+        wrong_permutation[1]=1u;
+        wrong_permutation[2]=2u;
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,xl,xu,A,b,types,wrong_permutation,inverse));
+        Matrix<FloatDPBounds> wrong_rows(2u,1u,FloatDPBounds(0.0_x,dp));
+        Matrix<FloatDPBounds> wrong_columns(1u,2u,FloatDPBounds(0.0_x,dp));
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,xl,xu,A,b,types,permutation,wrong_rows));
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(c,xl,xu,A,b,types,permutation,wrong_columns));
+    }
 
     Void test_linear_programming_exception_contracts() {
         const DegenerateFeasibilityProblemException degenerate;
