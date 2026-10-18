@@ -461,6 +461,10 @@ class TestNonlinearInfeasibleInteriorPointSolver
         configuration.set_verbosity(10u);
 
         test_candidate_linear();
+        test_candidate_infeasible();
+        test_candidate_boundary();
+        test_candidate_rank_deficient();
+        test_candidate_narrow_codomain();
         test_infeasible_minimisation_rejects_false_optima();
         test_stationary_minimisation();
     }
