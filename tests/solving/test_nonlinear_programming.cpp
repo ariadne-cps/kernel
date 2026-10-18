@@ -465,6 +465,13 @@ class TestNonlinearInfeasibleInteriorPointSolver
         test_candidate_boundary();
         test_candidate_rank_deficient();
         test_candidate_narrow_codomain();
+        // These more demanding valid cases may return an indeterminate
+        // candidate or reach boundary backtracking. Recheck their
+        // established semantic contracts with diagnostic output on.
+        test_candidate_anisotropic_domain();
+        test_candidate_multiple_constraints();
+        test_candidate_nonlinear_seven_dimensional();
+        test_candidate_overdetermined();
         test_infeasible_minimisation_rejects_false_optima();
         test_stationary_minimisation();
     }
