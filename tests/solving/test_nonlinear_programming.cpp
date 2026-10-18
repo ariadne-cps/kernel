@@ -419,6 +419,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
     Void test() {
         ARIADNE_TEST_CALL(test_common_point_feasibility_and_tolerance());
         ARIADNE_TEST_CALL(test_base_validation());
+        ARIADNE_TEST_CALL(test_logging_diagnostics());
         ARIADNE_TEST_CALL(test_validation_dimension_preconditions());
         ARIADNE_TEST_CALL(test_feasible_box_without_equalities());
         ARIADNE_TEST_CALL(test_feasible_box_rejections());
@@ -534,6 +535,45 @@ class TestNonlinearInfeasibleInteriorPointSolver
         auto status=optimiser.contains_feasible_point(D,g,C,box);
         ARIADNE_TEST_ASSERT(!definitely(status));
         ARIADNE_TEST_ASSERT(!definitely(not status));
+    }
+
+    Void test_logging_diagnostics() {
+        // Exercise public feasibility and infeasibility diagnostics with
+        // logging enabled, checking that the reported status remains sound.
+        auto& configuration=Logger::instance().configuration();
+        unsigned int const old_verbosity=configuration.verbosity();
+        configuration.set_verbosity(10u);
+
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType inequality({{0.25_x,0.75_x}});
+        ExactBoxType equality({{0.5_x,0.5_x}});
+        ExactBoxType infeasible({{2.0_x,3.0_x}});
+        FloatDPVector feasible_point({0.5_x},dp);
+        FloatDPVector infeasible_point({0.875_x},dp);
+        FloatDPVector initial({0.25_x},dp);
+        FloatDPVector multiplier({1.0_x},dp);
+        FloatDPBoundsVector interior({{0.25_x,0.75_x}},dp);
+
+        ARIADNE_TEST_ASSERT(optimiser.validate_feasibility(
+            domain,g,inequality,feasible_point));
+        ARIADNE_TEST_ASSERT(!optimiser.validate_feasibility(
+            domain,g,inequality,infeasible_point));
+        ARIADNE_TEST_ASSERT(optimiser.validate_feasibility(
+            domain,g,equality,initial));
+        ARIADNE_TEST_ASSERT(definitely(optimiser.contains_feasible_point(
+            domain,g,inequality,interior)));
+        ARIADNE_TEST_ASSERT(definitely(optimiser.contains_feasible_point(
+            domain,g,equality,interior)));
+        ARIADNE_TEST_ASSERT(optimiser.validate_infeasibility(
+            domain,g,infeasible,initial,multiplier));
+        ARIADNE_TEST_ASSERT(!optimiser.validate_infeasibility(
+            domain,g,inequality,initial,multiplier));
+        ARIADNE_TEST_ASSERT(optimiser.is_infeasibility_certificate(
+            domain,g,infeasible,multiplier));
+
+        configuration.set_verbosity(old_verbosity);
     }
 
     Void test_validation_dimension_preconditions() {
