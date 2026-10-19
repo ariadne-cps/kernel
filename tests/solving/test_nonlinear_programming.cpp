@@ -1036,6 +1036,7 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_penalty_minimisation_detects_infeasibility());
         ARIADNE_TEST_CALL(test_penalty_minimisation_input_contracts());
         ARIADNE_TEST_CALL(test_penalty_minimisation_upper_codomain());
+        ARIADNE_TEST_CALL(test_penalty_minimisation_boundary_requires_certificate());
         ARIADNE_TEST_CALL(test_point_feasibility_input_contracts());
         ARIADNE_TEST_CALL(test_point_feasibility_with_equalities());
         ARIADNE_TEST_CALL(test_stationary_feasibility());
@@ -1147,6 +1148,23 @@ class TestNonlinearPenaltyFunctionSolver
         auto midpoint_optimum=midpoint(optimum);
         ARIADNE_TEST_ASSERT(decide(abs(midpoint_optimum[0]+
             FloatDPApproximation(0.75_x,dp))<FloatDPApproximation(0.015625_x,dp)));
+    }
+
+    Void test_penalty_minimisation_boundary_requires_certificate() {
+        // The constrained minimum of (x-1)^2 with x<=0 is at x=0.
+        // At every finite penalty weight rho, the penalised minimiser
+        // lies at x=2/(rho+2)>0. Such an infeasible numerical iterate
+        // cannot be silently returned as a validated solution.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction f=sqr(coordinate[0]-Real(1.0_x));
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,0.0_x}});
+
+        ARIADNE_TEST_THROWS(
+            solver.minimise(f,domain,g,codomain),
+            IndeterminateFeasibilityException);
     }
 
     Void test_penalty_minimisation_detects_infeasibility() {
