@@ -65,6 +65,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_compute_basis_tall_matrix_precondition());
         ARIADNE_TEST_CALL(test_compute_basis_unit_columns());
         ARIADNE_TEST_CALL(test_compute_basis_singular_after_elimination());
+        ARIADNE_TEST_CALL(test_compute_basis_rational_nonunit());
         ARIADNE_TEST_CALL(test_compute_basis_nonunit_two_by_two());
         ARIADNE_TEST_CALL(test_compute_basis_column_pivoting());
     }
@@ -207,6 +208,24 @@ class TestLinearSimplexSolver
         LinearSimplexSolver<FloatDP> solver;
         Matrix<FloatDP> A({{1.0_x,1.0_x},{1.0_x,1.0_x}},dp);
         ARIADNE_TEST_THROWS(solver.compute_basis(A),SingularLinearProgram);
+    }
+
+    Void test_compute_basis_rational_nonunit() {
+        // The rational instantiation must compute a full inverse basis
+        // even when neither column is a unit column. det(A)=3.
+        // This exercises fraction-preserving elimination separately
+        // from the floating-point simplex instantiation.
+        RationalLinearSimplexSolver solver;
+        Matrix<Rational> A({{Rational(2),Rational(1)},
+                            {Rational(1),Rational(2)}});
+
+        auto basis=solver.compute_basis(A);
+        const auto& p=basis.first;
+        const auto& B=basis.second;
+        ARIADNE_TEST_EQUAL(p.size(),2u);
+        ARIADNE_TEST_EQUAL(p[0],0u);
+        ARIADNE_TEST_EQUAL(p[1],1u);
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,p,B));
     }
 
     Void test_compute_basis_nonunit_two_by_two() {
