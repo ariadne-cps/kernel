@@ -87,10 +87,14 @@ minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D,
                     if(decide(gx[j]<cl[j])) { residual[j]=gx[j]-cl[j]; }
                     else if(decide(gx[j]>cu[j])) { residual[j]=gx[j]-cu[j]; }
                     for(SizeType i=0; i!=n; ++i) {
-                        active_jacobian[j][i]=(decide(residual[j]!=zero) ? J[j][i] : zero);
+                        if(decide(residual[j]!=zero)) {
+                            active_jacobian[j][i]=J[j][i];
+                        } else {
+                            active_jacobian[j][i]=FloatDPApproximation(0.0_x,dp);
+                        }
                     }
                 }
-                gradient+=rho*transpose(active_jacobian)*residual;
+                gradient+=rho*(transpose(active_jacobian)*residual);
             }
 
             FloatDPApproximationMatrix regularised_hessian(n,n,dp);
@@ -98,7 +102,7 @@ minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D,
                 regularised_hessian[i][i]=one;
             }
             if(m!=0u) {
-                regularised_hessian+=rho*transpose(active_jacobian)*active_jacobian;
+                regularised_hessian+=rho*(transpose(active_jacobian)*active_jacobian);
             }
             FloatDPApproximationVector direction=solve(regularised_hessian,gradient);
             if(decide(norm(direction)<FloatDPApproximation(1e-12_a,dp))) { break; }
