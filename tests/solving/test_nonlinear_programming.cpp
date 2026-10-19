@@ -1034,6 +1034,8 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_penalty_minimisation_unconstrained());
         ARIADNE_TEST_CALL(test_penalty_minimisation_active_constraint());
         ARIADNE_TEST_CALL(test_penalty_minimisation_detects_infeasibility());
+        ARIADNE_TEST_CALL(test_penalty_minimisation_input_contracts());
+        ARIADNE_TEST_CALL(test_penalty_minimisation_upper_codomain());
         ARIADNE_TEST_CALL(test_point_feasibility_input_contracts());
         ARIADNE_TEST_CALL(test_point_feasibility_with_equalities());
         ARIADNE_TEST_CALL(test_stationary_feasibility());
@@ -1104,6 +1106,46 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_ASSERT(definitely(contains(codomain,g(optimum))));
         auto midpoint_optimum=midpoint(optimum);
         ARIADNE_TEST_ASSERT(decide(abs(midpoint_optimum[0]-
+            FloatDPApproximation(0.75_x,dp))<FloatDPApproximation(0.015625_x,dp)));
+    }
+
+    Void test_penalty_minimisation_input_contracts() {
+        // These are distinct violations of the documented public
+        // minimisation contract. Reject them before evaluating f or g.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        auto coordinates2=ValidatedScalarMultivariateFunction::coordinates(2);
+        ValidatedScalarMultivariateFunction f=sqr(coordinates[0]);
+        ValidatedScalarMultivariateFunction wrong_f=sqr(coordinates2[0]);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ValidatedVectorMultivariateFunction wrong_g({coordinates2[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+        ExactBoxType wrong_codomain({{-1.0_x,1.0_x},{-1.0_x,1.0_x}});
+        ExactBoxType unbounded_below({{-inf,1.0_x}});
+        ExactBoxType unbounded_above({{-1.0_x,+inf}});
+
+        ARIADNE_TEST_FAIL(solver.minimise(wrong_f,domain,g,codomain));
+        ARIADNE_TEST_FAIL(solver.minimise(f,domain,wrong_g,codomain));
+        ARIADNE_TEST_FAIL(solver.minimise(f,domain,g,wrong_codomain));
+        ARIADNE_TEST_FAIL(solver.minimise(f,unbounded_below,g,codomain));
+        ARIADNE_TEST_FAIL(solver.minimise(f,unbounded_above,g,codomain));
+    }
+
+    Void test_penalty_minimisation_upper_codomain() {
+        // g(x)=x initially exceeds the upper constraint -1/2 at x=0.
+        // The unconstrained optimum -3/4 lies strictly within the
+        // feasible interval [-1,-1/2] and must remain optimal.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction f=sqr(coordinate[0]+Real(0.75_x));
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,-0.5_x}});
+        FloatDPBoundsVector optimum=solver.minimise(f,domain,g,codomain);
+        ARIADNE_TEST_ASSERT(definitely(contains(codomain,g(optimum))));
+        auto midpoint_optimum=midpoint(optimum);
+        ARIADNE_TEST_ASSERT(decide(abs(midpoint_optimum[0]+
             FloatDPApproximation(0.75_x,dp))<FloatDPApproximation(0.015625_x,dp)));
     }
 
