@@ -1035,6 +1035,8 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_point_feasibility_with_equalities());
         ARIADNE_TEST_CALL(test_stationary_feasibility());
         ARIADNE_TEST_CALL(test_approximate_penalty_step());
+        ARIADNE_TEST_CALL(test_validated_penalty_feasibility_contraction());
+        ARIADNE_TEST_CALL(test_validated_penalty_inconsistent_enclosures());
         ARIADNE_TEST_CALL(test_one_sided_codomain_feasibility());
         ARIADNE_TEST_CALL(test_unbounded_codomain_feasibility());
         ARIADNE_TEST_CALL(test_primal_dual_penalty_equality_step());
@@ -1211,6 +1213,37 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(slack)));
         ARIADNE_TEST_ASSERT(decide(point[0]<FloatDPApproximation(0.25_x,dp)));
         ARIADNE_TEST_ASSERT(decide(slack[0]<FloatDPApproximation(0.0_x,dp)));
+    }
+
+    Void test_validated_penalty_feasibility_contraction() {
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType equality({{0.0_x,0.0_x}});
+        FloatDPBoundsVector point(1u,FloatDPBounds(-1,+1,dp));
+        FloatDPBoundsVector slack(1u,FloatDPBounds(-1,+1,dp));
+
+        solver.feasibility_step(domain,g,equality,point,slack);
+        // The mean-value contractor for g(x)=x narrows both unknowns
+        // to the exactly feasible singleton zero.
+        ARIADNE_TEST_ASSERT(definitely(point[0]==FloatDPBounds(0,dp)));
+        ARIADNE_TEST_ASSERT(definitely(slack[0]==FloatDPBounds(0,dp)));
+    }
+
+    Void test_validated_penalty_inconsistent_enclosures() {
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+        FloatDPBoundsVector point(1u,FloatDPBounds(-1.0_x,-0.5_x,dp));
+        FloatDPBoundsVector slack(1u,FloatDPBounds(0.5_x,1.0_x,dp));
+
+        // No x in [-1,-0.5] can satisfy g(x)=w with w in [0.5,1].
+        ARIADNE_TEST_THROWS(
+            solver.feasibility_step(domain,g,codomain,point,slack),
+            InfeasibleProblemException);
     }
 
     Void test_approximate_penalty_step() {

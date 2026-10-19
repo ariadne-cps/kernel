@@ -165,10 +165,50 @@ feasibility_step(const ExactBoxType& X, const ApproximateVectorMultivariateFunct
 
 
 Void NonlinearPenaltyFunctionSolver::
-feasibility_step(const ExactBoxType&, const ValidatedVectorMultivariateFunction&, const ExactBoxType&,
-                 FloatDPBoundsVector&, FloatDPBoundsVector&) const
+feasibility_step(const ExactBoxType& D, const ValidatedVectorMultivariateFunction& g, const ExactBoxType& C,
+                 FloatDPBoundsVector& x, FloatDPBoundsVector& w) const
 {
-    ARIADNE_NOT_IMPLEMENTED;
+    LOGGING_SCOPE_CREATE;
+    ARIADNE_PRECONDITION(D.size()==g.argument_size());
+    ARIADNE_PRECONDITION(C.size()==g.result_size());
+    ARIADNE_PRECONDITION(x.size()==D.size());
+    ARIADNE_PRECONDITION(w.size()==C.size());
+
+    // x and w represent sets of possible solutions, not approximate
+    // iterates. Only intersect with enclosures that are necessary for
+    // x in D, w in C, and g(x)=w; this never discards a solution.
+    x=refinement(x,cast_singleton(D));
+    w=refinement(w,cast_singleton(C));
+
+    FloatDPBoundsVector gx=g(x);
+    for(SizeType j=0; j!=w.size(); ++j) {
+        if(definitely(disjoint(UpperIntervalType(gx[j]),UpperIntervalType(w[j])))) {
+            throw InfeasibleProblemException();
+        }
+    }
+    w=refinement(w,gx);
+
+    // In one dimension, the mean-value inclusion
+    // g_j(x) in g_j(mid(x)) + Dg_j(x)*(x-mid(x))
+    // gives a rigorous backward contraction when the derivative
+    // is separated from zero. No numerical point is promoted to a
+    // validated enclosure.
+    if(x.size()==1u) {
+        FloatDPBoundsVector mx=midpoint(x);
+        FloatDPBoundsVector gmx=g(mx);
+        Vector<FloatDPBoundsDifferential> dgx=
+            g.evaluate(FloatDPBoundsDifferential::variables(1,x));
+        FloatDPBoundsMatrix J=dgx.jacobian();
+        const FloatDPBounds zero_bounds(0,dp);
+        for(SizeType j=0; j!=w.size(); ++j) {
+            if(definitely(J[j][0]>zero_bounds) || definitely(J[j][0]<zero_bounds)) {
+                x[0]=refinement(x[0],mx[0]+(w[j]-gmx[j])/J[j][0]);
+            }
+        }
+        // Shrinking x may also shrink the forward image of g.
+        w=refinement(w,g(x));
+    }
+    LOGGING_PRINTLN("validated x="<<x<<" w="<<w);
 }
 
 
