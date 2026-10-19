@@ -1149,27 +1149,16 @@ class TestLinearSimplexSolver
 
         ARIADNE_TEST_ASSERT(definitely(solver.feasible(lower,upper,A,rhs)));
         auto optimum=solver.minimise(costs,lower,upper,A,rhs);
-        ARIADNE_TEST_PRINT(optimum);
         ARIADNE_TEST_EQUAL(optimum.size(),2u);
         ARIADNE_TEST_EXECUTE(solver.consistency_check(A,rhs,optimum));
 
-        // Diagnose whether the rounded simplex stops before selecting
-        // a pivot or changes its basis without reaching the optimum.
-        auto basis=solver.compute_basis(A);
-        auto permutation=basis.first;
-        auto inverse_basis=basis.second;
-        Array<Slackness> statuses(2u);
-        statuses[permutation[0]]=Slackness::BASIS;
-        statuses[permutation[1]]=Slackness::LOWER;
-        auto primal=solver.compute_x(lower,upper,A,rhs,statuses);
-        ARIADNE_TEST_PRINT(primal);
-        Bool pivot_done=solver.lpstep(costs,lower,upper,A,rhs,
-                                      statuses,permutation,inverse_basis,primal);
-        ARIADNE_TEST_PRINT(pivot_done);
-        ARIADNE_TEST_PRINT(primal);
-        ARIADNE_TEST_PRINT(permutation);
-        ARIADNE_TEST_PRINT(statuses);
-        ARIADNE_TEST_ASSERT(definitely(optimum[0]<optimum[1]));
+        // RoundedFloatDP comparisons are ApproximateKleenean, not
+        // validated comparisons. Decide them rather than using
+        // definitely(), which does not certify an approximate result.
+        // The unique optimum is (0,1), not the initial vertex (1,0).
+        ARIADNE_TEST_ASSERT(decide(optimum[0]<RoundedFloatDP(0.25_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(optimum[1]>RoundedFloatDP(0.75_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(optimum[0]<optimum[1]));
     }
 
     Void test_pivot_to_better_vertex() {
