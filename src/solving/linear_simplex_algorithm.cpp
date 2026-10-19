@@ -1012,8 +1012,10 @@ LinearSimplexSolver<X>::lpstep(const Vector<X>& xl, const Vector<X>& xu, const M
     const SizeType m=A.row_size();
     const SizeType n=A.column_size();
 
-    ARIADNE_ASSERT(s<=n);
-    ARIADNE_ASSERT(vt[p[s]]!=Slackness::BASIS);
+    // s is an index into the full permutation. The sentinel n denotes
+    // 'no entering variable' and must not be dereferenced here.
+    ARIADNE_PRECONDITION(s<n);
+    ARIADNE_PRECONDITION(vt[p[s]]!=Slackness::BASIS);
 
     // Compute direction d in which to move the current basic variables
     // as the variable entering the basis changes by +1

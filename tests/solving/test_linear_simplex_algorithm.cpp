@@ -49,6 +49,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_approximate_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_unbounded_nonbasic_initialisation());
         ARIADNE_TEST_CALL(test_lpstep_without_leaving_variable());
+        ARIADNE_TEST_CALL(test_lpstep_entering_index_contracts());
         ARIADNE_TEST_CALL(test_approximate_lpstep_without_leaving_variable());
         ARIADNE_TEST_CALL(test_single_variable_infeasibility());
         ARIADNE_TEST_CALL(test_lpstep_upper_bound_flip());
@@ -701,6 +702,38 @@ class TestLinearSimplexSolver
             ARIADNE_TEST_EXECUTE(solver.consistency_check(
                 xl,xu,A,b,variable_types,permutation,inverse_basis,primal));
         }
+    }
+
+    Void test_lpstep_entering_index_contracts() {
+        // lpstep(..., s) is a public overload: s must index a nonbasic
+        // variable in p. In particular, n is a sentinel, not an index.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> rhs({0.5_x},dp);
+        Vector<FloatDP> lower({0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({1.0_x,1.0_x},dp);
+        Array<Slackness> statuses(2u);
+        statuses[0]=Slackness::BASIS;
+        statuses[1]=Slackness::LOWER;
+        Array<SizeType> permutation(2u);
+        permutation[0]=0u;
+        permutation[1]=1u;
+        Matrix<FloatDPBounds> inverse_basis=Matrix<FloatDPBounds>::identity(1u,dp);
+        auto primal=solver.compute_x(lower,upper,A,rhs,statuses);
+
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(
+            lower,upper,A,rhs,statuses,permutation,inverse_basis,primal));
+        ARIADNE_TEST_FAIL(solver.lpstep(
+            lower,upper,A,rhs,statuses,permutation,inverse_basis,primal,2u));
+        ARIADNE_TEST_FAIL(solver.lpstep(
+            lower,upper,A,rhs,statuses,permutation,inverse_basis,primal,0u));
+        // Rejection must leave the valid starting basis intact.
+        ARIADNE_TEST_EQUAL(statuses[0],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(statuses[1],Slackness::LOWER);
+        ARIADNE_TEST_EQUAL(permutation[0],0u);
+        ARIADNE_TEST_EQUAL(permutation[1],1u);
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(
+            lower,upper,A,rhs,statuses,permutation,inverse_basis,primal));
     }
 
     Void test_lpstep_without_leaving_variable() {
