@@ -1146,7 +1146,13 @@ class TestNonlinearPenaltyFunctionSolver
         FloatDPApproximationVector multipliers({0.0_x},dp);
         FloatDPApproximationVector slack({0.0_x},dp);
 
+        ARIADNE_TEST_PRINT(point);
+        ARIADNE_TEST_PRINT(multipliers);
+        ARIADNE_TEST_PRINT(slack);
         solver.feasibility_step(domain,g,equality,point,multipliers,slack);
+        ARIADNE_TEST_PRINT(point);
+        ARIADNE_TEST_PRINT(multipliers);
+        ARIADNE_TEST_PRINT(slack);
         ARIADNE_TEST_ASSERT(contains(domain,cast_exact(point)));
         ARIADNE_TEST_ASSERT(contains(equality,cast_exact(slack)));
         ARIADNE_TEST_ASSERT(decide(slack[0]==FloatDPApproximation(0.0_x,dp)));
@@ -1166,7 +1172,13 @@ class TestNonlinearPenaltyFunctionSolver
         FloatDPApproximationVector multipliers({2.0_x},dp);
         FloatDPApproximationVector slack({0.2_x},dp);
 
+        ARIADNE_TEST_PRINT(point);
+        ARIADNE_TEST_PRINT(multipliers);
+        ARIADNE_TEST_PRINT(slack);
         solver.feasibility_step(domain,g,codomain,point,multipliers,slack);
+        ARIADNE_TEST_PRINT(point);
+        ARIADNE_TEST_PRINT(multipliers);
+        ARIADNE_TEST_PRINT(slack);
         ARIADNE_TEST_ASSERT(contains(domain,cast_exact(point)));
         ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(slack)));
         // Expected reduced step is approximately (-0.843,-0.824).
