@@ -1036,6 +1036,7 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_stationary_feasibility());
         ARIADNE_TEST_CALL(test_approximate_penalty_step());
         ARIADNE_TEST_CALL(test_one_sided_codomain_feasibility());
+        ARIADNE_TEST_CALL(test_unbounded_codomain_feasibility());
         ARIADNE_TEST_CALL(test_primal_dual_penalty_equality_step());
         ARIADNE_TEST_CALL(test_primal_dual_penalty_backtracking());
         ARIADNE_TEST_CALL(test_approximate_penalty_backtracking());
@@ -1117,6 +1118,21 @@ class TestNonlinearPenaltyFunctionSolver
         ExactBoxType codomain({{-1.0_x,1.0_x}});
 
         ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,codomain)));
+    }
+
+    Void test_unbounded_codomain_feasibility() {
+        // Both bounds on the slack variable are infinite. Its initial
+        // value must be finite (zero), not the midpoint of [-inf,+inf].
+        // g(x)=x at the domain midpoint is feasible independently of
+        // how far the unconstrained slack variable may range.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType unconstrained_codomain({{-inf,+inf}});
+
+        ARIADNE_TEST_ASSERT(definitely(
+            solver.feasible(domain,g,unconstrained_codomain)));
     }
 
     Void test_one_sided_codomain_feasibility() {
