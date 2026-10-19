@@ -40,6 +40,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_public_simplex_input_contracts());
         ARIADNE_TEST_CALL(test_slackness_output());
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
+        ARIADNE_TEST_CALL(test_rounded_simplex_feasibility_and_optimum());
         ARIADNE_TEST_CALL(test_verify_feasibility_basic_statuses());
         ARIADNE_TEST_CALL(test_verify_feasibility_dual_signs());
         ARIADNE_TEST_CALL(test_upper_only_nonbasic_bounds());
@@ -1132,6 +1133,25 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_EQUAL(vt[1],Slackness::UPPER);
         ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(xl,xu,A,b,vt,p));
         ARIADNE_TEST_ASSERT(definitely(solver.validated_feasible(xl,xu,A,b)));
+    }
+
+    Void test_rounded_simplex_feasibility_and_optimum() {
+        // Cover the RoundedFloatDP instantiation on a complete LP,
+        // independently of the FloatDP and Approximation instantiations.
+        // On x0+x1=1 in [0,1]^2, minimising 2*x0+x1 must select
+        // x0=0, x1=1 rather than the initial vertex (1,0).
+        LinearSimplexSolver<RoundedFloatDP> solver;
+        Matrix<RoundedFloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<RoundedFloatDP> rhs({1.0_x},dp);
+        Vector<RoundedFloatDP> lower({0.0_x,0.0_x},dp);
+        Vector<RoundedFloatDP> upper({1.0_x,1.0_x},dp);
+        Vector<RoundedFloatDP> costs({2.0_x,1.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(lower,upper,A,rhs)));
+        auto optimum=solver.minimise(costs,lower,upper,A,rhs);
+        ARIADNE_TEST_EQUAL(optimum.size(),2u);
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,rhs,optimum));
+        ARIADNE_TEST_ASSERT(definitely(optimum[0]<optimum[1]));
     }
 
     Void test_pivot_to_better_vertex() {
