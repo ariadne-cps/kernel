@@ -1081,7 +1081,9 @@ class TestNonlinearPenaltyFunctionSolver
         ValidatedScalarMultivariateFunction f=sqr(coordinate[0]-Real(0.25_x));
         ValidatedVectorMultivariateFunction g(0u,1u);
         ExactBoxType domain({{-1.0_x,1.0_x}});
-        ExactBoxType codomain({});
+        // An empty exact box must be constructed by dimension, not from
+        // an empty initializer list (which has no precision information).
+        ExactBoxType codomain(0u);
         FloatDPBoundsVector optimum=solver.minimise(f,domain,g,codomain);
         ARIADNE_TEST_EQUAL(optimum.size(),1u);
         auto midpoint_optimum=midpoint(optimum);
