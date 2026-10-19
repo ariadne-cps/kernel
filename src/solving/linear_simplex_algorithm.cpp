@@ -90,8 +90,10 @@ extend_p(const Array<SizeType>& p, const SizeType n)
         q[j]=n;
     }
     for(SizeType k=0; k!=m; ++k) {
-        ARIADNE_ASSERT(decide(p[k]<n));
-        ARIADNE_ASSERT(decide(q[p[k]]==n));
+        // Partial basis indices are supplied by the caller and must
+        // form an injective list of in-range variable indices.
+        ARIADNE_PRECONDITION(p[k]<n);
+        ARIADNE_PRECONDITION(q[p[k]]==n);
         q[p[k]]=k;
     }
     SizeType k=m;

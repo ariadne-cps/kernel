@@ -62,6 +62,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_hotstarted_basis_initialisation());
         ARIADNE_TEST_CALL(test_hotstarted_optimisation_from_alternate_basis());
         ARIADNE_TEST_CALL(test_hotstarted_minimise_partial_permutation());
+        ARIADNE_TEST_CALL(test_invalid_partial_basis_permutations());
         ARIADNE_TEST_CALL(test_consistency_check_variable_types());
         ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
@@ -362,6 +363,46 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(
             x[0]+x[1]==FloatDPBounds(1.0_x,dp)));
         ARIADNE_TEST_EXECUTE(solver.consistency_check(A,b,x));
+    }
+
+    Void test_invalid_partial_basis_permutations() {
+        // The optional partial permutation lists m basic variable indices.
+        // An out-of-range index and a repeated index are distinct caller
+        // errors; neither is allowed to reach basis construction.
+        LinearSimplexSolver<FloatDP> solver;
+
+        Matrix<FloatDP> A_one({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> b_one({1.0_x},dp);
+        Vector<FloatDP> c_one({1.0_x,2.0_x},dp);
+        Vector<FloatDP> lower_one({0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper_one({1.0_x,1.0_x},dp);
+        Array<Slackness> types_one(2u);
+        types_one[0]=Slackness::BASIS;
+        types_one[1]=Slackness::LOWER;
+        Array<SizeType> out_of_range(1u);
+        out_of_range[0]=2u; // Valid column indices are 0 and 1.
+        Matrix<FloatDPBounds> inverse_one=Matrix<FloatDPBounds>::identity(1u,dp);
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(
+            c_one,lower_one,upper_one,A_one,b_one,
+            types_one,out_of_range,inverse_one));
+
+        Matrix<FloatDP> A_two({{1.0_x,0.0_x,0.0_x},
+                               {0.0_x,1.0_x,0.0_x}},dp);
+        Vector<FloatDP> b_two({0.5_x,0.5_x},dp);
+        Vector<FloatDP> c_two({1.0_x,2.0_x,3.0_x},dp);
+        Vector<FloatDP> lower_two({0.0_x,0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper_two({1.0_x,1.0_x,1.0_x},dp);
+        Array<Slackness> types_two(3u);
+        types_two[0]=Slackness::BASIS;
+        types_two[1]=Slackness::BASIS;
+        types_two[2]=Slackness::LOWER;
+        Array<SizeType> duplicate(2u);
+        duplicate[0]=0u;
+        duplicate[1]=0u;
+        Matrix<FloatDPBounds> inverse_two=Matrix<FloatDPBounds>::identity(2u,dp);
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(
+            c_two,lower_two,upper_two,A_two,b_two,
+            types_two,duplicate,inverse_two));
     }
 
     Void test_hotstarted_minimise_partial_permutation() {
