@@ -42,6 +42,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
         ARIADNE_TEST_CALL(test_rounded_simplex_feasibility_and_optimum());
         ARIADNE_TEST_CALL(test_verify_feasibility_basic_statuses());
+        ARIADNE_TEST_CALL(test_verify_feasibility_input_contracts());
         ARIADNE_TEST_CALL(test_verify_feasibility_dual_signs());
         ARIADNE_TEST_CALL(test_upper_only_nonbasic_bounds());
         ARIADNE_TEST_CALL(test_approximate_upper_entry_basis_exchange());
@@ -490,6 +491,42 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(solver.hotstarted_feasible(xl,xu,A,b,vt)));
         ARIADNE_TEST_EQUAL(vt[0],Slackness::BASIS);
         ARIADNE_TEST_EQUAL(vt[1],Slackness::LOWER);
+    }
+
+    Void test_verify_feasibility_input_contracts() {
+        // Validate each independent public input contract before basis
+        // reconstruction. The underlying feasible system is A=(1,1),
+        // rhs=1/2, with x0 basic and x1 at its lower bound.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> rhs({0.5_x},dp);
+        Vector<FloatDP> lower({0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({1.0_x,1.0_x},dp);
+        Vector<FloatDP> short_bounds({0.0_x},dp);
+        Vector<FloatDP> wrong_rhs({0.5_x,0.5_x},dp);
+        Array<Slackness> types(2u);
+        types[0]=Slackness::BASIS;
+        types[1]=Slackness::LOWER;
+        Array<Slackness> wrong_types(1u);
+        wrong_types[0]=Slackness::BASIS;
+
+        ARIADNE_TEST_FAIL(solver.verify_feasibility(
+            lower,upper,A,wrong_rhs,types));
+        ARIADNE_TEST_FAIL(solver.verify_feasibility(
+            short_bounds,upper,A,rhs,types));
+        ARIADNE_TEST_FAIL(solver.verify_feasibility(
+            lower,short_bounds,A,rhs,types));
+        ARIADNE_TEST_FAIL(solver.verify_feasibility(
+            lower,upper,A,rhs,wrong_types));
+
+        // Singleton bounds are valid constraints, but the fixed
+        // variable cannot be selected as a basic variable.
+        Matrix<FloatDP> one_variable_A({{1.0_x}},dp);
+        Vector<FloatDP> fixed_value({0.0_x},dp);
+        Array<Slackness> fixed_basic(1u);
+        fixed_basic[0]=Slackness::BASIS;
+        ARIADNE_TEST_FAIL(solver.verify_feasibility(
+            fixed_value,fixed_value,one_variable_A,fixed_value,fixed_basic));
     }
 
     Void test_verify_feasibility_basic_statuses() {

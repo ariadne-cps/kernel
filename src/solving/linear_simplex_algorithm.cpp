@@ -1347,19 +1347,21 @@ LinearSimplexSolver<X>::verify_feasibility(const Vector<X>& xl, const Vector<X>&
 {
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN("A="<<A<<" b="<<b<<" xl="<<xl<<" xu="<<xu<<" vt="<<vt);
-    const Array<SizeType> p=compute_p(vt);
 
     const SizeType m=A.row_size();
     const SizeType n=A.column_size();
-    ARIADNE_ASSERT(b.size()==m);
-    ARIADNE_ASSERT(xl.size()==n);
-    ARIADNE_ASSERT(xu.size()==n);
-    ARIADNE_ASSERT(vt.size()==n);
+    // The public validation entry point must reject malformed inputs
+    // before constructing or indexing the basis permutation.
+    ARIADNE_PRECONDITION(b.size()==m);
+    ARIADNE_PRECONDITION(xl.size()==n);
+    ARIADNE_PRECONDITION(xu.size()==n);
+    ARIADNE_PRECONDITION(vt.size()==n);
 
-    // Ensure singleton constraints for x are non-basic
+    // A variable constrained to a singleton cannot be basic.
     for(SizeType j=0; j!=n; ++j) {
-        if(decide(xl[j]==xu[j])) { ARIADNE_ASSERT(!(vt[j]==Slackness::BASIS));}
+        if(decide(xl[j]==xu[j])) { ARIADNE_PRECONDITION(vt[j]!=Slackness::BASIS); }
     }
+    const Array<SizeType> p=compute_p(vt);
 
     {
         const Matrix<XX> B=compute_B<X>(A,p);
