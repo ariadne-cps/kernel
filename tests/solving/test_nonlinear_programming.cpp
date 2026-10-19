@@ -1044,6 +1044,7 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_validated_penalty_feasibility_contraction());
         ARIADNE_TEST_CALL(test_validated_penalty_step_input_contracts());
         ARIADNE_TEST_CALL(test_validated_penalty_negative_derivative());
+        ARIADNE_TEST_CALL(test_validated_penalty_derivative_containing_zero());
         ARIADNE_TEST_CALL(test_validated_penalty_multidimensional_contraction());
         ARIADNE_TEST_CALL(test_validated_penalty_inconsistent_enclosures());
         ARIADNE_TEST_CALL(test_one_sided_codomain_feasibility());
@@ -1363,6 +1364,23 @@ class TestNonlinearPenaltyFunctionSolver
         solver.feasibility_step(domain,g,equality,point,slack);
         ARIADNE_TEST_ASSERT(definitely(point[0]==FloatDPBounds(-0.25_x,dp)));
         ARIADNE_TEST_ASSERT(definitely(slack[0]==FloatDPBounds(0.25_x,dp)));
+    }
+
+    Void test_validated_penalty_derivative_containing_zero() {
+        // For g(x)=x^2 on [-1,1], the derivative enclosure [-2,2]
+        // includes zero. Inverse-derivative contraction is therefore
+        // invalid; the step must preserve a sound enclosure of x=0.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({sqr(coordinate[0])});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType equality({{0.0_x,0.0_x}});
+        FloatDPBoundsVector point(1u,FloatDPBounds(-1,+1,dp));
+        FloatDPBoundsVector slack(1u,FloatDPBounds(-1,+1,dp));
+
+        solver.feasibility_step(domain,g,equality,point,slack);
+        ARIADNE_TEST_ASSERT(definitely(point[0]==FloatDPBounds(-1,+1,dp)));
+        ARIADNE_TEST_ASSERT(definitely(slack[0]==FloatDPBounds(0,dp)));
     }
 
     Void test_validated_penalty_multidimensional_contraction() {
