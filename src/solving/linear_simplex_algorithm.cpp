@@ -974,11 +974,19 @@ LinearSimplexSolver<X>::validated_feasibility_step(const Vector<X>& xl, const Ve
         // Variable p[r] should leave basis, and variable p[s] enter
         ARIADNE_ASSERT(r<m);
 
-        // Update pivots and variable types
+        // Update pivots and variable types. The ratio test selects a
+        // leaving basic variable using the certified sign of d[r] and
+        // the entering variable's direction. Use the same sign here:
+        // multiplying interval enclosures d[r] and t can obscure it.
+        const bool enters_from_lower=(vt[p[s]]==Slackness::LOWER);
+        const bool leaves_at_upper=enters_from_lower
+            ? definitely(-d[r]<0) : definitely(d[r]<0);
+        const bool leaves_at_lower=enters_from_lower
+            ? definitely(d[r]<0) : definitely(-d[r]<0);
         vt[p[s]] = Slackness::BASIS;
-        if(definitely(d[r]*t>0)) {
+        if(leaves_at_upper) {
             vt[p[r]] = Slackness::UPPER;
-        } else if(definitely(d[r]*t<0)) {
+        } else if(leaves_at_lower) {
             vt[p[r]] = Slackness::LOWER;
         } else {
             SizeType pr=p[r];
