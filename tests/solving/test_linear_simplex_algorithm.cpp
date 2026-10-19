@@ -45,6 +45,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_upper_only_nonbasic_bounds());
         ARIADNE_TEST_CALL(test_unbounded_nonbasic_initialisation());
         ARIADNE_TEST_CALL(test_lpstep_without_leaving_variable());
+        ARIADNE_TEST_CALL(test_approximate_lpstep_without_leaving_variable());
         ARIADNE_TEST_CALL(test_single_variable_infeasibility());
         ARIADNE_TEST_CALL(test_lpstep_upper_bound_flip());
         ARIADNE_TEST_CALL(test_lpstep_upper_entry());
@@ -543,6 +544,47 @@ class TestLinearSimplexSolver
                             DegenerateFeasibilityProblemException);
         ARIADNE_TEST_THROWS(solver.validated_feasible(xl,xu,A,b),
                             DegenerateFeasibilityProblemException);
+    }
+
+    Void test_approximate_lpstep_without_leaving_variable() {
+        // This is the approximate-arithmetic counterpart of the FloatDP
+        // regression. Here the generic compute_rt overload is used.
+        // With A=(1,0), the nonbasic x1 never affects Ax=b; when
+        // it is unbounded in the entering direction, no basis pivot
+        // or bound flip can occur.
+        LinearSimplexSolver<FloatDPApproximation> solver;
+        Matrix<FloatDPApproximation> A({{1.0_x,0.0_x}},dp);
+        Vector<FloatDPApproximation> b({0.5_x},dp);
+
+        for(SizeType order=0u; order!=2u; ++order) {
+            Vector<FloatDPApproximation> xl((order==0u)
+                ? Vector<FloatDPApproximation>({0.0_x,0.0_x},dp)
+                : Vector<FloatDPApproximation>({0.0_x,-inf},dp));
+            Vector<FloatDPApproximation> xu((order==0u)
+                ? Vector<FloatDPApproximation>({1.0_x,+inf},dp)
+                : Vector<FloatDPApproximation>({1.0_x,0.0_x},dp));
+            Array<Slackness> variable_types(2u);
+            variable_types[0]=Slackness::BASIS;
+            variable_types[1]=(order==0u ? Slackness::LOWER : Slackness::UPPER);
+
+            auto basis=solver.compute_basis(A);
+            auto permutation=basis.first;
+            auto inverse_basis=basis.second;
+            auto primal=solver.compute_x(xl,xu,A,b,variable_types);
+            ARIADNE_TEST_EXECUTE(solver.consistency_check(
+                xl,xu,A,b,variable_types,permutation,inverse_basis,primal));
+
+            SizeType leaving_index=solver.lpstep(
+                xl,xu,A,b,variable_types,permutation,inverse_basis,primal,1u);
+            ARIADNE_TEST_EQUAL(leaving_index,2u);
+            ARIADNE_TEST_EQUAL(variable_types[0],Slackness::BASIS);
+            ARIADNE_TEST_EQUAL(variable_types[1],
+                (order==0u ? Slackness::LOWER : Slackness::UPPER));
+            ARIADNE_TEST_EQUAL(permutation[0],0u);
+            ARIADNE_TEST_EQUAL(permutation[1],1u);
+            ARIADNE_TEST_EXECUTE(solver.consistency_check(
+                xl,xu,A,b,variable_types,permutation,inverse_basis,primal));
+        }
     }
 
     Void test_lpstep_without_leaving_variable() {
