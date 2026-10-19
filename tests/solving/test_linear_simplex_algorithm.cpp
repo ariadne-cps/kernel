@@ -40,6 +40,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_public_simplex_input_contracts());
         ARIADNE_TEST_CALL(test_slackness_output());
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
+        ARIADNE_TEST_CALL(test_bland_rule_with_reordered_nonbasic_variables());
         ARIADNE_TEST_CALL(test_rounded_simplex_feasibility_and_optimum());
         ARIADNE_TEST_CALL(test_verify_feasibility_basic_statuses());
         ARIADNE_TEST_CALL(test_verify_feasibility_input_contracts());
@@ -1196,6 +1197,47 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(decide(optimum[0]<RoundedFloatDP(0.25_x,dp)));
         ARIADNE_TEST_ASSERT(decide(optimum[1]>RoundedFloatDP(0.75_x,dp)));
         ARIADNE_TEST_ASSERT(decide(optimum[0]<optimum[1]));
+    }
+
+    Void test_bland_rule_with_reordered_nonbasic_variables() {
+        // Bland's rule chooses the eligible variable with the smallest
+        // ORIGINAL index, even when it appears later in the permutation.
+        // Both x1 and x2 reduce 2*x0+x1+x2, but p=[0,2,1] puts x2 first.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x,1.0_x}},dp);
+        Vector<FloatDP> rhs({1.0_x},dp);
+        Vector<FloatDP> costs({2.0_x,1.0_x,1.0_x},dp);
+        Vector<FloatDP> lower({0.0_x,0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({2.0_x,2.0_x,2.0_x},dp);
+        Array<Slackness> types(3u);
+        types[0]=Slackness::BASIS;
+        types[1]=Slackness::LOWER;
+        types[2]=Slackness::LOWER;
+        Array<SizeType> permutation(3u);
+        permutation[0]=0u;
+        permutation[1]=2u;
+        permutation[2]=1u;
+        Matrix<FloatDPBounds> inverse_basis=Matrix<FloatDPBounds>::identity(1u,dp);
+        auto primal=solver.compute_x(lower,upper,A,rhs,types);
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(
+            lower,upper,A,rhs,types,permutation,inverse_basis,primal));
+
+        ARIADNE_TEST_ASSERT(!solver.lpstep(
+            costs,lower,upper,A,rhs,types,permutation,inverse_basis,primal));
+        // x1 must enter, although it is in the LAST nonbasic position.
+        ARIADNE_TEST_EQUAL(permutation[0],1u);
+        ARIADNE_TEST_EQUAL(permutation[1],2u);
+        ARIADNE_TEST_EQUAL(permutation[2],0u);
+        ARIADNE_TEST_EQUAL(types[0],Slackness::LOWER);
+        ARIADNE_TEST_EQUAL(types[1],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(types[2],Slackness::LOWER);
+        ARIADNE_TEST_ASSERT(definitely(primal[0]<FloatDPBounds(0.25_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(primal[1]>FloatDPBounds(0.75_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(primal[2]==FloatDPBounds(0.0_x,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(
+            lower,upper,A,rhs,types,permutation,inverse_basis,primal));
+        ARIADNE_TEST_ASSERT(solver.lpstep(
+            costs,lower,upper,A,rhs,types,permutation,inverse_basis,primal));
     }
 
     Void test_pivot_to_better_vertex() {
