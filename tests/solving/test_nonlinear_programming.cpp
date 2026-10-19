@@ -1036,6 +1036,8 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_stationary_feasibility());
         ARIADNE_TEST_CALL(test_approximate_penalty_step());
         ARIADNE_TEST_CALL(test_one_sided_codomain_feasibility());
+        ARIADNE_TEST_CALL(test_primal_dual_penalty_equality_step());
+        ARIADNE_TEST_CALL(test_primal_dual_penalty_backtracking());
         ARIADNE_TEST_CALL(test_approximate_penalty_backtracking());
     }
 
@@ -1129,6 +1131,49 @@ class TestNonlinearPenaltyFunctionSolver
 
         ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,upper_only)));
         ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,lower_only)));
+    }
+
+    Void test_primal_dual_penalty_equality_step() {
+        // The three-vector penalty step must preserve a singleton slack
+        // constraint, while reducing the residual g(x)-w for g(x)=x.
+        // This exercises the equality row replacement in its Newton system.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType equality({{0.0_x,0.0_x}});
+        FloatDPApproximationVector point({0.25_x},dp);
+        FloatDPApproximationVector multipliers({0.0_x},dp);
+        FloatDPApproximationVector slack({0.0_x},dp);
+
+        solver.feasibility_step(domain,g,equality,point,multipliers,slack);
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(point)));
+        ARIADNE_TEST_ASSERT(contains(equality,cast_exact(slack)));
+        ARIADNE_TEST_ASSERT(decide(slack[0]==FloatDPApproximation(0.0_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(abs(point[0])<FloatDPApproximation(0.05_x,dp)));
+    }
+
+    Void test_primal_dual_penalty_backtracking() {
+        // For g(x)=x^2, the full Newton step from x=0.4, w=0.2,
+        // y=2 exceeds both [-1,1] bounds. A 0.75-scaled step lies
+        // strictly inside each box, so line search must reduce alpha.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({sqr(coordinate[0])});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+        FloatDPApproximationVector point({0.4_x},dp);
+        FloatDPApproximationVector multipliers({2.0_x},dp);
+        FloatDPApproximationVector slack({0.2_x},dp);
+
+        solver.feasibility_step(domain,g,codomain,point,multipliers,slack);
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(point)));
+        ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(slack)));
+        // Expected reduced step is approximately (-0.843,-0.824).
+        ARIADNE_TEST_ASSERT(decide(point[0]<FloatDPApproximation(-0.7_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(point[0]>FloatDPApproximation(-0.95_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(slack[0]<FloatDPApproximation(-0.7_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(slack[0]>FloatDPApproximation(-0.95_x,dp)));
     }
 
     Void test_approximate_penalty_backtracking() {
