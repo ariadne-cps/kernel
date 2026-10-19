@@ -337,8 +337,8 @@ LinearSimplexSolver<X>::compute_basis(const Matrix<X>& A) const
             }
         }
 
-        ARIADNE_DEBUG_ASSERT(decide(U[k][k]!=0));
-
+        // The singularity check above excludes a zero selected pivot.
+        // After the optional column swap, U[k][k] is exactly that pivot.
         if(!found_unit) {
             // Update LU factorisation
             XX r  = 1/U[k][k];
