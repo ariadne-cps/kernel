@@ -40,9 +40,109 @@ clone() const
 }
 
 ValidatedVectorType NonlinearPenaltyFunctionSolver::
-minimise(ValidatedScalarMultivariateFunction, ExactBoxType, ValidatedVectorMultivariateFunction, ExactBoxType) const
+minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D,
+         ValidatedVectorMultivariateFunction g, ExactBoxType C) const
 {
-    ARIADNE_NOT_IMPLEMENTED;
+    LOGGING_SCOPE_CREATE;
+    ARIADNE_PRECONDITION(f.argument_size()==D.size());
+    ARIADNE_PRECONDITION(g.argument_size()==D.size());
+    ARIADNE_PRECONDITION(g.result_size()==C.size());
+    const SizeType n=D.size();
+    const SizeType m=C.size();
+    for(SizeType i=0; i!=n; ++i) {
+        // This implementation uses a projected descent in a bounded box.
+        ARIADNE_PRECONDITION(!is_inf(D[i].lower_bound()));
+        ARIADNE_PRECONDITION(!is_inf(D[i].upper_bound()));
+    }
+
+    if(definitely(disjoint(apply(g,D),C))) {
+        throw InfeasibleProblemException();
+    }
+
+    // Minimise f(x) + rho/2 * ||g(x)-projection_C(g(x))||^2.
+    // The squared distance is differentiable, including where an
+    // inequality becomes active. Increase rho to enforce constraints.
+    // A regularised Gauss-Newton matrix supplies a descent direction;
+    // backtracking tests the ACTUAL penalised objective, not just a
+    // linear model, and every trial is projected back into D.
+    FloatDPApproximationVector x=midpoint(D);
+    const FloatDPApproximationVector dl=lower_bounds(D);
+    const FloatDPApproximationVector du=upper_bounds(D);
+    const FloatDPApproximationVector cl=lower_bounds(C);
+    const FloatDPApproximationVector cu=upper_bounds(C);
+    FloatDPApproximation rho(1.0_x,dp);
+
+    for(SizeType stage=0; stage!=10; ++stage) {
+        for(SizeType iteration=0; iteration!=32; ++iteration) {
+            auto ddf=f.evaluate(FloatDPApproximationDifferential::variables(1,x));
+            FloatDPApproximationVector gradient=transpose(ddf.gradient());
+            FloatDPApproximationVector residual(m,dp);
+            FloatDPApproximationMatrix active_jacobian(m,n,dp);
+            if(m!=0u) {
+                auto ddg=g.evaluate(FloatDPApproximationDifferential::variables(1,x));
+                FloatDPApproximationVector gx=ddg.value();
+                FloatDPApproximationMatrix J=ddg.jacobian();
+                for(SizeType j=0; j!=m; ++j) {
+                    residual[j]=zero;
+                    if(decide(gx[j]<cl[j])) { residual[j]=gx[j]-cl[j]; }
+                    else if(decide(gx[j]>cu[j])) { residual[j]=gx[j]-cu[j]; }
+                    for(SizeType i=0; i!=n; ++i) {
+                        active_jacobian[j][i]=(decide(residual[j]!=zero) ? J[j][i] : zero);
+                    }
+                }
+                gradient+=rho*transpose(active_jacobian)*residual;
+            }
+
+            FloatDPApproximationMatrix regularised_hessian(n,n,dp);
+            for(SizeType i=0; i!=n; ++i) {
+                regularised_hessian[i][i]=one;
+            }
+            if(m!=0u) {
+                regularised_hessian+=rho*transpose(active_jacobian)*active_jacobian;
+            }
+            FloatDPApproximationVector direction=solve(regularised_hessian,gradient);
+            if(decide(norm(direction)<FloatDPApproximation(1e-12_a,dp))) { break; }
+
+            FloatDPApproximation value=f(x);
+            if(m!=0u) { value+=rho*dot(residual,residual)*0.5_exact; }
+            FloatDPApproximation alpha(1.0_x,dp);
+            Bool improved=false;
+            for(SizeType backtrack=0; backtrack!=32; ++backtrack) {
+                FloatDPApproximationVector candidate=x-alpha*direction;
+                for(SizeType i=0; i!=n; ++i) {
+                    if(decide(candidate[i]<dl[i])) { candidate[i]=dl[i]; }
+                    if(decide(candidate[i]>du[i])) { candidate[i]=du[i]; }
+                }
+                FloatDPApproximation trial_value=f(candidate);
+                if(m!=0u) {
+                    FloatDPApproximationVector trial_g=g(candidate);
+                    for(SizeType j=0; j!=m; ++j) {
+                        FloatDPApproximation rj=zero;
+                        if(decide(trial_g[j]<cl[j])) { rj=trial_g[j]-cl[j]; }
+                        else if(decide(trial_g[j]>cu[j])) { rj=trial_g[j]-cu[j]; }
+                        trial_value+=rho*rj*rj*0.5_exact;
+                    }
+                }
+                if(decide(trial_value<value)) {
+                    x=candidate;
+                    improved=true;
+                    break;
+                }
+                alpha*=0.5_exact;
+            }
+            if(!improved) { break; }
+        }
+        LOGGING_PRINTLN_AT(1,"rho="<<rho<<" x="<<x<<" f(x)="<<f(x));
+        rho*=8.0_x;
+    }
+
+    // A small penalised residual is not a feasibility certificate.
+    // Never silently return an infeasible point as a validated result.
+    if(!contains(D,exact_vector(x)) ||
+       !this->validate_feasibility(D,g,C,exact_vector(x))) {
+        throw IndeterminateFeasibilityException();
+    }
+    return ValidatedVectorType(exact_vector(x));
 }
 
 ValidatedKleenean NonlinearPenaltyFunctionSolver::

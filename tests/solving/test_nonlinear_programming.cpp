@@ -1031,6 +1031,9 @@ class TestNonlinearPenaltyFunctionSolver
   public:
     Void test() {
         ARIADNE_TEST_CALL(test_point_feasibility_with_inequalities());
+        ARIADNE_TEST_CALL(test_penalty_minimisation_unconstrained());
+        ARIADNE_TEST_CALL(test_penalty_minimisation_active_constraint());
+        ARIADNE_TEST_CALL(test_penalty_minimisation_detects_infeasibility());
         ARIADNE_TEST_CALL(test_point_feasibility_input_contracts());
         ARIADNE_TEST_CALL(test_point_feasibility_with_equalities());
         ARIADNE_TEST_CALL(test_stationary_feasibility());
@@ -1069,6 +1072,47 @@ class TestNonlinearPenaltyFunctionSolver
             domain,g,codomain,wrong_size,multipliers));
         ARIADNE_TEST_FAIL(solver.check_feasibility(
             domain,g,codomain,point,wrong_size));
+    }
+
+    Void test_penalty_minimisation_unconstrained() {
+        // The unique minimiser of (x-1/4)^2 on [-1,1] is x=1/4.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction f=sqr(coordinate[0]-Real(0.25_x));
+        ValidatedVectorMultivariateFunction g(0u,1u);
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({});
+        FloatDPBoundsVector optimum=solver.minimise(f,domain,g,codomain);
+        ARIADNE_TEST_EQUAL(optimum.size(),1u);
+        auto midpoint_optimum=midpoint(optimum);
+        ARIADNE_TEST_ASSERT(decide(abs(midpoint_optimum[0]-
+            FloatDPApproximation(0.25_x,dp))<FloatDPApproximation(0.015625_x,dp)));
+    }
+
+    Void test_penalty_minimisation_active_constraint() {
+        // Start at x=0, which violates g(x)>=1/2; the constrained
+        // optimum of (x-3/4)^2 lies strictly inside [1/2,1].
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction f=sqr(coordinate[0]-Real(0.75_x));
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{0.5_x,1.0_x}});
+        FloatDPBoundsVector optimum=solver.minimise(f,domain,g,codomain);
+        ARIADNE_TEST_ASSERT(definitely(contains(codomain,g(optimum))));
+        auto midpoint_optimum=midpoint(optimum);
+        ARIADNE_TEST_ASSERT(decide(abs(midpoint_optimum[0]-
+            FloatDPApproximation(0.75_x,dp))<FloatDPApproximation(0.015625_x,dp)));
+    }
+
+    Void test_penalty_minimisation_detects_infeasibility() {
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction f=sqr(coordinate[0]);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType impossible({{2.0_x,3.0_x}});
+        ARIADNE_TEST_FAIL(solver.minimise(f,domain,g,impossible));
     }
 
     Void test_point_feasibility_with_inequalities() {
