@@ -1379,7 +1379,10 @@ class TestNonlinearPenaltyFunctionSolver
         FloatDPBoundsVector slack(1u,FloatDPBounds(-1,+1,dp));
 
         solver.feasibility_step(domain,g,equality,point,slack);
-        ARIADNE_TEST_ASSERT(definitely(point[0]==FloatDPBounds(-1,+1,dp)));
+        // Equality of overlapping validated intervals is indeterminate.
+        // Compare their representations to verify that the enclosure
+        // was preserved exactly when the derivative contains zero.
+        ARIADNE_TEST_ASSERT(same(point[0],FloatDPBounds(-1,+1,dp)));
         ARIADNE_TEST_ASSERT(definitely(slack[0]==FloatDPBounds(0,dp)));
     }
 
