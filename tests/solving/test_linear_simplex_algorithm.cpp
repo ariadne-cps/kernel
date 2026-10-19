@@ -56,6 +56,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_validated_upper_entry_bound_flip());
         ARIADNE_TEST_CALL(test_validated_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
+        ARIADNE_TEST_CALL(test_validated_feasibility_stationary_at_boundary());
         ARIADNE_TEST_CALL(test_validated_feasibility_bound_flip());
         ARIADNE_TEST_CALL(test_validated_feasibility_basis_exchange());
         ARIADNE_TEST_CALL(test_hotstarted_basis_initialisation());
@@ -938,6 +939,33 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(x[1]==FloatDPBounds(-1.5_x,dp)));
         ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(xl,xu,A,b,vt,p));
         ARIADNE_TEST_ASSERT(definitely(solver.verify_feasibility(xl,xu,A,b,vt)));
+    }
+
+    Void test_validated_feasibility_stationary_at_boundary() {
+        // x0=1 is on its upper bound. The nonbasic x1 has zero
+        // coefficient in A, hence its reduced cost is exactly zero.
+        // No strictly improving pivot exists, although this basis
+        // cannot certify strict feasibility at the boundary.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,0.0_x}},dp);
+        Vector<FloatDP> rhs({1.0_x},dp);
+        Vector<FloatDP> lower({0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({1.0_x,1.0_x},dp);
+        Array<Slackness> variable_types(2u);
+        variable_types[0]=Slackness::BASIS;
+        variable_types[1]=Slackness::LOWER;
+        Array<SizeType> permutation(2u);
+        permutation[0]=0u;
+        permutation[1]=1u;
+
+        ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(
+            lower,upper,A,rhs,variable_types,permutation));
+        ARIADNE_TEST_EQUAL(variable_types[0],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(variable_types[1],Slackness::LOWER);
+        ARIADNE_TEST_EQUAL(permutation[0],0u);
+        ARIADNE_TEST_EQUAL(permutation[1],1u);
+        ARIADNE_TEST_ASSERT(is_indeterminate(solver.verify_feasibility(
+            lower,upper,A,rhs,variable_types)));
     }
 
     Void test_validated_strict_feasibility() {
