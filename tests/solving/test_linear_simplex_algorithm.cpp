@@ -43,6 +43,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_verify_feasibility_basic_statuses());
         ARIADNE_TEST_CALL(test_verify_feasibility_dual_signs());
         ARIADNE_TEST_CALL(test_upper_only_nonbasic_bounds());
+        ARIADNE_TEST_CALL(test_approximate_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_unbounded_nonbasic_initialisation());
         ARIADNE_TEST_CALL(test_lpstep_without_leaving_variable());
         ARIADNE_TEST_CALL(test_approximate_lpstep_without_leaving_variable());
@@ -495,6 +496,38 @@ class TestLinearSimplexSolver
         // x0=-1 at this basis, but x1 can decrease to make x0 feasible.
         ARIADNE_TEST_ASSERT(is_indeterminate(solver.verify_feasibility(
             xl,xu,A,Vector<FloatDP>({0.0_x},dp),vt)));
+    }
+
+    Void test_approximate_upper_entry_basis_exchange() {
+        // The generic ratio test must handle a nonbasic variable entering
+        // from its upper bound. For x0+x1=1.5, moving x1 down from 1
+        // makes the basic variable x0 reach its upper bound at 1, causing
+        // x1 to enter the basis. This also exercises a finite leaving ratio.
+        LinearSimplexSolver<FloatDPApproximation> solver;
+        Matrix<FloatDPApproximation> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDPApproximation> rhs({1.5_x},dp);
+        Vector<FloatDPApproximation> lower({0.0_x,-inf},dp);
+        Vector<FloatDPApproximation> upper({1.0_x,1.0_x},dp);
+
+        Array<Slackness> variable_types(2u);
+        variable_types[0]=Slackness::BASIS;
+        variable_types[1]=Slackness::UPPER;
+        auto basis=solver.compute_basis(A);
+        auto permutation=basis.first;
+        auto inverse_basis=basis.second;
+        auto primal=solver.compute_x(lower,upper,A,rhs,variable_types);
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(
+            lower,upper,A,rhs,variable_types,permutation,inverse_basis,primal));
+
+        SizeType leaving_index=solver.lpstep(
+            lower,upper,A,rhs,variable_types,permutation,inverse_basis,primal,1u);
+        ARIADNE_TEST_EQUAL(leaving_index,0u);
+        ARIADNE_TEST_EQUAL(variable_types[0],Slackness::UPPER);
+        ARIADNE_TEST_EQUAL(variable_types[1],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(permutation[0],1u);
+        ARIADNE_TEST_EQUAL(permutation[1],0u);
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(
+            lower,upper,A,rhs,variable_types,permutation,inverse_basis,primal));
     }
 
     Void test_upper_only_nonbasic_bounds() {
