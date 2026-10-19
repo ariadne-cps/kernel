@@ -60,6 +60,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_validated_feasibility_without_finite_leaving_bound());
         ARIADNE_TEST_CALL(test_validated_feasibility_bound_flip());
         ARIADNE_TEST_CALL(test_validated_feasibility_basis_exchange());
+        ARIADNE_TEST_CALL(test_validated_feasibility_exchange_to_upper_bound());
         ARIADNE_TEST_CALL(test_hotstarted_basis_initialisation());
         ARIADNE_TEST_CALL(test_hotstarted_optimisation_from_alternate_basis());
         ARIADNE_TEST_CALL(test_hotstarted_minimise_partial_permutation());
@@ -1049,6 +1050,45 @@ class TestLinearSimplexSolver
         Vector<FloatDP> xu({1.0_x,1.0_x},dp);
 
         ARIADNE_TEST_ASSERT(definitely(solver.validated_feasible(xl,xu,A,b)));
+    }
+
+    Void test_validated_feasibility_exchange_to_upper_bound() {
+        // The initial basis fixes x1 at its LOWER bound, giving
+        // x0=-1.5 below its allowed interval [0,1]. Increasing x1
+        // increases x0 until x0 reaches UPPER; x1 must enter the basis.
+        // This tests the positive d[r]*t branch of the validated pivot.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,-1.0_x}},dp);
+        Vector<FloatDP> rhs({-1.5_x},dp);
+        Vector<FloatDP> lower({0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({1.0_x,5.0_x},dp);
+        Array<Slackness> variable_types(2u);
+        variable_types[0]=Slackness::BASIS;
+        variable_types[1]=Slackness::LOWER;
+        Array<SizeType> permutation(2u);
+        permutation[0]=0u;
+        permutation[1]=1u;
+
+        auto initial=solver.compute_x(lower,upper,A,rhs,variable_types);
+        ARIADNE_TEST_ASSERT(definitely(initial[0]==FloatDPBounds(-1.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(initial[1]==FloatDPBounds(0.0_x,dp)));
+
+        ARIADNE_TEST_ASSERT(!solver.validated_feasibility_step(
+            lower,upper,A,rhs,variable_types,permutation));
+        ARIADNE_TEST_EQUAL(variable_types[0],Slackness::UPPER);
+        ARIADNE_TEST_EQUAL(variable_types[1],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(permutation[0],1u);
+        ARIADNE_TEST_EQUAL(permutation[1],0u);
+
+        auto feasible_point=solver.compute_x(lower,upper,A,rhs,variable_types);
+        ARIADNE_TEST_ASSERT(definitely(
+            feasible_point[0]==FloatDPBounds(1.0_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(
+            feasible_point[1]==FloatDPBounds(2.5_x,dp)));
+        ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(
+            lower,upper,A,rhs,variable_types,permutation));
+        ARIADNE_TEST_ASSERT(definitely(solver.verify_feasibility(
+            lower,upper,A,rhs,variable_types)));
     }
 
     Void test_validated_feasibility_basis_exchange() {
