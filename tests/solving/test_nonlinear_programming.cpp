@@ -1146,17 +1146,11 @@ class TestNonlinearPenaltyFunctionSolver
         FloatDPApproximationVector multipliers({0.0_x},dp);
         FloatDPApproximationVector slack({0.0_x},dp);
 
-        ARIADNE_TEST_PRINT(point);
-        ARIADNE_TEST_PRINT(multipliers);
-        ARIADNE_TEST_PRINT(slack);
         solver.feasibility_step(domain,g,equality,point,multipliers,slack);
-        ARIADNE_TEST_PRINT(point);
-        ARIADNE_TEST_PRINT(multipliers);
-        ARIADNE_TEST_PRINT(slack);
         ARIADNE_TEST_ASSERT(contains(domain,cast_exact(point)));
         ARIADNE_TEST_ASSERT(contains(equality,cast_exact(slack)));
         ARIADNE_TEST_ASSERT(decide(slack[0]==FloatDPApproximation(0.0_x,dp)));
-        ARIADNE_TEST_ASSERT(decide(abs(point[0])<FloatDPApproximation(0.05_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(abs(point[0])<FloatDPApproximation(0.05_a,dp)));
     }
 
     Void test_primal_dual_penalty_backtracking() {
@@ -1168,24 +1162,18 @@ class TestNonlinearPenaltyFunctionSolver
         ValidatedVectorMultivariateFunction g({sqr(coordinate[0])});
         ExactBoxType domain({{-1.0_x,1.0_x}});
         ExactBoxType codomain({{-1.0_x,1.0_x}});
-        FloatDPApproximationVector point({0.4_x},dp);
+        FloatDPApproximationVector point({FloatDPApproximation(0.4_a,dp)});
         FloatDPApproximationVector multipliers({2.0_x},dp);
-        FloatDPApproximationVector slack({0.2_x},dp);
+        FloatDPApproximationVector slack({FloatDPApproximation(0.2_a,dp)});
 
-        ARIADNE_TEST_PRINT(point);
-        ARIADNE_TEST_PRINT(multipliers);
-        ARIADNE_TEST_PRINT(slack);
         solver.feasibility_step(domain,g,codomain,point,multipliers,slack);
-        ARIADNE_TEST_PRINT(point);
-        ARIADNE_TEST_PRINT(multipliers);
-        ARIADNE_TEST_PRINT(slack);
         ARIADNE_TEST_ASSERT(contains(domain,cast_exact(point)));
         ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(slack)));
         // Expected reduced step is approximately (-0.843,-0.824).
-        ARIADNE_TEST_ASSERT(decide(point[0]<FloatDPApproximation(-0.7_x,dp)));
-        ARIADNE_TEST_ASSERT(decide(point[0]>FloatDPApproximation(-0.95_x,dp)));
-        ARIADNE_TEST_ASSERT(decide(slack[0]<FloatDPApproximation(-0.7_x,dp)));
-        ARIADNE_TEST_ASSERT(decide(slack[0]>FloatDPApproximation(-0.95_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(point[0]<FloatDPApproximation(-0.7_a,dp)));
+        ARIADNE_TEST_ASSERT(decide(point[0]>FloatDPApproximation(-0.95_a,dp)));
+        ARIADNE_TEST_ASSERT(decide(slack[0]<FloatDPApproximation(-0.7_a,dp)));
+        ARIADNE_TEST_ASSERT(decide(slack[0]>FloatDPApproximation(-0.95_a,dp)));
     }
 
     Void test_approximate_penalty_backtracking() {
