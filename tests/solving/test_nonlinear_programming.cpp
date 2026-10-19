@@ -1032,6 +1032,7 @@ class TestNonlinearPenaltyFunctionSolver
     Void test() {
         ARIADNE_TEST_CALL(test_point_feasibility_with_inequalities());
         ARIADNE_TEST_CALL(test_penalty_minimisation_unconstrained());
+        ARIADNE_TEST_CALL(test_penalty_minimisation_lower_domain_projection());
         ARIADNE_TEST_CALL(test_penalty_minimisation_active_constraint());
         ARIADNE_TEST_CALL(test_penalty_minimisation_detects_infeasibility());
         ARIADNE_TEST_CALL(test_penalty_minimisation_input_contracts());
@@ -1079,6 +1080,23 @@ class TestNonlinearPenaltyFunctionSolver
             domain,g,codomain,wrong_size,multipliers));
         ARIADNE_TEST_FAIL(solver.check_feasibility(
             domain,g,codomain,point,wrong_size));
+    }
+
+    Void test_penalty_minimisation_lower_domain_projection() {
+        // The unconstrained minimiser of (x+2)^2 is x=-2.
+        // On [-1,1], its unique constrained minimiser is x=-1.
+        // The initial Gauss-Newton step crosses the lower domain bound,
+        // so the projected line search must clamp the candidate to -1.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction f=sqr(coordinate[0]+Real(2.0_x));
+        ValidatedVectorMultivariateFunction g(0u,1u);
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain(0u);
+
+        FloatDPBoundsVector optimum=solver.minimise(f,domain,g,codomain);
+        ARIADNE_TEST_EQUAL(optimum.size(),1u);
+        ARIADNE_TEST_ASSERT(same(optimum[0],FloatDPBounds(-1.0_x,dp)));
     }
 
     Void test_penalty_minimisation_unconstrained() {
