@@ -1031,11 +1031,39 @@ class TestNonlinearPenaltyFunctionSolver
   public:
     Void test() {
         ARIADNE_TEST_CALL(test_point_feasibility_with_inequalities());
+        ARIADNE_TEST_CALL(test_point_feasibility_input_contracts());
         ARIADNE_TEST_CALL(test_point_feasibility_with_equalities());
         ARIADNE_TEST_CALL(test_stationary_feasibility());
         ARIADNE_TEST_CALL(test_approximate_penalty_step());
         ARIADNE_TEST_CALL(test_one_sided_codomain_feasibility());
         ARIADNE_TEST_CALL(test_approximate_penalty_backtracking());
+    }
+
+    Void test_point_feasibility_input_contracts() {
+        // check_feasibility is a public entry point. Each invalid call
+        // violates exactly one dimension contract and must be rejected
+        // before function evaluation or multiplier arithmetic.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-0.5_x,0.5_x}});
+        ExactBoxType two_dimensional_domain({{-1.0_x,1.0_x},
+                                             {-1.0_x,1.0_x}});
+        ExactBoxType two_dimensional_codomain({{-0.5_x,0.5_x},
+                                               {-0.5_x,0.5_x}});
+        FloatDPVector point({0.0_x},dp);
+        FloatDPVector multipliers({0.0_x},dp);
+        FloatDPVector wrong_size({0.0_x,0.0_x},dp);
+
+        ARIADNE_TEST_FAIL(solver.check_feasibility(
+            two_dimensional_domain,g,codomain,point,multipliers));
+        ARIADNE_TEST_FAIL(solver.check_feasibility(
+            domain,g,two_dimensional_codomain,point,multipliers));
+        ARIADNE_TEST_FAIL(solver.check_feasibility(
+            domain,g,codomain,wrong_size,multipliers));
+        ARIADNE_TEST_FAIL(solver.check_feasibility(
+            domain,g,codomain,point,wrong_size));
     }
 
     Void test_point_feasibility_with_inequalities() {
