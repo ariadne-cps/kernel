@@ -62,6 +62,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_consistency_check_variable_types());
         ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
+        ARIADNE_TEST_CALL(test_compute_basis_tall_matrix_precondition());
         ARIADNE_TEST_CALL(test_compute_basis_unit_columns());
         ARIADNE_TEST_CALL(test_compute_basis_singular_after_elimination());
         ARIADNE_TEST_CALL(test_compute_basis_nonunit_two_by_two());
@@ -170,6 +171,15 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(B[1][0]==FloatDPBounds(-0.5_x,dp)));
         ARIADNE_TEST_ASSERT(definitely(B[1][1]==FloatDPBounds(1.0_x,dp)));
         ARIADNE_TEST_EXECUTE(solver.consistency_check(A,p,B));
+    }
+
+    Void test_compute_basis_tall_matrix_precondition() {
+        // A two-by-one matrix cannot contain a full row basis.
+        // The public entry point must reject the dimensions before
+        // attempting pivot selection or indexing its permutation.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> tall(2u,1u,FloatDP(1.0_x,dp));
+        ARIADNE_TEST_FAIL(solver.compute_basis(tall));
     }
 
     Void test_compute_basis_unit_columns() {

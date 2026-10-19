@@ -281,15 +281,15 @@ compute_p(const Array<Slackness>& tv)
 }
 
 
-// Compute a basis (p_1,\ldots,p_m) for the matrix A
-// Throws an error if the matrix A has full row rank
+// Compute a basis (p_1,\ldots,p_m) for the matrix A.
+// Requires at least as many columns as rows; throws if row rank is deficient.
 template<class X>
 Pair< Array<SizeType>, Matrix<RigorousNumericType<X>> >
 LinearSimplexSolver<X>::compute_basis(const Matrix<X>& A) const
 {
     const SizeType m=A.row_size();
     const SizeType n=A.column_size();
-    ARIADNE_DEBUG_ASSERT(n>=m);
+    ARIADNE_PRECONDITION(n>=m);
 
     Array<SizeType> p(n);
     for(SizeType j=0; j!=n; ++j) { p[j]=j; }
