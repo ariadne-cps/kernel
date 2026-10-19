@@ -1042,6 +1042,9 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_stationary_feasibility());
         ARIADNE_TEST_CALL(test_approximate_penalty_step());
         ARIADNE_TEST_CALL(test_validated_penalty_feasibility_contraction());
+        ARIADNE_TEST_CALL(test_validated_penalty_step_input_contracts());
+        ARIADNE_TEST_CALL(test_validated_penalty_negative_derivative());
+        ARIADNE_TEST_CALL(test_validated_penalty_multidimensional_contraction());
         ARIADNE_TEST_CALL(test_validated_penalty_inconsistent_enclosures());
         ARIADNE_TEST_CALL(test_one_sided_codomain_feasibility());
         ARIADNE_TEST_CALL(test_unbounded_codomain_feasibility());
@@ -1319,6 +1322,64 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_ASSERT(contains(codomain,cast_exact(slack)));
         ARIADNE_TEST_ASSERT(decide(point[0]<FloatDPApproximation(0.25_x,dp)));
         ARIADNE_TEST_ASSERT(decide(slack[0]<FloatDPApproximation(0.0_x,dp)));
+    }
+
+    Void test_validated_penalty_step_input_contracts() {
+        // Every public vector and function dimension must be compatible
+        // before evaluating g or refining any interval enclosures.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+        ExactBoxType wrong_domain({{-1.0_x,1.0_x},{-1.0_x,1.0_x}});
+        ExactBoxType wrong_codomain({{-1.0_x,1.0_x},{-1.0_x,1.0_x}});
+        FloatDPBoundsVector point(1u,FloatDPBounds(-1,+1,dp));
+        FloatDPBoundsVector slack(1u,FloatDPBounds(-1,+1,dp));
+        FloatDPBoundsVector wrong_point(2u,FloatDPBounds(-1,+1,dp));
+        FloatDPBoundsVector wrong_slack(2u,FloatDPBounds(-1,+1,dp));
+
+        ARIADNE_TEST_FAIL(solver.feasibility_step(
+            wrong_domain,g,codomain,point,slack));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(
+            domain,g,wrong_codomain,point,slack));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(
+            domain,g,codomain,wrong_point,slack));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(
+            domain,g,codomain,point,wrong_slack));
+    }
+
+    Void test_validated_penalty_negative_derivative() {
+        // g(x)=-x is strictly decreasing. Contracting g(x)=1/4
+        // must select x=-1/4, exercising the negative-Jacobian case.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({-coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType equality({{0.25_x,0.25_x}});
+        FloatDPBoundsVector point(1u,FloatDPBounds(-1,+1,dp));
+        FloatDPBoundsVector slack(1u,FloatDPBounds(-1,+1,dp));
+
+        solver.feasibility_step(domain,g,equality,point,slack);
+        ARIADNE_TEST_ASSERT(definitely(point[0]==FloatDPBounds(-0.25_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(slack[0]==FloatDPBounds(0.25_x,dp)));
+    }
+
+    Void test_validated_penalty_multidimensional_contraction() {
+        // g(x0,x1)=x0+x1=0 has infinitely many solutions in
+        // [-1,1]^2. The validated step must contract the slack to
+        // zero without applying a one-dimensional inverse derivative.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(2);
+        ValidatedVectorMultivariateFunction g({coordinate[0]+coordinate[1]});
+        ExactBoxType domain({{-1.0_x,1.0_x},{-1.0_x,1.0_x}});
+        ExactBoxType equality({{0.0_x,0.0_x}});
+        FloatDPBoundsVector point(2u,FloatDPBounds(-1,+1,dp));
+        FloatDPBoundsVector slack(1u,FloatDPBounds(-1,+1,dp));
+
+        solver.feasibility_step(domain,g,equality,point,slack);
+        ARIADNE_TEST_ASSERT(definitely(slack[0]==FloatDPBounds(0.0_x,dp)));
+        ARIADNE_TEST_EQUAL(point.size(),2u);
     }
 
     Void test_validated_penalty_feasibility_contraction() {
