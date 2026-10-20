@@ -1142,6 +1142,7 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_logging_diagnostics());
         ARIADNE_TEST_CALL(test_point_feasibility_with_inequalities());
         ARIADNE_TEST_CALL(test_point_feasibility_rounding_overlap());
+        ARIADNE_TEST_CALL(test_point_feasibility_cancellation_uncertainty());
         ARIADNE_TEST_CALL(test_penalty_minimisation_unconstrained());
         ARIADNE_TEST_CALL(test_penalty_minimisation_lower_domain_projection());
         ARIADNE_TEST_CALL(test_penalty_minimisation_active_constraint());
@@ -1391,6 +1392,29 @@ class TestNonlinearPenaltyFunctionSolver
 
         const auto status=solver.check_feasibility(
             domain,g,codomain,point,multiplier);
+        ARIADNE_TEST_ASSERT(not definitely(status));
+        ARIADNE_TEST_ASSERT(not definitely(not status));
+    }
+
+    Void test_point_feasibility_cancellation_uncertainty() {
+        // Mathematically g(x)=(x+2^53)-2^53=x, but the validated
+        // floating-point evaluation at x=1/2 encloses zero because
+        // the first addition loses the fractional part. The equality
+        // g(x)=0 has a root in D, but not at the proposed point.
+        // Newton must not turn this imprecise enclosure into either
+        // a feasibility or an infeasibility certificate.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({
+            (coordinate[0]+9007199254740992.0_x)-9007199254740992.0_x
+        });
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType equality({{0.0_x,0.0_x}});
+        FloatDPVector point({0.5_x},dp);
+        FloatDPVector multiplier({0.0_x},dp);
+
+        const auto status=solver.check_feasibility(
+            domain,g,equality,point,multiplier);
         ARIADNE_TEST_ASSERT(not definitely(status));
         ARIADNE_TEST_ASSERT(not definitely(not status));
     }
