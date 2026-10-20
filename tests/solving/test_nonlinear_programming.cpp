@@ -1069,6 +1069,7 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_one_sided_codomain_feasibility());
         ARIADNE_TEST_CALL(test_unbounded_codomain_feasibility());
         ARIADNE_TEST_CALL(test_primal_dual_penalty_equality_step());
+        ARIADNE_TEST_CALL(test_primal_dual_penalty_step_input_contracts());
         ARIADNE_TEST_CALL(test_primal_dual_penalty_backtracking());
         ARIADNE_TEST_CALL(test_approximate_penalty_backtracking());
     }
@@ -1340,6 +1341,34 @@ class TestNonlinearPenaltyFunctionSolver
 
         ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,upper_only)));
         ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,g,lower_only)));
+    }
+
+    Void test_primal_dual_penalty_step_input_contracts() {
+        // This public overload accepts a primal point, dual multipliers
+        // and constraint slack. Reject each inconsistent dimension before
+        // evaluating a function or assembling a Newton system.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{-1.0_x,1.0_x}});
+        ExactBoxType wrong_domain({{-1.0_x,1.0_x},{-1.0_x,1.0_x}});
+        ExactBoxType wrong_codomain({{-1.0_x,1.0_x},{-1.0_x,1.0_x}});
+        FloatDPApproximationVector point({0.25_x},dp);
+        FloatDPApproximationVector multipliers({0.0_x},dp);
+        FloatDPApproximationVector slack({0.0_x},dp);
+        FloatDPApproximationVector wrong_size({0.0_x,0.0_x},dp);
+
+        ARIADNE_TEST_FAIL(solver.feasibility_step(
+            wrong_domain,g,codomain,point,multipliers,slack));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(
+            domain,g,wrong_codomain,point,multipliers,slack));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(
+            domain,g,codomain,wrong_size,multipliers,slack));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(
+            domain,g,codomain,point,wrong_size,slack));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(
+            domain,g,codomain,point,multipliers,wrong_size));
     }
 
     Void test_primal_dual_penalty_equality_step() {

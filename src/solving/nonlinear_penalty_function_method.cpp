@@ -335,11 +335,14 @@ feasibility_step(ExactBoxType const& D, ApproximateVectorMultivariateFunction co
     LOGGING_PRINTLN("cl="<<cl<<", cu="<<cu);
     LOGGING_PRINTLN("w="<<w<<", x="<<x<<", y="<<y);
 
-    ARIADNE_ASSERT_MSG(g.argument_size()==D.size(),"D="<<D<<", g="<<g<<", C="<<C);
-    ARIADNE_ASSERT_MSG(g.result_size()==C.size(),  "D="<<D<<", g="<<g<<", C="<<C);
-    ARIADNE_ASSERT(w.size()==m);
-    ARIADNE_ASSERT(x.size()==n);
-    ARIADNE_ASSERT(y.size()==m);
+    // All five dimensions belong to the public step contract. The
+    // former x.size()==n and y.size()==m assertions were tautologies,
+    // because n and m are defined from those respective vector sizes.
+    ARIADNE_PRECONDITION(g.argument_size()==D.size());
+    ARIADNE_PRECONDITION(g.result_size()==C.size());
+    ARIADNE_PRECONDITION(x.size()==D.size());
+    ARIADNE_PRECONDITION(y.size()==C.size());
+    ARIADNE_PRECONDITION(w.size()==C.size());
 
     // Solve the problem
     //   minimise Sum -log(w-cl)-log(cu-w)-log(x-dl)-log(du-x)
