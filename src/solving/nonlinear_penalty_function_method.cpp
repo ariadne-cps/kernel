@@ -185,7 +185,6 @@ feasibility_step(const ExactBoxType& X, const ApproximateVectorMultivariateFunct
     ApproximateVectorMultivariateFunction h(0u,X.dimension());
     const SizeType n=X.size();
     const SizeType m=W.size();
-    const SizeType l=h.result_size();
 
     LOGGING_PRINTLN("x="<<x);
     LOGGING_PRINTLN("w="<<w);
@@ -206,14 +205,13 @@ feasibility_step(const ExactBoxType& X, const ApproximateVectorMultivariateFunct
     FloatDPApproximationMatrix A = transpose(ddgx.jacobian());
     LOGGING_PRINTLN("A=Dg(x)="<<A);
     FloatDPApproximationMatrix B = transpose(ddhx.jacobian());
-    // FIXME: Due to problems with zero-element differential, need to resize matrix if no h
-    if(l==0) { B.resize(n,0); }
+    // h has no components in this overload, so its Jacobian has zero columns.
+    B.resize(n,0);
     LOGGING_PRINTLN("B=Dh(x)="<<B);
 
     // H is the Hessian matrix H[i1,i2] = df/dx[i1]dx[i2] + Sum_[j] lambda[j]*dg[j]/dx[i1]dx[i2]
     FloatDPApproximationMatrix H(n,n,dp);
     for(SizeType j=0; j!=m; ++j) { H += (gx[j]-w[j]) * ddgx[j].hessian(); }
-    for(SizeType k=0; k!=l; ++k) { H += (hx[k]) * ddhx[k].hessian(); }
     LOGGING_PRINTLN("H="<<H);
 
     FloatDPApproximationDiagonalMatrix D(n,dp);
