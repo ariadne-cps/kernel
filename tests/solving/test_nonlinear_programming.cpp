@@ -1118,6 +1118,7 @@ class TestNonlinearPenaltyFunctionSolver
 {
   public:
     Void test() {
+        ARIADNE_TEST_CALL(test_logging_diagnostics());
         ARIADNE_TEST_CALL(test_point_feasibility_with_inequalities());
         ARIADNE_TEST_CALL(test_point_feasibility_rounding_overlap());
         ARIADNE_TEST_CALL(test_penalty_minimisation_unconstrained());
@@ -1145,6 +1146,34 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_primal_dual_penalty_step_input_contracts());
         ARIADNE_TEST_CALL(test_primal_dual_penalty_backtracking());
         ARIADNE_TEST_CALL(test_approximate_penalty_backtracking());
+    }
+
+    Void test_logging_diagnostics() {
+        // Recheck already-established semantic contracts with logging
+        // enabled. Diagnostic output must not change solver outcomes.
+        // Restore the global configuration even if an assertion throws.
+        auto& configuration=Logger::instance().configuration();
+        const unsigned int old_verbosity=configuration.verbosity();
+        struct RestoreVerbosity {
+            unsigned int value;
+            ~RestoreVerbosity() {
+                Logger::instance().configuration().set_verbosity(value);
+            }
+        } restore{old_verbosity};
+        configuration.set_verbosity(10u);
+
+        // Cover the public driver, all three step overloads, validated
+        // contraction and the true/false/indeterminate certificate paths.
+        test_penalty_minimisation_unconstrained();
+        test_stationary_feasibility();
+        test_approximate_penalty_step();
+        test_primal_dual_penalty_equality_step();
+        test_primal_dual_penalty_backtracking();
+        test_validated_penalty_feasibility_contraction();
+        test_point_feasibility_with_inequalities();
+        test_point_feasibility_with_equalities();
+        test_point_feasibility_multiplier_infeasibility_certificate();
+        test_point_feasibility_rounding_overlap();
     }
 
     Void test_point_feasibility_input_contracts() {
