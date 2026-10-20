@@ -272,6 +272,22 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_CALL(test_feasible_interior_minimisation());
         ARIADNE_TEST_CALL(test_nonlinear_equality_minimisation_backtracking());
         ARIADNE_TEST_CALL(test_stationary_minimisation_step());
+        ARIADNE_TEST_CALL(test_feasibility_dimension_preconditions());
+    }
+
+    Void test_feasibility_dimension_preconditions() {
+        // The public feasibility API must reject mismatched dimensions
+        // before numerical initialisation or an iterative solver step.
+        NonlinearInteriorPointSolver solver;
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{0.0_x,1.0_x}});
+        ExactBoxType wrong_domain({{0.0_x,1.0_x},{0.0_x,1.0_x}});
+        ExactBoxType wrong_codomain({{0.0_x,1.0_x},{0.0_x,1.0_x}});
+
+        ARIADNE_TEST_FAIL(solver.feasible(wrong_domain,g,codomain));
+        ARIADNE_TEST_FAIL(solver.feasible(domain,g,wrong_codomain));
     }
 
     Void test_feasible_interior_minimisation() {

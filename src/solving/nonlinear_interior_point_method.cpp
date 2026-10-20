@@ -234,8 +234,8 @@ feasible(ExactBoxType d, ValidatedVectorMultivariateFunction g, ExactBoxType c) 
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN("d="<<d<<", g="<<g<<", c="<<c);
 
-    ARIADNE_ASSERT(g.argument_size()==d.size());
-    ARIADNE_ASSERT(g.result_size()==c.size());
+    ARIADNE_PRECONDITION(g.argument_size()==d.size());
+    ARIADNE_PRECONDITION(g.result_size()==c.size());
     FloatDPApproximation t(dp);
     FloatDPApproximationVector x,y,z;
 
