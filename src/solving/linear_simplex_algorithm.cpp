@@ -874,7 +874,13 @@ SizeType lpenter(const Matrix<X>& A, const Vector<X>& c, const Array<Slackness>&
     Vector<XX> z=compute_z(A,c,p,y);
 
     SizeType s=compute_s(m,vt,p,z);
-    LOGGING_PRINTLN_AT(1,"vt="<<vt<<" y="<<y<<" z="<<z<<" s="<<s<<" p[s]="<<p[s]);
+    // s==n is the normal sentinel for an optimal basis. Logging must
+    // not index the permutation in that case.
+    if(s<p.size()) {
+        LOGGING_PRINTLN_AT(1,"vt="<<vt<<" y="<<y<<" z="<<z<<" s="<<s<<" p[s]="<<p[s]);
+    } else {
+        LOGGING_PRINTLN_AT(1,"vt="<<vt<<" y="<<y<<" z="<<z<<" s="<<s<<" (no entering variable)");
+    }
     return s;
 }
 

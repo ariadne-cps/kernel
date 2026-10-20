@@ -37,6 +37,7 @@ class TestLinearSimplexSolver
   public:
     Void test() {
         ARIADNE_TEST_CALL(test_linear_programming_exception_contracts());
+        ARIADNE_TEST_CALL(test_logging_diagnostics());
         ARIADNE_TEST_CALL(test_public_simplex_input_contracts());
         ARIADNE_TEST_CALL(test_slackness_output());
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
@@ -81,6 +82,30 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_compute_basis_column_pivoting());
     }
 
+
+    Void test_logging_diagnostics() {
+        // Recheck the same simplex contracts at high verbosity: pivot
+        // selection, bound flips, basis exchange and optimal termination
+        // must not depend on whether diagnostic streams are enabled.
+        auto& configuration=Logger::instance().configuration();
+        const unsigned int old_verbosity=configuration.verbosity();
+        struct RestoreVerbosity {
+            unsigned int value;
+            ~RestoreVerbosity() {
+                Logger::instance().configuration().set_verbosity(value);
+            }
+        } restore{old_verbosity};
+        configuration.set_verbosity(10u);
+
+        test_pivot_to_better_vertex();
+        test_bland_rule_with_reordered_nonbasic_variables();
+        test_rounded_simplex_feasibility_and_optimum();
+        test_lpstep_upper_bound_flip();
+        test_lpstep_upper_entry();
+        test_approximate_upper_entry_basis_exchange();
+        test_validated_upper_entry_basis_exchange();
+        test_validated_feasibility_basis_exchange();
+    }
 
     Void test_public_simplex_input_contracts() {
         // A single independent equality in two bounded variables has a
