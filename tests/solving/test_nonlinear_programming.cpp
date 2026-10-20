@@ -272,8 +272,56 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_CALL(test_feasible_interior_minimisation());
         ARIADNE_TEST_CALL(test_nonlinear_equality_minimisation_backtracking());
         ARIADNE_TEST_CALL(test_stationary_minimisation_step());
+#ifndef NDEBUG
+        ARIADNE_TEST_CALL(test_minimisation_step_debug_preconditions());
+#endif
         ARIADNE_TEST_CALL(test_feasibility_dimension_preconditions());
     }
+
+#ifndef NDEBUG
+    Void test_minimisation_step_debug_preconditions() {
+        // Verify each existing public debug precondition independently.
+        // Release builds omit these checks, so this test is Debug-only.
+        NonlinearInteriorPointSolver solver;
+        auto c1=ValidatedScalarMultivariateFunction::coordinates(1);
+        auto c2=ValidatedScalarMultivariateFunction::coordinates(2);
+        ValidatedScalarMultivariateFunction objective=sqr(c1[0]-0.5_x);
+        ValidatedScalarMultivariateFunction wrong_objective=sqr(c2[0]-0.5_x);
+        ValidatedVectorMultivariateFunction g({c1[0]});
+        ValidatedVectorMultivariateFunction h({c1[0]-0.5_x});
+        ValidatedVectorMultivariateFunction wrong_arguments({c2[0]});
+        ValidatedVectorMultivariateFunction wrong_results({c1[0],c1[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{0.25_x,0.75_x}});
+        FloatDPApproximationVector point({0.5_x},dp);
+        FloatDPApproximationVector slack({0.5_x},dp);
+        FloatDPApproximationVector kappa({0.0_x},dp);
+        FloatDPApproximationVector lambda({0.0_x},dp);
+        FloatDPApproximationVector wrong_size({0.0_x,0.0_x},dp);
+        FloatDPApproximationVector outside({1.25_x},dp);
+        FloatDPApproximation zero_mu(0.0_x,dp);
+        FloatDPApproximation positive_mu(0.25_x,dp);
+
+        ARIADNE_TEST_FAIL(solver.minimisation_step(
+            objective,domain,g,codomain,h,point,wrong_size,kappa,lambda,positive_mu));
+        ARIADNE_TEST_FAIL(solver.minimisation_step(
+            wrong_objective,domain,g,codomain,h,point,slack,kappa,lambda,positive_mu));
+        ARIADNE_TEST_FAIL(solver.minimisation_step(
+            objective,domain,wrong_arguments,codomain,h,point,slack,kappa,lambda,positive_mu));
+        ARIADNE_TEST_FAIL(solver.minimisation_step(
+            objective,domain,g,codomain,wrong_arguments,point,slack,kappa,lambda,positive_mu));
+        ARIADNE_TEST_FAIL(solver.minimisation_step(
+            objective,domain,wrong_results,codomain,h,point,slack,kappa,lambda,positive_mu));
+        ARIADNE_TEST_FAIL(solver.minimisation_step(
+            objective,domain,g,codomain,wrong_results,point,slack,kappa,lambda,positive_mu));
+        ARIADNE_TEST_FAIL(solver.minimisation_step(
+            objective,domain,g,codomain,h,outside,slack,kappa,lambda,positive_mu));
+        ARIADNE_TEST_FAIL(solver.minimisation_step(
+            objective,domain,g,codomain,h,point,outside,kappa,lambda,positive_mu));
+        ARIADNE_TEST_FAIL(solver.minimisation_step(
+            objective,domain,g,codomain,h,point,slack,kappa,lambda,zero_mu));
+    }
+#endif
 
     Void test_feasibility_dimension_preconditions() {
         // The public feasibility API must reject mismatched dimensions
