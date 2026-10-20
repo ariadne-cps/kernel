@@ -1041,6 +1041,7 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_penalty_minimisation_lower_boundary_requires_certificate());
         ARIADNE_TEST_CALL(test_point_feasibility_input_contracts());
         ARIADNE_TEST_CALL(test_point_feasibility_with_equalities());
+        ARIADNE_TEST_CALL(test_point_feasibility_multiplier_infeasibility_certificate());
         ARIADNE_TEST_CALL(test_stationary_feasibility());
         ARIADNE_TEST_CALL(test_approximate_penalty_step());
         ARIADNE_TEST_CALL(test_validated_penalty_feasibility_contraction());
@@ -1233,6 +1234,33 @@ class TestNonlinearPenaltyFunctionSolver
             domain,g,codomain,inside,multipliers)));
         ARIADNE_TEST_ASSERT(definitely(not cloned->check_feasibility(
             domain,g,codomain,outside,multipliers)));
+    }
+
+    Void test_point_feasibility_multiplier_infeasibility_certificate() {
+        // g(D)=[-1,1] is disjoint from C={5/2}, so the feasibility
+        // problem has no solution. At the supplied centering point
+        // x=5/2 (which need not belong to D), g(x) exactly satisfies
+        // the equality. The immediate pointwise check therefore cannot
+        // prove infeasibility; the multiplier y=1 separates g(D) and C.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType equality({{2.5_x,2.5_x}});
+        FloatDPVector center({2.5_x},dp);
+        FloatDPVector certificate({1.0_x},dp);
+        FloatDPVector no_certificate({0.0_x},dp);
+
+        ARIADNE_TEST_ASSERT(definitely(not solver.check_feasibility(
+            domain,g,equality,center,certificate)));
+
+        // The same infeasible problem has no separating information
+        // with y=0. Do not mistake absence of a certificate for
+        // evidence of feasibility.
+        auto unproved=solver.check_feasibility(
+            domain,g,equality,center,no_certificate);
+        ARIADNE_TEST_ASSERT(not definitely(unproved));
+        ARIADNE_TEST_ASSERT(not definitely(not unproved));
     }
 
     Void test_point_feasibility_with_equalities() {
