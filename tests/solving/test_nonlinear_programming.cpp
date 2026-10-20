@@ -1335,7 +1335,7 @@ class TestNonlinearPenaltyFunctionSolver
         auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
         ValidatedVectorMultivariateFunction g({sqrt(coordinate[0])});
         ExactBoxType domain({{1.0_x,3.0_x}});
-        ExactBoxType codomain({{1.4142135623730951_x,1.5_x}});
+        ExactBoxType codomain({{1.4142135623730951_pr,1.5_x}});
         FloatDPVector point({2.0_x},dp);
         FloatDPVector multiplier({0.0_x},dp);
 
