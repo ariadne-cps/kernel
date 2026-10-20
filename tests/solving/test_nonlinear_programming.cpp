@@ -270,6 +270,7 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_CALL(test_relaxation_parameter());
         ARIADNE_TEST_CALL(test_initial_feasibility_state());
         ARIADNE_TEST_CALL(test_feasible_interior_minimisation());
+        ARIADNE_TEST_CALL(test_minimisation_dimension_preconditions());
         ARIADNE_TEST_CALL(test_nonlinear_equality_minimisation_backtracking());
         ARIADNE_TEST_CALL(test_stationary_minimisation_step());
 #ifndef NDEBUG
@@ -336,6 +337,29 @@ class TestNonlinearInteriorPointSolverBasics {
 
         ARIADNE_TEST_FAIL(solver.feasible(wrong_domain,g,codomain));
         ARIADNE_TEST_FAIL(solver.feasible(domain,g,wrong_codomain));
+    }
+
+    Void test_minimisation_dimension_preconditions() {
+        // Independent public input contracts: objective arguments,
+        // constraint arguments and the number of constraint bounds.
+        // Reject each mismatch before evaluating the nonlinear system.
+        NonlinearInteriorPointSolver solver;
+        auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
+        auto coordinates2=ValidatedScalarMultivariateFunction::coordinates(2);
+        ValidatedScalarMultivariateFunction f=sqr(coordinates[0]-0.5_x);
+        ValidatedScalarMultivariateFunction wrong_f=sqr(coordinates2[0]-0.5_x);
+        ValidatedVectorMultivariateFunction g({coordinates[0]});
+        ValidatedVectorMultivariateFunction wrong_g({coordinates2[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ExactBoxType codomain({{0.25_x,0.75_x}});
+        ExactBoxType wrong_codomain({{0.25_x,0.75_x},{0.25_x,0.75_x}});
+
+        ARIADNE_TEST_THROWS(solver.minimise(wrong_f,domain,g,codomain),
+                            std::runtime_error);
+        ARIADNE_TEST_THROWS(solver.minimise(f,domain,wrong_g,codomain),
+                            std::runtime_error);
+        ARIADNE_TEST_THROWS(solver.minimise(f,domain,g,wrong_codomain),
+                            std::runtime_error);
     }
 
     Void test_feasible_interior_minimisation() {

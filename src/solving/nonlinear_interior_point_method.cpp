@@ -38,6 +38,13 @@ minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorM
 {
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN("f="<<f<<" D="<<D<<" g="<<g<<" C="<<C);
+
+    // Reject inconsistent public inputs before evaluating g over D or
+    // constructing the primal-dual Newton system.
+    ARIADNE_PRECONDITION(f.argument_size()==D.size());
+    ARIADNE_PRECONDITION(g.argument_size()==D.size());
+    ARIADNE_PRECONDITION(g.result_size()==C.size());
+
     ValidatedVectorMultivariateFunction h(0,D.dimension());
 
     UpperBoxType gD = apply(g,D);
