@@ -1119,6 +1119,7 @@ class TestNonlinearPenaltyFunctionSolver
   public:
     Void test() {
         ARIADNE_TEST_CALL(test_point_feasibility_with_inequalities());
+        ARIADNE_TEST_CALL(test_point_feasibility_rounding_overlap());
         ARIADNE_TEST_CALL(test_penalty_minimisation_unconstrained());
         ARIADNE_TEST_CALL(test_penalty_minimisation_lower_domain_projection());
         ARIADNE_TEST_CALL(test_penalty_minimisation_active_constraint());
@@ -1323,6 +1324,25 @@ class TestNonlinearPenaltyFunctionSolver
             domain,g,codomain,inside,multipliers)));
         ARIADNE_TEST_ASSERT(definitely(not cloned->check_feasibility(
             domain,g,codomain,outside,multipliers)));
+    }
+
+    Void test_point_feasibility_rounding_overlap() {
+        // sqrt(2) is not exactly representable in binary floating-point.
+        // Its validated point evaluation can straddle the lower bound
+        // of C. This neither certifies feasibility of x=2 nor proves
+        // the problem infeasible, since g(D) intersects C for x>2.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({sqrt(coordinate[0])});
+        ExactBoxType domain({{1.0_x,3.0_x}});
+        ExactBoxType codomain({{1.4142135623730951_x,1.5_x}});
+        FloatDPVector point({2.0_x},dp);
+        FloatDPVector multiplier({0.0_x},dp);
+
+        const auto status=solver.check_feasibility(
+            domain,g,codomain,point,multiplier);
+        ARIADNE_TEST_ASSERT(not definitely(status));
+        ARIADNE_TEST_ASSERT(not definitely(not status));
     }
 
     Void test_point_feasibility_multiplier_infeasibility_certificate() {
