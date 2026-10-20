@@ -43,6 +43,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
         ARIADNE_TEST_CALL(test_bland_rule_with_reordered_nonbasic_variables());
         ARIADNE_TEST_CALL(test_rounded_simplex_feasibility_and_optimum());
+        ARIADNE_TEST_CALL(test_rounded_simplex_hotstarted_paths());
         ARIADNE_TEST_CALL(test_verify_feasibility_basic_statuses());
         ARIADNE_TEST_CALL(test_verify_feasibility_input_contracts());
         ARIADNE_TEST_CALL(test_verify_feasibility_dual_signs());
@@ -1229,6 +1230,39 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_EQUAL(vt[1],Slackness::UPPER);
         ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(xl,xu,A,b,vt,p));
         ARIADNE_TEST_ASSERT(definitely(solver.validated_feasible(xl,xu,A,b)));
+    }
+
+    Void test_rounded_simplex_hotstarted_paths() {
+        // A strict initial basic point (1/2,0) needs no feasibility
+        // pivot. A subsequent hotstarted minimisation of 2*x0+x1
+        // must instead pivot to the optimum (0,1/2). In particular,
+        // exercise the RoundedFloatDP hotstart instantiation rather
+        // than relying on the FloatDP tests of the same interfaces.
+        LinearSimplexSolver<RoundedFloatDP> solver;
+        Matrix<RoundedFloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<RoundedFloatDP> rhs({0.5_x},dp);
+        Vector<RoundedFloatDP> lower({0.0_x,0.0_x},dp);
+        Vector<RoundedFloatDP> upper({1.0_x,1.0_x},dp);
+        Vector<RoundedFloatDP> costs({2.0_x,1.0_x},dp);
+
+        Array<Slackness> feasibility_basis(2u);
+        feasibility_basis[0]=Slackness::BASIS;
+        feasibility_basis[1]=Slackness::LOWER;
+        ARIADNE_TEST_ASSERT(definitely(solver.hotstarted_feasible(
+            lower,upper,A,rhs,feasibility_basis)));
+        ARIADNE_TEST_EQUAL(feasibility_basis[0],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(feasibility_basis[1],Slackness::LOWER);
+
+        Array<Slackness> optimisation_basis(2u);
+        optimisation_basis[0]=Slackness::BASIS;
+        optimisation_basis[1]=Slackness::LOWER;
+        auto optimum=solver.hotstarted_minimise(
+            costs,lower,upper,A,rhs,optimisation_basis);
+        ARIADNE_TEST_EQUAL(optimum.size(),2u);
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,rhs,optimum));
+        ARIADNE_TEST_ASSERT(decide(optimum[0]<RoundedFloatDP(0.125_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(optimum[1]>RoundedFloatDP(0.375_x,dp)));
+        ARIADNE_TEST_ASSERT(decide(optimum[1]<RoundedFloatDP(0.625_x,dp)));
     }
 
     Void test_rounded_simplex_feasibility_and_optimum() {
