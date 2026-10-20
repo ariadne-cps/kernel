@@ -1038,6 +1038,7 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_penalty_minimisation_input_contracts());
         ARIADNE_TEST_CALL(test_penalty_minimisation_upper_codomain());
         ARIADNE_TEST_CALL(test_penalty_minimisation_boundary_requires_certificate());
+        ARIADNE_TEST_CALL(test_penalty_minimisation_lower_boundary_requires_certificate());
         ARIADNE_TEST_CALL(test_point_feasibility_input_contracts());
         ARIADNE_TEST_CALL(test_point_feasibility_with_equalities());
         ARIADNE_TEST_CALL(test_stationary_feasibility());
@@ -1183,6 +1184,24 @@ class TestNonlinearPenaltyFunctionSolver
         ValidatedVectorMultivariateFunction g({coordinate[0]});
         ExactBoxType domain({{-1.0_x,1.0_x}});
         ExactBoxType codomain({{-1.0_x,0.0_x}});
+
+        ARIADNE_TEST_THROWS(
+            solver.minimise(f,domain,g,codomain),
+            IndeterminateFeasibilityException);
+    }
+
+    Void test_penalty_minimisation_lower_boundary_requires_certificate() {
+        // The constrained minimum of (x+1)^2 with x>=1/2 is at x=1/2.
+        // The exact minimiser of the quadratic-penalty objective for
+        // finite rho is 1/2-3/(rho+2), which violates the lower bound.
+        // A numerical iterate must not be returned as a validated
+        // feasible optimum merely because its violation is small.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction f=sqr(coordinate[0]+Real(1.0_x));
+        ValidatedVectorMultivariateFunction g({coordinate[0]});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain({{0.5_x,1.0_x}});
 
         ARIADNE_TEST_THROWS(
             solver.minimise(f,domain,g,codomain),
