@@ -266,6 +266,7 @@ class TestNonlinearAdapterProbe {
 class TestNonlinearInteriorPointSolverBasics {
   public:
     Void test() {
+        ARIADNE_TEST_CALL(test_logging_diagnostics());
         ARIADNE_TEST_CALL(test_disjoint_constraint_minimisation());
         ARIADNE_TEST_CALL(test_relaxation_parameter());
         ARIADNE_TEST_CALL(test_initial_feasibility_state());
@@ -323,6 +324,26 @@ class TestNonlinearInteriorPointSolverBasics {
             objective,domain,g,codomain,h,point,slack,kappa,lambda,zero_mu));
     }
 #endif
+
+    Void test_logging_diagnostics() {
+        // Diagnostic evaluation of matrices and residuals must not
+        // change the established feasibility/optimisation results.
+        // The solver's numerical steps are exercised unchanged.
+        auto& configuration=Logger::instance().configuration();
+        const unsigned int old_verbosity=configuration.verbosity();
+        struct RestoreVerbosity {
+            unsigned int value;
+            ~RestoreVerbosity() {
+                Logger::instance().configuration().set_verbosity(value);
+            }
+        } restore{old_verbosity};
+        configuration.set_verbosity(10u);
+
+        test_disjoint_constraint_minimisation();
+        test_feasible_interior_minimisation();
+        test_nonlinear_equality_minimisation_backtracking();
+        test_stationary_minimisation_step();
+    }
 
     Void test_feasibility_dimension_preconditions() {
         // The public feasibility API must reject mismatched dimensions
