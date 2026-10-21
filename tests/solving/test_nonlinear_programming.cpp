@@ -1152,6 +1152,7 @@ class TestNonlinearPenaltyFunctionSolver
         ARIADNE_TEST_CALL(test_point_feasibility_rounding_overlap());
         ARIADNE_TEST_CALL(test_point_feasibility_cancellation_uncertainty());
         ARIADNE_TEST_CALL(test_penalty_minimisation_unconstrained());
+        ARIADNE_TEST_CALL(test_penalty_minimisation_slow_convergence());
         ARIADNE_TEST_CALL(test_penalty_minimisation_lower_domain_projection());
         ARIADNE_TEST_CALL(test_penalty_minimisation_active_constraint());
         ARIADNE_TEST_CALL(test_penalty_minimisation_detects_infeasibility());
@@ -1265,6 +1266,28 @@ class TestNonlinearPenaltyFunctionSolver
         auto midpoint_optimum=midpoint(optimum);
         ARIADNE_TEST_ASSERT(decide(abs(midpoint_optimum[0]-
             FloatDPApproximation(0.25_x,dp))<FloatDPApproximation(0.015625_x,dp)));
+    }
+
+    Void test_penalty_minimisation_slow_convergence() {
+        // Scaling the quadratic by 1/128 makes each full descent step
+        // reduce the distance to x=1/4 by a factor of 63/64. The solver
+        // therefore uses every iteration in each stage, rather than
+        // stopping on a small direction or a failed line search.
+        NonlinearPenaltyFunctionSolver solver;
+        auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction f=
+            sqr(coordinate[0]-Real(0.25_x))/128;
+        ValidatedVectorMultivariateFunction g(0u,1u);
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType codomain(0u);
+
+        FloatDPBoundsVector candidate=solver.minimise(f,domain,g,codomain);
+        ARIADNE_TEST_EQUAL(candidate.size(),1u);
+        ARIADNE_TEST_ASSERT(definitely(contains(domain,candidate)));
+        ARIADNE_TEST_ASSERT(definitely(abs(candidate[0]-FloatDPBounds(0.25_x,dp))<
+            FloatDPBounds(0.0078125_x,dp)));
+        FloatDPBoundsVector initial({0.0_x},dp);
+        ARIADNE_TEST_ASSERT(definitely(f(candidate)<f(initial)));
     }
 
     Void test_penalty_minimisation_active_constraint() {
