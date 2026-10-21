@@ -301,7 +301,7 @@ ValidatedAffineConstrainedImageSet::outer_approximation(const Grid& g, Nat depth
 }
 
 
-Void ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(PavingInterface& paving, LinearProgram<FloatDP>& lp, const Vector<FloatDPError>& errors, GridCell& cell, Nat fineness)
+Void ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(PavingInterface& paving, LinearProgram<FloatDP>& lp, const Vector<FloatDPError>& errors, GridCell& cell, Nat fineness, const UpperBoxType* enclosure)
 {
 
     // No need to check if cell is already part of the set
@@ -311,6 +311,10 @@ Void ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(PavingIn
 
     // Find concrete cell box
     const ExactBoxType bx=cell.box();
+
+    // A validated enclosure is a cheap, sound rejection certificate.  In
+    // particular, a cell touching the enclosure is not rejected.
+    if(enclosure && definitely(disjoint(bx,*enclosure))) { return; }
 
     // Make part of linear program dependent on cell
     for(SizeType i=0; i!=cell.dimension(); ++i) {
@@ -336,8 +340,8 @@ Void ValidatedAffineConstrainedImageSet::_adjoin_outer_approximation_to(PavingIn
     } else {
         GridCell subcell1 = cell.split(0);
         GridCell subcell2 = cell.split(1);
-        _adjoin_outer_approximation_to(paving,lp,errors,subcell1,fineness);
-        _adjoin_outer_approximation_to(paving,lp,errors,subcell2,fineness);
+        _adjoin_outer_approximation_to(paving,lp,errors,subcell1,fineness,enclosure);
+        _adjoin_outer_approximation_to(paving,lp,errors,subcell2,fineness,enclosure);
     }
 
 }
@@ -431,7 +435,8 @@ ValidatedAffineConstrainedImageSet::adjoin_outer_approximation_to(PavingInterfac
 {
     ARIADNE_PRECONDITION(this->dimension()==paving.dimension());
 
-    GridCell bounding_cell=GridCell::smallest_enclosing_primary_cell(this->bounding_box(),paving.grid());
+    const UpperBoxType enclosure=this->bounding_box();
+    GridCell bounding_cell=GridCell::smallest_enclosing_primary_cell(enclosure,paving.grid());
 
     // Create linear program
     LinearProgram<FloatDP> lp;
@@ -440,7 +445,7 @@ ValidatedAffineConstrainedImageSet::adjoin_outer_approximation_to(PavingInterfac
     for(SizeType i=0; i!=this->dimension(); ++i) {
         errors[i]=this->_space_models[i].error();
     }
-    _adjoin_outer_approximation_to(paving,lp,errors,bounding_cell,fineness);
+    _adjoin_outer_approximation_to(paving,lp,errors,bounding_cell,fineness,&enclosure);
 }
 
 

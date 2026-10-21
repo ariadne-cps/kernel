@@ -23,6 +23,7 @@
  */
 
 #include <iostream>
+#include <chrono>
 #include "function/function.hpp"
 #include "geometry/box.hpp"
 #include "geometry/affine_set.hpp"
@@ -221,7 +222,10 @@ class TestAffineSet
             set.new_parameter_constraint(x[0]+x[1]<=-0.5_x);
             ARIADNE_TEST_PRINT(set);
 
-            GridTreePaving paving = set.outer_approximation(Grid(2),4);
+            const auto start1=std::chrono::steady_clock::now();
+        GridTreePaving paving = set.outer_approximation(Grid(2),4);
+        const auto elapsed_ms1=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start1).count();
+        std::cerr<<"test_outer_approximation case 1: "<<elapsed_ms1<<" ms\n";
             paving.recombine();
             std::cout<<std::setprecision(17);
             ARIADNE_TEST_PRINT(paving);
@@ -236,7 +240,10 @@ class TestAffineSet
             set.new_parameter_constraint(-0.5_x*x[0]+1.0_x*x[1]<=0.75_x);
             set.new_parameter_constraint(-0.5_x*x[0]-1.0_x*x[1]<=0.875_x);
 
-            GridTreePaving paving=set.outer_approximation(Grid(2),3);
+            const auto start2=std::chrono::steady_clock::now();
+        GridTreePaving paving=set.outer_approximation(Grid(2),3);
+        const auto elapsed_ms2=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start2).count();
+        std::cerr<<"test_outer_approximation case 2: "<<elapsed_ms2<<" ms\n";
             ARIADNE_TEST_ASSERT(paving.size()>0);
         }
 
@@ -252,7 +259,10 @@ class TestAffineSet
 
             Grid grid(2);
             GridTreePaving paving(grid);
-            set.adjoin_outer_approximation_to(paving,3);
+            const auto start3=std::chrono::steady_clock::now();
+        set.adjoin_outer_approximation_to(paving,3);
+        const auto elapsed_ms3=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start3).count();
+        std::cerr<<"test_outer_approximation case 3: "<<elapsed_ms3<<" ms\n";
             paving.recombine();
 
             ARIADNE_TEST_ASSERT(paving.size()>0);
@@ -263,7 +273,10 @@ class TestAffineSet
             set.new_parameter_constraint(0.0625_x*x[0]+x[1]<=1.1875_x);
             ARIADNE_TEST_PRINT(set);
 
-            GridTreePaving paving = set.outer_approximation(Grid(2),4);
+            const auto start4=std::chrono::steady_clock::now();
+        GridTreePaving paving = set.outer_approximation(Grid(2),4);
+        const auto elapsed_ms4=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start4).count();
+        std::cerr<<"test_outer_approximation case 4: "<<elapsed_ms4<<" ms\n";
             paving.recombine();
             std::cout<<std::setprecision(17);
             ARIADNE_TEST_PRINT(paving);

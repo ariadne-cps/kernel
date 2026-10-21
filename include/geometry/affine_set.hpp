@@ -154,7 +154,7 @@ class ValidatedAffineConstrainedImageSet
     Void construct(const ExactBoxType& D, const Matrix<FloatDP>& G, const Vector<FloatDP>& c);
     Void construct_linear_program(LinearProgram<FloatDP,FloatDPBounds>& lp) const;
     static Void _robust_adjoin_outer_approximation_to(PavingInterface& paving, LinearProgram<FloatDP,FloatDPBounds>& lp, const Vector<FloatDPError>& errors, GridCell& cell, Nat fineness);
-    static Void _adjoin_outer_approximation_to(PavingInterface& paving, LinearProgram<FloatDP,FloatDPBounds>& lp, const Vector<FloatDPError>& errors, GridCell& cell, Nat fineness);
+    static Void _adjoin_outer_approximation_to(PavingInterface& paving, LinearProgram<FloatDP,FloatDPBounds>& lp, const Vector<FloatDPError>& errors, GridCell& cell, Nat fineness, const UpperBoxType* enclosure=nullptr);
 };
 
 inline OutputStream& operator<<(OutputStream& os, const ValidatedAffineConstrainedImageSet& as) {
