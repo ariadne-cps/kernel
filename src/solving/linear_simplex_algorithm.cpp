@@ -1065,17 +1065,14 @@ LinearSimplexSolver<X>::lpstep(const Vector<X>& xl, const Vector<X>& xu, const M
         update_B(B,d,r);
         update_x(xl,xu,p,x,s,d,r,t);
 
-        // Update pivots and variable types
+        // The ratio test identifies the blocking bound from the sign
+        // of d[r] and the entering direction. Retain that information
+        // when t=0, or when an interval product d[r]*t is inconclusive.
+        const Bool enters_from_lower=(vt[p[s]]==Slackness::LOWER);
+        const Bool leaves_at_upper=enters_from_lower
+            ? decide(-d[r]<0) : decide(d[r]<0);
         vt[p[s]] = Slackness::BASIS;
-        if(decide(d[r]*t>0)) {
-            vt[p[r]] = Slackness::UPPER;
-        } else if(decide(d[r]*t<0)) {
-            vt[p[r]] = Slackness::LOWER;
-        } else {
-            SizeType pr=p[r];
-            ARIADNE_ASSERT(decide(x[pr]==xl[pr] || x[pr]==xu[pr]));
-            if(decide(x[pr]==xl[pr])) { vt[pr]=Slackness::LOWER; } else { vt[pr]=Slackness::UPPER; }
-        }
+        vt[p[r]] = leaves_at_upper ? Slackness::UPPER : Slackness::LOWER;
 
         std::swap(p[r],p[s]);
     }
