@@ -71,6 +71,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_validated_upper_entry_bound_flip());
         ARIADNE_TEST_CALL(test_validated_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
+        ARIADNE_TEST_CALL(test_validated_reduced_cost_certificates());
         ARIADNE_TEST_CALL(test_validated_feasibility_stationary_at_boundary());
         ARIADNE_TEST_CALL(test_validated_feasibility_without_finite_leaving_bound());
         ARIADNE_TEST_CALL(test_validated_feasibility_bound_flip());
@@ -1399,6 +1400,36 @@ class TestLinearSimplexSolver
         Vector<FloatDP> xu({1.0_x,1.0_x},dp);
 
         ARIADNE_TEST_ASSERT(definitely(solver.validated_feasible(xl,xu,A,b)));
+    }
+
+    Void test_validated_reduced_cost_certificates() {
+        // With x0+x1=b, a lower x1 cannot fix x0<0, and an upper
+        // x1 cannot fix x0>1. The reduced costs exclude those directions.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> lower({0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({1.0_x,1.0_x},dp);
+        Array<Slackness> types({Slackness::BASIS,Slackness::LOWER});
+        Array<SizeType> p({0u,1u});
+        Vector<FloatDP> below({-0.5_x},dp);
+        ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(lower,upper,A,below,types,p));
+        ARIADNE_TEST_ASSERT(definitely(not solver.verify_feasibility(lower,upper,A,below,types)));
+
+        types[1]=Slackness::UPPER;
+        Vector<FloatDP> above({3.0_x},dp);
+        ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(lower,upper,A,above,types,p));
+        ARIADNE_TEST_ASSERT(definitely(not solver.verify_feasibility(lower,upper,A,above,types)));
+
+        // An unrelated upper variable has zero reduced cost. It cannot
+        // improve the violated equality, but supplies no strict certificate.
+        Matrix<FloatDP> independent({{1.0_x,0.0_x}},dp);
+        ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(lower,upper,independent,below,types,p));
+        ARIADNE_TEST_ASSERT(is_indeterminate(
+            solver.verify_feasibility(lower,upper,independent,below,types)));
+        ARIADNE_TEST_EQUAL(types[0],Slackness::BASIS);
+        ARIADNE_TEST_EQUAL(types[1],Slackness::UPPER);
+        ARIADNE_TEST_EQUAL(p[0],0u);
+        ARIADNE_TEST_EQUAL(p[1],1u);
     }
 
     Void test_validated_feasibility_exchange_to_upper_bound() {
