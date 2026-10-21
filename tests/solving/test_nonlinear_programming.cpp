@@ -1772,6 +1772,9 @@ class TestApproximateNonlinearInteriorPointSolver {
         ARIADNE_TEST_CALL(test_affine_zero());
         ARIADNE_TEST_CALL(test_excluded_zero());
         ARIADNE_TEST_CALL(test_slow_convergence());
+        ARIADNE_TEST_CALL(test_nonlinear_zero());
+        ARIADNE_TEST_CALL(test_small_infeasible_residual());
+        ARIADNE_TEST_CALL(test_uncertified_small_residual());
         ARIADNE_TEST_CALL(test_logging_diagnostics());
     }
 
@@ -1808,6 +1811,35 @@ class TestApproximateNonlinearInteriorPointSolver {
         ARIADNE_TEST_ASSERT(is_indeterminate(solver.feasible_zero(
             ExactBoxType({{-1.0_x,2.0_x}}),
             ValidatedVectorMultivariateFunction({pow(x[0],3)}))));
+    }
+
+    Void test_nonlinear_zero() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        // sqrt(2) is not representable as a floating point number.
+        // Inclusion in [1,2] must certify the zero, rather than rely
+        // on an exactly vanishing numerical residual.
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible_zero(
+            ExactBoxType({{1.0_x,2.0_x}}),
+            ValidatedVectorMultivariateFunction({sqr(x[0])-2}))));
+    }
+
+    Void test_small_infeasible_residual() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        // Scaling does not move the root x=2 into [-1,1], although
+        // every numerical residual in that box is below 1e-10.
+        ARIADNE_TEST_ASSERT(definitely(!solver.feasible_zero(
+            ExactBoxType({{-1.0_x,1.0_x}}),
+            ValidatedVectorMultivariateFunction({Real(1e-12_x)*(x[0]-2)}))));
+    }
+
+    Void test_uncertified_small_residual() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        // The multiple root has a singular interval Jacobian on D.
+        // A small residual cannot replace the unavailable inclusion
+        // certificate; neither does the dual interval exclude zero.
+        ARIADNE_TEST_ASSERT(is_indeterminate(solver.feasible_zero(
+            ExactBoxType({{-1.0_x,2.0_x}}),
+            ValidatedVectorMultivariateFunction({Real(1e-12_x)*pow(x[0],3)}))));
     }
 
     Void test_logging_diagnostics() {

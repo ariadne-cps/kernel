@@ -43,7 +43,16 @@ feasible_zero(ExactBoxType D, ValidatedVectorMultivariateFunction h) const
         this->feasibility_step(D,h,x,y);
     }
 
-    if( decide(norm(h(x))<1e-10) ) { return true; }
+    // A small approximate residual only suggests convergence. It does
+    // not prove a zero exists (rescaling an infeasible equation can make
+    // its residual arbitrarily small). Require interval Newton inclusion
+    // inside the admissible domain before returning a validated true.
+    if(decide(norm(h(x))<1e-10)) {
+        const ExactBoxType zero_box(h.result_size(),ExactIntervalType(0,0));
+        if(definitely(this->contains_feasible_point(D,h,zero_box,cast_singleton(D)))) {
+            return true;
+        }
+    }
 
     if(!possibly(contains(UpperIntervalType(dot(UpperIntervalVectorType(exact_vector(y)),apply(h,D))),zero))) { return false; }
 
