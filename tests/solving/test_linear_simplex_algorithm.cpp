@@ -57,6 +57,8 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_approximate_lpstep_without_leaving_variable());
         ARIADNE_TEST_CALL(test_single_variable_infeasibility());
         ARIADNE_TEST_CALL(test_feasibility_iteration_budget());
+        ARIADNE_TEST_CALL(test_optimum_on_last_permitted_iteration());
+        ARIADNE_TEST_CALL(test_optimisation_iteration_budget());
         ARIADNE_TEST_CALL(test_lpstep_upper_bound_flip());
         ARIADNE_TEST_CALL(test_lpstep_upper_entry());
         ARIADNE_TEST_CALL(test_upper_entry_tied_upper_bounds());
@@ -958,6 +960,40 @@ class TestLinearSimplexSolver
         Vector<FloatDPApproximation> upper(n,FloatDPApproximation(1.0_x,dp));
         ARIADNE_TEST_THROWS(solver.feasible(lower,upper,A,rhs),
                             DegenerateFeasibilityProblemException);
+    }
+
+    Void test_optimum_on_last_permitted_iteration() {
+        check_optimisation_budget(1024u,true);
+    }
+
+    Void test_optimisation_iteration_budget() {
+        check_optimisation_budget(1025u,false);
+    }
+
+    Void check_optimisation_budget(SizeType n, Bool completes) {
+        // The equation fixes x0=1/2. Each remaining independent variable
+        // needs one bound flip to minimise -sum(xj), followed by one call
+        // to establish optimality. Completion on call 1024 is permitted;
+        // a problem requiring another call exhausts the fixed budget.
+        LinearSimplexSolver<FloatDP> solver;
+        FloatDP zero_value(0.0_x,dp);
+        Matrix<FloatDP> A(1u,n,zero_value);
+        A[0][0]=1;
+        Vector<FloatDP> rhs({0.5_x},dp);
+        Vector<FloatDP> lower(n,zero_value);
+        Vector<FloatDP> upper(n,FloatDP(1.0_x,dp));
+        Vector<FloatDP> costs(n,FloatDP(-1.0_x,dp));
+        costs[0]=0;
+        if(completes) {
+            auto optimum=solver.minimise(costs,lower,upper,A,rhs);
+            Vector<FloatDPBounds> expected(n,FloatDPBounds(1.0_x,dp));
+            expected[0]=FloatDPBounds(0.5_x,dp);
+            ARIADNE_TEST_ASSERT(definitely(norm(optimum-expected)==FloatDPBounds(0.0_x,dp)));
+            ARIADNE_TEST_EXECUTE(solver.consistency_check(A,rhs,optimum));
+        } else {
+            ARIADNE_TEST_THROWS(solver.minimise(costs,lower,upper,A,rhs),
+                                DegenerateFeasibilityProblemException);
+        }
     }
 
     Void test_lpstep_upper_bound_flip() {

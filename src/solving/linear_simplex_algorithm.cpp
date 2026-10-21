@@ -1519,7 +1519,10 @@ LinearSimplexSolver<X>::hotstarted_minimise(const Vector<X>& c, const Vector<X>&
     while(not done) {
         done=lpstep(c,xl,xu,A,b, vt,p,B,x);
         ++steps;
-        ARIADNE_ASSERT_MSG(steps<MAX_STEPS,"Maximum number of steps reached for linear programming problem.");
+        if(not done && steps>=MAX_STEPS) {
+            throw DegenerateFeasibilityProblemException(
+                "Maximum number of steps reached for linear programming problem.");
+        }
     }
     LOGGING_PRINTLN("Optimal A="<<A<<" b="<<b<<" c="<<c<<" xl="<<xl<<" xu="<<xu<<" vt="<<vt<<" p="<<p<<" x="<<x<<" Ax="<<A*x<<" cx="<<dot(x,x));
 
