@@ -393,6 +393,34 @@ class TestAffineSet
         ARIADNE_TEST_ASSERT(has_left && has_right && has_bottom && has_top);
     }
 
+    Void test_near_vertical_zonotope_boundary() {
+        // The simplex minimiser accepts residuals below its progress threshold.
+        // A near-vertical edge can therefore have a slightly negative outgoing
+        // horizontal component at the reported minimiser.  Its atan2 angle must
+        // be wrapped to [0,2*pi) rather than ordered before the other edges.
+        D=ExactBoxType::unit_box(1);
+        Affine<FloatDPBounds> fx(1,dp);
+        Affine<FloatDPBounds> fy(1,dp);
+        fx[0]=FloatDPBounds(-4e-13_pr,dp);
+        fy[0]=FloatDPBounds(1,dp);
+
+        set=ValidatedAffineConstrainedImageSet(D,{fx,fy});
+        List<Point2d> vertices=set.boundary(0,1);
+        ARIADNE_TEST_EQUALS(vertices.size(),6u);
+
+        bool narrow_x=true;
+        bool has_low_y=false;
+        bool has_high_y=false;
+        for(Point2d const& vertex:vertices) {
+            narrow_x=narrow_x && vertex.x > -1e-8 && vertex.x < +1e-8;
+            has_low_y=has_low_y || vertex.y < -0.9;
+            has_high_y=has_high_y || vertex.y > +0.9;
+        }
+        ARIADNE_TEST_ASSERT(narrow_x);
+        ARIADNE_TEST_ASSERT(has_low_y);
+        ARIADNE_TEST_ASSERT(has_high_y);
+    }
+
     Void test_logging_branches() {
         unsigned int const old_verbosity=Logger::instance().configuration().verbosity();
         Logger::instance().configuration().set_verbosity(10u);
@@ -611,6 +639,7 @@ class TestAffineSet
         ARIADNE_TEST_CALL(test_robust_outer_approximation());
         ARIADNE_TEST_CALL(test_large_zonotope_boundary());
         ARIADNE_TEST_CALL(test_collinear_negative_zonotope_boundary());
+        ARIADNE_TEST_CALL(test_near_vertical_zonotope_boundary());
         ARIADNE_TEST_CALL(test_logging_branches());
         ARIADNE_TEST_CALL(test_uniform_error());
         ARIADNE_TEST_CALL(test_draw());
