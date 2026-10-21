@@ -49,6 +49,8 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_verify_feasibility_input_contracts());
         ARIADNE_TEST_CALL(test_verify_feasibility_dual_signs());
         ARIADNE_TEST_CALL(test_verify_feasibility_with_narrow_bounds());
+        ARIADNE_TEST_CALL(test_uncertain_feasibility_at_large_bounds());
+        ARIADNE_TEST_CALL(test_uncertain_feasibility_residual());
         ARIADNE_TEST_CALL(test_upper_only_nonbasic_bounds());
         ARIADNE_TEST_CALL(test_approximate_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_unbounded_nonbasic_initialisation());
@@ -732,6 +734,42 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(possibly(primal[0]>upper[0]));
         ARIADNE_TEST_ASSERT(is_indeterminate(
             solver.verify_feasibility(lower,upper,A,rhs,types)));
+    }
+
+    Void test_uncertain_feasibility_at_large_bounds() {
+        // 3*x=300000 has the exact solution x=100000. Its interval
+        // enclosure straddles a bound by more than the absolute tolerance.
+        // Neither endpoint placement warrants an assertion failure or a
+        // definite claim when the numerical bounds cannot establish it.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{3.0_x}},dp);
+        Vector<FloatDP> rhs({300000.0_x},dp);
+        Vector<FloatDP> at_bound({100000.0_x},dp);
+        Vector<FloatDP> below({0.0_x},dp);
+        Vector<FloatDP> above({200000.0_x},dp);
+        ARIADNE_TEST_ASSERT(is_indeterminate(solver.feasible(at_bound,above,A,rhs)));
+        ARIADNE_TEST_ASSERT(is_indeterminate(solver.feasible(below,at_bound,A,rhs)));
+    }
+
+    Void test_uncertain_feasibility_residual() {
+        // The near-singular but invertible basis has an exact binary
+        // inverse. Applying it to the decimal rhs loses accuracy through
+        // cancellation: the residual reaches the strict tolerance.
+        const auto old_rounding=FloatDP::get_rounding_mode();
+        struct RestoreRounding {
+            decltype(FloatDP::get_rounding_mode()) value;
+            ~RestoreRounding() { FloatDP::set_rounding_mode(value); }
+        } restore{old_rounding};
+        FloatDP::set_rounding_to_nearest();
+        LinearSimplexSolver<FloatDPApproximation> solver;
+        Matrix<FloatDPApproximation> A({{1.0_x,1.0_x},
+            {1.0_x,1.0000000000000002220446049250313080847263336181640625_x}},dp);
+        Vector<FloatDPApproximation> rhs({0.0001_pr,0.001_pr},dp);
+        Vector<FloatDPApproximation> lower({-1e14_pr,-1e14_pr},dp);
+        Vector<FloatDPApproximation> upper({1e14_pr,1e14_pr},dp);
+        Array<Slackness> types({Slackness::BASIS,Slackness::BASIS});
+        ARIADNE_TEST_ASSERT(is_indeterminate(
+            solver.hotstarted_feasible(lower,upper,A,rhs,types)));
     }
 
     Void test_approximate_upper_entry_basis_exchange() {

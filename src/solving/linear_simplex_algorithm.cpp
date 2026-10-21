@@ -1219,16 +1219,17 @@ LinearSimplexSolver<X>::_feasible(const Vector<X>& xl, const Vector<X>& xu, cons
 
     LOGGING_PRINTLN("Checking solution...");
 
-    // Check solution
+    // A valid problem can yield an enclosure wider than the absolute
+    // tolerances, especially at a bound or in an ill-conditioned basis.
+    // Insufficient numerical evidence is an indeterminate result.
     for(SizeType i=0; i!=n; ++i) {
-        ARIADNE_ASSERT_MSG(decide(x[i]>=xl[i]-BOUNDS_TOLERANCE), "A="<<A<<" b="<<b<<" xl="<<xl<<" xu="<<xu<<" vt="<<vt<<" B="<<B<<" x="<<x );
-        ARIADNE_ASSERT_MSG(decide(x[i]<=xu[i]+BOUNDS_TOLERANCE), "A="<<A<<" b="<<b<<" xl="<<xl<<" xu="<<xu<<" vt="<<vt<<" B="<<B<<" x="<<x );
+        if(!decide(x[i]>=xl[i]-BOUNDS_TOLERANCE)) { return indeterminate; }
+        if(!decide(x[i]<=xu[i]+BOUNDS_TOLERANCE)) { return indeterminate; }
     }
 
     Vector<XX> Ax=A*x;
     for(SizeType i=0; i!=m; ++i) {
-        ARIADNE_ASSERT_MSG(decide(abs(Ax[i]-b[i])<RESIDUAL_TOLERANCE),
-                           "Ax="<<Ax<<", i="<<i<<", Ax[i]="<<Ax[i]<<", b[i]="<<b[i]<<", RESIDUAL_TOLERANCE="<<RESIDUAL_TOLERANCE);
+        if(!decide(abs(Ax[i]-b[i])<RESIDUAL_TOLERANCE)) { return indeterminate; }
     }
 
     LOGGING_PRINTLN("Feasible point x="<<x<<"; xl="<<xl<<", xu="<<xu<<", Ax="<<(A*x)<<", b="<<b);
