@@ -65,7 +65,15 @@ minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorM
         if(i%3==0) { mu *= 0.25_exact; }
     }
 
-    return ValidatedVectorType(exact_vector(x));
+    const ExactFloatDPVectorType candidate=exact_vector(x);
+    // The returned box is a singleton. A small numerical change, or even
+    // a certificate for a nearby root, would not prove that this point
+    // satisfies the constraints. Validate the actual returned point.
+    if(!this->is_feasible_point(D,g,C,candidate)) {
+        LOGGING_PRINTLN("Final minimisation point is not certified feasible");
+        throw IndeterminateFeasibilityException();
+    }
+    return ValidatedVectorType(candidate);
 }
 
 

@@ -271,6 +271,9 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_CALL(test_relaxation_parameter());
         ARIADNE_TEST_CALL(test_initial_feasibility_state());
         ARIADNE_TEST_CALL(test_feasible_interior_minimisation());
+        ARIADNE_TEST_CALL(test_unconstrained_minimisation());
+        ARIADNE_TEST_CALL(test_rejects_uncertified_minimum());
+        ARIADNE_TEST_CALL(test_minimisation_step_exhausts_backtracking());
         ARIADNE_TEST_CALL(test_minimisation_dimension_preconditions());
         ARIADNE_TEST_CALL(test_nonlinear_equality_minimisation_backtracking());
         ARIADNE_TEST_CALL(test_stationary_minimisation_step());
@@ -341,6 +344,9 @@ class TestNonlinearInteriorPointSolverBasics {
 
         test_disjoint_constraint_minimisation();
         test_feasible_interior_minimisation();
+        test_unconstrained_minimisation();
+        test_rejects_uncertified_minimum();
+        test_minimisation_step_exhausts_backtracking();
         test_nonlinear_equality_minimisation_backtracking();
         test_stationary_minimisation_step();
     }
@@ -399,6 +405,62 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_ASSERT(definitely(optimum[0]==FloatDPBounds(0.5_x,dp)));
         ARIADNE_TEST_ASSERT(definitely(contains(domain,optimum)));
         ARIADNE_TEST_ASSERT(definitely(contains(codomain,g(optimum))));
+    }
+
+    Void test_unconstrained_minimisation() {
+        NonlinearInteriorPointSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(x[0]-0.5_x);
+        ValidatedVectorMultivariateFunction no_constraints(0u,1u);
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        auto optimum=solver.minimise(objective,domain,no_constraints,ExactBoxType{});
+        // Vacuous constraints must not obstruct certification, and the
+        // zero-row Jacobian must retain its one-column input dimension.
+        ARIADNE_TEST_EQUAL(optimum.size(),1u);
+        ARIADNE_TEST_ASSERT(definitely(optimum[0]==FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(contains(domain,optimum)));
+        ARIADNE_TEST_ASSERT(definitely(objective(optimum)==FloatDPBounds(0.0_x,dp)));
+    }
+
+    Void test_rejects_uncertified_minimum() {
+        NonlinearInteriorPointSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(x[0]);
+        ValidatedVectorMultivariateFunction g({sqr(x[0])});
+        ExactBoxType domain({{-1.0_x,1.0_x}});
+        ExactBoxType target({{0.5_x,0.75_x}});
+        FloatDPVector feasible({0.75_x},dp);
+        FloatDPVector stationary({0.0_x},dp);
+        // The problem is feasible (x=3/4 is a witness). The iteration
+        // stays at its stationary midpoint x=0 while moving only slack
+        // and multiplier variables; g(0)=0 never reaches the target.
+        ARIADNE_TEST_ASSERT(solver.is_feasible_point(domain,g,target,feasible));
+        ARIADNE_TEST_ASSERT(!solver.is_feasible_point(domain,g,target,stationary));
+        ARIADNE_TEST_THROWS(solver.minimise(objective,domain,g,target),
+                            IndeterminateFeasibilityException);
+    }
+
+    Void test_minimisation_step_exhausts_backtracking() {
+        NonlinearInteriorPointSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedScalarMultivariateFunction objective=sqr(x[0]-0.5_x);
+        ValidatedVectorMultivariateFunction no_constraints(0u,1u);
+        ValidatedVectorMultivariateFunction equality({x[0]-Real(0x1p60_x)});
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        FloatDPApproximationVector point({0.5_x},dp);
+        FloatDPApproximationVector slack(0u,dp),kappa(0u,dp);
+        FloatDPApproximationVector lambda({0.0_x},dp);
+        const FloatDPApproximation mu(0.25_x,dp);
+        // The well-conditioned equality step targets x=2^60, outside D.
+        // No alpha above the numerical cutoff can keep the step in D.
+        // Failure must leave the caller's primal and dual state intact.
+        ARIADNE_TEST_THROWS(solver.minimisation_step(
+            objective,domain,no_constraints,ExactBoxType{},equality,
+            point,slack,kappa,lambda,mu),NearBoundaryOfFeasibleDomainException);
+        ARIADNE_TEST_ASSERT(decide(point[0]==0.5_approx));
+        ARIADNE_TEST_ASSERT(decide(lambda[0]==0.0_approx));
+        ARIADNE_TEST_EQUAL(slack.size(),0u);
+        ARIADNE_TEST_EQUAL(kappa.size(),0u);
     }
 
     Void test_nonlinear_equality_minimisation_backtracking() {
