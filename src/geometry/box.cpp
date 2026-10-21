@@ -129,7 +129,6 @@ template<class BX> using VertexType = typename BX::VertexType;
 template<class BX> void make_vertices_down(const BX& bx, SizeType i, SizeType n, VertexType<BX>& pt, std::vector<VertexType<BX>>& v);
 
 template<class BX> void make_vertices_up(const BX& bx, SizeType i, SizeType n, VertexType<BX>& pt, std::vector<VertexType<BX>>& v) {
-    ARIADNE_ASSERT(i <= n);
     if(i == n) {    // base case: we are at the last dimension of the box
         pt[i] = bx[i].lower_bound();
         v.push_back(pt);
@@ -144,7 +143,6 @@ template<class BX> void make_vertices_up(const BX& bx, SizeType i, SizeType n, V
 }
 
 template<class BX> void make_vertices_down(const BX& bx, SizeType i, SizeType n, VertexType<BX>& pt, std::vector<VertexType<BX>>& v) {
-    ARIADNE_ASSERT(i <= n);
     if(i == n) {    // base case: we are at the last dimension of the box
         pt[i] = bx[i].upper_bound();
         v.push_back(pt);
