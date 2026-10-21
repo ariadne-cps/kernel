@@ -2,6 +2,7 @@ set(UNIT_TESTS
     test_affine_sets
     test_binary_tree
     test_box
+    test_constraint_set
     test_constrained_image_set
     test_curve
     test_geometry

@@ -225,7 +225,7 @@ namespace {
 SizeType get_argument_size(const List<EffectiveConstraint>& c) {
     SizeType as = ( c.size()==0 ? 0 : c[0].function().argument_size() );
     for(SizeType i=0; i!=c.size(); ++i) {
-        ARIADNE_ASSERT_MSG(c[i].function().argument_size()==as,"c="<<c);
+        ARIADNE_PRECONDITION_MSG(c[i].function().argument_size()==as,"c="<<c);
     }
     return as;
 }
@@ -257,7 +257,7 @@ RealBox constraint_bounds(const List<EffectiveConstraint>& c) {
 }
 
 List<EffectiveConstraint> constraints(const EffectiveVectorMultivariateFunction& f, const RealBox& b) {
-    ARIADNE_ASSERT(f.result_size()==b.size());
+    ARIADNE_PRECONDITION(f.result_size()==b.size());
     List<EffectiveConstraint> c; c.reserve(b.size());
     for(SizeType i=0; i!=b.size(); ++i) {
         c.append(EffectiveConstraint(b[i].lower_bound(),f[i],b[i].upper_bound()));
@@ -385,8 +385,8 @@ BoundedConstraintSet::BoundedConstraintSet(const RealBox& bx)
 BoundedConstraintSet::BoundedConstraintSet(const RealBox& d, const EffectiveVectorMultivariateFunction& f, const RealBox& b)
     : _domain(d), _constraints(Ariadne::constraints(f,b))
 {
-    ARIADNE_ASSERT(b.size()==f.result_size());
-    ARIADNE_ASSERT(d.size()==f.argument_size());
+    // The bounds dimension is checked when constructing the constraints.
+    ARIADNE_PRECONDITION(d.size()==f.argument_size());
 }
 
 BoundedConstraintSet::BoundedConstraintSet(const RealBox& d, const List<EffectiveConstraint>& c)
@@ -514,13 +514,13 @@ intersection(const RealBox& bx,const ConstraintSet& cs)
 BoundedConstraintSet
 intersection(const BoundedConstraintSet& bcs1,const BoundedConstraintSet& bcs2)
 {
-    return BoundedConstraintSet(intersection(bcs1.constraint_bounds(),bcs2.constraint_bounds()),catenate(bcs1.constraints(),bcs2.constraints()));
+    return BoundedConstraintSet(intersection(bcs1.domain(),bcs2.domain()),catenate(bcs1.constraints(),bcs2.constraints()));
 }
 
 BoundedConstraintSet
 intersection(const BoundedConstraintSet& bcs,const RealBox& bx)
 {
-    return BoundedConstraintSet(intersection(bcs.constraint_bounds(),bx),bcs.constraints());
+    return BoundedConstraintSet(intersection(bcs.domain(),bx),bcs.constraints());
 }
 
 BoundedConstraintSet
@@ -532,7 +532,7 @@ intersection(const RealBox& bx,const BoundedConstraintSet& bcs)
 BoundedConstraintSet
 intersection(const BoundedConstraintSet& bcs,const ConstraintSet& cs)
 {
-    return BoundedConstraintSet(bcs.constraint_bounds(),catenate(bcs.constraints(),cs.constraints()));
+    return BoundedConstraintSet(bcs.domain(),catenate(bcs.constraints(),cs.constraints()));
 }
 
 BoundedConstraintSet
