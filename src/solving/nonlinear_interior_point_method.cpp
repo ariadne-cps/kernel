@@ -421,6 +421,10 @@ compute_mu(const ExactBoxType&, const ApproximateVectorMultivariateFunction& g, 
            const FloatDPApproximationVector& x, const FloatDPApproximationVector& lambda) const
 {
     // Compute the relaxation parameter mu as the average of the product of the Lyapunov exponents and constraint satisfactions
+    // With no constraints there are no multiplier contributions to
+    // average. Avoid the otherwise undefined division by C.size()==0.
+    if(C.size()==0u) { return FloatDPApproximation(0.0_x,dp); }
+
     FloatDPApproximation mu=zero;
     FloatDPApproximationVector gx = g(x);
 

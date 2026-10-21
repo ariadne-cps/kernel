@@ -502,6 +502,14 @@ class TestNonlinearInteriorPointSolverBasics {
         ExactBoxType upper_bounded({{-inf,0.75_x}});
         ExactBoxType lower_bounded({{0.25_x,inf}});
         ExactBoxType bounded({{0.25_x,0.75_x}});
+        ValidatedVectorMultivariateFunction no_constraints(0u,1u);
+        ExactBoxType empty_codomain(0u);
+        FloatDPApproximationVector no_multipliers(0u,dp);
+
+        // The average over an empty constraint family is defined as
+        // zero; it must not evaluate a 0/0 expression.
+        ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
+            domain,no_constraints,empty_codomain,point,no_multipliers)==0.0_approx));
 
         ARIADNE_TEST_ASSERT(decide(solver.compute_mu(
             domain,constraints,equality,point,positive_multiplier)==0.0_approx));
