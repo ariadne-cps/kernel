@@ -2111,14 +2111,5 @@ Int main(Int argc, const char* argv[]) {
     TestNonlinearPenaltyFunctionSolver().test();
     TestApproximateNonlinearInteriorPointSolver().test();
     return ARIADNE_TEST_FAILURES;
-    NonlinearInteriorPointSolver nlo;
-    TestNonlinearProgrammingSolver(nlo).test();
-
-    ApproximateNonlinearInteriorPointSolver appo;
-    TestNonlinearProgrammingSolver(appo).test_nonlinear_equality_feasibility();
-
-    IntervalNonlinearInteriorPointSolver ivlo;
-    TestNonlinearProgrammingSolver(ivlo).test_nonlinear_equality_feasibility();
-    return ARIADNE_TEST_FAILURES;
 }
 
