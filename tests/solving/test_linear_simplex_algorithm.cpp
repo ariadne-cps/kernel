@@ -58,6 +58,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_lpstep_entering_index_contracts());
         ARIADNE_TEST_CALL(test_approximate_lpstep_without_leaving_variable());
         ARIADNE_TEST_CALL(test_single_variable_infeasibility());
+        ARIADNE_TEST_CALL(test_approximate_infeasible_equality());
         ARIADNE_TEST_CALL(test_feasibility_iteration_budget());
         ARIADNE_TEST_CALL(test_optimum_on_last_permitted_iteration());
         ARIADNE_TEST_CALL(test_optimisation_iteration_budget());
@@ -130,6 +131,7 @@ class TestLinearSimplexSolver
         test_validated_feasibility_without_finite_leaving_bound();
         test_validated_feasibility_stationary_at_boundary();
         test_single_variable_infeasibility();
+        test_approximate_infeasible_equality();
         test_hotstarted_basis_initialisation();
         test_upper_only_nonbasic_bounds();
     }
@@ -991,6 +993,22 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(not solver.validated_feasible(xl,xu,A,above)));
         ARIADNE_TEST_ASSERT(definitely(not solver.feasible(xl,xu,A,below)));
         ARIADNE_TEST_ASSERT(definitely(not solver.validated_feasible(xl,xu,A,below)));
+    }
+
+    Void test_approximate_infeasible_equality() {
+        // The unique solution of x=-1 is outside [0,1]. Exercise the
+        // generic approximate-arithmetic phase and its diagnostics. The
+        // separate interval-style validator cannot certify approximate
+        // comparisons, so its own result remains indeterminate.
+        LinearSimplexSolver<FloatDPApproximation> solver;
+        Matrix<FloatDPApproximation> A({{1.0_x}},dp);
+        Vector<FloatDPApproximation> rhs({-1.0_x},dp);
+        Vector<FloatDPApproximation> lower({0.0_x},dp);
+        Vector<FloatDPApproximation> upper({1.0_x},dp);
+        Array<Slackness> types({Slackness::BASIS});
+        ARIADNE_TEST_ASSERT(definitely(not solver.feasible(lower,upper,A,rhs)));
+        ARIADNE_TEST_ASSERT(is_indeterminate(
+            solver.verify_feasibility(lower,upper,A,rhs,types)));
     }
 
     Void test_feasibility_iteration_budget() {
