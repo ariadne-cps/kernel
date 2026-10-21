@@ -1764,6 +1764,71 @@ class TestNonlinearPenaltyFunctionSolver
 };
 
 
+
+class TestApproximateNonlinearInteriorPointSolver {
+  public:
+    Void test() {
+        ARIADNE_TEST_CALL(test_stationary_zero());
+        ARIADNE_TEST_CALL(test_affine_zero());
+        ARIADNE_TEST_CALL(test_excluded_zero());
+        ARIADNE_TEST_CALL(test_slow_convergence());
+        ARIADNE_TEST_CALL(test_logging_diagnostics());
+    }
+
+    Void test_stationary_zero() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        // The midpoint already solves the equality; its Newton steps
+        // leave both the primal variable and multiplier stationary.
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible_zero(
+            ExactBoxType({{-1.0_x,1.0_x}}),
+            ValidatedVectorMultivariateFunction({x[0]}))));
+    }
+
+    Void test_affine_zero() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(2);
+        // An underdetermined affine equality has interior solutions.
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible_zero(
+            ExactBoxType({{-1.0_x,1.0_x},{-1.0_x,1.0_x}}),
+            ValidatedVectorMultivariateFunction({x[0]+2*x[1]-1}))));
+    }
+
+    Void test_excluded_zero() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        // The full Newton step targets x=2 outside D. Backtracking
+        // stays in D, and the final multiplier separates h(D) from zero.
+        ARIADNE_TEST_ASSERT(definitely(!solver.feasible_zero(
+            ExactBoxType({{-1.0_x,1.0_x}}),
+            ValidatedVectorMultivariateFunction({x[0]-2}))));
+    }
+
+    Void test_slow_convergence() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        // Newton iteration for x^3 divides x by 3/2. Starting at 1/2,
+        // eight steps do not meet the tolerance, and h(D) includes zero.
+        ARIADNE_TEST_ASSERT(is_indeterminate(solver.feasible_zero(
+            ExactBoxType({{-1.0_x,2.0_x}}),
+            ValidatedVectorMultivariateFunction({pow(x[0],3)}))));
+    }
+
+    Void test_logging_diagnostics() {
+        auto& configuration=Logger::instance().configuration();
+        struct RestoreVerbosity {
+            unsigned int value;
+            ~RestoreVerbosity() {
+                Logger::instance().configuration().set_verbosity(value);
+            }
+        } restore{configuration.verbosity()};
+        configuration.set_verbosity(10u);
+        // Diagnostics must preserve the result of both convergence
+        // and a backtracked, infeasible iteration.
+        test_affine_zero();
+        test_excluded_zero();
+    }
+  private:
+    ApproximateNonlinearInteriorPointSolver solver;
+};
+
+
 Void test_nonlinear_header_contracts()
 {
     const IndeterminateFeasibilityException indeterminate_exception;
@@ -1929,6 +1994,7 @@ Int main(Int argc, const char* argv[]) {
     TestNonlinearInfeasibleInteriorPointSolver().test();
     TestNonlinearInteriorPointSolverBasics().test();
     TestNonlinearPenaltyFunctionSolver().test();
+    TestApproximateNonlinearInteriorPointSolver().test();
     return ARIADNE_TEST_FAILURES;
     NonlinearInteriorPointSolver nlo;
     TestNonlinearProgrammingSolver(nlo).test();

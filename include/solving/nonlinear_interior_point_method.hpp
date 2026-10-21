@@ -141,8 +141,11 @@ class IntervalNonlinearInteriorPointSolver
 class ApproximateNonlinearInteriorPointSolver
     : public NonlinearInteriorPointSolver
 {
+  public:
     virtual ApproximateNonlinearInteriorPointSolver* clone() const { return new ApproximateNonlinearInteriorPointSolver(*this); }
+    //! \brief Test whether h has a zero in the bounded box D with nonempty interior.
     virtual ValidatedKleenean feasible_zero(ExactBoxType D, ValidatedVectorMultivariateFunction h) const;
+  private:
     Void feasibility_step(const ExactBoxType& D, const ApproximateVectorMultivariateFunction& h,
                           FloatDPApproximationVector& X, FloatDPApproximationVector& Lambda) const;
 };
