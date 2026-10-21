@@ -264,6 +264,15 @@ inline Void test_binary_tree() {
     left_destination.add_enabled(&source_subtree,subtreePath);
     ARIADNE_TEST_EQUAL(left_destination.is_enabled(subtreePath),true);
 
+    ARIADNE_PRINT_TEST_COMMENT("Adding an enabled subtree along a right-hand path");
+    BinaryWord rightSubtreePath;
+    rightSubtreePath.push_back(true);
+    BinaryTreeNode right_destination(false);
+    right_destination.add_enabled(&source_subtree,rightSubtreePath);
+    ARIADNE_TEST_EQUAL(right_destination.is_leaf(),false);
+    ARIADNE_TEST_EQUAL(right_destination.left_node()->is_disabled(),true);
+    ARIADNE_TEST_EQUAL(right_destination.right_node()->is_enabled(),true);
+
     ARIADNE_PRINT_TEST_COMMENT("Testing intersect/subset short-circuit outcomes");
     BinaryTreeNode disabled_subtree(false);
     disabled_subtree.split();
