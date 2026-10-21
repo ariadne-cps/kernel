@@ -459,7 +459,7 @@ compute_x(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Ve
 {
     const SizeType m=A.row_size();
     const SizeType n=A.column_size();
-    ARIADNE_ASSERT_MSG(p.size()==n, "vt="<<vt<<", p="<<p);
+    ARIADNE_PRECONDITION_MSG(p.size()==n, "vt="<<vt<<", p="<<p);
 
     Vector<XX> w(m,B.zero_element());
     Vector<XX> x(n,B.zero_element());
@@ -490,7 +490,7 @@ compute_x(const Vector<X>& xl, const Vector<X>& xu, const Matrix<X>& A, const Ve
     }
     Vector<XX> Ax=Matrix<XX>(A)*x;
     Vector<XX> Axmb=Ax-Vector<XX>(b);
-    ARIADNE_ASSERT_MSG(decide(norm(Axmb)*10000<=1),"A="<<A<<", b="<<b<<", xl="<<xl<<", xu="<<xu<<", vt="<<vt<<", p="<<p<<", x="<<x<<", Ax="<<Ax);
+    ARIADNE_PRECONDITION_MSG(decide(norm(Axmb)*10000<=1),"A="<<A<<", b="<<b<<", xl="<<xl<<", xu="<<xu<<", vt="<<vt<<", p="<<p<<", x="<<x<<", Ax="<<Ax);
     return x;
 }
 
@@ -1136,7 +1136,7 @@ LinearSimplexSolver<X>::compute_x(const Vector<X>& xl, const Vector<X>& xu, cons
     Array<SizeType> p=compute_p(vt);
     Matrix<XX> B = Ariadne::compute_B<X>(A,p);
     Vector<RigorousNumericType<X>> x=Ariadne::compute_x(xl,xu,A,b, vt,p,B);
-    ARIADNE_ASSERT_MSG(not is_nan(x), "x="<<x);
+    ARIADNE_PRECONDITION_MSG(not is_nan(x), "x="<<x);
     return x;
 }
 

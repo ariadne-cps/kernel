@@ -79,6 +79,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_consistency_check_variable_types());
         ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
         ARIADNE_TEST_CALL(test_consistency_check_rejects_inconsistent_states());
+        ARIADNE_TEST_CALL(test_point_reconstruction_input_contracts());
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
         ARIADNE_TEST_CALL(test_compute_basis_tall_matrix_precondition());
         ARIADNE_TEST_CALL(test_compute_basis_unit_columns());
@@ -449,6 +450,40 @@ class TestLinearSimplexSolver
         Array<Slackness> invalid_nonbasic({Slackness::BASIS,Slackness::FIXED});
         ARIADNE_TEST_FAIL(solver.consistency_check(
             lower,upper,A,rhs,invalid_nonbasic,p,inverse,primal));
+    }
+
+    Void test_point_reconstruction_input_contracts() {
+        LinearSimplexSolver<FloatDPApproximation> solver;
+        Matrix<FloatDPApproximation> A({{1.0_x,0.0_x}},dp);
+        Vector<FloatDPApproximation> rhs({0.5_x},dp);
+        Vector<FloatDPApproximation> lower({0.0_x,0.0_x},dp);
+        Vector<FloatDPApproximation> upper({1.0_x,1.0_x},dp);
+        Array<Slackness> incomplete_types({Slackness::BASIS});
+        ARIADNE_TEST_FAIL(solver.compute_x(lower,upper,A,rhs,incomplete_types));
+
+        // A warm-start inverse must reconstruct Ax=b to the stated
+        // tolerance. This small relative error in B passes the inverse
+        // check, but produces an unacceptable residual for a large rhs.
+        Matrix<FloatDPApproximation> one_variable({{1.0_x}},dp);
+        Vector<FloatDPApproximation> large_rhs({1073741824.0_x},dp);
+        Vector<FloatDPApproximation> large_lower({0.0_x},dp);
+        Vector<FloatDPApproximation> large_upper({2147483648.0_x},dp);
+        Vector<FloatDPApproximation> costs({0.0_x},dp);
+        Array<Slackness> types({Slackness::BASIS});
+        Array<SizeType> p({0u});
+        Matrix<FloatDPApproximation> inaccurate_inverse({{1.0000000000009094947017729282379150390625_x}},dp);
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(one_variable,p,inaccurate_inverse));
+        ARIADNE_TEST_FAIL(solver.hotstarted_minimise(costs,large_lower,large_upper,
+            one_variable,large_rhs,types,p,inaccurate_inverse));
+
+        // With no equations, a NaN nonbasic bound reaches the point
+        // reconstruction check without any invalid indexing or arithmetic.
+        Matrix<FloatDPApproximation> no_equations(0u,1u,FloatDPApproximation(0.0_x,dp));
+        Vector<FloatDPApproximation> no_rhs(0u,dp);
+        Vector<FloatDPApproximation> nan_lower(1u,FloatDPApproximation(FloatDP::nan(dp)));
+        Vector<FloatDPApproximation> finite_upper({1.0_x},dp);
+        Array<Slackness> nonbasic({Slackness::LOWER});
+        ARIADNE_TEST_FAIL(solver.compute_x(nan_lower,finite_upper,no_equations,no_rhs,nonbasic));
     }
 
     Void test_invalid_partial_basis_permutations() {
