@@ -489,7 +489,6 @@ class TestNonlinearProgrammingSolver
     Void test_feasibility_dimension_preconditions() {
         // The public feasibility API must reject mismatched dimensions
         // before numerical initialisation or an iterative solver step.
-        NonlinearInteriorPointSolver solver;
         auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
         ValidatedVectorMultivariateFunction g({coordinates[0]});
         ExactBoxType domain({{0.0_x,1.0_x}});
@@ -505,7 +504,6 @@ class TestNonlinearProgrammingSolver
         // Independent public input contracts: objective arguments,
         // constraint arguments and the number of constraint bounds.
         // Reject each mismatch before evaluating the nonlinear system.
-        NonlinearInteriorPointSolver solver;
         auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
         auto coordinates2=ValidatedScalarMultivariateFunction::coordinates(2);
         ValidatedScalarMultivariateFunction f=sqr(coordinates[0]-0.5_x);
@@ -528,7 +526,6 @@ class TestNonlinearProgrammingSolver
         // The midpoint solves g(x)=0 strictly inside both boxes.
         // The iterative penalty feasibility routine should preserve
         // this exact stationary solution.
-        NonlinearPenaltyFunctionSolver solver;
         auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
         ValidatedVectorMultivariateFunction g({coordinate[0]});
         ExactBoxType domain({{-1.0_x,1.0_x}});
@@ -540,7 +537,6 @@ class TestNonlinearProgrammingSolver
     Void test_one_sided_codomain_feasibility() {
         // The initial slack point is chosen one unit inside the only
         // finite codomain bound, avoiding an infinite midpoint.
-        NonlinearPenaltyFunctionSolver solver;
         auto coordinates=ValidatedScalarMultivariateFunction::coordinates(1);
         ValidatedVectorMultivariateFunction g({coordinates[0]});
         ExactBoxType domain({{-1.0_x,1.0_x}});
@@ -556,7 +552,6 @@ class TestNonlinearProgrammingSolver
         // value must be finite (zero), not the midpoint of [-inf,+inf].
         // g(x)=x at the domain midpoint is feasible independently of
         // how far the unconstrained slack variable may range.
-        NonlinearPenaltyFunctionSolver solver;
         auto coordinate=ValidatedScalarMultivariateFunction::coordinates(1);
         ValidatedVectorMultivariateFunction g({coordinate[0]});
         ExactBoxType domain({{-1.0_x,1.0_x}});
