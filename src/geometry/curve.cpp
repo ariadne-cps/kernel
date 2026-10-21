@@ -39,9 +39,6 @@
 
 namespace Ariadne {
 
-template<class F> inline const Point<F>& cast_exact(const Point<Approximation<F>>& t) {
-    return reinterpret_cast<const Point<F>&>(t); }
-
 template<> double numeric_cast(const CheckedAssignable<Approximation<FloatDP>>& a) { return a.get_d(); }
 template<> double numeric_cast(const CheckedAssignable<Approximation<FloatMP>>& a) { return a.get_d(); }
 
@@ -132,11 +129,18 @@ InterpolatedCurve::insert(const RawFloatDP& s, const Vector<RawFloatDP>& pt) {
 UpperBoxType
 InterpolatedCurve::bounding_box() const
 {
-    auto pt=cast_exact(this->_points.begin()->second);
-    ExactBoxType bx(pt);
+    // Approximation<FloatDP> stores a raw FloatDP, but the enclosing
+    // Point objects are not interchangeable by reinterpret_cast.
+    // Convert each scalar explicitly to preserve type safety.
+    const PointType& first=this->_points.begin()->second;
+    ExactBoxType bx(this->dimension());
+    for(SizeType i=0; i!=bx.dimension(); ++i) {
+        bx[i]=ExactIntervalType(cast_exact(first[i]));
+    }
     for(ConstIterator iter=this->_points.begin(); iter!=this->_points.end(); ++iter) {
-        pt=cast_exact(iter->second);
-        bx=hull(bx,pt);
+        for(SizeType i=0; i!=bx.dimension(); ++i) {
+            bx[i]=hull(bx[i],cast_exact(iter->second[i]));
+        }
     }
     return bx;
 }

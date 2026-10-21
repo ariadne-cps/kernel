@@ -68,6 +68,11 @@ Void test_interpolated_curve() {
     ARIADNE_TEST_EQUALS(box.dimension(),2u);
     ARIADNE_TEST_PRINT(box);
     ARIADNE_TEST_ASSERT(definitely(subset(box,ExactBoxType({{-2.0_x,4.0_x},{1.0_x,6.0_x}}))));
+    // All three points must contribute to the range, including the final one.
+    ARIADNE_TEST_ASSERT(std::abs(box[0].lower_bound().raw().get_d()+1.0)<1e-8);
+    ARIADNE_TEST_ASSERT(std::abs(box[0].upper_bound().raw().get_d()-3.0)<1e-8);
+    ARIADNE_TEST_ASSERT(std::abs(box[1].lower_bound().raw().get_d()-2.0)<1e-8);
+    ARIADNE_TEST_ASSERT(std::abs(box[1].upper_bound().raw().get_d()-5.0)<1e-8);
 
     std::unique_ptr<InterpolatedCurve> cloned(curve.clone());
     ARIADNE_TEST_EQUALS(cloned->size(),3u);
