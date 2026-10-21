@@ -123,20 +123,20 @@ consistency_check(const Array<Slackness>& vt, const Array<SizeType>& p)
     if(p.size()!=vt.size()) {
         const SizeType m=p.size();
         const SizeType n=vt.size();
-        ARIADNE_ASSERT(m<n);
+        ARIADNE_PRECONDITION(m<n);
         for(SizeType i=0; i!=m; ++i) {
-            ARIADNE_ASSERT_MSG(p[i]<n && vt[p[i]]==Slackness::BASIS, "vt="<<vt<<" p="<<p);
+            ARIADNE_PRECONDITION_MSG(p[i]<n && vt[p[i]]==Slackness::BASIS, "vt="<<vt<<" p="<<p);
         }
         return m;
     } else {
         const SizeType n=vt.size();
         SizeType m=0;
         for(; m!=n; ++m) {
-            ARIADNE_ASSERT_MSG(p[m]<n, "vt="<<vt<<" p="<<p);
+            ARIADNE_PRECONDITION_MSG(p[m]<n, "vt="<<vt<<" p="<<p);
             if(vt[p[m]]!=Slackness::BASIS) { break; }
         }
         for(SizeType i=m; i!=n; ++i) {
-            ARIADNE_ASSERT_MSG(p[i]<n && vt[p[i]]!=Slackness::BASIS, "vt="<<vt<<" p="<<p);
+            ARIADNE_PRECONDITION_MSG(p[i]<n && vt[p[i]]!=Slackness::BASIS, "vt="<<vt<<" p="<<p);
         }
         return m;
     }
@@ -170,7 +170,7 @@ LinearSimplexSolver<X>::consistency_check(const Matrix<X>& A, const Array<SizeTy
     Matrix<XX> Z=B*A_B;
     LOGGING_PRINTLN_AT(1,"p_B="<<p_B<<" B="<<B<<" A_B="<<A_B<<" B*A_B-I="<<Z);
     for(SizeType i=0; i!=m; ++i) { Z[i][i]-=1; }
-    ARIADNE_ASSERT_MSG(decide(norm(Z)<MAXIMUM_ERROR), "A="<<A<<"\np="<<p<<"\nB="<<B<<"\nZ=B*A_B-I="<<Z<<"\nnorm(Z)="<<norm(Z));
+    ARIADNE_PRECONDITION_MSG(decide(norm(Z)<MAXIMUM_ERROR), "A="<<A<<"\np="<<p<<"\nB="<<B<<"\nZ=B*A_B-I="<<Z<<"\nnorm(Z)="<<norm(Z));
 }
 
 
@@ -181,7 +181,7 @@ LinearSimplexSolver<X>::consistency_check(const Matrix<X>& A, const Vector<X>& b
 {
     const ExactDouble MAXIMUM_ERROR=ERROR_TOLERANCE;
     Vector<XX> z=A*x-b;
-    ARIADNE_ASSERT(decide(norm(z)<MAXIMUM_ERROR));
+    ARIADNE_PRECONDITION(decide(norm(z)<MAXIMUM_ERROR));
 }
 
 
@@ -210,20 +210,20 @@ LinearSimplexSolver<X>::consistency_check(const Vector<X>& xl, const Vector<X>& 
     LOGGING_PRINTLN("p_B="<<p_B<<" B="<<B<<" A_B="<<A_B<<" B*A_B="<<I);
     Matrix<XX> Z=I;
     for(SizeType i=0; i!=m; ++i) { Z[i][i]-=1; }
-    ARIADNE_ASSERT_MSG(decide(norm(Z)*10000<=1),"vt="<<vt<<" p_B="<<p_B<<" B="<<B<<" A_B="<<A_B<<" B*A_B="<<I);
+    ARIADNE_PRECONDITION_MSG(decide(norm(Z)*10000<=1),"vt="<<vt<<" p_B="<<p_B<<" B="<<B<<" A_B="<<A_B<<" B*A_B="<<I);
 
     Vector<XX> Ax=A*x;
     LOGGING_PRINTLN("A="<<A<<" x="<<x<<" b="<<b<<" Ax="<<Ax);
 
     for(SizeType k=m; k!=n; ++k) {
         SizeType j=p[k];
-        ARIADNE_ASSERT_MSG(vt[j]==Slackness::LOWER || vt[j]==Slackness::UPPER,
+        ARIADNE_PRECONDITION_MSG(vt[j]==Slackness::LOWER || vt[j]==Slackness::UPPER,
                            "vt["<<j<<"]="<<vt[j]<<"\n  A="<<A<<", b="<<b<<", xl="<<xl<<", xu="<<xu<<", vt="<<vt<<", p="<<p<<", x="<<x<<", Ax="<<Ax);
         XX xj = (vt[j]==Slackness::LOWER ? xl[j] : xu[j]);
-        ARIADNE_ASSERT_MSG(decide(x[j]==xj),"x["<<j<<"]="<<x[j]<<" xj="<<xj<<"\n  A="<<A<<", b="<<b<<", xl="<<xl<<", xu="<<xu<<", vt="<<vt<<", p="<<p<<", x="<<x<<", Ax="<<Ax);
+        ARIADNE_PRECONDITION_MSG(decide(x[j]==xj),"x["<<j<<"]="<<x[j]<<" xj="<<xj<<"\n  A="<<A<<", b="<<b<<", xl="<<xl<<", xu="<<xu<<", vt="<<vt<<", p="<<p<<", x="<<x<<", Ax="<<Ax);
     }
     Vector<XX> Axmb = Ax-b;
-    ARIADNE_ASSERT_MSG(decide(norm(Axmb)*10000<=1),"A="<<A<<", b="<<b<<", xl="<<xl<<", xu="<<xu<<", vt="<<vt<<", p="<<p<<", x="<<x<<", Ax="<<Ax);
+    ARIADNE_PRECONDITION_MSG(decide(norm(Axmb)*10000<=1),"A="<<A<<", b="<<b<<", xl="<<xl<<", xu="<<xu<<", vt="<<vt<<", p="<<p<<", x="<<x<<", Ax="<<Ax);
 }
 
 

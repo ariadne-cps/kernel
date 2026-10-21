@@ -73,6 +73,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_invalid_partial_basis_permutations());
         ARIADNE_TEST_CALL(test_consistency_check_variable_types());
         ARIADNE_TEST_CALL(test_consistency_check_nonsquare_system());
+        ARIADNE_TEST_CALL(test_consistency_check_rejects_inconsistent_states());
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
         ARIADNE_TEST_CALL(test_compute_basis_tall_matrix_precondition());
         ARIADNE_TEST_CALL(test_compute_basis_unit_columns());
@@ -395,6 +396,42 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(
             x[0]+x[1]==FloatDPBounds(1.0_x,dp)));
         ARIADNE_TEST_EXECUTE(solver.consistency_check(A,b,x));
+    }
+
+    Void test_consistency_check_rejects_inconsistent_states() {
+        // These public diagnostics accept caller-supplied basis and primal
+        // data. Reject each inconsistent component independently.
+        LinearSimplexSolver<FloatDP> solver;
+        Array<Slackness> types({Slackness::BASIS,Slackness::LOWER});
+        Array<SizeType> p({0u,1u});
+        Array<SizeType> too_long({0u,1u,0u});
+        Array<SizeType> bad_prefix({2u,1u});
+        Array<SizeType> bad_suffix({0u,2u});
+        Array<SizeType> partial_outside({2u});
+        Array<SizeType> partial_nonbasic({1u});
+        ARIADNE_TEST_FAIL(solver.consistency_check(types,too_long));
+        ARIADNE_TEST_FAIL(solver.consistency_check(types,bad_prefix));
+        ARIADNE_TEST_FAIL(solver.consistency_check(types,bad_suffix));
+        ARIADNE_TEST_FAIL(solver.consistency_check(types,partial_outside));
+        ARIADNE_TEST_FAIL(solver.consistency_check(types,partial_nonbasic));
+
+        Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDP> rhs({0.5_x},dp);
+        Vector<FloatDP> lower({0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({1.0_x,1.0_x},dp);
+        Matrix<FloatDPBounds> inverse({{1.0_x}},dp);
+        Matrix<FloatDPBounds> wrong_inverse({{2.0_x}},dp);
+        Vector<FloatDPBounds> primal({0.5_x,0.0_x},dp);
+        Vector<FloatDPBounds> wrong_bound({0.25_x,0.25_x},dp);
+        Vector<FloatDPBounds> wrong_residual({0.75_x,0.0_x},dp);
+        ARIADNE_TEST_FAIL(solver.consistency_check(A,p,wrong_inverse));
+        ARIADNE_TEST_FAIL(solver.consistency_check(A,rhs,wrong_residual));
+        ARIADNE_TEST_FAIL(solver.consistency_check(
+            lower,upper,A,rhs,types,p,wrong_inverse,primal));
+        ARIADNE_TEST_FAIL(solver.consistency_check(
+            lower,upper,A,rhs,types,p,inverse,wrong_bound));
+        ARIADNE_TEST_FAIL(solver.consistency_check(
+            lower,upper,A,rhs,types,p,inverse,wrong_residual));
     }
 
     Void test_invalid_partial_basis_permutations() {
