@@ -25,6 +25,7 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <sstream>
 #include "geometry/paving_interface.hpp"
 #include "geometry/grid_paving.hpp"
 #include "function/function.hpp"
@@ -302,8 +303,122 @@ Void TestPaving::test_approximation() const {
 }
 
 
+class NonnegativePredicate : public PredicateInterface<ExactBoxType> {
+  public:
+    ValidatedKleenean check(const ExactBoxType& box) override { return box[0].lower_bound()>=FloatDP(0,dp); }
+};
+
+Void test_paving_handle_forwarding() {
+    Grid grid(1u);
+    GridTreePaving native(grid);
+    GridCell root(grid,0u,BinaryWord());
+    GridCell left(grid,0u,BinaryWord("0"));
+    GridCell right(grid,0u,BinaryWord("1"));
+    native.adjoin(root);
+    native.mince(1u);
+    const SubPavingInterface& native_interface=native;
+    PavingHandle paving(native_interface);
+    PavingHandle copied(paving);
+    PavingHandle owned(new GridTreePaving(grid));
+    owned=copied;
+    const PavingHandle& alias=owned;
+    owned=alias;
+    const PavingHandle& const_owned=owned;
+    const PavingInterface& const_interface=const_owned;
+    ARIADNE_TEST_EQUALS(const_owned.grid(),grid);
+    ARIADNE_TEST_EQUALS(const_owned.size(),2u);
+    ARIADNE_TEST_ASSERT(const_owned.superset(left));
+    ARIADNE_TEST_ASSERT(const_owned.subset(native_interface));
+    ARIADNE_TEST_ASSERT(const_owned.intersects(native_interface));
+    ARIADNE_TEST_ASSERT(const_owned.root_cell()==root);
+    ARIADNE_TEST_ASSERT(const_interface==native_interface);
+    ARIADNE_TEST_ASSERT(subset(const_interface,native_interface));
+    ARIADNE_TEST_ASSERT(intersect(const_interface,native_interface));
+    auto iter=const_owned.begin();
+    auto old=iter++;
+    ARIADNE_TEST_ASSERT(*old==left);
+    ARIADNE_TEST_ASSERT(iter->box()==right.box());
+    old=iter;
+    const auto& old_alias=old;
+    old=old_alias;
+    ARIADNE_TEST_ASSERT(old==iter);
+    ARIADNE_TEST_ASSERT(old!=const_owned.end());
+    ++iter;
+    ARIADNE_TEST_ASSERT(iter==const_owned.end());
+    auto native_iterator=native.begin();
+    ForwardConstantIteratorHandle<GridCell> adapted(static_cast<const ForwardConstantIteratorInterface<GridCell>&>(native_iterator));
+    ARIADNE_TEST_ASSERT(*adapted==left);
+    std::ostringstream repr;
+    repr<<adapted<<old<<const_owned;
+    auto& mutable_interface=static_cast<PavingInterface&>(paving);
+    SubPavingHandle sub=mutable_interface.branch(false);
+    SubPavingHandle sub_copy(sub);
+    SubPavingHandle from_interface(static_cast<const SubPavingInterface&>(sub));
+    sub_copy=from_interface;
+    const SubPavingHandle& sub_alias=sub_copy;
+    sub_copy=sub_alias;
+    const SubPavingHandle& const_sub=sub;
+    const SubPavingInterface& const_sub_interface=const_sub;
+    ARIADNE_TEST_EQUALS(const_sub_interface.size(),1u);
+    ARIADNE_TEST_EQUALS(const_sub.grid(),grid);
+    ARIADNE_TEST_EQUALS(const_sub.size(),1u);
+    ARIADNE_TEST_ASSERT(const_sub.root_cell()==left);
+    ARIADNE_TEST_ASSERT(const_sub.superset(left));
+    ARIADNE_TEST_ASSERT(const_sub.subset(native_interface));
+    ARIADNE_TEST_ASSERT(const_sub.intersects(native_interface));
+    ARIADNE_TEST_ASSERT(const_sub.begin()!=const_sub.end());
+    ARIADNE_TEST_EQUALS(const_sub.bounding_box().dimension(),1u);
+    ExactBoxType large{{-1.0_x,2.0_x}};
+    ExactBoxType far{{3.0_x,4.0_x}};
+    ExactBoxType middle{{0.125_x,0.375_x}};
+    ARIADNE_TEST_ASSERT(definitely(const_sub.inside(large)));
+    ARIADNE_TEST_ASSERT(definitely(const_sub.separated(far)));
+    ARIADNE_TEST_ASSERT(definitely(const_sub.overlaps(middle)));
+    repr<<const_sub;
+    sub_copy.mince(2u);
+    sub_copy.recombine();
+    sub_copy.set_root_cell(false);
+    ARIADNE_TEST_EQUALS(sub_copy.size(),0u);
+    ARIADNE_TEST_EQUALS(const_sub.size(),1u);
+    paving.set_root_cell(true);
+    ARIADNE_TEST_EQUALS(paving.bounding_box().dimension(),1u);
+    ARIADNE_TEST_ASSERT(definitely(paving.inside(large)));
+    ARIADNE_TEST_ASSERT(definitely(paving.separated(far)));
+    ARIADNE_TEST_ASSERT(definitely(paving.overlaps(middle)));
+    paving.remove(right);
+    ARIADNE_TEST_ASSERT(!paving.superset(right));
+    paving.adjoin(right);
+    ARIADNE_TEST_ASSERT(paving.superset(right));
+    paving.remove(native_interface);
+    ARIADNE_TEST_EQUALS(paving.size(),0u);
+    paving.adjoin(native_interface);
+    paving.restrict(native_interface);
+    ARIADNE_TEST_ASSERT(paving.subset(native_interface));
+    ARIADNE_TEST_ASSERT(join(native_interface,native_interface).superset(left));
+    ARIADNE_TEST_ASSERT(geometric_union(native_interface,native_interface).superset(left));
+    ARIADNE_TEST_ASSERT(intersection(native_interface,native_interface).superset(left));
+    ARIADNE_TEST_EQUALS(difference(native_interface,native_interface).size(),0u);
+    owned.set_root_cell(false);
+    ExactBoxSetType set(ExactBoxType{{0.125_x,0.875_x}});
+    const EffectiveEuclideanCompactSetInterface& compact=set;
+    const EffectiveEuclideanOpenSetInterface& open=set;
+    const EffectiveEuclideanSetInterface& generic=set;
+    owned.adjoin_outer_approximation(compact,2u);
+    ARIADNE_TEST_ASSERT(owned.size()>0u);
+    owned.set_root_cell(false);
+    owned.adjoin_inner_approximation(open,0u,2u);
+    ARIADNE_TEST_ASSERT(owned.size()>0u);
+    owned.set_root_cell(false);
+    owned.adjoin_inner_approximation(generic,2u);
+    ARIADNE_TEST_ASSERT(owned.size()>0u);
+    NonnegativePredicate predicate;
+    ARIADNE_TEST_THROWS(owned.adjoin_cells(predicate,2u),std::runtime_error);
+    ARIADNE_TEST_ASSERT(!repr.str().empty());
+}
+
 Int main()
 {
+    ARIADNE_TEST_CALL(test_paving_handle_forwarding());
     TestPaving().test();
     return ARIADNE_TEST_FAILURES;
 }
