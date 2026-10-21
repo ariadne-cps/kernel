@@ -425,6 +425,9 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_FAIL(solver.consistency_check(types,bad_suffix));
         ARIADNE_TEST_FAIL(solver.consistency_check(types,partial_outside));
         ARIADNE_TEST_FAIL(solver.consistency_check(types,partial_nonbasic));
+        Array<Slackness> separated_basis({Slackness::BASIS,Slackness::LOWER,Slackness::BASIS});
+        Array<SizeType> wrong_order({0u,1u,2u});
+        ARIADNE_TEST_FAIL(solver.consistency_check(separated_basis,wrong_order));
 
         Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
         Vector<FloatDP> rhs({0.5_x},dp);
@@ -443,6 +446,9 @@ class TestLinearSimplexSolver
             lower,upper,A,rhs,types,p,inverse,wrong_bound));
         ARIADNE_TEST_FAIL(solver.consistency_check(
             lower,upper,A,rhs,types,p,inverse,wrong_residual));
+        Array<Slackness> invalid_nonbasic({Slackness::BASIS,Slackness::FIXED});
+        ARIADNE_TEST_FAIL(solver.consistency_check(
+            lower,upper,A,rhs,invalid_nonbasic,p,inverse,primal));
     }
 
     Void test_invalid_partial_basis_permutations() {
@@ -603,6 +609,12 @@ class TestLinearSimplexSolver
         fixed_basic[0]=Slackness::BASIS;
         ARIADNE_TEST_FAIL(solver.verify_feasibility(
             fixed_value,fixed_value,one_variable_A,fixed_value,fixed_basic));
+
+        // A singleton is permitted for a nonbasic variable: x1=0
+        // leaves the basic x0=1/2 strictly inside its own bounds.
+        Vector<FloatDP> fixed_nonbasic_upper({1.0_x,0.0_x},dp);
+        ARIADNE_TEST_ASSERT(definitely(solver.verify_feasibility(
+            lower,fixed_nonbasic_upper,A,rhs,types)));
     }
 
     Void test_verify_feasibility_basic_statuses() {
