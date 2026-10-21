@@ -24,6 +24,7 @@
 
 #include "numeric/module.hpp"
 #include "geometry/box.hpp"
+#include "function/function.hpp"
 
 #include "macro/testing.hpp"
 
@@ -49,6 +50,49 @@ template<class BX> class TestBoxType {
     void test() {
         ARIADNE_TEST_CALL(test_geometric_predicates());
         ARIADNE_TEST_CALL(test_vertices());
+        ARIADNE_TEST_CALL(test_validated_function_images());
+    }
+
+    void test_validated_function_images() {
+        // Exercise scalar and vector images over both inhabited and empty
+        // domains.  Empty images must retain their result dimension.
+        ValidatedScalarUnivariateFunction scalar_univariate=
+            ValidatedScalarUnivariateFunction::coordinate();
+        ValidatedVectorUnivariateFunction vector_univariate=
+            ValidatedVectorUnivariateFunction::zeros(2u);
+        ValidatedScalarMultivariateFunction scalar_multivariate=
+            ValidatedScalarMultivariateFunction::coordinate(2u,0u);
+        ValidatedVectorMultivariateFunction vector_multivariate=
+            ValidatedVectorMultivariateFunction::identity(2u);
+
+        UpperIntervalType segment(0.0_x,1.0_x);
+        UpperIntervalType empty_segment=UpperIntervalType::empty_interval();
+        UpperBoxType rectangle({{0.0_x,1.0_x},{2.0_x,3.0_x}});
+        UpperBoxType empty_rectangle(2u,empty_segment);
+
+        auto scalar_segment_image=image(segment,scalar_univariate);
+        ARIADNE_TEST_ASSERT(definitely(subset(scalar_segment_image,UpperIntervalType(-1.0_x,2.0_x))));
+        auto vector_segment_image=image(segment,vector_univariate);
+        ARIADNE_TEST_EQUALS(vector_segment_image.dimension(),2u);
+        ARIADNE_TEST_ASSERT(definitely(subset(vector_segment_image,UpperBoxType({{-1.0_x,1.0_x},{-1.0_x,1.0_x}}))));
+
+        auto scalar_rectangle_image=image(rectangle,scalar_multivariate);
+        ARIADNE_TEST_ASSERT(definitely(subset(scalar_rectangle_image,UpperIntervalType(-1.0_x,2.0_x))));
+        auto vector_rectangle_image=image(rectangle,vector_multivariate);
+        ARIADNE_TEST_EQUALS(vector_rectangle_image.dimension(),2u);
+        ARIADNE_TEST_ASSERT(definitely(subset(vector_rectangle_image,UpperBoxType({{-1.0_x,2.0_x},{1.0_x,4.0_x}}))));
+
+        auto empty_scalar_segment=image(empty_segment,scalar_univariate);
+        ARIADNE_TEST_ASSERT(definitely(empty_scalar_segment.is_empty()));
+        auto empty_vector_segment=image(empty_segment,vector_univariate);
+        ARIADNE_TEST_EQUALS(empty_vector_segment.dimension(),2u);
+        ARIADNE_TEST_ASSERT(definitely(empty_vector_segment.is_empty()));
+
+        auto empty_scalar_rectangle=image(empty_rectangle,scalar_multivariate);
+        ARIADNE_TEST_ASSERT(definitely(empty_scalar_rectangle.is_empty()));
+        auto empty_vector_rectangle=image(empty_rectangle,vector_multivariate);
+        ARIADNE_TEST_EQUALS(empty_vector_rectangle.dimension(),2u);
+        ARIADNE_TEST_ASSERT(definitely(empty_vector_rectangle.is_empty()));
     }
 
     void test_vertices() {
