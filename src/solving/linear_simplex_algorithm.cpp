@@ -641,16 +641,23 @@ SizeType
 compute_s_nocycling(const SizeType m, const Array<Slackness>& vt, const Array<SizeType>& p, const Vector<X>& z)
 {
     const SizeType n=z.size();
-    for(SizeType j=0; j!=n; ++j) {
+    ARIADNE_PRECONDITION(Ariadne::consistency_check(vt,p)==m);
+    SizeType entering=n;
+    SizeType smallest_index=n;
+    // Bland's rule minimises the original variable index among eligible
+    // nonbasic variables. Scan that list directly instead of searching
+    // it again after choosing an index from the full variable range.
+    for(SizeType k=m; k!=p.size(); ++k) {
+        const SizeType j=p[k];
         if( (vt[j]==Slackness::LOWER && decide(z[j]< -PROGRESS_THRESHOLD) )
                 || (vt[j]==Slackness::UPPER && decide(z[j]> +PROGRESS_THRESHOLD)) ) {
-            for(SizeType k=m; k!=n; ++k) {
-                if(p[k]==j) { return k; }
+            if(j<smallest_index) {
+                entering=k;
+                smallest_index=j;
             }
-            ARIADNE_ASSERT(false); // Should not reach here
         }
     }
-    return n;
+    return entering;
 }
 
 // Compute the direction in which the basic variables move if non-basic variable is increased.

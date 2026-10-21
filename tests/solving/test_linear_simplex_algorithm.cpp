@@ -42,6 +42,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_slackness_output());
         ARIADNE_TEST_CALL(test_pivot_to_better_vertex());
         ARIADNE_TEST_CALL(test_bland_rule_with_reordered_nonbasic_variables());
+        ARIADNE_TEST_CALL(test_bland_rule_rejects_inconsistent_partition());
         ARIADNE_TEST_CALL(test_rounded_simplex_feasibility_and_optimum());
         ARIADNE_TEST_CALL(test_rounded_simplex_hotstarted_paths());
         ARIADNE_TEST_CALL(test_verify_feasibility_basic_statuses());
@@ -1519,6 +1520,23 @@ class TestLinearSimplexSolver
             lower,upper,A,rhs,types,permutation,inverse_basis,primal));
         ARIADNE_TEST_ASSERT(solver.lpstep(
             costs,lower,upper,A,rhs,types,permutation,inverse_basis,primal));
+    }
+
+    Void test_bland_rule_rejects_inconsistent_partition() {
+        // The leading column describes a basis variable. Labelling all
+        // variables LOWER violates that partition even though dimensions,
+        // the permutation and inverse matrix are otherwise correct.
+        LinearSimplexSolver<FloatDPApproximation> solver;
+        Matrix<FloatDPApproximation> A({{1.0_x,1.0_x}},dp);
+        Vector<FloatDPApproximation> rhs({0.5_x},dp);
+        Vector<FloatDPApproximation> costs({0.0_x,-1.0_x},dp);
+        Vector<FloatDPApproximation> lower({0.0_x,0.0_x},dp);
+        Vector<FloatDPApproximation> upper({1.0_x,1.0_x},dp);
+        Vector<FloatDPApproximation> primal({0.5_x,0.0_x},dp);
+        Array<Slackness> types({Slackness::LOWER,Slackness::LOWER});
+        Array<SizeType> p({0u,1u});
+        auto inverse=Matrix<FloatDPApproximation>::identity(1u,dp);
+        ARIADNE_TEST_FAIL(solver.lpstep(costs,lower,upper,A,rhs,types,p,inverse,primal));
     }
 
     Void test_pivot_to_better_vertex() {
