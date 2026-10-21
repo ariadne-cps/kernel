@@ -665,6 +665,5 @@ class TestAffineSet
 Int main()
 {
     TestAffineSet().test();
-    std::cerr<<"INCOMPLETE ";
     return ARIADNE_TEST_FAILURES;
 }
