@@ -5,6 +5,7 @@ set(UNIT_TESTS
     test_constrained_image_set
     test_grid_paving
     test_paving
+    test_point
     test_measurable_set
 )
 foreach(TEST ${UNIT_TESTS})
