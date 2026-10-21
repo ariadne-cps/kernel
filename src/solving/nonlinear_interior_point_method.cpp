@@ -60,7 +60,9 @@ minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorM
 
     for(SizeType i=0; i!=12; ++i) {
         this->minimisation_step(f,D,g,C,h, x,w, kappa,lambda, mu);
-        if(i%3==0 && i<=10) { mu *= 0.25_exact; }
+        // For the twelve iterations i=0,...,11, i%3==0 only at 0,3,6,9.
+        // An additional i<=10 guard would therefore always be true.
+        if(i%3==0) { mu *= 0.25_exact; }
     }
 
     return ValidatedVectorType(exact_vector(x));
