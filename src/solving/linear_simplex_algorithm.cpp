@@ -257,10 +257,8 @@ compute_vt(const Vector<X>& xl, const Vector<X>& xu, const Array<SizeType>& p, c
             vt[p[k]] = Slackness::LOWER;
         } else if(decide(xu[p[k]]<+inf)) {
             vt[p[k]] = Slackness::UPPER;
-        } else {
-            ARIADNE_THROW(DegenerateFeasibilityProblemException,"compute_vt",
-                          "xl["<<p[k]<<"]="<<xl[p[k]]<<", xu["<<p[k]<<"]="<<xu[p[k]]<<"\n");
-        }
+        } else ARIADNE_THROW(DegenerateFeasibilityProblemException,"compute_vt",
+                            "xl["<<p[k]<<"]="<<xl[p[k]]<<", xu["<<p[k]<<"]="<<xu[p[k]]<<"\n");
     }
     return vt;
 }
