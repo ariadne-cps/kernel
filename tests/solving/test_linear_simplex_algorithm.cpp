@@ -870,6 +870,13 @@ class TestLinearSimplexSolver
             lower,upper,A,rhs,statuses,permutation,inverse_basis,primal,2u));
         ARIADNE_TEST_FAIL(solver.lpstep(
             lower,upper,A,rhs,statuses,permutation,inverse_basis,primal,0u));
+        Array<Slackness> wrong_types=statuses;
+        wrong_types[1]=Slackness::BASIS;
+        ARIADNE_TEST_FAIL(solver.lpstep(
+            lower,upper,A,rhs,wrong_types,permutation,inverse_basis,primal,1u));
+        Vector<FloatDPBounds> short_primal({0.5_x},dp);
+        ARIADNE_TEST_FAIL(solver.lpstep(
+            lower,upper,A,rhs,statuses,permutation,inverse_basis,short_primal,1u));
         // Rejection must leave the valid starting basis intact.
         ARIADNE_TEST_EQUAL(statuses[0],Slackness::BASIS);
         ARIADNE_TEST_EQUAL(statuses[1],Slackness::LOWER);

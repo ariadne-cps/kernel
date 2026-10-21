@@ -834,10 +834,8 @@ update_x(const Vector<X>& xl, const Vector<X>& xu, const Array<SizeType>& p, Vec
     // The variable p[s] moves by t; the variables p[i] i<m by t*d[i]
     // The variable p[r] becomes an upper or lower variable depending on t*d[r]
     const SizeType m=d.size();
-    const SizeType n=x.size();
-    ARIADNE_ASSERT(r<m);
-    ARIADNE_ASSERT(s>=m);
-    ARIADNE_ASSERT(s<n);
+    // lpstep checks the entering index and dimensions before selecting
+    // the ratio; the exchange case selects r<m by construction.
     for(SizeType i=0; i!=m; ++i) {
         x[p[i]]+=t*d[i];
     }
@@ -853,8 +851,7 @@ update_x(const Vector<X>& xl, const Vector<X>& xu, const Array<SizeType>& p, Vec
 {
     // Update basis when a variable changes between lower and upper
     // The constant t determines how much the variable p[s] moves
-    ARIADNE_ASSERT_MSG(s>=d.size(),"x="<<x<<" d="<<d<<" s="<<s);
-    ARIADNE_ASSERT_MSG(s<x.size(),"x="<<x<<" d="<<d<<" s="<<s);
+    // The public step has already checked that s is a nonbasic index.
     const SizeType m=d.size();
     for(SizeType i=0; i!=m; ++i) {
         x[p[i]]+=t*d[i];
@@ -1024,7 +1021,9 @@ LinearSimplexSolver<X>::lpstep(const Vector<X>& xl, const Vector<X>& xu, const M
     // s is an index into the full permutation. The sentinel n denotes
     // 'no entering variable' and must not be dereferenced here.
     ARIADNE_PRECONDITION(s<n);
+    ARIADNE_PRECONDITION(s>=m);
     ARIADNE_PRECONDITION(vt[p[s]]!=Slackness::BASIS);
+    ARIADNE_PRECONDITION(x.size()==n);
 
     // Compute direction d in which to move the current basic variables
     // as the variable entering the basis changes by +1
@@ -1060,8 +1059,6 @@ LinearSimplexSolver<X>::lpstep(const Vector<X>& xl, const Vector<X>& xu, const M
         else { vt[p[s]]=Slackness::LOWER; }
     } else {
         // Variable p[r] should leave basis, and variable p[s] enter
-        ARIADNE_ASSERT(r<m);
-
         update_B(B,d,r);
         update_x(xl,xu,p,x,s,d,r,t);
 
