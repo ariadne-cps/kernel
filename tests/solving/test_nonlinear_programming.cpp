@@ -564,6 +564,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_numeric_step_failure());
         ARIADNE_TEST_CALL(test_uncertified_minimisation());
         ARIADNE_TEST_CALL(test_candidate_redundant_equalities());
+        ARIADNE_TEST_CALL(test_minimisation_iteration_limit());
     }
 
     Void test_logging_solver_diagnostics() {
@@ -603,6 +604,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
         test_numeric_step_failure();
         test_uncertified_minimisation();
         test_candidate_redundant_equalities();
+        test_minimisation_iteration_limit();
     }
 
     Void test_numeric_step_failure() {
@@ -655,11 +657,27 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ExactBoxType domain({{0.0_x,1.0_x}});
         ValidatedVectorMultivariateFunction redundant({x[0],x[0]});
         ExactBoxType zero_box(2u,ExactIntervalType(0,0));
-        // Both equalities have the boundary root x=0, but no interval
-        // certificate is available after the twelve candidate steps.
+        // Both equalities have the boundary root x=0. The former
+        // twelve-step budget left a residual above 1e-8; refinement
+        // to the small-barrier limit improves the candidate without
+        // inventing a certificate for the redundant equality system.
         auto candidate=optimiser.feasible_candidate(domain,redundant,zero_box);
         ARIADNE_TEST_ASSERT(is_indeterminate(candidate.first));
         ARIADNE_TEST_ASSERT(contains(domain,cast_exact(candidate.second)));
+        ARIADNE_TEST_ASSERT(decide(norm(candidate.second)<1e-8));
+    }
+
+    Void test_minimisation_iteration_limit() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ExactBoxType domain({{-1.0_x,2.0_x}});
+        ValidatedVectorMultivariateFunction equality({pow(x[0],3)});
+        ExactBoxType zero_box(1u,ExactIntervalType(0,0));
+        // The equality forces x=0, while the objective favours x=1.
+        // The twenty-four Newton steps exhaust the budget before a
+        // certificate is obtained for the multiple equality root.
+        ARIADNE_TEST_THROWS(optimiser.minimise(
+            pow(x[0]-1,4),domain,equality,zero_box),
+            IndeterminateFeasibilityException);
     }
 
     Void test_stationary_minimisation() {

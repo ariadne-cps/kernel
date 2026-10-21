@@ -150,7 +150,11 @@ feasible_candidate(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactB
 
     static const ExactDouble MU_MIN = 1e-12_pr;
 
-    for(SizeType i=0; i!=12; ++i) {
+    // Use the same iteration budget as minimisation. Twelve steps can
+    // leave a boundary candidate short of the small-barrier stopping
+    // criterion even while the primal residual is still decreasing.
+    static const SizeType MAXIMUM_STEPS=24;
+    for(SizeType i=0; i!=MAXIMUM_STEPS; ++i) {
         LOGGING_PRINTLN_AT(1,"f(x)="<<f(x)<<", x="<<x<<", y="<<y<<", g(x)="<<g(x));
         try {
             this->step(f,D,g,R,v);
