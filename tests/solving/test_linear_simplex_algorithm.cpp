@@ -1063,15 +1063,15 @@ class TestLinearSimplexSolver
         // Restoring x0>=0 in x0-sum(xj)=-1025 requires 1025 unit
         // bound flips. The fixed iteration budget must report exhaustion
         // rather than returning a feasibility certificate for x0<0.
-        LinearSimplexSolver<FloatDPApproximation> solver;
+        LinearSimplexSolver<FloatDP> solver;
         const SizeType n=1026u;
-        FloatDPApproximation zero_value(0.0_x,dp);
-        Matrix<FloatDPApproximation> A(1u,n,zero_value);
+        FloatDP zero_value(0.0_x,dp);
+        Matrix<FloatDP> A(1u,n,zero_value);
         A[0][0]=1;
         for(SizeType j=1u; j!=n; ++j) { A[0][j]=-1; }
-        Vector<FloatDPApproximation> rhs({-1025.0_x},dp);
-        Vector<FloatDPApproximation> lower(n,zero_value);
-        Vector<FloatDPApproximation> upper(n,FloatDPApproximation(1.0_x,dp));
+        Vector<FloatDP> rhs({-1025.0_x},dp);
+        Vector<FloatDP> lower(n,zero_value);
+        Vector<FloatDP> upper(n,FloatDP(1.0_x,dp));
         ARIADNE_TEST_THROWS(solver.feasible(lower,upper,A,rhs),
                             DegenerateFeasibilityProblemException);
     }

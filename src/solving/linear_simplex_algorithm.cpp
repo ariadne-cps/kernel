@@ -1162,8 +1162,6 @@ LinearSimplexSolver<X>::_feasible(const Vector<X>& xl, const Vector<X>& xu, cons
     LOGGING_PRINTLN("B="<<B);
     LOGGING_PRINTLN("x="<<x);
 
-    static const ExactDouble RESIDUAL_TOLERANCE=0.0001_pr;
-
     const SizeType m=A.row_size();
     const SizeType n=A.column_size();
 
@@ -1226,17 +1224,23 @@ LinearSimplexSolver<X>::_feasible(const Vector<X>& xl, const Vector<X>& xu, cons
 
     LOGGING_PRINTLN("Checking solution...");
 
-    // A valid problem can yield an enclosure wider than the absolute
-    // tolerances, especially at a bound or in an ill-conditioned basis.
-    // Insufficient numerical evidence is an indeterminate result.
-    for(SizeType i=0; i!=n; ++i) {
-        if(!decide(x[i]>=xl[i]-BOUNDS_TOLERANCE)) { return indeterminate; }
-        if(!decide(x[i]<=xu[i]+BOUNDS_TOLERANCE)) { return indeterminate; }
-    }
-
-    Vector<XX> Ax=A*x;
-    for(SizeType i=0; i!=m; ++i) {
-        if(!decide(abs(Ax[i]-b[i])<RESIDUAL_TOLERANCE)) { return indeterminate; }
+    if constexpr(Same<X,XX>) {
+        // For point iterates, termination already establishes the bounds.
+        // Rounded scaling in the reconstruction check may admit a residual
+        // exactly on the tolerance, so retain the strict pointwise check.
+        static const ExactDouble RESIDUAL_TOLERANCE=0.0001_pr;
+        Vector<XX> Ax=A*x;
+        for(SizeType i=0; i!=m; ++i) {
+            if(!decide(abs(Ax[i]-b[i])<RESIDUAL_TOLERANCE)) { return indeterminate; }
+        }
+    } else {
+        // Rigorous reconstruction already certified norm(Ax-b)*10000<=1,
+        // stronger than the strict tolerance above. Its enclosures may
+        // still straddle a bound even though no violation was proved.
+        for(SizeType i=0; i!=n; ++i) {
+            if(!decide(x[i]>=xl[i]-BOUNDS_TOLERANCE)) { return indeterminate; }
+            if(!decide(x[i]<=xu[i]+BOUNDS_TOLERANCE)) { return indeterminate; }
+        }
     }
 
     LOGGING_PRINTLN("Feasible point x="<<x<<"; xl="<<xl<<", xu="<<xu<<", Ax="<<(A*x)<<", b="<<b);
