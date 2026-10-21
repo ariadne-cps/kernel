@@ -48,6 +48,40 @@ template<class BX> class TestBoxType {
   public:
     void test() {
         ARIADNE_TEST_CALL(test_geometric_predicates());
+        ARIADNE_TEST_CALL(test_vertices());
+    }
+
+    void test_vertices() {
+        // Zero dimensions have no vertices; one dimension exercises the base
+        // case, while two and three dimensions exercise both recursion orders.
+        BoxType zero_dimensional(0u);
+        ARIADNE_TEST_EQUALS(zero_dimensional.vertices().size(),0u);
+
+        BoxType segment({{-1.0_x,2.0_x}});
+        auto segment_vertices=segment.vertices();
+        ARIADNE_TEST_EQUALS(segment_vertices.size(),2u);
+        ARIADNE_TEST_ASSERT(segment_vertices[0]==PointType({-1.0_x},dp));
+        ARIADNE_TEST_ASSERT(segment_vertices[1]==PointType({2.0_x},dp));
+
+        BoxType rectangle({{-1.0_x,2.0_x},{3.0_x,5.0_x}});
+        auto rectangle_vertices=rectangle.vertices();
+        ARIADNE_TEST_EQUALS(rectangle_vertices.size(),4u);
+        ARIADNE_TEST_ASSERT(rectangle_vertices[0]==PointType({-1.0_x,3.0_x},dp));
+        ARIADNE_TEST_ASSERT(rectangle_vertices[1]==PointType({-1.0_x,5.0_x},dp));
+        ARIADNE_TEST_ASSERT(rectangle_vertices[2]==PointType({2.0_x,5.0_x},dp));
+        ARIADNE_TEST_ASSERT(rectangle_vertices[3]==PointType({2.0_x,3.0_x},dp));
+
+        BoxType cube({{0.0_x,1.0_x},{2.0_x,3.0_x},{4.0_x,5.0_x}});
+        auto cube_vertices=cube.vertices();
+        ARIADNE_TEST_EQUALS(cube_vertices.size(),8u);
+        ARIADNE_TEST_ASSERT(cube_vertices[0]==PointType({0.0_x,2.0_x,4.0_x},dp));
+        ARIADNE_TEST_ASSERT(cube_vertices[1]==PointType({0.0_x,2.0_x,5.0_x},dp));
+        ARIADNE_TEST_ASSERT(cube_vertices[2]==PointType({0.0_x,3.0_x,5.0_x},dp));
+        ARIADNE_TEST_ASSERT(cube_vertices[3]==PointType({0.0_x,3.0_x,4.0_x},dp));
+        ARIADNE_TEST_ASSERT(cube_vertices[4]==PointType({1.0_x,3.0_x,4.0_x},dp));
+        ARIADNE_TEST_ASSERT(cube_vertices[5]==PointType({1.0_x,3.0_x,5.0_x},dp));
+        ARIADNE_TEST_ASSERT(cube_vertices[6]==PointType({1.0_x,2.0_x,5.0_x},dp));
+        ARIADNE_TEST_ASSERT(cube_vertices[7]==PointType({1.0_x,2.0_x,4.0_x},dp));
     }
 
     void test_geometric_predicates() {
