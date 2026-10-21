@@ -1825,21 +1825,23 @@ class TestApproximateNonlinearInteriorPointSolver {
 
     Void test_small_infeasible_residual() {
         auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        // The dyadic scale 2^-40 is exactly representable on every target.
         // Scaling does not move the root x=2 into [-1,1], although
         // every numerical residual in that box is below 1e-10.
         ARIADNE_TEST_ASSERT(definitely(!solver.feasible_zero(
             ExactBoxType({{-1.0_x,1.0_x}}),
-            ValidatedVectorMultivariateFunction({Real(1e-12_x)*(x[0]-2)}))));
+            ValidatedVectorMultivariateFunction({Real(0x1p-40_x)*(x[0]-2)}))));
     }
 
     Void test_uncertified_small_residual() {
         auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        // Use the same exact dyadic scale as the infeasible regression.
         // The multiple root has a singular interval Jacobian on D.
         // A small residual cannot replace the unavailable inclusion
         // certificate; neither does the dual interval exclude zero.
         ARIADNE_TEST_ASSERT(is_indeterminate(solver.feasible_zero(
             ExactBoxType({{-1.0_x,2.0_x}}),
-            ValidatedVectorMultivariateFunction({Real(1e-12_x)*pow(x[0],3)}))));
+            ValidatedVectorMultivariateFunction({Real(0x1p-40_x)*pow(x[0],3)}))));
     }
 
     Void test_logging_diagnostics() {
