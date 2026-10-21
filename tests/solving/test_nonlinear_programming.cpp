@@ -561,6 +561,7 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_candidate_rank_deficient());
         ARIADNE_TEST_CALL(test_candidate_overdetermined());
         ARIADNE_TEST_CALL(test_candidate_deterministic());
+        ARIADNE_TEST_CALL(test_numeric_step_failure());
         ARIADNE_TEST_CALL(test_uncertified_minimisation());
         ARIADNE_TEST_CALL(test_candidate_redundant_equalities());
     }
@@ -599,8 +600,33 @@ class TestNonlinearInfeasibleInteriorPointSolver
         test_candidate_overdetermined();
         test_infeasible_minimisation_rejects_false_optima();
         test_stationary_minimisation();
+        test_numeric_step_failure();
         test_uncertified_minimisation();
         test_candidate_redundant_equalities();
+    }
+
+    Void test_numeric_step_failure() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ValidatedScalarMultivariateFunction steep=exp(4096*x[0]);
+        ValidatedVectorMultivariateFunction identity({x[0]});
+        ExactBoxType unit({{0.0_x,1.0_x}});
+        // The real objective is finite on D, but its double-precision
+        // value and derivatives overflow at the initial midpoint.
+        // Reject the numerical direction through the solver exception,
+        // rather than a debug assertion or a spurious certified optimum.
+        ARIADNE_TEST_THROWS(optimiser.minimise(steep,domain,identity,unit),
+            DegenerateNonlinearFeasibilityProblemException);
+
+        // exp(4096*x) in [1,2] is feasible near x=0. The heuristic
+        // cannot form its initial Newton step; it must retain a safe
+        // candidate and make no feasibility claim.
+        ValidatedVectorMultivariateFunction constraint({steep});
+        ExactBoxType target({{1.0_x,2.0_x}});
+        auto candidate=optimiser.feasible_candidate(domain,constraint,target);
+        ARIADNE_TEST_ASSERT(is_indeterminate(candidate.first));
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(candidate.second)));
+        ARIADNE_TEST_EQUAL(candidate.second[0].raw(),FloatDP(0.5_x,dp));
     }
 
     Void test_uncertified_minimisation() {

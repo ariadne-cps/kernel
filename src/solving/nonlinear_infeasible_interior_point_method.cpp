@@ -26,10 +26,23 @@
 // "Interior-point methods for nonconvex nonlinear programming: Jamming and comparative numerical testing"
 #include "solving/nonlinear_interior_point_method.hpp"
 #include "solving/nonlinear_programming.tpl.hpp"
+#include <limits>
 
 namespace Ariadne {
 
 using namespace Detail;
+
+namespace {
+// Roundoff and overflow can invalidate a Newton direction for valid
+// problems. These are numerical failures, not violated caller contracts
+// or impossible debug invariants. Keep the same relative error limits
+// for every equation, including in release builds.
+Void check_step_error(const FloatDPApproximation& error, double tolerance) {
+    if(!decide(error<tolerance)) {
+        throw DegenerateNonlinearFeasibilityProblemException();
+    }
+}
+} // namespace
 
 //------- NonlinearInfeasibleInteriorPointSolver -------------------------//
 
@@ -143,6 +156,9 @@ feasible_candidate(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactB
             this->step(f,D,g,R,v);
         } catch(const NearBoundaryOfFeasibleDomainException&) {
             LOGGING_PRINTLN("Near boundary of feasible domain; returning indeterminate candidate");
+            return {indeterminate,safe_candidate(x)};
+        } catch(const DegenerateNonlinearFeasibilityProblemException&) {
+            LOGGING_PRINTLN("Inaccurate Newton direction; returning indeterminate candidate");
             return {indeterminate,safe_candidate(x)};
         }
         if(this->validate_feasibility(D,g,C,exact_vector(x))) {
@@ -316,7 +332,14 @@ NonlinearInfeasibleInteriorPointSolver::step(
     S+=E;
 
     LOGGING_PRINTLN("S="<<S);
-    ARIADNE_DEBUG_ASSERT(decide(norm(FloatDPApproximationMatrix(S-(YH+E+transpose(A)*(D*A))))/norm(S)<1e-8));
+    // Matrix norms can ignore NaN components when taking a maximum.
+    // Check each coefficient before normalisation or factorisation.
+    for(SizeType i=0; i!=n; ++i) {
+        for(SizeType j=0; j!=n; ++j) {
+            check_step_error(abs(S[i][j]),std::numeric_limits<double>::infinity());
+        }
+    }
+    check_step_error(norm(FloatDPApproximationMatrix(S-(YH+E+transpose(A)*(D*A))))/norm(S),1e-8);
     LOGGING_PRINTLN("Sinv="<<inverse(S));
 
     FloatDPApproximationVector r = transpose(A)*(rw+D*ry)+rx;
@@ -329,7 +352,7 @@ NonlinearInfeasibleInteriorPointSolver::step(
     dx = dx + solve(S,r-S*dx);
     LOGGING_PRINTLN("S*dx="<<S*dx<<" r="<<r);
     LOGGING_PRINTLN("S*inverse(S)-I="<<S*inverse(S)-FloatDPApproximationMatrix::identity(n,dp));
-    ARIADNE_DEBUG_ASSERT(decide(norm(S*dx - r)/max(1.0_x,norm(r))<1e-4));
+    check_step_error(norm(S*dx-r)/max(one,norm(r)),1e-4);
 
     FloatDPApproximationVector dw = A*dx-ry;
     FloatDPApproximationVector dy = D*dw-rw;
@@ -338,9 +361,9 @@ NonlinearInfeasibleInteriorPointSolver::step(
     LOGGING_PRINTLN("YH*dx+E*dx+dy*A="<<(YH*dx+E*dx+transpose(A)*dy)<<", rx="<<rx);
 
     // Check solution of linear system for residuals
-    ARIADNE_DEBUG_ASSERT(decide(norm(D*dw-dy-rw)/max(one,norm(rw))<1e-4));
-    ARIADNE_DEBUG_ASSERT(decide(norm(YH*dx+E*dx+transpose(A)*dy-rx)/max(one,norm(rx))<1e-2));
-    ARIADNE_DEBUG_ASSERT(decide(norm(-dw+A*dx-ry)/max(one,norm(ry))<1e-4));
+    check_step_error(norm(D*dw-dy-rw)/max(one,norm(rw)),1e-4);
+    check_step_error(norm(YH*dx+E*dx+transpose(A)*dy-rx)/max(one,norm(rx)),1e-2);
+    check_step_error(norm(-dw+A*dx-ry)/max(one,norm(ry)),1e-4);
 
 
     FloatDPApproximationVector dwl = evl-dw;
