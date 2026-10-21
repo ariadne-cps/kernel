@@ -95,6 +95,8 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_consistency_check_rejects_inconsistent_states());
         ARIADNE_TEST_CALL(test_point_reconstruction_input_contracts());
         ARIADNE_TEST_CALL(test_hotstarted_feasibility_optional_basis());
+        ARIADNE_TEST_CALL(test_warm_start_validation_corrects_false_negative());
+        ARIADNE_TEST_CALL(test_warm_start_validation_corrects_false_positive());
         ARIADNE_TEST_CALL(test_compute_basis_tall_matrix_precondition());
         ARIADNE_TEST_CALL(test_compute_basis_unit_columns());
         ARIADNE_TEST_CALL(test_compute_basis_singular_after_elimination());
@@ -372,6 +374,40 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(reconstructed_x[0]==inferred_x[0]));
         ARIADNE_TEST_ASSERT(definitely(reconstructed_x[1]==inferred_x[1]));
         ARIADNE_TEST_ASSERT(definitely(reconstructed_B[0][0]==inferred_B[0][0]));
+    }
+
+    Void test_warm_start_validation_corrects_false_negative() {
+        check_warm_start_validation(true);
+    }
+
+    Void test_warm_start_validation_corrects_false_positive() {
+        check_warm_start_validation(false);
+    }
+
+    Void check_warm_start_validation(Bool actually_feasible) {
+        // An accepted small error in the warm-start inverse puts the
+        // numerical x on the opposite side of a nearby upper bound from
+        // the exact solution x=1. A determinate validation must prevail,
+        // and the final primal/dual state must use the rebuilt inverse.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x}},dp);
+        Vector<FloatDP> rhs({1.0_x},dp);
+        Vector<FloatDP> lower({0.0_x},dp);
+        Vector<FloatDP> upper({actually_feasible
+            ? 1.0000000000004547_pr : 0.9999999999995453_pr},dp);
+        Array<Slackness> types({Slackness::BASIS});
+        Array<SizeType> p({0u});
+        auto inverse=Matrix<FloatDPBounds>::identity(1u,dp);
+        FloatDPBounds error=FloatDPBounds(1,dp)/FloatDPBounds(1099511627776.0_x,dp);
+        inverse[0][0]=actually_feasible ? FloatDPBounds(1,dp)+error : FloatDPBounds(1,dp)-error;
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,p,inverse));
+        Vector<FloatDPBounds> primal(1u,dp),dual(1u,dp);
+        auto status=solver.hotstarted_feasible(lower,upper,A,rhs,types,p,inverse,primal,dual);
+        ARIADNE_TEST_ASSERT(definitely(actually_feasible ? status : not status));
+        ARIADNE_TEST_ASSERT(definitely(inverse[0][0]==FloatDPBounds(1,dp)));
+        ARIADNE_TEST_ASSERT(definitely(primal[0]==FloatDPBounds(1,dp)));
+        ARIADNE_TEST_ASSERT(definitely(dual[0]==FloatDPBounds(actually_feasible ? 0 : 1,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,rhs,primal));
     }
 
     Void test_consistency_check_variable_types() {

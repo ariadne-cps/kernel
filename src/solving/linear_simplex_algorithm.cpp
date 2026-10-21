@@ -1337,12 +1337,21 @@ LinearSimplexSolver<X>::hotstarted_feasible(const Vector<X>& xl, const Vector<X>
     LOGGING_PRINTLN("x="<<x<<" c="<<c<<" y="<<y<<" z="<<z);
 
     ValidatedKleenean vfs = this->verify_feasibility(xl,xu,A,b,vt);
-    if(is_determinate(vfs) && definitely(vfs!=fs)) {
+    if(is_determinate(vfs)) {
+        if(definitely(vfs!=fs)) {
             ARIADNE_WARN("ApproximateTag feasibility algorithm for\n  A="<<A<<" b="<<b<<" xl="<<xl<<" xu="<<xu<<"\nyielded basic variables "<<vt<<
                          " and result "<<fs<<", but validation code gave "<<vfs<<".");
+            // Validation reconstructs the inverse rather than trusting
+            // the supplied warm start. Keep the returned primal and dual
+            // state consistent with that conclusive result as well.
+            B=Ariadne::compute_B<X>(A,p);
+            x=Ariadne::compute_x(xl,xu,A,b,vt,p,B);
+            c=Ariadne::compute_c(xl,xu,p,x,m);
+            y=Ariadne::compute_y(c,p,B);
+        }
+        return vfs;
     }
-    //FIXME: Return correct value
-    // return vfs;
+    // Retain the numerical phase's status when validation is inconclusive.
     return fs;
 }
 
