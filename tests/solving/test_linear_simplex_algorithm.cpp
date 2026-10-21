@@ -62,6 +62,8 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_degenerate_ratio_tie_breaking());
         ARIADNE_TEST_CALL(test_zero_step_lower_bound_pivot());
         ARIADNE_TEST_CALL(test_zero_step_upper_bound_pivot());
+        ARIADNE_TEST_CALL(test_rounding_at_lower_basic_bound());
+        ARIADNE_TEST_CALL(test_rounding_at_upper_basic_bound());
         ARIADNE_TEST_CALL(test_validated_upper_entry_bound_flip());
         ARIADNE_TEST_CALL(test_validated_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
@@ -1072,6 +1074,44 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_EQUAL(types[1],Slackness::BASIS);
         ARIADNE_TEST_ASSERT(definitely(primal[0]==initial[0]));
         ARIADNE_TEST_ASSERT(definitely(primal[1]==initial[1]));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(
+            lower,upper,A,rhs,types,p,inverse,primal));
+    }
+
+    Void test_rounding_at_lower_basic_bound() {
+        check_rounding_at_basic_bound(true);
+    }
+
+    Void test_rounding_at_upper_basic_bound() {
+        check_rounding_at_basic_bound(false);
+    }
+
+    Void check_rounding_at_basic_bound(Bool enters_from_upper) {
+        // The ratio test uses 3/10, whereas reconstruction uses (1/10)*3.
+        // Their floating results differ by one ulp. The reconstructed
+        // basic point must be clamped to its bound within the tolerance,
+        // for both signs, while retaining a small equality residual.
+        LinearSimplexSolver<FloatDPApproximation> solver;
+        Matrix<FloatDPApproximation> A({{1.0_x,10.0_x}},dp);
+        Vector<FloatDPApproximation> rhs({enters_from_upper ? -3.0_x : 3.0_x},dp);
+        Vector<FloatDPApproximation> lower({enters_from_upper ? -10.0_pr : 0.0_pr,
+                                            enters_from_upper ? -0.3_pr : 0.0_pr},dp);
+        Vector<FloatDPApproximation> upper({enters_from_upper ? 0.0_pr : 10.0_pr,
+                                            enters_from_upper ? 0.0_pr : 0.3_pr},dp);
+        Array<Slackness> types({Slackness::BASIS,
+            enters_from_upper ? Slackness::UPPER : Slackness::LOWER});
+        auto basis=solver.compute_basis(A);
+        auto p=basis.first;
+        auto inverse=basis.second;
+        auto primal=solver.compute_x(lower,upper,A,rhs,types);
+
+        ARIADNE_TEST_EQUAL(solver.lpstep(lower,upper,A,rhs,types,p,inverse,primal,1u),0u);
+        ARIADNE_TEST_EQUAL(p[0],1u);
+        ARIADNE_TEST_EQUAL(types[0],
+            (enters_from_upper ? Slackness::UPPER : Slackness::LOWER));
+        ARIADNE_TEST_EQUAL(types[1],Slackness::BASIS);
+        const auto blocking_bound=enters_from_upper ? lower[1] : upper[1];
+        ARIADNE_TEST_ASSERT(decide(primal[1]==blocking_bound));
         ARIADNE_TEST_EXECUTE(solver.consistency_check(
             lower,upper,A,rhs,types,p,inverse,primal));
     }
