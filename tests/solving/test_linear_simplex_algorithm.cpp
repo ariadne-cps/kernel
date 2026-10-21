@@ -59,6 +59,8 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_upper_entry_tied_upper_bounds());
         ARIADNE_TEST_CALL(test_validated_multiple_upper_violations());
         ARIADNE_TEST_CALL(test_degenerate_ratio_tie_breaking());
+        ARIADNE_TEST_CALL(test_zero_step_lower_bound_pivot());
+        ARIADNE_TEST_CALL(test_zero_step_upper_bound_pivot());
         ARIADNE_TEST_CALL(test_validated_upper_entry_bound_flip());
         ARIADNE_TEST_CALL(test_validated_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
@@ -1009,6 +1011,41 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(x[2]==FloatDPBounds(-0.5_x,dp)));
         ARIADNE_TEST_ASSERT(solver.validated_feasibility_step(xl,xu,A,b,vt,p));
         ARIADNE_TEST_ASSERT(definitely(solver.verify_feasibility(xl,xu,A,b,vt)));
+    }
+
+    Void test_zero_step_lower_bound_pivot() {
+        check_zero_step_pivot(false);
+    }
+
+    Void test_zero_step_upper_bound_pivot() {
+        check_zero_step_pivot(true);
+    }
+
+    Void check_zero_step_pivot(Bool at_upper) {
+        // A basic variable already on the blocking bound leaves at t=0.
+        // The basis must change without moving the feasible vertex, and
+        // its new nonbasic type must describe the bound it already occupies.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,(at_upper ? -1.0_x : 1.0_x)}},dp);
+        Vector<FloatDP> rhs({(at_upper ? 1.0_x : 0.0_x)},dp);
+        Vector<FloatDP> lower({0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({1.0_x,1.0_x},dp);
+        Array<Slackness> types({Slackness::BASIS,Slackness::LOWER});
+        Array<SizeType> p({0u,1u});
+        Matrix<FloatDPBounds> inverse=Matrix<FloatDPBounds>::identity(1u,dp);
+        auto primal=solver.compute_x(lower,upper,A,rhs,types);
+        const auto initial=primal;
+
+        SizeType leaving=solver.lpstep(lower,upper,A,rhs,types,p,inverse,primal,1u);
+        ARIADNE_TEST_EQUAL(leaving,0u);
+        ARIADNE_TEST_EQUAL(p[0],1u);
+        ARIADNE_TEST_EQUAL(p[1],0u);
+        ARIADNE_TEST_EQUAL(types[0],(at_upper ? Slackness::UPPER : Slackness::LOWER));
+        ARIADNE_TEST_EQUAL(types[1],Slackness::BASIS);
+        ARIADNE_TEST_ASSERT(definitely(primal[0]==initial[0]));
+        ARIADNE_TEST_ASSERT(definitely(primal[1]==initial[1]));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(
+            lower,upper,A,rhs,types,p,inverse,primal));
     }
 
     Void test_degenerate_ratio_tie_breaking() {
