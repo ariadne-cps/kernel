@@ -72,6 +72,8 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_validated_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
         ARIADNE_TEST_CALL(test_validated_reduced_cost_certificates());
+        ARIADNE_TEST_CALL(test_validated_ratio_skips_violated_lower_bound());
+        ARIADNE_TEST_CALL(test_validated_ratio_skips_violated_upper_bound());
         ARIADNE_TEST_CALL(test_validated_feasibility_stationary_at_boundary());
         ARIADNE_TEST_CALL(test_validated_feasibility_without_finite_leaving_bound());
         ARIADNE_TEST_CALL(test_validated_feasibility_bound_flip());
@@ -1430,6 +1432,39 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_EQUAL(types[1],Slackness::UPPER);
         ARIADNE_TEST_EQUAL(p[0],0u);
         ARIADNE_TEST_EQUAL(p[1],1u);
+    }
+
+    Void test_validated_ratio_skips_violated_lower_bound() {
+        check_validated_ratio_with_violated_bound(false);
+    }
+
+    Void test_validated_ratio_skips_violated_upper_bound() {
+        check_validated_ratio_with_violated_bound(true);
+    }
+
+    Void check_validated_ratio_with_violated_bound(Bool towards_upper) {
+        // The first basic variable already violates the bound towards
+        // which it moves. That bound cannot block a positive step. The
+        // other basic variable supplies the admissible blocking ratio.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,0.0_x,towards_upper ? -1.0_x : 1.0_x},
+                           {0.0_x,1.0_x,towards_upper ? -2.0_x : 2.0_x}},dp);
+        Vector<FloatDP> rhs({towards_upper ? 1.5_x : -0.5_x,
+                              towards_upper ? -0.5_x : 1.5_x},dp);
+        Vector<FloatDP> lower({0.0_x,0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({1.0_x,1.0_x,2.0_x},dp);
+        Array<Slackness> types({Slackness::BASIS,Slackness::BASIS,Slackness::LOWER});
+        Array<SizeType> p({0u,1u,2u});
+        ARIADNE_TEST_ASSERT(!solver.validated_feasibility_step(lower,upper,A,rhs,types,p));
+        ARIADNE_TEST_EQUAL(p[0],0u);
+        ARIADNE_TEST_EQUAL(p[1],2u);
+        ARIADNE_TEST_EQUAL(p[2],1u);
+        ARIADNE_TEST_EQUAL(types[1],towards_upper ? Slackness::UPPER : Slackness::LOWER);
+        auto primal=solver.compute_x(lower,upper,A,rhs,types);
+        ARIADNE_TEST_ASSERT(definitely(primal[0]==FloatDPBounds(towards_upper ? 2.25_x : -1.25_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(primal[1]==FloatDPBounds(towards_upper ? 1.0_x : 0.0_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(primal[2]==FloatDPBounds(0.75_x,dp)));
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,rhs,primal));
     }
 
     Void test_validated_feasibility_exchange_to_upper_bound() {
