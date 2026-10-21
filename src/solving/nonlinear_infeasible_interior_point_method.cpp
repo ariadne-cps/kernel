@@ -88,7 +88,15 @@ minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorM
     }
     LOGGING_PRINTLN("f(x)="<<f(x)<<", x="<<x<<", y="<<y<<", g(x)="<<g(x));
 
-    if(this->validate_feasibility(D,g,C,exact_vector(x))) {
+    Bool certified=false;
+    try {
+        certified=this->validate_feasibility(D,g,C,exact_vector(x));
+    } catch(const SingularMatrixException&) {
+        // A multiple equality root may have a singular interval Newton
+        // correction. This means no certificate, not infeasibility.
+        LOGGING_PRINTLN("Singular equality correction; feasibility is indeterminate");
+    }
+    if(certified) {
         LOGGING_PRINTLN("f(x)="<<f(x)<<", x="<<x<<", y="<<y<<", g(x)="<<g(x));
         return exact_vector(x);
     }

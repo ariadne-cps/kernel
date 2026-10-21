@@ -561,6 +561,8 @@ class TestNonlinearInfeasibleInteriorPointSolver
         ARIADNE_TEST_CALL(test_candidate_rank_deficient());
         ARIADNE_TEST_CALL(test_candidate_overdetermined());
         ARIADNE_TEST_CALL(test_candidate_deterministic());
+        ARIADNE_TEST_CALL(test_uncertified_minimisation());
+        ARIADNE_TEST_CALL(test_candidate_redundant_equalities());
     }
 
     Void test_logging_solver_diagnostics() {
@@ -597,6 +599,41 @@ class TestNonlinearInfeasibleInteriorPointSolver
         test_candidate_overdetermined();
         test_infeasible_minimisation_rejects_false_optima();
         test_stationary_minimisation();
+        test_uncertified_minimisation();
+        test_candidate_redundant_equalities();
+    }
+
+    Void test_uncertified_minimisation() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ExactBoxType domain({{-1.0_x,2.0_x}});
+        ValidatedVectorMultivariateFunction redundant({x[0],x[0]});
+        ExactBoxType redundant_zero(2u,ExactIntervalType(0,0));
+        // The constraints are consistent, but the generic equality
+        // certificate cannot invert an overdetermined correction.
+        // A large linear objective reaches the barrier stopping limit.
+        ARIADNE_TEST_THROWS(optimiser.minimise(
+            1000000*x[0],domain,redundant,redundant_zero),
+            IndeterminateFeasibilityException);
+
+        // The multiple root x=0 is feasible, but its singular interval
+        // Jacobian cannot certify the final quartic minimisation iterate.
+        ValidatedVectorMultivariateFunction multiple({pow(x[0],3)});
+        ExactBoxType zero_box(1u,ExactIntervalType(0,0));
+        ARIADNE_TEST_THROWS(optimiser.minimise(
+            pow(x[0],4),domain,multiple,zero_box),
+            IndeterminateFeasibilityException);
+    }
+
+    Void test_candidate_redundant_equalities() {
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ValidatedVectorMultivariateFunction redundant({x[0],x[0]});
+        ExactBoxType zero_box(2u,ExactIntervalType(0,0));
+        // Both equalities have the boundary root x=0, but no interval
+        // certificate is available after the twelve candidate steps.
+        auto candidate=optimiser.feasible_candidate(domain,redundant,zero_box);
+        ARIADNE_TEST_ASSERT(is_indeterminate(candidate.first));
+        ARIADNE_TEST_ASSERT(contains(domain,cast_exact(candidate.second)));
     }
 
     Void test_stationary_minimisation() {
