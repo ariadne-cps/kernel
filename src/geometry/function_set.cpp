@@ -620,7 +620,7 @@ ValidatedKleenean ConstrainedImageSet::satisfies(const EffectiveConstraint& nc, 
     const EffectiveNumber& lower_bound = nc.lower_bound();
     const EffectiveNumber& upper_bound = nc.upper_bound();
 
-    ValidatedKleenean result;
+    ValidatedKleenean result=false;
     if(definitely(upper_bound<+infinity)) {
         all_constraints.append( composed_function >= upper_bound );
         result=solver.feasible(over_approximation(domain),all_constraints).first;
@@ -1121,7 +1121,7 @@ ValidatedKleenean ValidatedConstrainedImageSet::satisfies(const ValidatedConstra
     ValidatedScalarMultivariateFunction composed_function = compose(nc.function(),this->_function);
     const ExactIntervalType& bounds = nc.bounds();
 
-    ValidatedKleenean result;
+    ValidatedKleenean result=false;
     if(definitely(bounds.upper_bound()<+infty)) {
         all_constraints.append( composed_function >= bounds.upper_bound() );
         result=solver.feasible(domain,all_constraints).first;
@@ -1139,6 +1139,10 @@ ValidatedKleenean ValidatedConstrainedImageSet::satisfies(const ValidatedConstra
 Void
 ValidatedConstrainedImageSet::draw(CanvasInterface& cnvs, const Projection2d& proj) const {
     GraphicsManager::instance().drawer().draw(cnvs,proj,*this);
+}
+
+ValidatedConstrainedImageSet image(ValidatedConstrainedImageSet set, const ValidatedVectorMultivariateFunction& function) {
+    set.apply(function); return set;
 }
 
 ValidatedConstrainedImageSet

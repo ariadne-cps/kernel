@@ -3,6 +3,7 @@ set(UNIT_TESTS
     test_binary_tree
     test_box
     test_constraint_set
+    test_validated_constrained_image_set
     test_constrained_image_set
     test_curve
     test_geometry

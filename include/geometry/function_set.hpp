@@ -192,15 +192,15 @@ class ConstrainedImageSet
     List< EffectiveConstraint > _constraints;
   public:
     //! \brief Construct the set with zero-dimensional parameterisation in zero dimensions with no constraints.
-    ConstrainedImageSet() : _domain(), _function() { }
+    ConstrainedImageSet() : _domain(), _function(EffectiveVectorMultivariateFunction::zeros(0u,0u)) { }
     //! \brief Construct the box \a dom.
     ConstrainedImageSet(const RealBox& dom) : _domain(dom), _function(EffectiveVectorMultivariateFunction::identity(dom.size())) { }
     //! \brief Construct the image of \a dom under \a fn.
     ConstrainedImageSet(const RealBox& dom, const EffectiveVectorMultivariateFunction& fn) : _domain(dom), _function(fn) {
-        ARIADNE_ASSERT_MSG(dom.size()==fn.argument_size(),"dom="<<dom<<", fn="<<fn); }
+        ARIADNE_PRECONDITION_MSG(dom.size()==fn.argument_size(),"dom="<<dom<<", fn="<<fn); }
     //! \brief Construct the image of \a dom under \a fn, using constraints \a c.
     ConstrainedImageSet(const RealBox& dom, const EffectiveVectorMultivariateFunction& fn, const List<EffectiveConstraint>& c) : _domain(dom), _function(fn), _constraints(c) {
-        ARIADNE_ASSERT_MSG(dom.size()==fn.argument_size(),"dom="<<dom<<", fn="<<fn); }
+        ARIADNE_PRECONDITION_MSG(dom.size()==fn.argument_size(),"dom="<<dom<<", fn="<<fn); }
     //! \brief Convert from a bounded constraint set.
     ConstrainedImageSet(const BoundedConstraintSet& set);
     //! \brief The domain of the set.
@@ -227,12 +227,12 @@ class ConstrainedImageSet
 
     //! \brief Introduce a new constraint of the form \f$g(y)\in [c_l,c_u]\f$.
     Void new_parameter_constraint(const EffectiveConstraint& c) {
-        ARIADNE_ASSERT_MSG(c.function().argument_size()==this->domain().size(),*this<<", "<<c);
+        ARIADNE_PRECONDITION_MSG(c.function().argument_size()==this->domain().size(),*this<<", "<<c);
         this->_constraints.append(c); }
 
     //! \brief Introduce a new constraint of the form \f$g(y)\in [c_l,c_u]\f$.
     Void new_space_constraint(const EffectiveConstraint& c) {
-        ARIADNE_ASSERT_MSG(c.function().argument_size()==this->_function.result_size(),*this<<", "<<c);
+        ARIADNE_PRECONDITION_MSG(c.function().argument_size()==this->_function.result_size(),*this<<", "<<c);
         this->_constraints.append(EffectiveConstraint(c.lower_bound(),compose(c.function(),_function),c.upper_bound())); }
 
     virtual ConstrainedImageSet* clone() const override { return new ConstrainedImageSet(*this); }
@@ -293,19 +293,19 @@ class ValidatedConstrainedImageSet
     List< ValidatedConstraint > _constraints;
   public:
     //! \brief Construct the set with zero-dimensional parameterisation in zero dimensions with no constraints.
-    ValidatedConstrainedImageSet() : _domain(), _function() { }
+    ValidatedConstrainedImageSet() : _domain(), _function(ValidatedVectorMultivariateFunction::zeros(0u,0u)) { }
     //! \brief Construct the box \a dom.
     ValidatedConstrainedImageSet(const ExactBoxType& dom)
         : _domain(dom), _reduced_domain(dom)
         , _function(static_cast<ValidatedVectorMultivariateFunction const&>(EffectiveVectorMultivariateFunction::identity(dom.size()))) { }
     //! \brief Construct the image of \a dom under \a fn.
     ValidatedConstrainedImageSet(const ExactBoxType& dom, const ValidatedVectorMultivariateFunction& fn) : _domain(dom), _reduced_domain(dom), _function(fn) {
-        ARIADNE_ASSERT_MSG(dom.size()==fn.argument_size(),"dom="<<dom<<", fn="<<fn); }
+        ARIADNE_PRECONDITION_MSG(dom.size()==fn.argument_size(),"dom="<<dom<<", fn="<<fn); }
     ValidatedConstrainedImageSet(const ExactBoxType& dom, const ValidatedVectorMultivariateFunctionModelDP& fn) : _domain(dom), _reduced_domain(dom), _function(fn.raw_pointer()->_clone()) {
-        ARIADNE_ASSERT_MSG(dom.size()==fn.argument_size(),"dom="<<dom<<", fn="<<fn); }
+        ARIADNE_PRECONDITION_MSG(dom.size()==fn.argument_size(),"dom="<<dom<<", fn="<<fn); }
     //! \brief Construct the image of \a dom under \a fn.
     ValidatedConstrainedImageSet(const ExactBoxType& dom, const ValidatedVectorMultivariateFunction& fn, const List<ValidatedConstraint>& cnstr) : _domain(dom), _reduced_domain(dom), _function(fn), _constraints(cnstr) {
-        ARIADNE_ASSERT_MSG(dom.size()==fn.argument_size(),"dom="<<dom<<", fn="<<fn); }
+        ARIADNE_PRECONDITION_MSG(dom.size()==fn.argument_size(),"dom="<<dom<<", fn="<<fn); }
 
     //! \brief The domain of the set.
     const ExactBoxType& domain() const { return this->_domain; }
@@ -328,13 +328,13 @@ class ValidatedConstrainedImageSet
 
     //! \brief Introduce a new constraint of the form \f$g(s)\in [c_l,c_u]\f$.
     Void new_parameter_constraint(const ValidatedConstraint& c) {
-        ARIADNE_ASSERT_MSG(c.function().argument_size()==this->number_of_parameters(),*this<<", "<<c);
+        ARIADNE_PRECONDITION_MSG(c.function().argument_size()==this->number_of_parameters(),*this<<", "<<c);
         this->_constraints.append(c);
     }
 
     //! \brief Introduce a new constraint of the form \f$g(x)\in [c_l,c_u]\f$.
     Void new_space_constraint(const ValidatedConstraint& c) {
-        ARIADNE_ASSERT_MSG(c.function().argument_size()==this->dimension(),*this<<", "<<c);
+        ARIADNE_PRECONDITION_MSG(c.function().argument_size()==this->dimension(),*this<<", "<<c);
         this->_constraints.append(ValidatedConstraint(c.lower_bound(),compose(c.function(),this->function()),c.upper_bound()));
     }
 
