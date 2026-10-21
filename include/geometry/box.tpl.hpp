@@ -70,7 +70,7 @@ template<class I> SizeType irmax(const Box<I>& bx) {
 template<class I> Box<I> Box<I>::split(SizeType k, SplitPart lmu) const
 {
     const Box<I>& bx=*this;
-    ARIADNE_ASSERT(k<bx.dimension());
+    ARIADNE_PRECONDITION(k<bx.dimension());
     Box<I> r(bx);
     r[k]=Ariadne::split(bx[k],lmu);
     return r;
@@ -79,7 +79,7 @@ template<class I> Box<I> Box<I>::split(SizeType k, SplitPart lmu) const
 template<class I> Pair< Box<I>, Box<I> > Box<I>::split(SizeType k) const
 {
     const Box<I>& bx=*this;
-    ARIADNE_ASSERT(k<bx.dimension());
+    ARIADNE_PRECONDITION(k<bx.dimension());
     Pair< Box<I>, Box<I> > r(bx,bx);
     auto c=bx[k].midpoint();
     r.first[k].set_upper_bound(c);
@@ -127,7 +127,7 @@ template<class I> typename Box<I>::VertexType Box<I>::upper_bounds() const
 template<class I> typename Box<I>::RadiusType Box<I>::radius() const
 {
     const Box<I>& bx=*this;
-    ARIADNE_ASSERT(bx.dimension()>0);
+    ARIADNE_PRECONDITION(bx.dimension()>0);
     decltype(declval<I>().radius()) r=bx[0].radius();
     for(SizeType i=1; i!=bx.dimension(); ++i) {
         r=max(r,bx[i].radius());
@@ -138,7 +138,7 @@ template<class I> typename Box<I>::RadiusType Box<I>::radius() const
 template<class I> Vector<typename Box<I>::RadiusType> Box<I>::widths() const
 {
     const Box<I>& bx=*this;
-    ARIADNE_ASSERT(bx.dimension()>0);
+    ARIADNE_PRECONDITION(bx.dimension()>0);
     Vector<decltype(declval<I>().width())> r(bx.dimension(),bx[0].width());
     for(SizeType i=1; i!=bx.dimension(); ++i) {
         r[i] = bx[i].width();
@@ -149,7 +149,7 @@ template<class I> Vector<typename Box<I>::RadiusType> Box<I>::widths() const
 template<class I> Vector<typename Box<I>::RadiusType> Box<I>::radii() const
 {
     const Box<I>& bx=*this;
-    ARIADNE_ASSERT(bx.dimension()>0);
+    ARIADNE_PRECONDITION(bx.dimension()>0);
     Vector<decltype(declval<I>().width())> r(bx.dimension(),bx[0].radius());
     for(SizeType i=1; i!=bx.dimension(); ++i) {
         r[i] = bx[i].radius();
@@ -160,7 +160,7 @@ template<class I> Vector<typename Box<I>::RadiusType> Box<I>::radii() const
 template<class I> typename Box<I>::RadiusType Box<I>::semiperimeter() const
 {
     const Box<I>& bx=*this;
-    ARIADNE_ASSERT(bx.dimension()>0);
+    ARIADNE_PRECONDITION(bx.dimension()>0);
     decltype(declval<I>().width()) r=bx[0].width();
     for(SizeType i=1; i!=bx.dimension(); ++i) {
         r += bx[i].width();
@@ -171,7 +171,7 @@ template<class I> typename Box<I>::RadiusType Box<I>::semiperimeter() const
 template<class I> typename Box<I>::RadiusType Box<I>::measure() const
 {
     const Box<I>& bx=*this;
-    ARIADNE_ASSERT(bx.dimension()>0);
+    ARIADNE_PRECONDITION(bx.dimension()>0);
     decltype(declval<I>().width()) r=bx[0].width();
     for(SizeType i=1; i!=bx.dimension(); ++i) {
         r*=bx[i].width();

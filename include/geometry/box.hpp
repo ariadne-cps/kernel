@@ -244,7 +244,7 @@ template<class I> inline Pair<Box<I>,Box<I>> split(const Box<I>& bx, SizeType k)
 //! \relates Box \brief The Cartesian product of two boxes, defined as \f$ B_1 \times B_2 = \{ (x_1,x_2) \mid x_1 \in B_1 \wedge x_2 \in B_2 \} \f$.
 template<class I> inline Box<I> product(const Box<I>& bx1, const Box<I>& bx2) { return Box<I>::_product(bx1,bx2); }
 //! \relates Box \brief The Cartesian product of an interval and a box.
-template<class I> inline Box<I> product(const Interval<I>& ivl1, const Box<I>& bx2) { return Box<I>::_product(ivl1,bx2); }
+template<class I> inline Box<I> product(const I& ivl1, const Box<I>& bx2) { return Box<I>::_product(ivl1,bx2); }
 //! \relates Box \brief The Cartesian product of a box and an interval.
 template<class I> inline Box<I> product(const Box<I>& bx1, const I& ivl2) { return Box<I>::_product(bx1,ivl2); }
 //! \relates Box \brief The Cartesian product of three boxes.
@@ -314,7 +314,7 @@ template<class I> Bool same(const Box<I>& bx1, const Box<I>& bx2) {
 
 //! \relates Box \brief The smallest box containing the two boxes.
 template<class I1, class I2> Box<decltype(hull(declval<I1>(),declval<I2>()))> hull(const Box<I1>& bx1, const Box<I2>& bx2) {
-    ARIADNE_ASSERT(bx1.dimension()==bx2.dimension());
+    ARIADNE_PRECONDITION(bx1.dimension()==bx2.dimension());
     Box<decltype(hull(declval<I1>(),declval<I2>()))> r(bx1.dimension());
     for(SizeType i=0; i!=bx1.dimension(); ++i) {
         r[i]=hull(bx1[i],bx2[i]);
