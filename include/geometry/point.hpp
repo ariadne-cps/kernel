@@ -144,7 +144,7 @@ template<class X> X Point<X>::_make_default_coordinate() {
 }
 
 template<class X> template<class... PRS> requires Constructible<X,ExactDouble,PRS...>
-Point<X>::Point(InitializerList<ExactDouble> lst, PRS... prs) : Vector<X>(lst,prs...) { }
+Point<X>::Point(InitializerList<ExactDouble> lst, PRS... prs) : Vector<X>(UniformArray<X>(lst,prs...)) { }
 
 } // namespace Ariadne
 
