@@ -298,7 +298,8 @@ inline BinaryTreeNode::BinaryTreeNode(const ValidatedKleenean isEnabled) {
 }
 
 inline BinaryTreeNode::BinaryTreeNode(const BinaryTreeNode& theTreeNode) {
-    if( (theTreeNode._pLeftNode) != nullptr && ( theTreeNode._pRightNode != nullptr ) ) {
+    // Children are always created and removed as a pair.
+    if( theTreeNode._pLeftNode != nullptr ) {
         init( theTreeNode._isEnabled, new BinaryTreeNode( *theTreeNode._pLeftNode ), new BinaryTreeNode( *theTreeNode._pRightNode ) );
     } else {
         //NOTE: We do not allow for nodes where one leaf is nullptr and another is not
@@ -338,7 +339,7 @@ inline Bool BinaryTreeNode::is_disabled() const{
 }
 
 inline Bool BinaryTreeNode::is_leaf() const{
-    return (_pLeftNode == nullptr) && (_pRightNode == nullptr);
+    return _pLeftNode == nullptr;
 }
 
 inline BinaryTreeNode * BinaryTreeNode::child_node(Bool left_or_right) const {
@@ -356,10 +357,10 @@ inline BinaryTreeNode * BinaryTreeNode::right_node() const {
 inline Void BinaryTreeNode::set(Bool enabled_or_disabled) {
     _isEnabled = enabled_or_disabled;
     if( _pLeftNode != nullptr ) {
-        delete _pLeftNode;
+        delete _pLeftNode; _pLeftNode = nullptr;
     }
     if( _pRightNode != nullptr ) {
-        delete _pRightNode;
+        delete _pRightNode; _pRightNode = nullptr;
     }
 }
 
@@ -372,6 +373,7 @@ inline Void BinaryTreeNode::set_enabled() {
 }
 
 inline Void BinaryTreeNode::copy_from( const BinaryTreeNode * pOtherNode ) {
+    if( pOtherNode == this ) { return; }
     if( pOtherNode != nullptr ) {
         _isEnabled = pOtherNode->_isEnabled;
         if( _pLeftNode != nullptr) { delete _pLeftNode; _pLeftNode = nullptr; }
@@ -430,6 +432,7 @@ inline String BinaryTreeNode::node_to_string() const {
 }
 
 inline BinaryTreeNode& BinaryTreeNode::operator=( const BinaryTreeNode & otherNode ) {
+    if( this == &otherNode ) { return *this; }
     //Copy the node value
     _isEnabled = otherNode._isEnabled;
 

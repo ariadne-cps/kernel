@@ -293,7 +293,49 @@ inline Void test_binary_tree() {
 }
 
 
+Void test_copy_and_reset() {
+    BinaryTreeNode empty(BooleanArray{},BooleanArray{});
+    BinaryTreeNode no_leaves(BooleanArray{false},BooleanArray{});
+    ARIADNE_TEST_ASSERT(empty.is_disabled());
+    ARIADNE_TEST_ASSERT(no_leaves.is_disabled());
+    ARIADNE_TEST_ASSERT(empty.node_to_string().find("BinaryTreeNode")!=String::npos);
+
+    BinaryTreeNode branch(false);
+    branch.split();
+    branch.left_node()->set_enabled();
+    ARIADNE_TEST_THROWS(branch.set_enabled(),NotALeafNodeException);
+    BinaryTreeNode copied(false);
+    copied=branch;
+    ARIADNE_TEST_ASSERT(copied==branch);
+    copied.right_node()->set_enabled();
+    ARIADNE_TEST_ASSERT(branch.right_node()->is_disabled());
+    const BinaryTreeNode& alias=copied;
+    copied=alias;
+    ARIADNE_TEST_ASSERT(copied.all_enabled());
+    copied=empty;
+    ARIADNE_TEST_ASSERT(copied.is_leaf());
+    ARIADNE_TEST_ASSERT(copied.is_disabled());
+    copied=branch;
+    copied.copy_from(&empty);
+    ARIADNE_TEST_ASSERT(copied.is_leaf());
+    copied.copy_from(&branch);
+    copied.copy_from(&copied);
+    ARIADNE_TEST_ASSERT(copied==branch);
+    copied.copy_from(nullptr);
+    ARIADNE_TEST_ASSERT(copied==branch);
+    copied.set(true);
+    ARIADNE_TEST_ASSERT(copied.is_leaf());
+    ARIADNE_TEST_ASSERT(copied.left_node()==nullptr);
+    ARIADNE_TEST_ASSERT(copied.right_node()==nullptr);
+    copied.set(false);
+    ARIADNE_TEST_ASSERT(copied.is_disabled());
+    copied.split();
+    copied.left_node()->set_enabled();
+    ARIADNE_TEST_ASSERT(copied.has_enabled());
+}
+
 Int main() {
+    ARIADNE_TEST_CALL(test_copy_and_reset());
 
     test_binary_tree();
 
