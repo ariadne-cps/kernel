@@ -66,7 +66,7 @@ overlap(const LocatedSetInterface<EffectiveTag,T>& ls, const RegularSetInterface
     if(definitely(rs.separated(bx))) {
         return false;
     }
-    else if(definitely(rs.covers(bx))) {
+    else if(definitely(rs.covers(bx) && ls.overlaps(bx))) {
         return true;
     }
     else if(definitely(bx.radius()<cast_exact(eps))) {
@@ -88,8 +88,10 @@ overlap(const LocatedSetInterface<EffectiveTag,T>& ls, const RegularSetInterface
 template<class T> ValidatedKleenean
 inside(const LocatedSetInterface<EffectiveTag,T>& ls, const RegularSetInterface<EffectiveTag,T>& rs, const ExactBoxType& bx, const FloatDP& eps)
 {
-    if(definitely(ls.separated(bx) || rs.separated(bx))) {
+    if(definitely(ls.separated(bx) || rs.covers(bx))) {
         return true;
+    } else if(definitely(ls.overlaps(bx) && rs.separated(bx))) {
+        return false;
     } else if(decide(bx.radius()<cast_exact(eps))) {
         return indeterminate;
     } else {
@@ -111,6 +113,8 @@ separated(const LocatedSetInterface<EffectiveTag,T>& ls, const RegularSetInterfa
 {
     if(definitely(ls.separated(bx) || rs.separated(bx))) {
         return true;
+    } else if(definitely(ls.overlaps(bx) && rs.covers(bx))) {
+        return false;
     } else if(definitely(bx.radius()<cast_exact(eps))) {
         return indeterminate;
     } else {
