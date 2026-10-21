@@ -439,7 +439,11 @@ compute_c(const SizeType m, const Vector<X>& xl, const Vector<X>& xu, const Arra
         if(possibly(x[j]<=xl[j])) { c[j]=-1; }
         else if(possibly(x[j]>=xu[j])) { c[j]=+1; }
         if(possibly(x[j]<xl[j]) && possibly(x[j]>xu[j])) {
-            ARIADNE_FAIL_MSG("Unhandled case in checking feasibility of linear program. Basic variable x["<<j<<"]="<<x[j]<<" may violate both lower bound "<<xl[j]<<" and upper bound "<<xu[j]<<".");
+            // An enclosure wider than the admissible interval cannot
+            // select a certified direction of violation. A zero cost
+            // leaves this component neutral; verify_feasibility then
+            // reports indeterminate instead of rejecting a valid problem.
+            c[j]=0;
         }
     }
     return c;

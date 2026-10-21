@@ -47,6 +47,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_verify_feasibility_basic_statuses());
         ARIADNE_TEST_CALL(test_verify_feasibility_input_contracts());
         ARIADNE_TEST_CALL(test_verify_feasibility_dual_signs());
+        ARIADNE_TEST_CALL(test_verify_feasibility_with_narrow_bounds());
         ARIADNE_TEST_CALL(test_upper_only_nonbasic_bounds());
         ARIADNE_TEST_CALL(test_approximate_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_unbounded_nonbasic_initialisation());
@@ -651,6 +652,27 @@ class TestLinearSimplexSolver
         // x0=-1 at this basis, but x1 can decrease to make x0 feasible.
         ARIADNE_TEST_ASSERT(is_indeterminate(solver.verify_feasibility(
             xl,xu,A,Vector<FloatDP>({0.0_x},dp),vt)));
+    }
+
+    Void test_verify_feasibility_with_narrow_bounds() {
+        // The exact solution is (1/5,1/5), strictly inside these bounds.
+        // Inverting A in interval arithmetic gives a wider enclosure
+        // crossing both bounds. That uncertainty must be reported without
+        // throwing or claiming a certificate of feasibility/infeasibility.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{3.0_x,2.0_x},{2.0_x,3.0_x}},dp);
+        Vector<FloatDP> rhs({1.0_x,1.0_x},dp);
+        Vector<FloatDP> lower({0.19999999999999998_pr,0.19999999999999998_pr},dp);
+        Vector<FloatDP> upper({0.20000000000000004_pr,0.20000000000000004_pr},dp);
+        Array<Slackness> types({Slackness::BASIS,Slackness::BASIS});
+        Rational exact_solution=Rational(1)/5;
+        ARIADNE_TEST_ASSERT(Rational(lower[0])<exact_solution);
+        ARIADNE_TEST_ASSERT(exact_solution<Rational(upper[0]));
+        auto primal=solver.compute_x(lower,upper,A,rhs,types);
+        ARIADNE_TEST_ASSERT(possibly(primal[0]<lower[0]));
+        ARIADNE_TEST_ASSERT(possibly(primal[0]>upper[0]));
+        ARIADNE_TEST_ASSERT(is_indeterminate(
+            solver.verify_feasibility(lower,upper,A,rhs,types)));
     }
 
     Void test_approximate_upper_entry_basis_exchange() {
