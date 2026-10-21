@@ -46,7 +46,7 @@ template<> double numeric_cast(const CheckedAssignable<Approximation<FloatMP>>& 
 Curve::Curve(const EffectiveVectorUnivariateFunction& f)
     : _function(f)
 {
-    ARIADNE_ASSERT(this->_function.argument_size()==1);
+    // The univariate function type fixes the argument size to one.
 }
 
 
@@ -110,20 +110,20 @@ InterpolatedCurve::clone() const
 
 Void
 InterpolatedCurve::insert(const ParameterType& s, const PointType& pt) {
-    if(!this->_points.empty()) { ARIADNE_ASSERT(pt.size()==this->dimension()); }
+    if(!this->_points.empty()) { ARIADNE_PRECONDITION(pt.size()==this->dimension()); }
     this->_points.insert(Pair< ParameterType, PointType >(s,pt));
 }
 
 Void
 InterpolatedCurve::insert(const Dyadic& s, const PointType& pt) {
-    decltype(auto) spr = this->_points.begin()->first.precision();
+    PrecisionType spr;
     this->insert(ParameterType(s,spr),pt);
 }
 
 Void
 InterpolatedCurve::insert(const RawFloatDP& s, const Vector<RawFloatDP>& pt) {
-    if(!this->_points.empty()) { ARIADNE_ASSERT(pt.size()==this->dimension()); }
-    this->insert(ParameterType(s),PointType(reinterpret_cast<Vector<FloatDP>const&>(pt)));
+    // The typed overload checks the dimension after scalar conversion.
+    this->insert(ParameterType(s),PointType(Vector<FloatDPApproximation>(pt)));
 }
 
 UpperBoxType
