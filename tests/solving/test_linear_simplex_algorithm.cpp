@@ -109,6 +109,12 @@ class TestLinearSimplexSolver
         test_approximate_upper_entry_basis_exchange();
         test_validated_upper_entry_basis_exchange();
         test_validated_feasibility_basis_exchange();
+        test_lpstep_without_leaving_variable();
+        test_validated_feasibility_without_finite_leaving_bound();
+        test_validated_feasibility_stationary_at_boundary();
+        test_single_variable_infeasibility();
+        test_hotstarted_basis_initialisation();
+        test_upper_only_nonbasic_bounds();
     }
 
     Void test_public_simplex_input_contracts() {
