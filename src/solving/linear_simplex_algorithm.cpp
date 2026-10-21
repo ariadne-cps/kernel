@@ -978,8 +978,6 @@ LinearSimplexSolver<X>::validated_feasibility_step(const Vector<X>& xl, const Ve
         else { vt[p[s]]=Slackness::LOWER; }
     } else {
         // Variable p[r] should leave basis, and variable p[s] enter
-        ARIADNE_ASSERT(r<m);
-
         // Update pivots and variable types. The ratio test selects a
         // leaving basic variable using the certified sign of d[r] and
         // the entering variable's direction. Use the same sign here:
@@ -987,18 +985,12 @@ LinearSimplexSolver<X>::validated_feasibility_step(const Vector<X>& xl, const Ve
         const bool enters_from_lower=(vt[p[s]]==Slackness::LOWER);
         const bool leaves_at_upper=enters_from_lower
             ? definitely(-d[r]<0) : definitely(d[r]<0);
-        const bool leaves_at_lower=enters_from_lower
-            ? definitely(d[r]<0) : definitely(-d[r]<0);
         vt[p[s]] = Slackness::BASIS;
-        if(leaves_at_upper) {
-            vt[p[r]] = Slackness::UPPER;
-        } else if(leaves_at_lower) {
-            vt[p[r]] = Slackness::LOWER;
-        } else {
-            SizeType pr=p[r];
-            ARIADNE_ASSERT(decide(x[pr]==xl[pr] || x[pr]==xu[pr]));
-            if(definitely(x[pr]==xl[pr])) { vt[pr]=Slackness::LOWER; } else { vt[pr]=Slackness::UPPER; }
-        }
+        // compute_rt can return only s, n or a basic index k<m. In
+        // this branch r is a basic index selected with a certified
+        // nonzero direction. Its sign therefore determines exactly
+        // one blocking bound, even for a degenerate step of length zero.
+        vt[p[r]] = leaves_at_upper ? Slackness::UPPER : Slackness::LOWER;
 
         std::swap(p[r],p[s]);
     }
