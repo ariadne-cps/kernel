@@ -8,6 +8,7 @@ set(UNIT_TESTS
     test_grid_paving
     test_paving
     test_point
+    test_union_of_intervals
     test_measurable_set
 )
 foreach(TEST ${UNIT_TESTS})

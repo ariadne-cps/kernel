@@ -30,6 +30,7 @@
 #define ARIADNE_UNION_OF_INTERVALS_HPP
 
 #include "interval/interval.hpp"
+#include "geometry/set_interface.hpp"
 
 namespace Ariadne {
 
@@ -55,7 +56,7 @@ template<class U> class UnionOfIntervals {
             : _data(ivls._data) { }
     template<class UU, class... PRS> requires Constructible<U,UU,PRS...>
         UnionOfIntervals(List<Interval<UU>> ivls, PRS... prs)
-            : _data(Ariadne::apply([&](Interval<UU>const& ivl){return Interval<U>(ivl,prs...);},ivls)) { }
+            : _data(Ariadne::apply([&](Interval<UU>const& ivl){return Interval<U>(ivl,prs...);},ivls)) { this->_sort(); this->_combine(); }
 
     UnionOfIntervals(InitializerList<Interval<U>> ivls) : UnionOfIntervals(List<Interval<U>>(ivls)) { }
     template<class... PRS> requires Constructible<U,Dyadic,PRS...>
@@ -67,7 +68,7 @@ template<class U> class UnionOfIntervals {
         if constexpr (Constructible<Interval<U>,IntervalDomainType>) {
             return UnionOfIntervals<U>({Interval<U>(bs)});
         } else {
-            assert(this->_data.size()!=0);
+            ARIADNE_PRECONDITION(this->_data.size()!=0);
             Interval<U> bivl=this->_data.front(); bivl=DyadicInterval(bs);
             return UnionOfIntervals<U>({bivl});
         }
@@ -100,6 +101,12 @@ template<class U> class UnionOfIntervals {
         return UnionOfIntervals<U>::_subset(ivls1,ivls2); }
     friend OutputStream& operator<<(OutputStream& os, UnionOfIntervals<U> const& ivls) { return os << ivls._data; }
   private:
+    // With no interval supplying a precision, use the numeric type's
+    // default characteristics for the zero measure of an empty union.
+    static MeasureType _zero_measure() {
+        if constexpr (Constructible<MeasureType,Nat>) { return MeasureType(0u); }
+        else { return MeasureType(0u,CharacteristicsType<U>{}); }
+    }
     static UnionOfIntervals<U> _intersection(UnionOfIntervals<U> const& ivls1, UnionOfIntervals<U> const& ivls2);
     static UnionOfIntervals<U> _join(UnionOfIntervals<U> const& ivls1, UnionOfIntervals<U> const& ivls2);
     static Bool _intersect(UnionOfIntervals<U> const& ivls1, UnionOfIntervals<U> const& ivls2);
@@ -112,8 +119,8 @@ template<class U> UnionOfIntervals<U> interior(UnionOfIntervals<U> ivls, Negatio
     List<Interval<U>> rivls;
     rivls.reserve(ivls.size());
     for (auto ivl : ivls) {
-        Interval<U> rivl(ivl.lower()+eps, ivl.upper()-eps);
-        if (not rivl.empty()) {
+        Interval<U> rivl(ivl.lower_bound()+eps, ivl.upper_bound()-eps);
+        if (not rivl.is_empty()) {
             rivls.append(rivl);
         }
     }
@@ -128,9 +135,9 @@ template<class U> UnionOfIntervals<U> UnionOfIntervals<U>::_intersection(UnionOf
     auto iter2=ivls2.begin();
     while (iter1!=ivls1.end() && iter2!=ivls2.end()) {
         if (iter1->lower_bound() >= iter2->upper_bound()) {
-            ++iter1;
-        } else if (iter2->lower_bound() >= iter1->upper_bound()) {
             ++iter2;
+        } else if (iter2->lower_bound() >= iter1->upper_bound()) {
+            ++iter1;
         } else {
             rivls.append(Interval<U>(max(iter1->lower_bound(),iter2->lower_bound()),min(iter1->upper_bound(),iter2->upper_bound())));
             if (iter1->upper_bound()<iter2->upper_bound()) { ++iter1; } else { ++iter2; }
@@ -180,7 +187,7 @@ template<class U> Bool UnionOfIntervals<U>::_subset(UnionOfIntervals<U> const& i
 
 
 template<class U> auto UnionOfIntervals<U>::measure() const -> MeasureType {
-    MeasureType r(nul(_data[0].width()));
+    MeasureType r = _data.empty() ? _zero_measure() : MeasureType(nul(_data.front().width()));
     for (auto ivl : this->_data) {
         r+=ivl.width();
     }
@@ -188,7 +195,7 @@ template<class U> auto UnionOfIntervals<U>::measure() const -> MeasureType {
 }
 
 template<class U> Interval<U> UnionOfIntervals<U>::bounding_box() const {
-    ARIADNE_ASSERT(!_data.empty());
+    ARIADNE_PRECONDITION(!_data.empty());
     return Interval<U>(this->_data.front().lower_bound(),this->_data.back().upper_bound());
 }
 
