@@ -160,11 +160,10 @@ Int Grid::subdivision_index(DimensionType d, const ExactNumericType& x) const
     FloatDP half(0.5_x,dp);
     Int n=integer_cast<Int>(floor(add(near,div(near,sub(near,x,this->_data->_origin[d]),this->_data->_lengths[d]),half)));
     FloatDP sc=add(near,this->_data->_origin[d],mul(near,this->_data->_lengths[d],n));
-    if(sc == x.raw()) {
-        return n;
-    } else {
-        ARIADNE_THROW(InvalidGridPosition,std::setprecision(20)<<"Grid::subdivision_index(DimensionType d,ExactNumericType x)","d="<<d<<", x="<<x<<", this->origin[d]="<<this->_data->_origin[d]<<", this->lengths[d]="<<this->_data->_lengths[d]<<" (closest value is "<<sc<<")");
+    if(sc != x.raw()) {
+        ARIADNE_THROW(InvalidGridPosition,std::setprecision(20)<<"Grid::subdivision_index(DimensionType d,ExactNumericType x)","d="<<d<<", x="<<x<<", this->origin[d]="<<this->_data->_origin[d]<<", this->lengths[d]="<<this->_data->_lengths[d]<<" (closest value is "<<sc<<")")
     }
+    return n;
 }
 
 Int Grid::subdivision_lower_index(DimensionType d, const LowerNumericType& x) const
