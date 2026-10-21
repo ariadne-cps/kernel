@@ -39,19 +39,33 @@ feasible_zero(ExactBoxType D, ValidatedVectorMultivariateFunction h) const
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN("D="<<D<<", h="<<h);
 
+    ARIADNE_PRECONDITION(D.is_bounded());
     const SizeType n=D.size();
+    for(SizeType j=0; j!=n; ++j) {
+        ARIADNE_PRECONDITION(D[j].lower_bound()<D[j].upper_bound());
+    }
+    const ExactBoxType zero_box(h.result_size(),ExactIntervalType(0,0));
+    const ExactFloatDPVectorType centre=midpoint(D);
+    // This also handles vacuous equalities and zero-dimensional domains.
+    if(this->is_feasible_point(D,h,zero_box,centre)) { return true; }
+    if(n==0u) { return indeterminate; }
 
-    FloatDPBoundsVector zl(n,dp), zu(n,dp);
-    ExactFloatDPVectorType xl = Ariadne::lower_bounds(D);
-    ExactFloatDPVectorType xu = Ariadne::upper_bounds(D);
-
-    FloatDPBoundsVector x=cast_singleton(D);
+    const ExactFloatDPVectorType xl=lower_bounds(D);
+    const ExactFloatDPVectorType xu=upper_bounds(D);
+    // A local search box avoids the barrier poles at D's endpoints.
+    // It need not contain every zero in D: failure here is indeterminate.
+    FloatDPBoundsVector x=(cast_singleton(D)+centre)*0.5_exact;
     FloatDPBoundsVector y(h.result_size(),FloatDPBounds(-1,+1,dp));
-    FloatDPBounds mu(0,1,dp);
+    // mu is a fixed positive barrier parameter, not an unknown constrained
+    // by ||y||^2. Including zero made the initial Hessian enclosure
+    // contain a singular matrix even for regular equality problems.
+    const FloatDPBounds mu(1,dp);
 
     for(SizeType i=0; i!=8; ++i) {
         try {
-            this->feasibility_step(xl,xu,h,x,y,zl,zu,mu);
+            if(!this->feasibility_step(xl,xu,h,x,y,mu)) {
+                return indeterminate;
+            }
         } catch(const SingularMatrixException&) {
             // An interval enclosure containing a singular matrix cannot
             // provide a Newton correction. This is failure to certify,
@@ -61,27 +75,31 @@ feasible_zero(ExactBoxType D, ValidatedVectorMultivariateFunction h) const
         }
     }
 
+    // The local Newton search is not itself a feasibility certificate.
+    // Check an exact point first (including singleton contractions), then
+    // ask the existing validated inclusion test to certify the enclosure.
+    const ExactFloatDPVectorType candidate=midpoint(x);
+    if(this->is_feasible_point(D,h,zero_box,candidate)) { return true; }
+    if(definitely(this->contains_feasible_point(D,h,zero_box,x))) { return true; }
     return indeterminate;
 }
 
-Void IntervalNonlinearInteriorPointSolver::
+Bool IntervalNonlinearInteriorPointSolver::
 feasibility_step(const ExactFloatDPVectorType& xl, const ExactFloatDPVectorType& xu, const ValidatedVectorMultivariateFunction& h,
-                 FloatDPBoundsVector& x, FloatDPBoundsVector& y, FloatDPBoundsVector& zl, FloatDPBoundsVector zu, FloatDPBounds& mu) const
+                 FloatDPBoundsVector& x, FloatDPBoundsVector& y, const FloatDPBounds& mu) const
 {
     LOGGING_SCOPE_CREATE;
-    LOGGING_PRINTLN("[x]="<<x<<" [lambda]="<<y<<", [zl]="<<zl<<", [zu]="<<zu<<" [mu]="<<mu);
+    LOGGING_PRINTLN("[x]="<<x<<" [lambda]="<<y<<" [mu]="<<mu);
 
     const SizeType n=x.size();
     const SizeType m=y.size();
 
     FloatDPBoundsVector mx=midpoint(x);
     FloatDPBoundsVector my=midpoint(y);
-    FloatDPBoundsVector mzl=midpoint(zl);
-    FloatDPBoundsVector mzu=midpoint(zu);
-    FloatDPBounds mmu(midpoint(mu));
+
     LOGGING_PRINTLN_AT(1,"x~"<<x<<" lambda~="<<y<<", mu~"<<mu);
 
-    // Solve equations y Dh(x) - zl + zu = 0; h(x) = 0; (x-xl).zl - mu = 0;  (xu-x).zu - mu = 0; Sum_j y_j^2 - mu = 0
+    // Fixed-barrier KKT equations: Dh(x)^T y - mu/(x-xl) + mu/(xu-x) = 0; h(x) = 0.
     Vector<FloatDPBoundsDifferential> ddhx=h.evaluate(FloatDPBoundsDifferential::variables(2,x));
     Vector<FloatDPBoundsDifferential> dhmx=h.evaluate(FloatDPBoundsDifferential::variables(1,mx));
     FloatDPBoundsMatrix A = ddhx.jacobian();
@@ -90,13 +108,11 @@ feasibility_step(const ExactFloatDPVectorType& xl, const ExactFloatDPVectorType&
 
     FloatDPBoundsVector rx = transpose(mA) * my;
     for(SizeType j=0; j!=n; ++j) {
-        rx[j] -= mmu*rec(mx[j]-xl[j]);
-        rx[j] += mmu*rec(xu[j]-mx[j]);
+        rx[j] -= mu*rec(mx[j]-xl[j]);
+        rx[j] += mu*rec(xu[j]-mx[j]);
     }
     FloatDPBoundsVector ry = dhmx.value();
-    FloatDPBoundsVector rzl = esub(emul(FloatDPBoundsVector(mx-xl),mzl),mmu);
-    FloatDPBoundsVector rzu = esub(emul(FloatDPBoundsVector(xu-mx),mzu),mmu);
-    LOGGING_PRINTLN("rx="<<rx<<" ry="<<ry<<" rzl="<<rzl<<" rzu="<<rzu);
+    LOGGING_PRINTLN("rx="<<rx<<" ry="<<ry);
 
     FloatDPBoundsMatrix H(n,n,dp);
     for(SizeType i=0; i!=m; ++i) { H += y[i] * ddhx[i].hessian(); }
@@ -118,15 +134,24 @@ feasibility_step(const ExactFloatDPVectorType& xl, const ExactFloatDPVectorType&
     FloatDPBoundsVector dx = Hinv * ( rx - transpose(A) * dy);
     LOGGING_PRINTLN("dx="<<dx<<" dy="<<dy);
 
-    FloatDPBoundsVector nx = x-dx;
-    FloatDPBoundsVector ny = y-dy;
+    // Interval Newton is centred at (mx,my), where the residuals were
+    // evaluated. Subtracting from the whole old boxes retains their width.
+    FloatDPBoundsVector nx = mx-dx;
+    FloatDPBoundsVector ny = my-dy;
     LOGGING_PRINTLN("nx="<<nx<<" ny="<<ny);
     LOGGING_PRINTLN_AT(1,"h(x)="<<h(nx));
 
-    x = refinement(x,nx); y=refinement(y,ny);
-    FloatDPBounds nmu = zero;
-    for(SizeType i=0; i!=m; ++i) { nmu += sqr(y[i]); }
-    mu=refinement(mu,nmu);
+    // Reject an empty local KKT contraction before constructing Bounds
+    // with inconsistent endpoints. This says nothing about zeros elsewhere.
+    for(SizeType j=0; j!=n; ++j) {
+        if(inconsistent(x[j],nx[j])) { return false; }
+    }
+    for(SizeType i=0; i!=m; ++i) {
+        if(inconsistent(y[i],ny[i])) { return false; }
+    }
+    x=refinement(x,nx);
+    y=refinement(y,ny);
+    return true;
 }
 
 /*

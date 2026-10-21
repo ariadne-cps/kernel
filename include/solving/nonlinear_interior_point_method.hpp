@@ -136,8 +136,8 @@ class IntervalNonlinearInteriorPointSolver
     //! \brief Test whether h has a zero in the bounded box D with nonempty interior.
     virtual ValidatedKleenean feasible_zero(ExactBoxType D, ValidatedVectorMultivariateFunction h) const;
   private:
-    Void feasibility_step(const FloatDPVector& xl, const FloatDPVector& xu, const ValidatedVectorMultivariateFunction& h,
-                          FloatDPBoundsVector& x, FloatDPBoundsVector& y, FloatDPBoundsVector& zl, FloatDPBoundsVector zu, FloatDPBounds& mu) const;
+    Bool feasibility_step(const FloatDPVector& xl, const FloatDPVector& xu, const ValidatedVectorMultivariateFunction& h,
+                          FloatDPBoundsVector& x, FloatDPBoundsVector& y, const FloatDPBounds& mu) const;
 };
 
 
