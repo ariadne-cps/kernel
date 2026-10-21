@@ -436,6 +436,9 @@ class TestLinearSimplexSolver
         Array<Slackness> separated_basis({Slackness::BASIS,Slackness::LOWER,Slackness::BASIS});
         Array<SizeType> wrong_order({0u,1u,2u});
         ARIADNE_TEST_FAIL(solver.consistency_check(separated_basis,wrong_order));
+        Array<Slackness> one_basis({Slackness::BASIS,Slackness::LOWER,Slackness::LOWER});
+        Array<SizeType> outside_suffix({0u,1u,3u});
+        ARIADNE_TEST_FAIL(solver.consistency_check(one_basis,outside_suffix));
 
         Matrix<FloatDP> A({{1.0_x,1.0_x}},dp);
         Vector<FloatDP> rhs({0.5_x},dp);
