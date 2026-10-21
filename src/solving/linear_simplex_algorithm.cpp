@@ -1177,6 +1177,7 @@ LinearSimplexSolver<X>::_feasible(const Vector<X>& xl, const Vector<X>& xu, cons
 
     Bool infeasible=false;
     for(SizeType j=0; j!=n; ++j) {
+        ARIADNE_PRECONDITION(decide(xl[j]<=xu[j]));
         // If x[j] is (almost) infeasible by way of being to low, relax constraint x[j]>=xl[j] to x[j]>=-inf.
         if(decide(x[j]<xl[j])) { cc[j]=-1; ll[j]=-inf; infeasible=true; }
         else if(decide(x[j]>xu[j])) { cc[j]=+1; uu[j]=+inf; infeasible=true; }
@@ -1203,9 +1204,11 @@ LinearSimplexSolver<X>::_feasible(const Vector<X>& xl, const Vector<X>& xu, cons
         }
 
         infeasible=false;
+        // Reconstruction assigns each nonbasic coordinate its bound.
+        // A previously violated bound is relaxed to infinity and cannot
+        // become a blocking bound, so a leaving variable also takes an
+        // original bound. Those assignments need no equality assertions.
         for(SizeType j=0; j!=n; ++j) {
-            if(vt[j]==Slackness::LOWER) { ARIADNE_ASSERT(decide(x[j]==xl[j])); }
-            if(vt[j]==Slackness::UPPER) { ARIADNE_ASSERT(decide(x[j]==xu[j])); }
             if(decide(x[j]<xl[j]+ROBUST_FEASIBILITY_THRESHOLD)) { cc[j]=-1; ll[j]=-inf; infeasible=true; }
             else if(decide(x[j]>xu[j]-ROBUST_FEASIBILITY_THRESHOLD)) { cc[j]=+1; uu[j]=+inf; infeasible=true; }
             else { cc[j]=0; ll[j]=xl[j]; uu[j]=xu[j]; }

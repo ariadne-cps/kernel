@@ -60,6 +60,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_single_variable_infeasibility());
         ARIADNE_TEST_CALL(test_approximate_infeasible_equality());
         ARIADNE_TEST_CALL(test_feasibility_iteration_budget());
+        ARIADNE_TEST_CALL(test_feasibility_rejects_inverted_bounds());
         ARIADNE_TEST_CALL(test_optimum_on_last_permitted_iteration());
         ARIADNE_TEST_CALL(test_optimisation_iteration_budget());
         ARIADNE_TEST_CALL(test_lpstep_upper_bound_flip());
@@ -1045,6 +1046,17 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(not solver.feasible(lower,upper,A,rhs)));
         ARIADNE_TEST_ASSERT(is_indeterminate(
             solver.verify_feasibility(lower,upper,A,rhs,types)));
+    }
+
+    Void test_feasibility_rejects_inverted_bounds() {
+        // The equation and basis are consistent; only the second
+        // variable's lower/upper interval is inverted.
+        LinearSimplexSolver<FloatDPApproximation> solver;
+        Matrix<FloatDPApproximation> A({{1.0_x,0.0_x}},dp);
+        Vector<FloatDPApproximation> rhs({0.5_x},dp);
+        Vector<FloatDPApproximation> lower({0.0_x,1.0_x},dp);
+        Vector<FloatDPApproximation> upper({1.0_x,0.0_x},dp);
+        ARIADNE_TEST_FAIL(solver.feasible(lower,upper,A,rhs));
     }
 
     Void test_feasibility_iteration_budget() {
