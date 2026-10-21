@@ -116,10 +116,6 @@ ExactBoxType make_box(const String& str)
             ss >> c;
         }
     }
-    if(ss) {
-        ss.putback(c);
-    }
-
     ExactBoxType bx(vec.size());
     for(SizeType i=0; i!=bx.dimension(); ++i) {
         bx[i]=vec[i];
