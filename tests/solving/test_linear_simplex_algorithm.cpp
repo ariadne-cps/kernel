@@ -56,6 +56,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_lpstep_entering_index_contracts());
         ARIADNE_TEST_CALL(test_approximate_lpstep_without_leaving_variable());
         ARIADNE_TEST_CALL(test_single_variable_infeasibility());
+        ARIADNE_TEST_CALL(test_feasibility_iteration_budget());
         ARIADNE_TEST_CALL(test_lpstep_upper_bound_flip());
         ARIADNE_TEST_CALL(test_lpstep_upper_entry());
         ARIADNE_TEST_CALL(test_upper_entry_tied_upper_bounds());
@@ -940,6 +941,23 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(definitely(not solver.validated_feasible(xl,xu,A,above)));
         ARIADNE_TEST_ASSERT(definitely(not solver.feasible(xl,xu,A,below)));
         ARIADNE_TEST_ASSERT(definitely(not solver.validated_feasible(xl,xu,A,below)));
+    }
+
+    Void test_feasibility_iteration_budget() {
+        // Restoring x0>=0 in x0-sum(xj)=-1025 requires 1025 unit
+        // bound flips. The fixed iteration budget must report exhaustion
+        // rather than returning a feasibility certificate for x0<0.
+        LinearSimplexSolver<FloatDPApproximation> solver;
+        const SizeType n=1026u;
+        FloatDPApproximation zero_value(0.0_x,dp);
+        Matrix<FloatDPApproximation> A(1u,n,zero_value);
+        A[0][0]=1;
+        for(SizeType j=1u; j!=n; ++j) { A[0][j]=-1; }
+        Vector<FloatDPApproximation> rhs({-1025.0_x},dp);
+        Vector<FloatDPApproximation> lower(n,zero_value);
+        Vector<FloatDPApproximation> upper(n,FloatDPApproximation(1.0_x,dp));
+        ARIADNE_TEST_THROWS(solver.feasible(lower,upper,A,rhs),
+                            DegenerateFeasibilityProblemException);
     }
 
     Void test_lpstep_upper_bound_flip() {
