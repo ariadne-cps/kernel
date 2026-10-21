@@ -35,6 +35,7 @@ using namespace Detail;
 ValidatedKleenean IntervalNonlinearInteriorPointSolver::
 feasible_zero(ExactBoxType D, ValidatedVectorMultivariateFunction h) const
 {
+    ARIADNE_PRECONDITION(h.argument_size()==D.size());
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN("D="<<D<<", h="<<h);
 
@@ -49,7 +50,15 @@ feasible_zero(ExactBoxType D, ValidatedVectorMultivariateFunction h) const
     FloatDPBounds mu(0,1,dp);
 
     for(SizeType i=0; i!=8; ++i) {
-        this->feasibility_step(xl,xu,h,x,y,zl,zu,mu);
+        try {
+            this->feasibility_step(xl,xu,h,x,y,zl,zu,mu);
+        } catch(const SingularMatrixException&) {
+            // An interval enclosure containing a singular matrix cannot
+            // provide a Newton correction. This is failure to certify,
+            // not evidence that the equality problem is infeasible.
+            LOGGING_PRINTLN("Singular interval Newton correction; feasibility is indeterminate");
+            return indeterminate;
+        }
     }
 
     return indeterminate;

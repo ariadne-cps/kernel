@@ -3,6 +3,7 @@ set(UNIT_TESTS
     test_linear_interior_point_method
     test_linear_simplex_algorithm
     test_nonlinear_programming
+    test_nonlinear_interval_interior_point_method
     test_equation_solvers
 )
 foreach(TEST ${UNIT_TESTS})
