@@ -66,6 +66,7 @@ Void test_interpolated_curve() {
 
     auto box=curve.bounding_box();
     ARIADNE_TEST_EQUALS(box.dimension(),2u);
+    ARIADNE_TEST_PRINT(box);
     ARIADNE_TEST_ASSERT(definitely(subset(box,ExactBoxType({{-2.0_x,4.0_x},{1.0_x,6.0_x}}))));
 
     std::unique_ptr<InterpolatedCurve> cloned(curve.clone());
