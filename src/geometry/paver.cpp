@@ -55,10 +55,9 @@ namespace {
 PositiveFloatDPUpperBound average_width(const UpperBoxType& bx) {
     PositiveFloatDPUpperBound res(0u,double_precision);
     for(SizeType i=0; i!=bx.size(); ++i) {
-        if(definitely(bx[i].lower_bound()>bx[i].upper_bound())) { return PositiveFloatDPUpperBound(cast_positive(-infty),double_precision); }
         res+=bx[i].width();
     }
-    return res/bx.size();
+    return bx.size()==0u ? res : res/bx.size();
 }
 
 PositiveFloatDPUpperBound maximum_scaled_width(const UpperBoxType& bx, const Vector<PositiveFloatDP>& sf) {
@@ -74,7 +73,7 @@ PositiveFloatDPUpperBound average_scaled_width(const UpperBoxType& bx, const Vec
     for(SizeType i=0; i!=bx.size(); ++i) {
         res+=(bx[i].width()/sf[i]);
     }
-    return res/bx.size();
+    return bx.size()==0u ? res : res/bx.size();
 }
 
 
@@ -107,7 +106,11 @@ Void SubdivisionPaver::adjoin_outer_approximation_recursion(PavingInterface& pav
     // How small an over-approximating box needs to be relative to the cell size
     static const ExactDouble RELATIVE_SMALLNESS=0.5_x;
 
+    ARIADNE_PRECONDITION(paving.dimension()==set.dimension());
+    ARIADNE_PRECONDITION(max_errors.size()==paving.dimension());
+    for(SizeType i=0; i!=max_errors.size(); ++i) { ARIADNE_PRECONDITION(max_errors[i]>FloatDP(0,dp)); }
     const ExactBoxType& subdomain = set.reduced_domain();
+    if(definitely(subdomain.is_empty())) { return; }
     const ValidatedVectorMultivariateFunction& function = set.function();
     const List<ValidatedConstraint>& constraints = set.constraints();
 
@@ -130,7 +133,16 @@ Void SubdivisionPaver::adjoin_outer_approximation_recursion(PavingInterface& pav
     if(small) {
         paving.adjoin_outer_approximation(cast_exact_box(range),fineness);
     } else {
-        Pair<ValidatedConstrainedImageSet,ValidatedConstrainedImageSet> subsets=set.split();
+        const auto sensitivity=lipschitz_index_and_error(function,subdomain);
+        FloatDP minimum_error=max_errors[0];
+        for(SizeType i=1u; i!=max_errors.size(); ++i) { minimum_error=min(minimum_error,max_errors[i]); }
+        if(sensitivity.first==subdomain.dimension() || sensitivity.second.raw()<=mul(down,minimum_error,FloatDP(RELATIVE_SMALLNESS,dp))) {
+            // Further parameter subdivision cannot remove intrinsic output
+            // uncertainty. Discretise its enclosing box at the requested grid resolution.
+            paving.adjoin_outer_approximation(cast_exact_box(range),fineness);
+            return;
+        }
+        Pair<ValidatedConstrainedImageSet,ValidatedConstrainedImageSet> subsets=set.split(sensitivity.first);
         this->adjoin_outer_approximation_recursion(paving,subsets.first,fineness,max_errors);
         this->adjoin_outer_approximation_recursion(paving,subsets.second,fineness,max_errors);
     }
@@ -142,7 +154,9 @@ Void AffinePaver::adjoin_outer_approximation(PavingInterface& paving,
                                              const ValidatedConstrainedImageSet& set,
                                              Nat fineness) const
 {
+    ARIADNE_PRECONDITION(paving.dimension()==set.dimension());
     const ExactBoxType& subdomain = set.reduced_domain();
+    if(definitely(subdomain.is_empty())) { return; }
     const ValidatedVectorMultivariateFunction& function = set.function();
     const List<ValidatedConstraint>& constraints = set.constraints();
 
@@ -155,7 +169,7 @@ Void AffinePaver::adjoin_outer_approximation(PavingInterface& paving,
 
     const ExactDouble max_error=BASIC_ERROR/TwoExp(static_cast<Int>(fineness));
 
-    ARIADNE_DEBUG_ASSERT(function.domain()==set.constraint_function().domain());
+    // Constraint functions are constructed on the mapping function's domain.
     ValidatedVectorMultivariateFunction fg=join(function,set.constraint_function());
 
     List<ExactBoxType> subdomains;
@@ -192,11 +206,7 @@ Void AffinePaver::adjoin_outer_approximation(PavingInterface& paving,
     }
 }
 
-Nat verbosity;
-
 namespace {
-
-using Ariadne::verbosity;
 
 template<class Y, class PR> decltype(auto) make_raw_float(Y const& y, PR pr) { return RawFloat<PR>(y,pr); }
 
@@ -276,7 +286,8 @@ Void procedure_constraint_adjoin_outer_approximation_recursion(
         }
         newdomwdth=average_width(new_domain);
         LOGGING_PRINTLN_AT(2,"domwdth="<<newdomwdth<<" dom="<<new_domain);
-    } while( !definitely(new_domain.is_empty()) && strictly_smaller_by_factor(newdomwdth , olddomwdth, ACCEPTABLE_REDUCTION_FACTOR) );
+    // Each reduction above returns immediately if the domain becomes empty.
+    } while( strictly_smaller_by_factor(newdomwdth , olddomwdth, ACCEPTABLE_REDUCTION_FACTOR) );
 
     LOGGING_PRINTLN_AT(1,"new_domain="<<new_domain);
 
@@ -301,12 +312,16 @@ Void procedure_constraint_adjoin_outer_approximation_recursion(
     ExactDouble RELATIVE_SPLITTING_SIZE = 4.0_x;
 
     if( !strictly_smaller_by_factor(bbxmaxwdth, clmaxwdth, RELATIVE_SPLITTING_SIZE) || (cell.depth()>=max_dpth && strictly_smaller(clmaxwdth, bbxmaxwdth)) ) {
-        Pair<SizeType,FloatDPError> lipsch = lipschitz_index_and_error(f,new_domain);
-        LOGGING_PRINTLN("Splitting domain on coordinate "<<lipsch.first);
-        Pair<ExactBoxType,ExactBoxType> sd=cast_exact_box(new_domain).split(lipsch.first);
-        procedure_constraint_adjoin_outer_approximation_recursion(paving, sd.first, f, g, codomain, cell, max_dpth, splt+1, procedures);
-        procedure_constraint_adjoin_outer_approximation_recursion(paving, sd.second, f, g, codomain, cell, max_dpth, splt+1, procedures);
-    } else if(cell.depth()>=max_dpth) {
+        const auto sensitivity=lipschitz_index_and_error(f,new_domain);
+        if(sensitivity.first<m && sensitivity.second.raw()>cell.box().radius().upper().raw()) {
+            LOGGING_PRINTLN("Splitting domain on coordinate "<<sensitivity.first);
+            const auto domains=cast_exact_box(new_domain).split(sensitivity.first);
+            procedure_constraint_adjoin_outer_approximation_recursion(paving, domains.first, f, g, codomain, cell, max_dpth, splt+1, procedures);
+            procedure_constraint_adjoin_outer_approximation_recursion(paving, domains.second, f, g, codomain, cell, max_dpth, splt+1, procedures);
+            return;
+        }
+    }
+    if(cell.depth()>=max_dpth) {
         LOGGING_PRINTLN("Adjoining cell "<<cell_box);
         paving.adjoin(cell);
     } else {
@@ -321,283 +336,41 @@ Void procedure_constraint_adjoin_outer_approximation_recursion(
 
 
 
-Void hotstarted_constraint_adjoin_outer_approximation_recursion(
-    PavingInterface& r, const ExactBoxType& d, const ValidatedVectorMultivariateFunction& f,
-    const ValidatedVectorMultivariateFunction& g, const ExactBoxType& c, const GridCell& b, ExactPointType x, ExactPointType y, Nat e)
+// The former hot-start solver did not update its feasibility variable:
+// it remained zero. Use validated interval subdivision with a sensitivity check, so intrinsic
+// uncertainty cannot cause endless parameter splits.
+Void interval_constraint_adjoin_outer_approximation_recursion(
+    PavingInterface& paving, const ExactBoxType& domain,
+    const ValidatedVectorMultivariateFunction& function,
+    const ValidatedVectorMultivariateFunction& constraints, const ExactBoxType& bounds,
+    const GridCell& cell, Nat fineness)
 {
-    LOGGING_SCOPE_CREATE;
-    // When making a new starting primal point, need to move components away from zero
-    // This constant shows how far away from zero the points are
-    static const FloatDP XSIGMA { 0.125_x,dp };
-    static const FloatDP TERR { ExactDouble(-1.0/((1<<e)*1024.0)),dp };
-    static const ExactDouble exact_infinity(Ariadne::inf.get_d());
-    DoublePrecision pr;
+    if(paving.superset(cell)) { return; }
+    const auto combined=join(function,constraints);
+    if(definitely(disjoint(apply(combined,domain),product(cell.box(),bounds)))) { return; }
 
-    // Set up the classes used for constraint propagation and
-    // optimisation using the Kuhn-Tucker conditions
-    ConstraintSolver solver;
-    ValidatedVectorMultivariateFunction fg=join(f,g);
-
-    const SizeType m=fg.argument_size();
-    const SizeType n=fg.result_size();
-    LOGGING_PRINTLN_AT(1,"dom="<<d<<" cnst="<<c<<" cell="<<b.box()<<" dpth="<<b.depth()<<" e="<<e);
-    LOGGING_PRINTLN_AT(1,"x0="<<x<<", y0="<<y);
-
-    FloatDPPoint z(x.size(),dp);
-    FloatDP t(dp);
-    FloatDPApproximation one(1.0_x,dp);
-
-    Vector<FloatDPApproximation> ax(x);
-    Vector<FloatDPApproximation> ay(y);
-    Vector<FloatDPApproximation> az(z);
-    FloatDPApproximation at(t);
-    auto update_exact_values = [&]() {
-        static_cast<Vector<FloatDP>&>(x)=cast_exact(ax);
-        static_cast<Vector<FloatDP>&>(y)=cast_exact(ay);
-        static_cast<Vector<FloatDP>&>(z)=cast_exact(az);
-        t=at.raw();
-    };
-
-    if(r.superset(b)) {
-        LOGGING_PRINTLN("Cell already in set");
-        return;
-    }
-
-    ExactBoxType bx=product(static_cast<const ExactBoxType&>(b.box()),static_cast<const ExactBoxType&>(c));
-
-    LOGGING_PRINTLN_AT(1,"fg(d)="<<apply(fg,d)<<", bx="<<bx);
-    if(definitely(disjoint(apply(fg,d),bx))) {
-        LOGGING_PRINTLN("Proved disjointness using direct evaluation");
-        return;
-    }
-
-
-    // The former interior-point calls were no-ops: they neither
-    // initialised the dual variables nor performed a feasibility step.
-    // Preserve the pre-existing initial state before the subsequent
-    // domain/cell split and any validated constraint reduction.
-    update_exact_values();
-    LOGGING_PRINTLN_AT(1,"t="<<t<<", y="<<y<<", x="<<x<<", z="<<z);
-
-    if(!(t<exact_infinity)) {
-        ARIADNE_WARN("feasibility failed");
-        char ch; std::cin >> ch;
-        at=0;
-        ay=midpoint(d);
-        ax=FloatDPApproximationVector(x.size(),one/x.size());
-        update_exact_values();
-    }
-    ax = FloatDPApproximation(1-XSIGMA)*ax + Vector<FloatDPApproximation>(x.size(),XSIGMA/x.size());
-    update_exact_values();
-
-    //assert(t>=-1000);
-
-    if(t<TERR) {
-
-        // Probably disjoint, so try to prove this
-        UpperBoxType nd=d;
-        const ExactBoxType& domain=d;
-
-        // Use the computed dual variables to try to make a scalar function which is negative over the entire domain.
-        // This should be easier than using all constraints separately
-        TrivialSweeper<FloatDP> sweeper{dp};
-        EffectiveScalarMultivariateFunction zero_function=EffectiveScalarMultivariateFunction::zero(m);
-        EffectiveVectorMultivariateFunction identity_function=EffectiveVectorMultivariateFunction::identity(m);
-        ValidatedScalarMultivariateTaylorFunctionModelDP txg(domain,zero_function,sweeper);
-        FloatDPBounds cnst = {0,pr};
-        for(SizeType j=0; j!=n; ++j) {
-            txg = txg - (FloatDPBounds(x[j])-FloatDPBounds(x[n+j]))*ValidatedScalarMultivariateTaylorFunctionModelDP(domain,ValidatedScalarMultivariateFunction(fg[j]),sweeper);
-            cnst += (bx[j].upper_bound()*x[j]-bx[j].lower_bound()*x[n+j]);
-        }
-        for(SizeType i=0; i!=m; ++i) {
-            txg = txg - (FloatDPBounds(x[2*n+i])-FloatDPBounds(x[2*n+m+i]))*ValidatedScalarMultivariateTaylorFunctionModelDP(domain,ValidatedScalarMultivariateFunction(identity_function[i]),sweeper);
-            cnst += (d[i].upper_bound()*x[2*n+i]-d[i].lower_bound()*x[2*n+m+i]);
-        }
-        txg = FloatDPBounds(cnst) + txg;
-
-        LOGGING_PRINTLN_AT(1,"txg="<<txg);
-
-        ValidatedConstraint constraint=(txg>=0);
-
-        LOGGING_PRINTLN_AT(1,"dom="<<nd);
-        solver.hull_reduce(nd,txg,ExactIntervalType(0,exact_infinity));
-        LOGGING_PRINTLN_AT(1,"dom="<<nd);
-        if(definitely(nd.is_empty())) {
-            LOGGING_PRINTLN("Proved disjointness using hull reduce");
-            return;
-        }
-
-        for(SizeType i=0; i!=m; ++i) {
-            solver.box_reduce(nd,txg,ExactIntervalType(0,exact_infinity),i);
-            LOGGING_PRINTLN_AT(2,"dom="<<nd);
-            if(definitely(nd.is_empty())) { LOGGING_PRINTLN("Proved disjointness using box reduce"); return; }
-        }
-        LOGGING_PRINTLN_AT(1,"dom="<<nd);
-
-        solver.hull_reduce(nd,txg,ExactIntervalType(0,exact_infinity));
-        LOGGING_PRINTLN_AT(1,"dom="<<nd);
-        if(definitely(nd.is_empty())) {
-            LOGGING_PRINTLN("Proved disjointness using hull reduce");
-            return;
-        }
-    }
-
-    if(decide(t<=0.0_exact) && decide(UpperBoxType(apply(f,d)).radius()>b.box().radius()) ) {
-        LOGGING_PRINTLN("Splitting domain");
-        Pair<ExactBoxType,ExactBoxType> sd=d.split();
-        ax = FloatDPApproximation(1-XSIGMA)*ax + Vector<FloatDPApproximation>(ax.size(),XSIGMA/x.size());
-        ay=midpoint(sd.first);
-        update_exact_values();
-        hotstarted_constraint_adjoin_outer_approximation_recursion(r, sd.first, f,g, c, b, x, y, e);
-        ay = midpoint(sd.second);
-        update_exact_values();
-        hotstarted_constraint_adjoin_outer_approximation_recursion(r, sd.second, f,g, c, b, x, y, e);
-        return;
-    }
-
-    if(t>0.0_exact) {
-        LOGGING_PRINTLN_AT(1,"Intersection point: parameter="<<y);
-    }
-
-    if(b.depth()>=Int(e*b.dimension())) {
-        LOGGING_PRINTLN_AT(1,"Adjoining cell "<<b.box());
-        r.adjoin(b);
+    const auto sensitivity=lipschitz_index_and_error(function,domain);
+    if(sensitivity.first<domain.dimension() && sensitivity.second.raw()>cell.box().radius().upper().raw()) {
+        const auto domains=domain.split(sensitivity.first);
+        interval_constraint_adjoin_outer_approximation_recursion(paving,domains.first,function,constraints,bounds,cell,fineness);
+        interval_constraint_adjoin_outer_approximation_recursion(paving,domains.second,function,constraints,bounds,cell,fineness);
+    } else if(cell.depth()>=Int(fineness*cell.dimension())) {
+        paving.adjoin(cell);
     } else {
-        LOGGING_PRINTLN_AT(1,"Splitting cell; t="<<t);
-        Pair<GridCell,GridCell> sb = b.split();
-        hotstarted_constraint_adjoin_outer_approximation_recursion(r,d,f,g,c,sb.first,x,y,e);
-        hotstarted_constraint_adjoin_outer_approximation_recursion(r,d,f,g,c,sb.second,x,y,e);
+        const auto cells=cell.split();
+        interval_constraint_adjoin_outer_approximation_recursion(paving,domain,function,constraints,bounds,cells.first,fineness);
+        interval_constraint_adjoin_outer_approximation_recursion(paving,domain,function,constraints,bounds,cells.second,fineness);
     }
 }
 
-
-Void hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(PavingInterface& r, const ExactBoxType& d, const ValidatedVectorMultivariateTaylorFunctionModelDP& fg, const ExactBoxType& c, const GridCell& b, ExactPointType& x, ExactPointType& y, Nat e)
+Void constraint_adjoin_outer_approximation(
+    PavingInterface& paving, const ExactBoxType& domain,
+    const ValidatedVectorMultivariateFunction& function,
+    const ValidatedVectorMultivariateFunction& constraints, const ExactBoxType& bounds, Nat fineness)
 {
-    LOGGING_SCOPE_CREATE;
-    auto properties = fg.properties();
-    auto pr = properties.precision();
-
-    // When making a new starting primal point, need to move components away from zero
-    // This constant shows how far away from zero the points are
-    static const FloatDP XSIGMA = {TwoExp(-3),pr};
-    static const FloatDP  TERR = {TwoExp(-10),pr};
-    static const ExactDouble exact_infinity(Ariadne::inf.get_d());
-
-    const SizeType m=fg.argument_size();
-    const SizeType n=fg.result_size();
-    LOGGING_PRINTLN_AT(1,"dom="<<d<<" cnst="<<c<<" cell="<<b.box()<<" dpth="<<b.depth()<<" e="<<e);
-
-    ConstraintSolver solver;
-
-    FloatDP t{pr};
-    FloatDPPoint z(x.size(),dp);
-
-    FloatDPApproximationVector ax(x);
-    FloatDPApproximationVector ay(y);
-    FloatDPApproximationVector az(z);
-    FloatDPApproximation at(t);
-    auto update_exact_values = [&]() {
-        static_cast<Vector<FloatDP>&>(x)=cast_exact(ax);
-        static_cast<Vector<FloatDP>&>(y)=cast_exact(ay);
-        static_cast<Vector<FloatDP>&>(z)=cast_exact(az);
-        t=at.raw();
-    };
-
-    if(r.superset(b)) {
-        return;
-    }
-
-    ExactBoxType bx=product(static_cast<const ExactBoxType&>(b.box()),static_cast<const ExactBoxType&>(c));
-
-    // The former interior-point initialisation and iteration were
-    // no-ops. Keep the unchanged initial values for the validated
-    // checks and paving recursion below.
-    update_exact_values();
-    LOGGING_PRINTLN_AT(1,"t="<<t<<", y="<<y<<", x="<<x<<", z="<<z);
-
-    if(t<TERR) {
-        // Probably disjoint, so try to prove this
-        UpperBoxType nd=d;
-
-        // Use the computed dual variables to try to make a scalar function which is negative over the entire domain.
-        // This should be easier than using all constraints separately
-        ValidatedScalarMultivariateTaylorFunctionModelDP xg=ValidatedScalarMultivariateTaylorFunctionModelDP::zero(d,properties);
-        FloatDPBounds cnst = {0,pr};
-        for(SizeType j=0; j!=n; ++j) {
-            xg = xg - (x[j]-x[n+j])*ValidatedScalarMultivariateTaylorFunctionModelDP(d,fg[j],properties);
-            cnst += (bx[j].upper_bound()*x[j]-bx[j].lower_bound()*x[n+j]);
-        }
-        for(SizeType i=0; i!=m; ++i) {
-            xg = xg - (x[2*n+i]-x[2*n+m+i])*ValidatedScalarMultivariateTaylorFunctionModelDP::coordinate(d,i,properties);
-            cnst += (d[i].upper_bound()*x[2*n+i]-d[i].lower_bound()*x[2*n+m+i]);
-        }
-        xg = (cnst) + xg;
-
-        LOGGING_PRINTLN_AT(1,"xg="<<xg);
-
-
-        LOGGING_PRINTLN_AT(1,"dom="<<nd);
-        solver.hull_reduce(nd,xg,ExactIntervalType(0,exact_infinity));
-        LOGGING_PRINTLN_AT(1,"dom="<<nd);
-        if(definitely(nd.is_empty())) {
-            LOGGING_PRINTLN("Proved disjointness using hull reduce");
-            return;
-        }
-
-        for(SizeType i=0; i!=m; ++i) {
-            solver.box_reduce(nd,xg,ExactIntervalType(0,exact_infinity),i);
-            LOGGING_PRINTLN_AT(2,"dom="<<nd);
-            if(definitely(nd.is_empty())) { LOGGING_PRINTLN("Proved disjointness using box reduce"); return; }
-        }
-        LOGGING_PRINTLN_AT(1,"dom="<<nd);
-
-        //Pair<ExactBoxType,ExactBoxType> sd=solver.split(List<EffectiveConstraint>(1u,constraint),d);
-        LOGGING_PRINTLN("Splitting domain");
-        Pair<ExactBoxType,ExactBoxType> sd=split(d);
-        ExactPointType nx = cast_exact((1-XSIGMA)*ax + Vector<FloatDPApproximation>(x.size(),XSIGMA/x.size()));
-        ExactPointType ny = midpoint(sd.first);
-        hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(r, sd.first, fg, c, b, nx, ny, e);
-        nx = cast_exact((1-XSIGMA)*x + Vector<FloatDPApproximation>(x.size(),XSIGMA/x.size()));
-        ny = midpoint(sd.second);
-        hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(r, sd.second, fg, c, b, x, ny, e);
-    }
-
-    if(b.depth()>=Int(e*b.dimension())) {
-        LOGGING_PRINTLN_AT(1,"Adjoining cell "<<b.box());
-        r.adjoin(b);
-    } else {
-        LOGGING_PRINTLN_AT(1,"Splitting cell; t="<<t);
-        Pair<GridCell,GridCell> sb = b.split();
-        ExactPointType sx = cast_exact((1-XSIGMA)*x + Vector<FloatDPApproximation>(x.size(),XSIGMA/x.size()));
-        ExactPointType sy = y;
-        hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(r,d,fg,c,sb.first,sx,sy,e);
-        sx = cast_exact(FloatDPApproximation(1-XSIGMA)*x + Vector<FloatDPApproximation>(x.size(),XSIGMA/x.size()));
-        sy = y;
-        hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(r,d,fg,c,sb.second,sx,sy,e);
-    }
-
-
-}
-
-
-
-
-
-Void
-constraint_adjoin_outer_approximation(PavingInterface& p, const ExactBoxType& d, const ValidatedVectorMultivariateFunction& f,
-                                      const ValidatedVectorMultivariateFunction& g, const ExactBoxType& c, Nat e)
-{
-    ARIADNE_ASSERT(p.dimension()==f.result_size());
-
-    GridCell b=GridCell::smallest_enclosing_primary_cell(cast_exact_box(apply(f,d)),p.grid());
-    ExactBoxType r=cast_exact_box(widen(apply(g,d),1));
-    ExactBoxType rc=intersection(r,c);
-
-    Point<FloatDP> y=midpoint(d);
-    const SizeType l=(d.size()+f.result_size()+g.result_size())*2;
-    Point<FloatDP> x(l,FloatDP(dp)); for(SizeType k=0; k!=l; ++k) { x[k]=FloatDP(ExactDouble(1.0/l),dp); }
-
-    Ariadne::hotstarted_constraint_adjoin_outer_approximation_recursion(p,d,f,g,rc,b,x,y,e);
+    const GridCell cell=GridCell::smallest_enclosing_primary_cell(cast_exact_box(apply(function,domain)),paving.grid());
+    const ExactBoxType constraint_bounds=intersection(cast_exact_box(widen(apply(constraints,domain),1)),bounds);
+    interval_constraint_adjoin_outer_approximation_recursion(paving,domain,function,constraints,constraint_bounds,cell,fineness);
 }
 
 Void
@@ -615,57 +388,32 @@ procedure_constraint_adjoin_outer_approximation(PavingInterface& p, const ExactB
     //std::cerr<<"Computing outer approximation considered a total of "<<COUNT_TESTS<<" domains/cells\n";
     //std::cerr<<"Measure of paving is "<<p.measure()<<"\n";
 
-    if(dynamic_cast<GridTreePaving*>(&p)) { dynamic_cast<GridTreePaving&>(p).recombine(); }
-}
-
-Void optimal_constraint_adjoin_outer_approximation(PavingInterface& p, const ExactBoxType& d, const ValidatedVectorMultivariateFunction& f,
-                                                   const ValidatedVectorMultivariateFunction& g, const ExactBoxType& c, Nat e)
-{
-    GridCell b=GridCell::smallest_enclosing_primary_cell(cast_exact_box(apply(g,d)),p.grid());
-    ExactBoxType rc=intersection(cast_exact_box(widen(apply(g,d),1)),c);
-
-    ExactPointType y=midpoint(d);
-    const SizeType l=(d.size()+f.result_size()+g.result_size())*2;
-    ExactPointType x(l,dp); for(SizeType k=0; k!=l; ++k) { x[k]=cast_exact(FloatDPApproximation(1.0/l,dp)); }
-
-    auto tfptr = dynamic_cast<const ValidatedVectorMultivariateTaylorFunctionModelDP*>(f.raw_pointer());
-    auto tgptr = dynamic_cast<const ValidatedVectorMultivariateTaylorFunctionModelDP*>(g.raw_pointer());
-
-    ValidatedVectorMultivariateTaylorFunctionModelDP* tfgptr;
-    if( tfptr ) {
-        if( tgptr ) {
-            tfgptr=new ValidatedVectorMultivariateTaylorFunctionModelDP(join(*tfptr,*tgptr));
-        } else {
-            if(g.result_size()>0) {
-                auto tg=ValidatedVectorMultivariateTaylorFunctionModelDP(tfptr->domain(),g,tfptr->properties());
-                tfgptr=new ValidatedVectorMultivariateTaylorFunctionModelDP(join(*tfptr,tg));
-            } else {
-                tfgptr=new ValidatedVectorMultivariateTaylorFunctionModelDP(*tfptr);
-            }
-        }
-    } else {
-        ThresholdSweeper<FloatDP> swp(dp,1e-12);
-        tfgptr=new ValidatedVectorMultivariateTaylorFunctionModelDP(d,join(f,g),swp);
-    }
-    ValidatedVectorMultivariateTaylorFunctionModelDP const& tfg=*tfgptr;
-    Ariadne::hotstarted_optimal_constraint_adjoin_outer_approximation_recursion(p,d,tfg,rc,b,x,y,e);
-
-    delete tfgptr;
+    p.recombine();
 }
 
 } // namespace
 
 
 Void ReducePaver::adjoin_outer_approximation(PavingInterface& paving, const ValidatedConstrainedImageSet& set, Nat fineness) const {
-    return procedure_constraint_adjoin_outer_approximation(paving,set.domain(),set.function(),set.constraint_function(),set.constraint_bounds(),fineness);
+    ARIADNE_PRECONDITION(paving.dimension()==set.dimension());
+    if(definitely(set.reduced_domain().is_empty())) { return; }
+    // With no parameters there is no domain to reduce. Procedure reduction
+    // requires variables, while interval enclosure handles constant images.
+    if(set.reduced_domain().dimension()==0u) { return ConstraintPaver().adjoin_outer_approximation(paving,set,fineness); }
+    return procedure_constraint_adjoin_outer_approximation(paving,set.reduced_domain(),set.function(),set.constraint_function(),set.constraint_bounds(),fineness);
 }
 
 Void ConstraintPaver::adjoin_outer_approximation(PavingInterface& paving, const ValidatedConstrainedImageSet& set, Nat fineness) const {
-    return constraint_adjoin_outer_approximation(paving,set.domain(),set.function(),set.constraint_function(),set.constraint_bounds(),fineness);
+    ARIADNE_PRECONDITION(paving.dimension()==set.dimension());
+    if(definitely(set.reduced_domain().is_empty())) { return; }
+    return constraint_adjoin_outer_approximation(paving,set.reduced_domain(),set.function(),set.constraint_function(),set.constraint_bounds(),fineness);
 }
 
 Void OptimalConstraintPaver::adjoin_outer_approximation(PavingInterface& paving, const ValidatedConstrainedImageSet& set, Nat fineness) const {
-    return optimal_constraint_adjoin_outer_approximation(paving,set.reduced_domain(),set.function(),set.constraint_function(),set.constraint_bounds(),fineness);
+    // The removed optimisation initialiser was a no-op. Its zero feasibility
+    // value caused unconditional recursion. Use validated constraint reduction
+    // until an optimisation implementation can supply a feasibility certificate.
+    return ReducePaver().adjoin_outer_approximation(paving,set,fineness);
 }
 
 } // namespace Ariadne

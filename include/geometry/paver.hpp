@@ -30,8 +30,11 @@
 #define ARIADNE_PAVER_HPP
 
 #include "geometry/paver_interface.hpp"
+#include "utility/handle.hpp"
 
 namespace Ariadne {
+
+template<class X> class Vector;
 
 class Paver
     : public Handle<const PaverInterface>

@@ -9,6 +9,7 @@ set(UNIT_TESTS
     test_geometry
     test_grid
     test_grid_paving
+    test_paver
     test_paving
     test_point
     test_union_of_intervals

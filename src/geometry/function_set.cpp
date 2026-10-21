@@ -731,7 +731,11 @@ OutputStream& operator<<(OutputStream& os, ConstrainedImageSet const& set) {
 
 Matrix<FloatDPError> nonlinearities_zeroth_order(const ValidatedVectorMultivariateFunction& f, const ExactBoxType& dom)
 {
-    return nonlinearities_zeroth_order(dynamic_cast<const ValidatedVectorMultivariateTaylorFunctionModelDP&>(*f.raw_pointer()),dom);
+    if(auto const* model=dynamic_cast<const ValidatedVectorMultivariateTaylorFunctionModelDP*>(f.raw_pointer())) {
+        return nonlinearities_zeroth_order(*model,dom);
+    }
+    ValidatedVectorMultivariateTaylorFunctionModelDP approximation(dom,f,TrivialSweeper<FloatDP>(dp));
+    return nonlinearities_zeroth_order(approximation,dom);
 }
 
 /*
