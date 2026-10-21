@@ -1086,10 +1086,14 @@ LinearSimplexSolver<X>::lpstep(const Vector<X>& xl, const Vector<X>& xu, const M
     x=Ariadne::compute_x<X>(xl,xu,A,b, vt,p,B);
     for(SizeType i=0; i!=m; ++i) {
         if(decide(x[p[i]]<xl[p[i]])) {
-            ARIADNE_ASSERT(decide(x[p[i]]>xl[p[i]]-BOUNDS_TOLERANCE));
+            if(!decide(x[p[i]]>xl[p[i]]-BOUNDS_TOLERANCE)) {
+                throw DegenerateFeasibilityProblemException("Reconstructed basic point exceeds the lower-bound tolerance.");
+            }
             x[p[i]]=xl[p[i]];
         } else if(decide(x[p[i]]>xu[p[i]])) {
-            ARIADNE_ASSERT(decide(x[p[i]]<xu[p[i]]+BOUNDS_TOLERANCE));
+            if(!decide(x[p[i]]<xu[p[i]]+BOUNDS_TOLERANCE)) {
+                throw DegenerateFeasibilityProblemException("Reconstructed basic point exceeds the upper-bound tolerance.");
+            }
             x[p[i]]=xu[p[i]];
         }
     }

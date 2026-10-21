@@ -70,6 +70,10 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_zero_step_upper_bound_pivot());
         ARIADNE_TEST_CALL(test_rounding_at_lower_basic_bound());
         ARIADNE_TEST_CALL(test_rounding_at_upper_basic_bound());
+        ARIADNE_TEST_CALL(test_rigorous_warm_start_lower_correction());
+        ARIADNE_TEST_CALL(test_rigorous_warm_start_upper_correction());
+        ARIADNE_TEST_CALL(test_rigorous_warm_start_lower_failure());
+        ARIADNE_TEST_CALL(test_rigorous_warm_start_upper_failure());
         ARIADNE_TEST_CALL(test_validated_upper_entry_bound_flip());
         ARIADNE_TEST_CALL(test_validated_upper_entry_basis_exchange());
         ARIADNE_TEST_CALL(test_validated_strict_feasibility());
@@ -1267,6 +1271,57 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_ASSERT(decide(primal[1]==blocking_bound));
         ARIADNE_TEST_EXECUTE(solver.consistency_check(
             lower,upper,A,rhs,types,p,inverse,primal));
+    }
+
+    Void test_rigorous_warm_start_lower_correction() {
+        check_rigorous_warm_start_reconstruction(true,false);
+    }
+
+    Void test_rigorous_warm_start_upper_correction() {
+        check_rigorous_warm_start_reconstruction(false,false);
+    }
+
+    Void test_rigorous_warm_start_lower_failure() {
+        check_rigorous_warm_start_reconstruction(true,true);
+    }
+
+    Void test_rigorous_warm_start_upper_failure() {
+        check_rigorous_warm_start_reconstruction(false,true);
+    }
+
+    Void check_rigorous_warm_start_reconstruction(Bool enters_from_upper, Bool rejects) {
+        // The warm-start inverse passes the public inverse-error check.
+        // Its small error makes the ratio prefer a basis exchange before
+        // a nearby entering bound. Recomputing the inverse then reveals
+        // an overshoot: clamp within tolerance, report degeneracy beyond it.
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,10.0_x}},dp);
+        Vector<FloatDP> rhs({enters_from_upper ? -3.0_x : 3.0_x},dp);
+        Vector<FloatDP> lower({enters_from_upper ? -10.0_x : 0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({enters_from_upper ? 0.0_x : 10.0_x,0.0_x},dp);
+        FloatDP bound(rejects ? 0.299999999995_pr : 0.2999999999999_pr,dp);
+        if(enters_from_upper) { lower[1]=-bound; } else { upper[1]=bound; }
+        Array<Slackness> types({Slackness::BASIS,
+            enters_from_upper ? Slackness::UPPER : Slackness::LOWER});
+        Array<SizeType> p({0u,1u});
+        auto inverse=Matrix<FloatDPBounds>::identity(1u,dp);
+        // The perturbations are exactly 2^-35 and 2^-40 respectively.
+        inverse[0][0]=FloatDPBounds(1,dp)+FloatDPBounds(1,dp)/
+            FloatDPBounds(rejects ? 34359738368.0_x : 1099511627776.0_x,dp);
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(A,p,inverse));
+        auto primal=solver.compute_x(lower,upper,A,rhs,types);
+        if(rejects) {
+            ARIADNE_TEST_THROWS(solver.lpstep(lower,upper,A,rhs,types,p,inverse,primal,1u),
+                                DegenerateFeasibilityProblemException);
+        } else {
+            ARIADNE_TEST_EQUAL(solver.lpstep(lower,upper,A,rhs,types,p,inverse,primal,1u),0u);
+            ARIADNE_TEST_EQUAL(p[0],1u);
+            ARIADNE_TEST_EQUAL(types[1],Slackness::BASIS);
+            FloatDP expected=enters_from_upper ? -bound : bound;
+            ARIADNE_TEST_ASSERT(definitely(primal[1]==FloatDPBounds(expected)));
+            ARIADNE_TEST_EXECUTE(solver.consistency_check(
+                lower,upper,A,rhs,types,p,inverse,primal));
+        }
     }
 
     Void test_degenerate_ratio_tie_breaking() {
