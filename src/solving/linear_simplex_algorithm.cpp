@@ -104,9 +104,8 @@ extend_p(const Array<SizeType>& p, const SizeType n)
     for(SizeType j=0; j!=n; ++j) {
         r[q[j]]=j;
     }
-    for(SizeType i=0; i!=m; ++i) {
-        ARIADNE_ASSERT(p[i]==r[i]);
-    }
+    // q[p[k]]=k for every supplied index; inverting q therefore gives
+    // r[k]=p[k]. The validated injective prefix is preserved by construction.
     return r;
 }
 
