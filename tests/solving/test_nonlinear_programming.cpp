@@ -270,6 +270,11 @@ class TestNonlinearInteriorPointSolverBasics {
         ARIADNE_TEST_CALL(test_disjoint_constraint_minimisation());
         ARIADNE_TEST_CALL(test_relaxation_parameter());
         ARIADNE_TEST_CALL(test_initial_feasibility_state());
+        ARIADNE_TEST_CALL(test_feasibility_results());
+        ARIADNE_TEST_CALL(test_feasibility_steps());
+        ARIADNE_TEST_CALL(test_singular_feasibility_step());
+        ARIADNE_TEST_CALL(test_feasibility_numerical_failures());
+        ARIADNE_TEST_CALL(test_feasibility_state_preconditions());
         ARIADNE_TEST_CALL(test_feasible_interior_minimisation());
         ARIADNE_TEST_CALL(test_unconstrained_minimisation());
         ARIADNE_TEST_CALL(test_rejects_uncertified_minimum());
@@ -349,6 +354,200 @@ class TestNonlinearInteriorPointSolverBasics {
         test_minimisation_step_exhausts_backtracking();
         test_nonlinear_equality_minimisation_backtracking();
         test_stationary_minimisation_step();
+        test_feasibility_results();
+        test_feasibility_steps();
+        test_singular_feasibility_step();
+        test_feasibility_numerical_failures();
+    }
+
+    Void test_feasibility_results() {
+        NonlinearInteriorPointSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ExactBoxType domain({{0.0_x,1.0_x}});
+        ValidatedVectorMultivariateFunction identity({x[0]});
+        // Certify midpoint witnesses, including equality and vacuous constraints.
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,identity,ExactBoxType({{0.25_x,0.75_x}}))));
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,identity,ExactBoxType({{0.5_x,0.5_x}}))));
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,ValidatedVectorMultivariateFunction(0u,1u),ExactBoxType{})));
+        // These witnesses require actual steps away from the infeasible midpoint.
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,identity,ExactBoxType({{0.75_x,1.0_x}}))));
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,identity,ExactBoxType({{0.75_x,inf}}))));
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,identity,ExactBoxType({{-inf,0.25_x}}))));
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,identity,ExactBoxType({{-inf,inf}}))));
+        ValidatedVectorMultivariateFunction nonlinear({sqr(x[0])});
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(domain,nonlinear,ExactBoxType({{0.75_x,1.0_x}}))));
+        auto xy=ValidatedScalarMultivariateFunction::coordinates(2);
+        ARIADNE_TEST_ASSERT(definitely(solver.feasible(
+            ExactBoxType({{0.0_x,1.0_x},{0.0_x,1.0_x}}),
+            ValidatedVectorMultivariateFunction({xy[0]+xy[1]}),ExactBoxType({{1.5_x,2.0_x}}))));
+        // Both individual constraint ranges intersect [0,1], but no x can
+        // satisfy x<=1/4 and x>=3/4. Signed facet weights certify the conflict.
+        ARIADNE_TEST_ASSERT(definitely(!solver.feasible(domain,
+            ValidatedVectorMultivariateFunction({x[0],x[0]}),
+            ExactBoxType({{0.0_x,0.25_x},{0.75_x,1.0_x}}))));
+        ARIADNE_TEST_ASSERT(definitely(!solver.feasible(domain,identity,ExactBoxType({{2.0_x,3.0_x}}))));
+        ARIADNE_TEST_ASSERT(definitely(!solver.feasible(ExactBoxType({{1.0_x,0.0_x}}),identity,domain)));
+        ARIADNE_TEST_ASSERT(definitely(!solver.feasible(domain,identity,ExactBoxType({{1.0_x,0.0_x}}))));
+        // At the stationary midpoint of x^2 there is no numerical direction.
+        // Neither its negative margin nor iteration exhaustion proves infeasibility:
+        // x=3/4 remains a witness, so the solver must return indeterminate.
+        ExactBoxType symmetric({{-1.0_x,1.0_x}}), target({{0.5_x,0.75_x}});
+        ARIADNE_TEST_ASSERT(solver.is_feasible_point(symmetric,nonlinear,target,FloatDPVector({0.75_x},dp)));
+        auto uncertain=solver.feasible(symmetric,nonlinear,target);
+        ARIADNE_TEST_ASSERT(!definitely(uncertain));
+        ARIADNE_TEST_ASSERT(!definitely(!uncertain));
+    }
+
+    Void test_feasibility_steps() {
+        NonlinearInteriorPointSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({sqr(x[0])});
+        ExactBoxType domain({{0.0_x,1.0_x}}), target({{0.75_x,1.0_x}});
+        FloatDPApproximationVector weights,point;
+        FloatDPApproximation margin(dp);
+        solver.setup_feasibility(domain,g,target,weights,point,margin);
+        ARIADNE_TEST_ASSERT(decide(margin==-1.5_approx));
+        solver.feasibility_step(domain,g,target,weights,point,margin);
+        ARIADNE_TEST_ASSERT(decide(margin> -1.5_approx));
+        ARIADNE_TEST_ASSERT(decide(point[0]>0.5_approx));
+        ARIADNE_TEST_ASSERT(decide(point[0]<1.0_approx));
+        ARIADNE_TEST_ASSERT(decide(g(point)[0]-target[0].lower_bound()>margin));
+        ARIADNE_TEST_ASSERT(decide(target[0].upper_bound()-g(point)[0]>margin));
+        for(SizeType k=0; k!=weights.size(); ++k) { ARIADNE_TEST_ASSERT(decide(weights[k]>0)); }
+        ARIADNE_TEST_ASSERT(decide(abs(dot(weights,FloatDPApproximationVector(4u,FloatDPApproximation(1,dp)))-1)<0x1p-40_x));
+        // The convenience overload uses the same initial margin and step.
+        FloatDPApproximationVector restarted_weights,restarted_point;
+        solver.setup_feasibility(domain,g,target,restarted_weights,restarted_point);
+        solver.feasibility_step(domain,g,target,restarted_weights,restarted_point);
+        ARIADNE_TEST_ASSERT(decide(restarted_point[0]==point[0]));
+        for(SizeType k=0; k!=weights.size(); ++k) {
+            ARIADNE_TEST_ASSERT(decide(restarted_weights[k]==weights[k]));
+        }
+        // Inactive facets have zero weight, not infinite slacks in the KKT system.
+        ExactBoxType one_sided({{0.75_x,inf}});
+        ValidatedVectorMultivariateFunction affine({x[0]});
+        solver.setup_feasibility(domain,affine,one_sided,weights,point,margin);
+        ARIADNE_TEST_ASSERT(decide(weights[0]==0.0_approx));
+        solver.feasibility_step(domain,affine,one_sided,weights,point,margin);
+        ARIADNE_TEST_ASSERT(decide(weights[0]==0.0_approx));
+        ARIADNE_TEST_ASSERT(decide(point[0]>0.5_approx));
+        // A zero-dimensional, unconstrained problem has no barrier facets.
+        ValidatedVectorMultivariateFunction vacuous(0u,0u);
+        solver.setup_feasibility(ExactBoxType{},vacuous,ExactBoxType{},weights,point,margin);
+        solver.feasibility_step(ExactBoxType{},vacuous,ExactBoxType{},weights,point,margin);
+        ARIADNE_TEST_EQUAL(weights.size(),0u);
+        ARIADNE_TEST_EQUAL(point.size(),0u);
+        ARIADNE_TEST_ASSERT(decide(margin==0.0_approx));
+        // Constant unconstrained output: all potential facets are inactive.
+        auto constant=ValidatedScalarMultivariateFunction::constant(0u,0.0_x);
+        ValidatedVectorMultivariateFunction unconstrained({constant});
+        solver.setup_feasibility(ExactBoxType{},unconstrained,ExactBoxType({{-inf,inf}}),weights,point,margin);
+        ARIADNE_TEST_ASSERT(decide(weights[0]==0.0_approx));
+        ARIADNE_TEST_ASSERT(decide(weights[1]==0.0_approx));
+        solver.feasibility_step(ExactBoxType{},unconstrained,ExactBoxType({{-inf,inf}}),weights,point,margin);
+        ARIADNE_TEST_ASSERT(decide(margin==0.0_approx));
+    }
+
+    Void test_singular_feasibility_step() {
+        NonlinearInteriorPointSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ValidatedVectorMultivariateFunction g({-sqr(x[0])});
+        ExactBoxType domain({{-1.0_x,1.0_x}}), target({{0.0_x,1.0_x}});
+        FloatDPApproximationVector weights({0.3125_x,0.1875_x,0.25_x,0.25_x},dp);
+        FloatDPApproximationVector point({0.0_x},dp);
+        FloatDPApproximation margin(-1.0_x,dp);
+        // Positive normalised weights and strict slacks, but the negative
+        // constraint curvature cancels the domain barrier curvature exactly.
+        ARIADNE_TEST_THROWS(solver.feasibility_step(domain,g,target,weights,point,margin),SingularMatrixException);
+        ARIADNE_TEST_ASSERT(decide(point[0]==0.0_approx));
+        ARIADNE_TEST_ASSERT(decide(margin== -1.0_approx));
+        ARIADNE_TEST_ASSERT(decide(weights[0]==0.3125_approx));
+        ARIADNE_TEST_ASSERT(decide(weights[1]==0.1875_approx));
+    }
+
+    Void test_feasibility_numerical_failures() {
+        NonlinearInteriorPointSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        ExactBoxType symmetric({{-1.0_x,1.0_x}}), nonnegative({{0.0_x,inf}});
+        ValidatedVectorMultivariateFunction concave_barrier({0.25_x*sqr(x[0])-1.5_x});
+        FloatDPApproximationVector weights,point;
+        FloatDPApproximation margin(dp);
+        // At the ordinary midpoint initialisation, the one-sided constraint
+        // curvature exactly cancels the domain barrier curvature. The driver
+        // can still certify infeasibility from the initial signed weights.
+        solver.setup_feasibility(symmetric,concave_barrier,nonnegative,weights,point,margin);
+        ARIADNE_TEST_THROWS(solver.feasibility_step(
+            symmetric,concave_barrier,nonnegative,weights,point,margin),SingularMatrixException);
+        ARIADNE_TEST_ASSERT(definitely(!solver.feasible(symmetric,concave_barrier,nonnegative)));
+
+        // Nearly cancelled barrier curvature can also exhaust backtracking
+        // from the ordinary initial state. Regardless of numerical rounding,
+        // the validated range proves that g stays strictly below zero on D.
+        ValidatedVectorMultivariateFunction nearly_singular({
+            Real(0x1.9249249249249p-2_x)*sqr(x[0])+x[0]-1.5_x});
+        ARIADNE_TEST_ASSERT(definitely(!solver.feasible(symmetric,nearly_singular,nonnegative)));
+
+        ExactBoxType domain({{0.0_x,1.0_x}}), badly_scaled({{0.75_x,0x1p60_x}});
+        ValidatedVectorMultivariateFunction identity({x[0]});
+        solver.setup_feasibility(domain,identity,badly_scaled,weights,point,margin);
+        // Iteration exhaustion with a very distant upper bound must not
+        // turn failure to find a witness into an infeasibility claim.
+        ARIADNE_TEST_ASSERT(solver.is_feasible_point(domain,identity,badly_scaled,FloatDPVector({1.0_x},dp)));
+        auto uncertain=solver.feasible(domain,identity,badly_scaled);
+        ARIADNE_TEST_ASSERT(!definitely(uncertain));
+        ARIADNE_TEST_ASSERT(!definitely(!uncertain));
+
+        // A legitimate positive hot start with very small domain weights
+        // produces a direction too large for any step above the cutoff.
+        ExactBoxType far_target({{1.0_x,2.0_x}});
+        ValidatedVectorMultivariateFunction gentle({0x1p-60_x*x[0]});
+        weights=FloatDPApproximationVector({0.5_x,0.5_x,0x1p-120_x,0x1p-120_x},dp);
+        point=FloatDPApproximationVector({0.0_x},dp); margin=-2;
+        ARIADNE_TEST_THROWS(solver.feasibility_step(
+            symmetric,gentle,far_target,weights,point,margin),NearBoundaryOfFeasibleDomainException);
+        ARIADNE_TEST_ASSERT(decide(point[0]==0.0_approx));
+        ARIADNE_TEST_ASSERT(decide(margin== -2.0_approx));
+        ARIADNE_TEST_ASSERT(decide(weights[0]==0.5_approx));
+        ARIADNE_TEST_ASSERT(decide(weights[2]==0x1p-120_x));
+
+        // Scaling the initial margin is necessary when subtracting one
+        // would round straight back to the violated constraint boundary.
+        ExactBoxType distant({{0x1p60_x,0x1p61_x}});
+        solver.setup_feasibility(domain,identity,distant,weights,point,margin);
+        ARIADNE_TEST_ASSERT(decide(point[0]-distant[0].lower_bound()>margin));
+        solver.feasibility_step(domain,identity,distant,weights,point);
+    }
+
+    Void test_feasibility_state_preconditions() {
+        NonlinearInteriorPointSolver solver;
+        auto x=ValidatedScalarMultivariateFunction::coordinates(1);
+        auto xy=ValidatedScalarMultivariateFunction::coordinates(2);
+        ValidatedVectorMultivariateFunction g({x[0]}), wrong_arguments({xy[0]});
+        ExactBoxType domain({{0.0_x,1.0_x}}), target({{0.75_x,1.0_x}}), wrong_target({{0.0_x,1.0_x},{0.0_x,1.0_x}});
+        FloatDPApproximationVector weights,point;
+        FloatDPApproximation margin(dp);
+        ARIADNE_TEST_FAIL(solver.setup_feasibility(domain,wrong_arguments,target,weights,point));
+        ARIADNE_TEST_FAIL(solver.setup_feasibility(domain,g,wrong_target,weights,point));
+        ARIADNE_TEST_FAIL(solver.setup_feasibility(ExactBoxType({{1.0_x,0.0_x}}),g,target,weights,point));
+        ARIADNE_TEST_FAIL(solver.setup_feasibility(ExactBoxType({{-inf,1.0_x}}),g,target,weights,point));
+        ARIADNE_TEST_FAIL(solver.setup_feasibility(ExactBoxType({{0.0_x,inf}}),g,target,weights,point));
+        solver.setup_feasibility(domain,g,target,weights,point,margin);
+        FloatDPApproximationVector wrong_weights(3u,dp), wrong_point(2u,dp);
+        ARIADNE_TEST_FAIL(solver.feasibility_step(domain,wrong_arguments,target,weights,point,margin));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(domain,g,wrong_target,weights,point,margin));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(domain,g,target,wrong_weights,point,margin));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(domain,g,target,weights,wrong_point,margin));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(domain,wrong_arguments,target,weights,point));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(domain,g,wrong_target,weights,point));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(domain,g,target,wrong_weights,point));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(domain,g,target,weights,wrong_point));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(ExactBoxType({{-inf,1.0_x}}),g,target,weights,point,margin));
+        ARIADNE_TEST_FAIL(solver.feasibility_step(ExactBoxType({{0.0_x,inf}}),g,target,weights,point,margin));
+        weights[0]=0;
+        ARIADNE_TEST_FAIL(solver.feasibility_step(domain,g,target,weights,point,margin));
+        solver.setup_feasibility(domain,g,target,weights,point,margin);
+        margin=1;
+        ARIADNE_TEST_FAIL(solver.feasibility_step(domain,g,target,weights,point,margin));
     }
 
     Void test_feasibility_dimension_preconditions() {

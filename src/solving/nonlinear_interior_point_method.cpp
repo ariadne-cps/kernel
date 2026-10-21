@@ -245,183 +245,158 @@ minimisation_step(const ApproximateScalarMultivariateFunction& f, const ExactBox
 
 
 
+namespace {
+
+// Positive slack means that the corresponding facet is satisfied with
+// margin t. Infinite constraint bounds are inactive, with unit slack.
+FloatDPApproximationVector feasibility_slack(
+    const ExactBoxType& d, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& c,
+    const FloatDPApproximationVector& y, const FloatDPApproximation& t)
+{
+    const SizeType m=d.size(), n=c.size();
+    FloatDPApproximationVector z(2*(m+n),dp);
+    const auto gy=g(y);
+    for(SizeType j=0; j!=n; ++j) {
+        z[j]=is_inf(c[j].upper_bound()) ? FloatDPApproximation(1,dp) : c[j].upper_bound()-gy[j]-t;
+        z[n+j]=is_inf(c[j].lower_bound()) ? FloatDPApproximation(1,dp) : gy[j]-c[j].lower_bound()-t;
+    }
+    for(SizeType i=0; i!=m; ++i) {
+        z[2*n+i]=d[i].upper_bound()-y[i]-t;
+        z[2*n+m+i]=y[i]-d[i].lower_bound()-t;
+    }
+    return z;
+}
+
+} // namespace
+
 ValidatedKleenean NonlinearInteriorPointSolver::
 feasible(ExactBoxType d, ValidatedVectorMultivariateFunction g, ExactBoxType c) const
 {
     LOGGING_SCOPE_CREATE;
     LOGGING_PRINTLN("d="<<d<<", g="<<g<<", c="<<c);
-
     ARIADNE_PRECONDITION(g.argument_size()==d.size());
     ARIADNE_PRECONDITION(g.result_size()==c.size());
+    if(d.is_empty() || c.is_empty()) { return false; }
+
     FloatDPApproximation t(dp);
-    FloatDPApproximationVector x,y,z;
+    FloatDPApproximationVector x,y;
+    this->setup_feasibility(d,g,c,x,y,t);
+    if(this->is_feasible_point(d,g,c,exact_vector(y))) { return true; }
 
-    this->setup_feasibility(d,g,c,x,y);
-
-    // FIXME: Allow more steps
     for(SizeType i=0; i!=12; ++i) {
-        LOGGING_PRINTLN_AT(1,"t="<<t<<", y="<<y<<", g(y)="<<g(y)<<", x="<<x<<", z="<<z);
-        this->feasibility_step(d,g,c,x,y);
-        if(probably(LogicalValue(t>0))) {
-            LOGGING_PRINTLN_AT(1,"y="<<y<<", g(y)="<<g(y));
-            if(this->is_feasible_point(d,g,c,exact_vector(y))) {
-                return true;
-            }
+        try {
+            this->feasibility_step(d,g,c,x,y,t);
+        } catch(const SingularMatrixException&) {
+            break;
+        } catch(const NearBoundaryOfFeasibleDomainException&) {
+            break;
         }
+        LOGGING_PRINTLN_AT(1,"t="<<t<<", y="<<y<<", g(y)="<<g(y)<<", x="<<x);
+        if(this->is_feasible_point(d,g,c,exact_vector(y))) { return true; }
     }
-    LOGGING_PRINTLN("t="<<t<<", y="<<y<<", g(y)="<<g(y));
-    if(this->is_infeasibility_certificate(d,g,c,exact_vector(x))) {
-        return false;
-    }
+    // x contains weights for upper/lower constraint facets followed by
+    // domain facets. Only their signed constraint differences multiply g.
+    FloatDPApproximationVector lambda(c.size(),dp);
+    for(SizeType j=0; j!=c.size(); ++j) { lambda[j]=x[j]-x[c.size()+j]; }
+    if(this->is_infeasibility_certificate(d,g,c,exact_vector(lambda))) { return false; }
     return indeterminate;
 }
 
-
-Void
-NonlinearInteriorPointSolver::feasibility_step(
-    const ExactBoxType&, const ApproximateVectorMultivariateFunction&, const ExactBoxType&,
-    FloatDPApproximationVector&, FloatDPApproximationVector&) const
+Void NonlinearInteriorPointSolver::feasibility_step(
+    const ExactBoxType& d, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& c,
+    FloatDPApproximationVector& x, FloatDPApproximationVector& y) const
 {
-    ARIADNE_NOT_IMPLEMENTED;
+    ARIADNE_PRECONDITION(g.argument_size()==d.size());
+    ARIADNE_PRECONDITION(g.result_size()==c.size());
+    ARIADNE_PRECONDITION(x.size()==2*(d.size()+c.size()));
+    ARIADNE_PRECONDITION(y.size()==d.size());
+    // A hot start without a margin is made strictly interior before the
+    // same primal-dual step used by the persistent-margin driver.
+    FloatDPApproximation t(0,dp);
+    const auto slack=feasibility_slack(d,g,c,y,t);
+    for(SizeType k=0; k!=slack.size(); ++k) { t=min(t,slack[k]); }
+    // An absolute unit offset alone can round away for large violations.
+    t-=max(FloatDPApproximation(1,dp),abs(t));
+    this->feasibility_step(d,g,c,x,y,t);
 }
 
-
-Void
-NonlinearInteriorPointSolver::feasibility_step(
+Void NonlinearInteriorPointSolver::feasibility_step(
     const ExactBoxType& d, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& c,
     FloatDPApproximationVector& x, FloatDPApproximationVector& y, FloatDPApproximation& t) const
 {
     LOGGING_SCOPE_CREATE;
+    const SizeType m=d.size(), n=c.size(), l=2*(m+n);
+    ARIADNE_PRECONDITION(g.argument_size()==m);
+    ARIADNE_PRECONDITION(g.result_size()==n);
+    ARIADNE_PRECONDITION(x.size()==l);
+    ARIADNE_PRECONDITION(y.size()==m);
 
-    static const ExactDouble GAMMA=0.0009765625_x; // 1.0/1024;
-    static const ExactDouble SIGMA=0.125_x;
-    static const ExactDouble SCALE=0.75_x;
-
-    const SizeType m=d.size();
-    const SizeType n=c.size();
-
-    FloatDPApproximationVector z(n,dp);
-
-    ARIADNE_ASSERT_MSG(g.argument_size()==m,"d="<<d<<" g="<<g);
-    ARIADNE_ASSERT_MSG(g.result_size()==n,"d="<<d<<" g="<<g<<" c="<<c);
-    ARIADNE_ASSERT(x.size()==m);
-    ARIADNE_ASSERT(y.size()==n);
-
-    Vector<FloatDPApproximationDifferential> ddgx=g.evaluate(FloatDPApproximationDifferential::variables(2,x));
-    LOGGING_PRINTLN("ddgx="<<ddgx);
-
-    Vector<FloatDPApproximation> gx = ddgx.value();
-    LOGGING_PRINTLN("g(x)="<<gx<<" ");
-    Matrix<FloatDPApproximation> A = transpose(ddgx.jacobian());
-    LOGGING_PRINTLN("A="<<A<<" ");
-
-    // H is the Hessian matrix H of the Lagrangian $L(x,\lambda) = f(x) + \sum_k g_k(x) \lambda_k$
-    Matrix<FloatDPApproximation> H(m,m,dp);
-    for(SizeType i=0; i!=m; ++i) {
-        H+=y[i]*ddgx[i].hessian();
-    }
-    LOGGING_PRINTLN("H="<<H<<" ");
-
-
-    // Add correction for singleton domain to diagonal elements of Hessian
-    for(SizeType i=0; i!=m; ++i) {
-    }
-
-    // Compute diagonal entries of KKT Hessian
-    Vector<FloatDPApproximation> D(n,dp);
+    // Maximise the common margin t, with z=s(y)-t>0, x>0 and sum(x)=1.
+    // Columns of A are gradients of -s, followed by the t derivative.
+    const auto ddgy=g.evaluate(FloatDPApproximationDifferential::variables(2,y));
+    FloatDPApproximationMatrix A(m+1,l,dp), H(m+1,m+1,dp);
+    List<SizeType> active;
     for(SizeType j=0; j!=n; ++j) {
-        if(c[j].lower_bound()==c[j].upper_bound()) {
-        } else if(c[j].upper_bound().raw()==+inf) {
-        } else if(c[j].lower_bound().raw()==-inf) {
-        } else {
-            ARIADNE_DEBUG_ASSERT(definitely(-infty<c[j].lower_bound() && c[j].lower_bound()<c[j].upper_bound() && c[j].upper_bound()<+infty));
+        if(!is_inf(c[j].upper_bound())) {
+            active.append(j); A[m][j]=1;
+            for(SizeType i=0; i!=m; ++i) { A[i][j]=ddgy[j].gradient()[i]; }
+        }
+        if(!is_inf(c[j].lower_bound())) {
+            active.append(n+j); A[m][n+j]=1;
+            for(SizeType i=0; i!=m; ++i) { A[i][n+j]=-ddgy[j].gradient()[i]; }
         }
     }
-
-    FloatDPApproximation sigma(SIGMA,dp);
-    FloatDPApproximation mu=dot(x,z)/m;
-    if(!egtr(emul(x,z),GAMMA*mu)) {
-        LOGGING_PRINTLN("WARNING: near-degeneracy in Lyapunov multipliers in interior-point solver:\n  x="<<x<<", y="<<y<<", z="<<z);
-        x=(1-sigma)*x+FloatDPApproximationVector(x.size(),sigma/x.size());
-        mu=dot(x,z)/m;
+    for(SizeType i=0; i!=m; ++i) {
+        ARIADNE_PRECONDITION(!is_inf(d[i].lower_bound()));
+        ARIADNE_PRECONDITION(!is_inf(d[i].upper_bound()));
+        active.append(2*n+i); active.append(2*n+m+i);
+        A[i][2*n+i]=1; A[i][2*n+m+i]=-1;
+        A[m][2*n+i]=1; A[m][2*n+m+i]=1;
     }
+    if(active.empty()) { t=0; return; }
 
-    FloatDPApproximationVector yt=join(y,t);
-    LOGGING_PRINTLN("m="<<m<<" n="<<n);
-    LOGGING_PRINTLN("x="<<x<<" yt="<<yt<<" z="<<z);
-
-
-    // Construct diagonal matrices
-    FloatDPApproximationVector DE=ediv(x,z);
-    LOGGING_PRINTLN("D="<<DE);
-
-    // Construct the extended valuation GY=(gy-cu+te,cl-gy+te,y-bu+te,bl-y+te)
-    FloatDPApproximationVector gye(2*(m+n),dp);
-    //for(SizeType j=0; j!=n; ++j) { gxe[j]=gy[j]-c[j].upper_bound()+t; gye[n+j]=c[j].lower_bound()-gy[j]+t; }
-    //for(SizeType i=0; i!=m; ++i) { gye[2*n+i]=y[i]-d[i].upper_bound()+t; gye[2*n+m+i]=d[i].lower_bound()-y[i]+t; }
-    LOGGING_PRINTLN("GE="<<gye);
-
-    // Construct the extended matrix AE=(A -A I -I \\ e e 0 0)
-    FloatDPApproximationMatrix AE(m+1,2*(m+n),dp);
-    //for(SizeType i=0; i!=m; ++i) { for(SizeType j=0; j!=n; ++j) { AE[i][j]=A[i][j]; AE[i][n+j]=-A[i][j]; } }
-    //for(SizeType i=0; i!=m; ++i) { AE[i][2*n+i]=1; AE[i][2*n+m+i]=-1; }
-    //for(SizeType k=0; k!=o; ++k) { AE[m][k]=1; }
-    FloatDPApproximationMatrix AET=transpose(AE);
-
-    // Construct the symmetric matrix and its inverse
-    //FloatDPMatrix S(m+1,m+1); adat(S,AE,DE);
-    //LOGGING_PRINTLN("S="<<S);
-    //S=FloatDPMatrix(m+1,m+1); simple_adat(S,AE,DE);
-    //LOGGING_PRINTLN("S="<<S);
-    FloatDPApproximationMatrix S=feasibility_adat(H,A,DE);
-    LOGGING_PRINTLN("S="<<S);
-    FloatDPApproximationMatrix Sinv=inverse(S);
-    LOGGING_PRINTLN("Sinv="<<Sinv);
-
-    // FIXME: What if S is not invertible?
-
-    // Construct the residuals
-    FloatDPApproximationVector rx=esub(emul(x,z),mu*sigma);
-    //RawFloatDPVector ryt=-prod(AE,x); ryt[m]+=1; // FIXME: Need hessian
-    FloatDPApproximationVector ryt=-feasibility_mul(A,x); ryt[m]+=1; // FIXME: Need hessian
-    FloatDPApproximationVector rz=gye+z;
-    LOGGING_PRINTLN("rx="<<rx<<" ryt="<<ryt<<" rz="<<rz);
-
-    //RawFloatDPVector rr=prod(AE,ediv(RawFloatDPVector(rx-emul(x,rz)),z))-ryt;
-    FloatDPApproximationVector rr=ryt + AE*ediv(FloatDPApproximationVector(rx-emul(x,rz)),z) - ryt;
-
-
-    // Compute the differences
-    FloatDPApproximationVector dyt=Sinv*rr;
-    //RawFloatDPVector dz=-rz-prod(AET,dyt);
-    FloatDPApproximationVector dz=-rz-feasibility_trmul(A,dyt);
-    FloatDPApproximationVector dx=-ediv(FloatDPApproximationVector(rx+emul(x,dz)),z);
-    LOGGING_PRINTLN("dx="<<dx<<" dyt="<<dyt<<" dz="<<dz);
-
-    FloatDPApproximationVector nx,ny,nyt,nz; FloatDPApproximation nt(dp);
-
-    // Since we need to keep the point feasible, but the updates are linear
-    // we need to validate feasibility directly rather than assuming the
-    // linear update of y and z are good enough.
-    Bool allpositive=false;
-    FloatDPApproximation alpha=1/FloatDPApproximation(SCALE,dp);
-    if(!egtr(emul(x,z) , GAMMA*mu/16)) {
-        LOGGING_PRINTLN("WARNING: x="<<x<<", z="<<z<< ", x.z="<<emul(x,z)<<"<"<<GAMMA*mu / 16);
-        throw NearBoundaryOfFeasibleDomainException();
+    const auto z=feasibility_slack(d,g,c,y,t);
+    FloatDPApproximationVector weights(l,dp);
+    for(const auto k : active) {
+        ARIADNE_PRECONDITION(decide(x[k]>0));
+        ARIADNE_PRECONDITION(decide(z[k]>0));
+        weights[k]=x[k];
     }
-    while(!allpositive) {
-        alpha=alpha*SCALE;
-        nx=x+alpha*dx;
-        nyt=yt+alpha*dyt;
-        ny=project(nyt,range(0,m));
-        nt=nyt[m];
-        //NonlinearInteriorPointSolver::compute_z(d,g,c,ny,nt,nz);
-        allpositive = egtr(nx,0.0) && egtr(nz,0.0) && egtr(emul(nx,nz),GAMMA*mu);
+    for(SizeType j=0; j!=n; ++j) {
+        const auto hj=ddgy[j].hessian();
+        for(SizeType i=0; i!=m; ++i) {
+            for(SizeType k=0; k!=m; ++k) { H[i][k]+=(weights[j]-weights[n+j])*hj[i][k]; }
+        }
     }
-    LOGGING_PRINTLN("alpha="<<alpha);
-    LOGGING_PRINTLN("nx="<<nx<<" nyt="<<nyt<<" nz="<<nz<<" nxz="<<emul(nx,nz));
+    const auto mu=dot(weights,z)/active.size();
+    auto rx=emul(weights,z);
+    for(const auto k : active) { rx[k]-=mu*0.125_x; }
+    FloatDPApproximationVector residual=-(A*weights); residual[m]+=1;
+    auto S=H;
+    adat(S,A,ediv(weights,z));
+    const auto dyt=inverse(S)*(residual+A*ediv(rx,z));
+    const FloatDPApproximationVector dz=-(transpose(A)*dyt);
+    const auto dx=-ediv(FloatDPApproximationVector(rx+emul(weights,dz)),z);
+    LOGGING_PRINTLN("mu="<<mu<<", dx="<<dx<<", dyt="<<dyt);
 
-    x=nx; y=project(nyt,range(0,m)); z=nz; t=nyt[m];
+    // Re-evaluate nonlinear slacks; a positive linear prediction alone
+    // cannot preserve the barrier. Bound backtracking even on failure.
+    FloatDPApproximation alpha(1,dp);
+    while(decide(alpha>0x1p-52_x)) {
+        const FloatDPApproximationVector nx=weights+alpha*dx;
+        const FloatDPApproximationVector ny=y+alpha*FloatDPApproximationVector(project(dyt,range(0,m)));
+        const FloatDPApproximation nt=t+alpha*dyt[m];
+        const auto nz=feasibility_slack(d,g,c,ny,nt);
+        Bool acceptable=true;
+        for(const auto k : active) {
+            if(!decide(nx[k]>0 && nz[k]>0 && nx[k]*nz[k]>mu*0.0009765625_x)) {
+                acceptable=false; break;
+            }
+        }
+        if(acceptable) { x=nx; y=ny; t=nt; return; }
+        alpha*=0.75_x;
+    }
+    throw NearBoundaryOfFeasibleDomainException();
 }
 
 FloatDPApproximation NonlinearInteriorPointSolver::
@@ -451,17 +426,38 @@ compute_mu(const ExactBoxType&, const ApproximateVectorMultivariateFunction& g, 
 
 
 Void NonlinearInteriorPointSolver::
-setup_feasibility(const ExactBoxType& d, const ApproximateVectorMultivariateFunction&, const ExactBoxType& c,
+setup_feasibility(const ExactBoxType& d, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& c,
                   FloatDPApproximationVector& x, FloatDPApproximationVector& y) const
 {
-    const SizeType l=2*(d.size()+c.size());
+    ARIADNE_PRECONDITION(g.argument_size()==d.size());
+    ARIADNE_PRECONDITION(g.result_size()==c.size());
+    ARIADNE_PRECONDITION(!d.is_empty());
+    for(SizeType i=0; i!=d.size(); ++i) {
+        ARIADNE_PRECONDITION(!is_inf(d[i].lower_bound()));
+        ARIADNE_PRECONDITION(!is_inf(d[i].upper_bound()));
+    }
+    const SizeType m=d.size(), n=c.size(), l=2*(m+n);
     y=midpoint(d);
-    x=FloatDPApproximationVector(l,one/l);
-    //compute_tz(d,g,c,y,t,z);
+    x=FloatDPApproximationVector(l,dp);
+    SizeType count=2*m;
+    for(SizeType j=0; j!=n; ++j) {
+        if(!is_inf(c[j].upper_bound())) { x[j]=1; ++count; }
+        if(!is_inf(c[j].lower_bound())) { x[n+j]=1; ++count; }
+    }
+    for(SizeType k=2*n; k!=l; ++k) { x[k]=1; }
+    if(count!=0u) { for(SizeType k=0; k!=l; ++k) { x[k]/=count; } }
 }
 
-
-
-
+Void NonlinearInteriorPointSolver::
+setup_feasibility(const ExactBoxType& d, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& c,
+                  FloatDPApproximationVector& x, FloatDPApproximationVector& y, FloatDPApproximation& t) const
+{
+    this->setup_feasibility(d,g,c,x,y);
+    t=0;
+    const auto slack=feasibility_slack(d,g,c,y,t);
+    for(SizeType k=0; k!=slack.size(); ++k) { t=min(t,slack[k]); }
+    // An absolute unit offset alone can round away for large violations.
+    t-=max(FloatDPApproximation(1,dp),abs(t));
+}
 
 } // namespace Ariadne

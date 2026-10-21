@@ -90,6 +90,7 @@ class NonlinearInteriorPointSolver
     //! \pre The domain \f$D\f$ is bounded and has nonempty interior, and the codomain \f$C\f$ is nonempty.
     //! \return A box \f$X\f$ which definitely contains a feasible point, and contains a local optimum.
     virtual Vector<ValidatedNumericType> minimise(ValidatedScalarMultivariateFunction f, ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactBoxType C) const;
+    //! \pre The domain is bounded; empty domain or constraint boxes are infeasible.
     //! \brief Tests is the nonlinear programming problem \f$x\in D \text{ and } g(x)\in C\f$ is feasible.
     virtual ValidatedKleenean feasible(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactBoxType C) const;
 
@@ -105,14 +106,20 @@ class NonlinearInteriorPointSolver
 
     Void minimisation_step(const ApproximateScalarMultivariateFunction& f, const ExactBoxType& D, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& C, const ApproximateVectorMultivariateFunction& h,
                            FloatDPApproximationVector& x, FloatDPApproximationVector& w, FloatDPApproximationVector& kappa, FloatDPApproximationVector& lambda, const FloatDPApproximation& mu) const;
+    //! \brief Initialise positive weights for finite constraint/domain facets and the domain midpoint.
+    //! \details Weights are ordered as upper constraints, lower constraints, upper domain, lower domain.
+    //! Infinite constraint bounds have zero weight. The margin overload also sets t strictly below all finite slacks.
     Void setup_feasibility(const ExactBoxType& D, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& C,
-                           FloatDPApproximationVector& x, FloatDPApproximationVector& lambda) const;
+                           FloatDPApproximationVector& weights, FloatDPApproximationVector& point) const;
     Void setup_feasibility(const ExactBoxType& D, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& C,
-                           FloatDPApproximationVector& x, FloatDPApproximationVector& lambda, FloatDPApproximation& t) const;
+                           FloatDPApproximationVector& weights, FloatDPApproximationVector& point, FloatDPApproximation& t) const;
+    //! \brief Take a primal-dual Newton step for maximising the common feasibility margin.
+    //! \pre State dimensions match setup_feasibility; active weights and slacks are strictly positive.
+    //! \details The overload without t first chooses a strictly interior margin. A failed step preserves the state.
     Void feasibility_step(const ExactBoxType& D, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& C,
-                          FloatDPApproximationVector& x, FloatDPApproximationVector& lambda) const;
+                          FloatDPApproximationVector& weights, FloatDPApproximationVector& point) const;
     Void feasibility_step(const ExactBoxType& D, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& C,
-                          FloatDPApproximationVector& x, FloatDPApproximationVector& lambda, FloatDPApproximation& violation) const;
+                          FloatDPApproximationVector& weights, FloatDPApproximationVector& point, FloatDPApproximation& margin) const;
     Void initialise_lagrange_multipliers(const ExactBoxType& D, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& C,
                                          const FloatDPApproximationVector& x, FloatDPApproximationVector& lambda) const;
     FloatDPApproximation compute_mu(const ExactBoxType& D, const ApproximateVectorMultivariateFunction& g, const ExactBoxType& C,
