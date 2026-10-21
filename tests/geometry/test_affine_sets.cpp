@@ -365,6 +365,34 @@ class TestAffineSet
         ARIADNE_TEST_ASSERT(vertices.size()>1000u);
     }
 
+    Void test_collinear_negative_zonotope_boundary() {
+        // Two identical, negatively oriented generators must be traversed
+        // from their upper parameter bounds.  Their equal angles also require
+        // the deterministic generator-index tie-break in boundary sorting.
+        D=ExactBoxType::unit_box(3);
+        Affine<FloatDPBounds> fx(3,dp);
+        Affine<FloatDPBounds> fy(3,dp);
+        fx[0]=FloatDPBounds(-65536,dp);
+        fx[1]=FloatDPBounds(-65536,dp);
+        fx[2]=FloatDPBounds(+65536,dp);
+        fy[0]=FloatDPBounds(+65536,dp);
+        fy[1]=FloatDPBounds(+65536,dp);
+        fy[2]=FloatDPBounds(+65536,dp);
+
+        set=ValidatedAffineConstrainedImageSet(D,{fx,fy});
+        List<Point2d> vertices=set.boundary(0,1);
+        ARIADNE_TEST_EQUALS(vertices.size(),10u);
+
+        bool has_left=false, has_right=false, has_bottom=false, has_top=false;
+        for(Point2d const& vertex:vertices) {
+            has_left = has_left || vertex.x < -196607.0;
+            has_right = has_right || vertex.x > 196607.0;
+            has_bottom = has_bottom || vertex.y < -196607.0;
+            has_top = has_top || vertex.y > 196607.0;
+        }
+        ARIADNE_TEST_ASSERT(has_left && has_right && has_bottom && has_top);
+    }
+
     Void test_logging_branches() {
         unsigned int const old_verbosity=Logger::instance().configuration().verbosity();
         Logger::instance().configuration().set_verbosity(10u);
@@ -582,6 +610,7 @@ class TestAffineSet
         ARIADNE_TEST_CALL(test_outer_approximation());
         ARIADNE_TEST_CALL(test_robust_outer_approximation());
         ARIADNE_TEST_CALL(test_large_zonotope_boundary());
+        ARIADNE_TEST_CALL(test_collinear_negative_zonotope_boundary());
         ARIADNE_TEST_CALL(test_logging_branches());
         ARIADNE_TEST_CALL(test_uniform_error());
         ARIADNE_TEST_CALL(test_draw());
