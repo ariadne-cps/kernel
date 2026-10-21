@@ -61,6 +61,7 @@ class TestLinearSimplexSolver
         ARIADNE_TEST_CALL(test_approximate_infeasible_equality());
         ARIADNE_TEST_CALL(test_feasibility_iteration_budget());
         ARIADNE_TEST_CALL(test_feasibility_rejects_inverted_bounds());
+        ARIADNE_TEST_CALL(test_feasibility_requires_multiple_bound_flips());
         ARIADNE_TEST_CALL(test_optimum_on_last_permitted_iteration());
         ARIADNE_TEST_CALL(test_optimisation_iteration_budget());
         ARIADNE_TEST_CALL(test_lpstep_upper_bound_flip());
@@ -135,6 +136,7 @@ class TestLinearSimplexSolver
         test_validated_feasibility_stationary_at_boundary();
         test_single_variable_infeasibility();
         test_approximate_infeasible_equality();
+        test_feasibility_requires_multiple_bound_flips();
         test_hotstarted_basis_initialisation();
         test_upper_only_nonbasic_bounds();
     }
@@ -1051,12 +1053,35 @@ class TestLinearSimplexSolver
     Void test_feasibility_rejects_inverted_bounds() {
         // The equation and basis are consistent; only the second
         // variable's lower/upper interval is inverted.
-        LinearSimplexSolver<FloatDPApproximation> solver;
-        Matrix<FloatDPApproximation> A({{1.0_x,0.0_x}},dp);
-        Vector<FloatDPApproximation> rhs({0.5_x},dp);
-        Vector<FloatDPApproximation> lower({0.0_x,1.0_x},dp);
-        Vector<FloatDPApproximation> upper({1.0_x,0.0_x},dp);
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,0.0_x}},dp);
+        Vector<FloatDP> rhs({0.5_x},dp);
+        Vector<FloatDP> lower({0.0_x,1.0_x},dp);
+        Vector<FloatDP> upper({1.0_x,0.0_x},dp);
         ARIADNE_TEST_FAIL(solver.feasible(lower,upper,A,rhs));
+    }
+
+    Void test_feasibility_requires_multiple_bound_flips() {
+        // The default vertex is (2.5,0,0), outside x0<=1. One bound
+        // flip leaves x0=1.5 infeasible; the second gives (0.5,1,1).
+        LinearSimplexSolver<FloatDP> solver;
+        Matrix<FloatDP> A({{1.0_x,1.0_x,1.0_x}},dp);
+        Vector<FloatDP> rhs({2.5_x},dp);
+        Vector<FloatDP> lower({0.0_x,0.0_x,0.0_x},dp);
+        Vector<FloatDP> upper({1.0_x,1.0_x,1.0_x},dp);
+        Array<Slackness> types({Slackness::BASIS,Slackness::LOWER,Slackness::LOWER});
+        Array<SizeType> p({0u,1u,2u});
+        auto inverse=Matrix<FloatDPBounds>::identity(1u,dp);
+        Vector<FloatDPBounds> primal(3u,dp),dual(1u,dp);
+        ARIADNE_TEST_ASSERT(definitely(solver.hotstarted_feasible(
+            lower,upper,A,rhs,types,p,inverse,primal,dual)));
+        ARIADNE_TEST_ASSERT(definitely(primal[0]==FloatDPBounds(0.5_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(primal[1]==FloatDPBounds(1.0_x,dp)));
+        ARIADNE_TEST_ASSERT(definitely(primal[2]==FloatDPBounds(1.0_x,dp)));
+        ARIADNE_TEST_EQUAL(types[1],Slackness::UPPER);
+        ARIADNE_TEST_EQUAL(types[2],Slackness::UPPER);
+        ARIADNE_TEST_EXECUTE(solver.consistency_check(
+            lower,upper,A,rhs,types,p,inverse,primal));
     }
 
     Void test_feasibility_iteration_budget() {
