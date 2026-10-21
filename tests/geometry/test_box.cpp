@@ -71,16 +71,20 @@ template<class BX> class TestBoxType {
         UpperBoxType empty_rectangle(2u,empty_segment);
 
         auto scalar_segment_image=image(segment,scalar_univariate);
-        ARIADNE_TEST_ASSERT(definitely(subset(scalar_segment_image,UpperIntervalType(-1.0_x,2.0_x))));
+        ARIADNE_TEST_PRINT(scalar_segment_image);
+        ARIADNE_TEST_ASSERT(definitely(subset(scalar_segment_image,ExactIntervalType(-1.0_x,2.0_x))));
         auto vector_segment_image=image(segment,vector_univariate);
+        ARIADNE_TEST_PRINT(vector_segment_image);
         ARIADNE_TEST_EQUALS(vector_segment_image.dimension(),2u);
-        ARIADNE_TEST_ASSERT(definitely(subset(vector_segment_image,UpperBoxType({{-1.0_x,1.0_x},{-1.0_x,1.0_x}}))));
+        ARIADNE_TEST_ASSERT(definitely(subset(vector_segment_image,ExactBoxType({{-1.0_x,1.0_x},{-1.0_x,1.0_x}}))));
 
         auto scalar_rectangle_image=image(rectangle,scalar_multivariate);
-        ARIADNE_TEST_ASSERT(definitely(subset(scalar_rectangle_image,UpperIntervalType(-1.0_x,2.0_x))));
+        ARIADNE_TEST_PRINT(scalar_rectangle_image);
+        ARIADNE_TEST_ASSERT(definitely(subset(scalar_rectangle_image,ExactIntervalType(-1.0_x,2.0_x))));
         auto vector_rectangle_image=image(rectangle,vector_multivariate);
+        ARIADNE_TEST_PRINT(vector_rectangle_image);
         ARIADNE_TEST_EQUALS(vector_rectangle_image.dimension(),2u);
-        ARIADNE_TEST_ASSERT(definitely(subset(vector_rectangle_image,UpperBoxType({{-1.0_x,2.0_x},{1.0_x,4.0_x}}))));
+        ARIADNE_TEST_ASSERT(definitely(subset(vector_rectangle_image,ExactBoxType({{-1.0_x,2.0_x},{1.0_x,4.0_x}}))));
 
         auto empty_scalar_segment=image(empty_segment,scalar_univariate);
         ARIADNE_TEST_ASSERT(definitely(empty_scalar_segment.is_empty()));
