@@ -285,6 +285,11 @@ inline Void test_binary_tree() {
     ARIADNE_TEST_EQUAL(BinaryTreeNode::intersect(&disabled_subtree,&enabled_leaf_for_relation),false);
     ARIADNE_TEST_EQUAL(BinaryTreeNode::intersect(&enabled_leaf_for_relation,&disabled_subtree),false);
     ARIADNE_TEST_EQUAL(BinaryTreeNode::subset(&enabled_subtree,&disabled_leaf_for_relation),false);
+
+    ARIADNE_PRINT_TEST_COMMENT("An entirely disabled subtree is a subset of a disabled leaf");
+    ARIADNE_TEST_EQUAL(disabled_subtree.is_leaf(),false);
+    ARIADNE_TEST_EQUAL(disabled_subtree.has_enabled(),false);
+    ARIADNE_TEST_EQUAL(BinaryTreeNode::subset(&disabled_subtree,&disabled_leaf_for_relation),true);
 }
 
 
