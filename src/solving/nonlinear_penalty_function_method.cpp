@@ -174,7 +174,16 @@ feasible(ExactBoxType D, ValidatedVectorMultivariateFunction g, ExactBoxType C) 
     for(SizeType i=0; i!=10; ++i) {
         this->feasibility_step(D,g,C,x,y,w);
     }
-    return this->check_feasibility(D,g,C,exact_vector(x),exact_vector(y));
+    const auto point_status=this->check_feasibility(D,g,C,exact_vector(x),exact_vector(y));
+    if(definitely(!point_status)) {
+        // Failure of a local point check cannot certify infeasibility
+        // of the entire domain. Only a global certificate can do that.
+        if(this->is_infeasibility_certificate(D,g,C,exact_vector(y))) {
+            return false;
+        }
+        return indeterminate;
+    }
+    return point_status;
 }
 
 Void NonlinearPenaltyFunctionSolver::
