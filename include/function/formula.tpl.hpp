@@ -331,7 +331,6 @@ template<class X, class Y> inline X cached_evaluate(const Formula<Y>& f, const V
 }
 
 template<class X, class Y> Vector<X> cached_evaluate(const Vector<Formula<Y>>& f, const Vector<X>& v) {
-    ARIADNE_PRECONDITION(v.size()!=0);
     Vector<X> r(f.size(),zero_element(v));
     Map<const Void*,X> cache;
     for(SizeType i=0; i!=r.size(); ++i) {
@@ -400,7 +399,7 @@ template<class Y> Bool identical(const Formula<Y>& a1, const Formula<Y>& a2)
 }
 
 template<class Y> Vector<Formula<Y>> simplify(const Vector<Formula<Y>>& f) {
-    return Vector<Formula<Y>>(f.size(),[&f](SizeType i){return simplify(f[i]);});
+    return Vector<Formula<Y>>(f.size(),[&f](SizeType i){return simplify(f[i]);},f.zero_element());
 }
 
 

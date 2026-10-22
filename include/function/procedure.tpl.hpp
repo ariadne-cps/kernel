@@ -54,7 +54,7 @@ template<class P> Procedure<Number<P>> make_procedure(ScalarMultivariateFunction
 
 
 
-namespace {
+namespace ProcedureDetail {
 
 template<class Y> Void _convert_impl(List<ProcedureInstruction>& p, List<Y>& c, const FormulaNode<Y>& f, Map<const Void*,SizeType>& cache) {
     struct Visitor {
@@ -70,16 +70,20 @@ template<class Y> Void _convert_impl(List<ProcedureInstruction>& p, List<Y>& c, 
         Void operator()(GradedFormulaNode<Y> const& f) {
             p.append(ProcedureInstruction(f._op,_convert(p,c,f._arg,cache),f._num)); }
         Void operator()(ScalarFormulaNode<Y> const& f) {
-            c.append(f._cnst); p.append(ProcedureInstruction(f._op,c.size()-1u,_convert(p,c,f._arg,cache))); }
+            const SizeType constant_index=c.size();
+            c.append(f._cnst);
+            const SizeType argument_index=_convert(p,c,f._arg,cache);
+            p.append(ProcedureInstruction(ProcedureInstructionVariant(
+                ScalarProcedureInstruction(f._op,constant_index,argument_index)))); }
     };
     f.accept(Visitor{p,c,cache});
 }
 
-} // namespace
+} // namespace ProcedureDetail
 
 template<class Y> SizeType _convert(List<ProcedureInstruction>& p, List<Y>& c, const Formula<Y>& f, Map<const Void*,SizeType>& cache) {
     if(cache.has_key(f.node_ptr())) { return cache[f.node_ptr()]; }
-    _convert_impl(p,c,f.node_ref(),cache);
+    ProcedureDetail::_convert_impl(p,c,f.node_ref(),cache);
     const SizeType num=p.size()-1;
     cache.insert(f.node_ptr(),num);
     return num;
@@ -184,7 +188,8 @@ Vector<Procedure<Y>>::Vector(VectorMultivariateFunction<P> const& f)
 
 template<class Y>
 Vector<Procedure<Y>>::Vector(const Procedure<Y>& f)
-    : _constants(f._constants)
+    : _argument_size(f.argument_size())
+    , _constants(f._constants)
     , _instructions(f._instructions)
     , _results(1u,f._instructions.size()-1u)
 {
@@ -206,7 +211,7 @@ template<class OP> struct AlgebraScalar { }
 
 
 
-namespace {
+namespace ProcedureDetail {
 
 template<class X, class OP> Void propagate(X& r, OP op, X const& x1, X const& x2) { r=op(x1,x2); }
 template<class X, class OP> Void propagate(X& r, OP op, X const& x) { r=op(x); }
@@ -238,17 +243,13 @@ template<class X> Void propagate(X& r, UnaryElementaryOperator eop, X const& x) 
 template<class X, class N> Void propagate(X& r, GradedElementaryOperator eop, X const& x, N n) { eop.accept([&](auto op){r=op(x,n);}); }
 template<class Y, class X> requires (not Same<Y,UnivariateSecondDifferential<X>>)
 Void propagate(UnivariateSecondDifferential<X>& r, BinaryElementaryOperator eop, Y const& y1, UnivariateSecondDifferential<X> const& x2) {
-    switch(eop.code()) {
-        case OperatorCode::ADD: r=Add()(y1,x2); return;
-        case OperatorCode::SUB: r=Sub()(y1,x2); return;
-        case OperatorCode::MUL: r=Mul()(y1,x2); return;
-        case OperatorCode::DIV: r=Div()(y1,x2); return;
-        case OperatorCode::MAX:
-        case OperatorCode::MIN:
+    eop.accept([&](auto op) {
+        if constexpr (Same<decltype(op),Max> || Same<decltype(op),Min>) {
             ARIADNE_FAIL_MSG("Scalar max/min is not supported for UnivariateSecondDifferential.");
-        default:
-            ARIADNE_FAIL_MSG("Unsupported scalar binary operator "<<eop);
-    }
+        } else {
+            r=op(y1,x2);
+        }
+    });
 }
 template<class Y, class X> Void propagate(X& r, BinaryElementaryOperator eop, Y const& y1, X const& x2) { eop.accept([&](auto op){r=op(y1,x2);}); }
 
@@ -265,13 +266,13 @@ template<class X, class Y> Void _execute_impl(SizeType r, List<X>& v, const Proc
     pri.accept(Visitor{r,v,c,x});
 }
 
-} // namespace
+} // namespace ProcedureDetail
 
 // \related Procedure \brief Evaluate a function \a f defined by an algorithmic procedure
 template<class X, class Y> Void _execute(List<X>& v, const List<ProcedureInstruction>& p, const List<Y>& c, const Vector<X>& x) {
-    ARIADNE_ASSERT(v.size()==p.size());
+    ARIADNE_PRECONDITION(v.size()==p.size());
     for(SizeType i=0; i!=p.size(); ++i) {
-        _execute_impl(i,v,p[i],c,x);
+        ProcedureDetail::_execute_impl(i,v,p[i],c,x);
     }
 }
 
@@ -416,7 +417,7 @@ template<class X, class Y> Void _backpropagate(SizeType r, Vector<X>& x, List<X>
 
 template<class X, class Y> Void _backpropagate(Vector<X>& x, List<X>& v, const List<ProcedureInstruction>& p, const List<Y>& c)
 {
-    ARIADNE_ASSERT(v.size()==p.size());
+    ARIADNE_PRECONDITION(v.size()==p.size());
     SizeType r=p.size();
     while(r!=0u) {
         --r;
@@ -434,18 +435,18 @@ template<class X, class D> void back_gradient(D const& dr, Add, X const&, D& da1
 template<class X, class D> void back_gradient(D const& dr, Sub, X const&, D& da1, X const&, D& da2) { da1+=dr; da2-=dr; }
 template<class X, class D> void back_gradient(D const& dr, Mul, X const& a1, D& da1, X const& a2, D& da2) { da1+=dr*a2; da2+=a1*dr; }
 template<class X, class D> void back_gradient(D const& dr, Div, X const& a1, D& da1, X const& a2, D& da2) { da1+=dr/a2; da2-=dr/a2*(a1/a2); }
-template<class X, class D> void back_gradient(D const&, Max, X const&, D&, X const&, D&) { assert(false); }
-template<class X, class D> void back_gradient(D const&, Min, X const&, D&, X const&, D&) { assert(false); }
+template<class X, class D> void back_gradient(D const&, Max, X const&, D&, X const&, D&) { ARIADNE_FAIL_MSG("Cannot take derivative of a non-smooth procedure operator."); }
+template<class X, class D> void back_gradient(D const&, Min, X const&, D&, X const&, D&) { ARIADNE_FAIL_MSG("Cannot take derivative of a non-smooth procedure operator."); }
 
 template<class Y, class X, class D> void back_gradient(D const& dr, Add, Y const&, X const&, D& da2) { da2+=dr; }
 template<class Y, class X, class D> void back_gradient(D const& dr, Sub, Y const&, X const&, D& da2) { da2-=dr; }
 template<class Y, class X, class D> void back_gradient(D const& dr, Mul, Y const& c1, X const&, D& da2) { da2+=c1*dr; }
 template<class Y, class X, class D> void back_gradient(D const& dr, Div, Y const& c1, X const& a2, D& da2) { da2-=(dr/a2)*(c1/a2); }
-template<class Y, class X, class D> void back_gradient(D const&, Max, Y const&, X const&, D&) { assert(false); }
-template<class Y, class X, class D> void back_gradient(D const&, Min, Y const&, X const&, D&) { assert(false); }
+template<class Y, class X, class D> void back_gradient(D const&, Max, Y const&, X const&, D&) { ARIADNE_FAIL_MSG("Cannot take derivative of a non-smooth procedure operator."); }
+template<class Y, class X, class D> void back_gradient(D const&, Min, Y const&, X const&, D&) { ARIADNE_FAIL_MSG("Cannot take derivative of a non-smooth procedure operator."); }
 
 template<class OP, class X, class D> void back_gradient(D const& dr, OP op, X const& a, D& da) { da+=op.derivative(a,dr); }
-template<class X, class D> void back_gradient(D const&, Abs, X const&, D&) { assert(false); }
+template<class X, class D> void back_gradient(D const&, Abs, X const&, D&) { ARIADNE_FAIL_MSG("Cannot take derivative of a non-smooth procedure operator."); }
 
 template<class N, class X, class D> void back_gradient(D const& dr, Pow op, X const& a, D& da, N n) { da+=op.derivative(a,dr,n); }
 
@@ -462,7 +463,7 @@ template<class N, class X, class D> void back_gradient(D const& dr, GradedElemen
 
 
 
-namespace {
+namespace ProcedureDetail {
 template<class X, class Y> void _back_gradient_impl(SizeType r, ProcedureInstruction const& pri, Vector<X> const& x, List<Y> const& c, List<X>& v, List<X>& dv, Covector<X>& dfx) {
     struct Visitor {
         SizeType r; Vector<X> const& x; List<Y> const& c; List<X>& v; List<X>& dv; Covector<X>& dfx;
@@ -475,10 +476,12 @@ template<class X, class Y> void _back_gradient_impl(SizeType r, ProcedureInstruc
     };
     pri.accept(Visitor{r,x,c,v,dv,dfx});
 }
-} // namespace
+} // namespace ProcedureDetail
 
 
 template<class X, class Y> Covector<X> gradient(Procedure<Y> const& f, Vector<X> const& x) {
+    ARIADNE_PRECONDITION(f.argument_size()==x.size());
+    ARIADNE_PRECONDITION(!f._instructions.empty());
     X z=x.zero_element();
     auto& p=f._instructions;
     auto& c=f._constants;
@@ -493,7 +496,7 @@ template<class X, class Y> Covector<X> gradient(Procedure<Y> const& f, Vector<X>
     dv[r-1]=1;
     while(r!=0u) {
         --r;
-        _back_gradient_impl(r,p[r],x,c,v,dv,dfx);
+        ProcedureDetail::_back_gradient_impl(r,p[r],x,c,v,dv,dfx);
     }
     return dfx;
 }
@@ -506,6 +509,8 @@ template<class X, class Y> Covector<X> gradient(Procedure<Y> const& f, Vector<X>
 namespace Ariadne {
 
 template<class X, class Y> X hessian(Procedure<Y> const& f, Vector<X> const& x, Vector<X> const& s) {
+    ARIADNE_PRECONDITION(f.argument_size()==x.size());
+    ARIADNE_PRECONDITION(s.size()==x.size());
     auto da=UnivariateSecondDifferential<X>::variable(s.zero_element());
     Vector<UnivariateSecondDifferential<X>> dxpas=x+da*s;
     UnivariateSecondDifferential<X> dfxpas=evaluate(f,dxpas);

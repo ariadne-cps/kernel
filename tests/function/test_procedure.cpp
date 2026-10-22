@@ -88,6 +88,7 @@ class TestProcedure
     Void test_nul_hlf_backpropagation();
     Void test_elementary_empty_backpropagation();
     Void test_derivative();
+    Void test_scalar_formula_conversion();
 };
 
 TestProcedure::TestProcedure()
@@ -109,6 +110,7 @@ Void TestProcedure::test()
     ARIADNE_TEST_CALL(test_nul_hlf_backpropagation());
     ARIADNE_TEST_CALL(test_elementary_empty_backpropagation());
     ARIADNE_TEST_CALL(test_derivative());
+    ARIADNE_TEST_CALL(test_scalar_formula_conversion());
 }
 
 
@@ -812,7 +814,155 @@ Void TestProcedure::test_derivative()
     ARIADNE_TEST_EQUALS(hessian(p,q,s),f(ds).hessian().get(0,0));
 }
 
+Void TestProcedure::test_scalar_formula_conversion() {
+    using F=ApproximateFormula;
+    auto x=F::coordinate(0u),y=F::coordinate(1u);
+    auto formula=F::scalar(Mul(),ApproximateNumber(3),x+y);
+    ApproximateProcedure procedure(2u,formula);
+    Vector<FloatDPApproximation> point({2,4},dp);
+    ARIADNE_TEST_EQUALS(evaluate(procedure,point),FloatDPApproximation(18,dp));
+    Vector<ApproximateProcedure> vector(procedure);
+    ARIADNE_TEST_EQUALS(vector.argument_size(),2u);
+    ARIADNE_TEST_EQUALS(evaluate(vector,point)[0u],FloatDPApproximation(18,dp));
+}
+
+
+Void test_procedure_instruction_accessors() {
+    ProcedureInstruction constant(Cnst(),2u),variable(Var(),1u),unary(Neg(),3u);
+    ProcedureInstruction binary(Add(),4u,5u),power(Pow(),6u,3);
+    ProcedureInstruction scalar(ProcedureInstructionVariant(ScalarProcedureInstruction(Mul(),0u,1u)));
+    ARIADNE_TEST_EQUALS(constant.val(),2u);ARIADNE_TEST_EQUALS(variable.ind(),1u);
+    ARIADNE_TEST_EQUALS(unary.arg(),3u);ARIADNE_TEST_EQUALS(power.arg(),6u);
+    ARIADNE_TEST_EQUALS(binary.arg1(),4u);ARIADNE_TEST_EQUALS(binary.arg2(),5u);
+    ARIADNE_TEST_EQUALS(power.num(),3);
+    ARIADNE_TEST_ASSERT(constant.op().code()==OperatorCode::CNST);
+    ARIADNE_TEST_ASSERT(variable.op().code()==OperatorCode::VAR);
+    ARIADNE_TEST_ASSERT(unary.op().code()==OperatorCode::NEG);
+    ARIADNE_TEST_ASSERT(binary.op().code()==OperatorCode::ADD);
+    ARIADNE_TEST_ASSERT(power.op().code()==OperatorCode::POW);
+    ARIADNE_TEST_ASSERT(scalar.op().code()==OperatorCode::MUL);
+}
+Void test_procedure_builders_and_contracts() {
+    using X=FloatDPApproximation;using F=ApproximateFormula;
+    ApproximateProcedure constant(0u);constant.new_constant(ApproximateNumber(7));constant.new_instruction(Cnst(),0u);
+    ARIADNE_TEST_EQUALS(evaluate(constant,Vector<X>(0u,dp)),X(7,dp));
+    auto x=F::coordinate(0u),y=F::coordinate(1u);
+    ApproximateProcedure sum(2u,x+y);
+    Vector<ApproximateProcedure> vector(sum);
+    ARIADNE_TEST_EQUALS(vector.argument_size(),2u);
+    auto previous=vector.temporaries_size()-1u;
+    vector.new_instruction(Neg(),previous);
+    vector.new_instruction(Pow(),vector.temporaries_size()-1u,2);
+    vector.new_instruction(Add(),previous,vector.temporaries_size()-1u);
+    vector.set_return(0u,vector.temporaries_size()-1u);
+    Vector<X> point({2,4},dp);
+    ARIADNE_TEST_EQUALS(evaluate(vector,point)[0u],X(42,dp));
+    List<X> temporaries(vector.temporaries_size(),X(0,dp));
+    execute(temporaries,vector,point);
+    ARIADNE_TEST_EQUALS(temporaries.back(),X(42,dp));
+    ARIADNE_TEST_FAIL(evaluate(sum,Vector<X>(1u,dp)));
+    ARIADNE_TEST_FAIL(evaluate(vector,Vector<X>(1u,dp)));
+    ARIADNE_TEST_FAIL(execute(temporaries,vector,Vector<X>(1u,dp)));
+    ARIADNE_TEST_FAIL(execute(temporaries,sum,point));
+    ARIADNE_TEST_FAIL(gradient(sum,Vector<X>(1u,dp)));
+    ARIADNE_TEST_FAIL(hessian(sum,point,Vector<X>(1u,dp)));
+    ARIADNE_TEST_FAIL(hessian(sum,Vector<X>(1u,dp),point));
+    ApproximateProcedure empty(2u);
+    ARIADNE_TEST_FAIL(evaluate(empty,point));
+    ARIADNE_TEST_FAIL(gradient(empty,point));
+    using I=UpperIntervalType;
+    ValidatedProcedure identity(1u,ValidatedFormula::coordinate(0u));
+    Vector<I> interval{I(-2,2)};List<I> values(1u,I(1,1));
+    backpropagate(values,identity,interval);
+    ARIADNE_TEST_SAME(interval[0u],I(1,1));
+    Vector<ValidatedProcedure> vector_identity(identity);
+    interval[0u]=I(-2,2);backpropagate(values,vector_identity,interval);
+    ARIADNE_TEST_SAME(interval[0u],I(1,1));
+    List<I> wrong_values;Vector<I> wrong_point(0u,I(0,0));
+    ARIADNE_TEST_FAIL(backpropagate(wrong_values,identity,interval));
+    ARIADNE_TEST_FAIL(backpropagate(values,identity,wrong_point));
+    ARIADNE_TEST_FAIL(backpropagate(values,vector_identity,wrong_point));
+    ARIADNE_TEST_FAIL(execute(values,identity,wrong_point));
+}
+Void test_procedure_scalar_derivatives() {
+    using X=FloatDPApproximation;using F=ApproximateFormula;
+    Vector<X> point{X(2,dp)},direction{X(1,dp)};
+    struct Case { BinaryElementaryOperator op;Int value;ExactDouble first,second; };
+    List<Case> cases{{Add(),5,1.0_x,0.0_x},{Sub(),1,-1.0_x,0.0_x},{Mul(),6,3.0_x,0.0_x},{Div(),0,-0.75_x,0.75_x}};
+    for(const auto& example:cases) {
+        auto expression=F::scalar(example.op,ApproximateNumber(3),F::coordinate(0u));
+        ApproximateProcedure p(1u,expression);
+        if(example.op.code()==OperatorCode::DIV) { ARIADNE_TEST_EQUALS(evaluate(p,point),X(1.5_x,dp)); }
+        else { ARIADNE_TEST_EQUALS(evaluate(p,point),X(example.value,dp)); }
+        ARIADNE_TEST_EQUALS(gradient(p,point)[0u],X(example.first,dp));
+        ARIADNE_TEST_EQUALS(hessian(p,point,direction),X(example.second,dp));
+    }
+    ApproximateProcedure cube(1u,F::graded(Pow(),F::coordinate(0u),3));
+    ARIADNE_TEST_EQUALS(gradient(cube,point)[0u],X(12,dp));
+    ApproximateProcedure polynomial(1u,pow(F::coordinate(0u),3)+ApproximateNumber(7));
+    ARIADNE_TEST_EQUALS(gradient(polynomial,point)[0u],X(12,dp));
+    for(const auto& op:List<UnaryElementaryOperator>{Asin(),Acos()}) {
+        ApproximateProcedure p(1u,F::unary(op,F::coordinate(0u)));
+        Vector<X> argument{X(0.5_x,dp)},velocity{X(2,dp)};
+        X expected=X(2,dp)/(X(0.75_x,dp)*sqrt(X(0.75_x,dp)));
+        if(op.code()==OperatorCode::ACOS) { expected=-expected; }
+        ARIADNE_TEST_WITHIN(hessian(p,argument,velocity),expected,1e-14);
+    }
+    for(const auto& op:List<BinaryElementaryOperator>{Max(),Min()}) {
+        ApproximateProcedure p(1u,F::scalar(op,ApproximateNumber(3),F::coordinate(0u)));
+        ARIADNE_TEST_FAIL(gradient(p,point));ARIADNE_TEST_FAIL(hessian(p,point,direction));
+        ApproximateProcedure binary(1u,F::binary(op,F::coordinate(0u),F(ApproximateNumber(3))));
+        ARIADNE_TEST_FAIL(gradient(binary,point));
+    }
+    ApproximateProcedure absolute(1u,abs(F::coordinate(0u)));
+    ARIADNE_TEST_FAIL(gradient(absolute,point));
+    ValidatedProcedure validated(1u,ValidatedFormula::graded(Pow(),ValidatedFormula::coordinate(0u),3));
+    Vector<FloatDPBounds> bounds{FloatDPBounds(2,dp)};
+    ARIADNE_TEST_ASSERT(definitely(evaluate(validated,bounds)==FloatDPBounds(8,dp)));
+    ValidatedProcedure scalar_validated(1u,ValidatedFormula::scalar(Mul(),ValidatedNumber(3),ValidatedFormula::coordinate(0u)));
+    ARIADNE_TEST_ASSERT(definitely(evaluate(scalar_validated,bounds)==FloatDPBounds(6,dp)));
+}
+
+
+Void test_procedure_interval_contracts_and_empty_targets() {
+    using B=FloatDPBounds;using D=UnivariateSecondDifferential<FloatDPApproximation>;
+    ValidatedProcedure identity(1u,ValidatedFormula::coordinate(0u)),empty(1u);
+    Vector<B> point{B(2,dp)};List<B> values(1u,B(0,dp));
+    execute(values,identity,point);ARIADNE_TEST_ASSERT(definitely(values[0u]==B(2,dp)));
+    ARIADNE_TEST_FAIL(execute(values,identity,Vector<B>(0u,dp)));
+    ARIADNE_TEST_FAIL(evaluate(identity,Vector<B>(0u,dp)));
+    ARIADNE_TEST_FAIL(evaluate(empty,point));
+    Vector<ValidatedProcedure> vector(identity);UpperBoxType domain{{-1,1}};
+    ARIADNE_TEST_FAIL(simple_hull_reduce(domain,vector,ExactBoxType(0u)));
+    ApproximateProcedure p(1u,ApproximateFormula::coordinate(0u)),no_instructions(1u);
+    Vector<D> differentials(1u,D(FloatDPApproximation(2,dp)));
+    ARIADNE_TEST_EQUALS(evaluate(p,differentials).value(),FloatDPApproximation(2,dp));
+    ARIADNE_TEST_FAIL(evaluate(p,Vector<D>(0u,D(FloatDPApproximation(0,dp)))));
+    ARIADNE_TEST_FAIL(evaluate(no_instructions,differentials));
+    ARIADNE_TEST_ASSERT(definitely(gradient(identity,point)[0u]==B(1,dp)));
+    ARIADNE_TEST_ASSERT(definitely(hessian(identity,point,Vector<B>{B(1,dp)})==B(0,dp)));
+    using I=UpperIntervalType;
+    I target=I::empty_interval();
+    for(const auto& op:List<BinaryElementaryOperator>{Max(),Min()}) {
+        I a(-2,2),b(-3,3);backpropagate(target,op,a,b);
+        ARIADNE_TEST_ASSERT(definitely(a.is_empty()));ARIADNE_TEST_ASSERT(definitely(b.is_empty()));
+        a=I(-2,2);const ValidatedNumber coefficient(1);backpropagate(target,op,coefficient,a);
+        ARIADNE_TEST_ASSERT(definitely(a.is_empty()));
+    }
+    for(const auto& op:List<UnaryElementaryOperator>{Nul(),Cos(),Tan()}) {
+        I argument(-2,2);backpropagate(target,op,argument);
+        ARIADNE_TEST_ASSERT(definitely(argument.is_empty()));
+    }
+    I argument(-2,2);backpropagate(I(-2,-1),Nul(),argument);
+    ARIADNE_TEST_ASSERT(definitely(argument.is_empty()));
+    argument=I(-2,2);backpropagate(target,Pow(),argument,3);
+    ARIADNE_TEST_ASSERT(definitely(argument.is_empty()));
+}
 Int main() {
     TestProcedure().test();
+    ARIADNE_TEST_CALL(test_procedure_interval_contracts_and_empty_targets());
+    ARIADNE_TEST_CALL(test_procedure_instruction_accessors());
+    ARIADNE_TEST_CALL(test_procedure_builders_and_contracts());
+    ARIADNE_TEST_CALL(test_procedure_scalar_derivatives());
     return ARIADNE_TEST_FAILURES;
 }

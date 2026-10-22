@@ -226,7 +226,8 @@ class TestFormula
         ARIADNE_TEST_ASSERT(same(evaluated[1],EffectiveNumber(2)));
         Vector<EffectiveFormula> formulae({two});
         Vector<EffectiveNumber> empty_values;
-        ARIADNE_TEST_THROWS(evaluate(formulae,empty_values),std::runtime_error);
+        ARIADNE_TEST_ASSERT(same(evaluate(formulae,empty_values)[0u],EffectiveNumber(2)));
+        ARIADNE_TEST_EQUALS(simplify(Vector<EffectiveFormula>{}).size(),0u);
     }
 
     Void test_is_constant_in() {
@@ -286,8 +287,111 @@ class TestFormula
 };
 
 
+
+Void test_formula_algebraic_classification() {
+    using F=EffectiveFormula;
+    auto x=F::coordinate(0u),y=F::coordinate(1u);F c(EffectiveNumber(2));
+    Set<Nat> variables{0u};
+    for(const auto& op:List<UnaryElementaryOperator>{Atan(),Acos(),Asin(),Cos(),Sin(),Tan(),Tanh(),Abs(),Sqr(),Log(),Sqrt(),Exp(),Rec()}) {
+        ARIADNE_TEST_ASSERT(!is_affine_in(F::unary(op,x),variables));
+        ARIADNE_TEST_ASSERT(is_affine_in(F::unary(op,y),variables));
+        ARIADNE_TEST_ASSERT(!is_constant(F::unary(op,c)));
+    }
+    for(const auto& op:List<UnaryElementaryOperator>{Hlf(),Pos(),Neg()}) {
+        ARIADNE_TEST_ASSERT(is_affine_in(F::unary(op,x),variables));
+        ARIADNE_TEST_ASSERT(!is_affine_in(F::unary(op,sqr(x)),variables));
+    }
+    ARIADNE_TEST_ASSERT(is_affine_in(F::unary(Nul(),sqr(x)),variables));
+    for(const auto& op:List<BinaryElementaryOperator>{Add(),Sub()}) {
+        ARIADNE_TEST_ASSERT(is_affine_in(F::binary(op,x,y),variables));
+        ARIADNE_TEST_ASSERT(!is_affine_in(F::binary(op,x,sqr(x)),variables));
+        ARIADNE_TEST_ASSERT(!is_affine_in(F::binary(op,sqr(x),x),variables));
+    }
+    ARIADNE_TEST_ASSERT(is_affine_in(x*c,variables));
+    ARIADNE_TEST_ASSERT(is_affine_in(c*x,variables));
+    ARIADNE_TEST_ASSERT(!is_affine_in(x*x,variables));
+    ARIADNE_TEST_ASSERT(!is_affine_in(sqr(x)*x,variables));
+    ARIADNE_TEST_ASSERT(is_affine_in(x/c,variables));
+    ARIADNE_TEST_ASSERT(!is_affine_in(c/x,variables));
+    ARIADNE_TEST_ASSERT(!is_affine_in(sqr(x)/c,variables));
+    for(const auto& op:List<BinaryElementaryOperator>{Max(),Min()}) {
+        ARIADNE_TEST_ASSERT(is_affine_in(F::binary(op,c,y),variables));
+        ARIADNE_TEST_ASSERT(!is_affine_in(F::binary(op,x,c),variables));
+        ARIADNE_TEST_ASSERT(!is_affine_in(F::binary(op,c,x),variables));
+    }
+    ARIADNE_TEST_ASSERT(is_affine_in(pow(x,0),variables));
+    ARIADNE_TEST_ASSERT(is_affine_in(pow(x,1),variables));
+    ARIADNE_TEST_ASSERT(!is_affine_in(pow(x,2),variables));
+    ARIADNE_TEST_ASSERT(!is_affine_in(pow(sqr(x),1),variables));
+    ARIADNE_TEST_ASSERT(is_affine_in(pow(y,2),variables));
+    ARIADNE_TEST_ASSERT(is_constant_in(pow(x,0),variables));
+    ARIADNE_TEST_ASSERT(!is_constant_in(pow(x,1),variables));
+    ARIADNE_TEST_ASSERT(is_constant_in(pow(y,2),variables));
+    ARIADNE_TEST_ASSERT(!is_constant(pow(c,2)));
+    ARIADNE_TEST_ASSERT(!is_constant(F::scalar(Mul(),EffectiveNumber(2),x)));
+    ARIADNE_TEST_ASSERT(!identical(pow(x,2),pow(y,2)));
+    ARIADNE_TEST_ASSERT(!identical(pow(x,2),pow(x,3)));
+}
+Void test_formula_simplification_identities() {
+    using F=EffectiveFormula;
+    auto x=F::coordinate(0u),y=F::coordinate(1u);F z(EffectiveNumber(0)),one(EffectiveNumber(1));
+    List<Pair<F,F>> identities{{x-z,x},{x-x,z},{z-x,-x},{x-y,x-y},
+        {z*x,z},{x*z,z},{one*x,x},{x*one,x},{x*y,x*y},
+        {z/x,z},{x/one,x},{one/x,rec(x)},{x/x,one},{x/y,x/y},
+        {F::unary(Pos(),x),x},{neg(neg(x)),x},{rec(rec(x)),x},{rec(sqr(x)),rec(sqr(x))},
+        {neg(sqr(x)),neg(sqr(x))},{F::unary(Neg(),F(EffectiveNumber(2))),F(EffectiveNumber(-2))},
+        {pow(x,-1),rec(x)},{pow(x,0),one},{pow(x,1),x},{pow(x,2),sqr(x)},{pow(x,3),pow(x,3)}};
+    for(const auto& example:identities) { ARIADNE_TEST_ASSERT(identical(simplify(example.first),example.second)); }
+}
+Void test_formula_derivatives_and_cache() {
+    using F=EffectiveFormula;using X=FloatDPApproximation;
+    auto x=F::coordinate(0u),y=F::coordinate(1u);Vector<X> point({2,4},dp);
+    ARIADNE_TEST_EQUALS(evaluate(derivative(x/y,0u),point),X(0.25_x,dp));
+    ARIADNE_TEST_EQUALS(evaluate(derivative(x/y,1u),point),X(-0.125_x,dp));
+    ARIADNE_TEST_EQUALS(evaluate(derivative(pow(x,3),0u),point),X(12,dp));
+    ARIADNE_TEST_EQUALS(evaluate(derivative(x,1u),point),X(0,dp));
+    ARIADNE_TEST_FAIL(derivative(abs(x),0u));
+    ARIADNE_TEST_FAIL(derivative(min(x,y),0u));
+    ARIADNE_TEST_FAIL(derivative(max(x,y),0u));
+    auto shared=pow(x,3)+y;Map<const Void*,X> cache;
+    ARIADNE_TEST_EQUALS(cached_evaluate(shared,point,cache),X(12,dp));
+    auto cached_size=cache.size();
+    ARIADNE_TEST_EQUALS(cached_evaluate(shared,point,cache),X(12,dp));
+    ARIADNE_TEST_EQUALS(cache.size(),cached_size);
+    Vector<ApproximateNumber> generic_point{ApproximateNumber(2),ApproximateNumber(4)};
+    auto evaluated=evaluate(Vector<F>{shared,shared},generic_point);
+    ARIADNE_TEST_EQUALS(X(evaluated[0u],dp),X(12,dp));
+    F indexed(Index(1u));ARIADNE_TEST_ASSERT(identical(indexed,y));
+    ARIADNE_TEST_EQUALS(evaluate(3+x,point),X(5,dp));
+    ARIADNE_TEST_EQUALS(evaluate(3-x,point),X(1,dp));
+    ARIADNE_TEST_ASSERT(same(make_constant(EffectiveNumber(3),Real(0)),Real(3)));
+    auto real_formula=make_constant(EffectiveNumber(3),Formula<Real>::zero());
+    ARIADNE_TEST_ASSERT(is_constant(real_formula,Real(3)));
+}
+Void test_formula_parentheses() {
+    using F=EffectiveFormula;auto x=F::coordinate(0u),y=F::coordinate(1u);
+    List<Pair<F,String>> cases{
+        {F::unary(Neg(),F(EffectiveNumber(2))),"-2"},{F::unary(Pos(),x),"+x[0]"},{min(x,y),"min(x[0],x[1])"},
+        {-(x+y),"-(x[0]+x[1])"},{-x,"-x[0]"},
+        {x-(x+y),"x[0]-(x[0]+x[1])"},{x-(x-y),"x[0]-(x[0]-x[1])"},{x-y,"x[0]-x[1]"},
+        {(x+y)*x,"(x[0]+x[1])*x[0]"},{(x-y)*x,"(x[0]-x[1])*x[0]"},{(x/y)*x,"(x[0]/x[1])*x[0]"},
+        {x*(x+y),"x[0]*(x[0]+x[1])"},{x*(x-y),"x[0]*(x[0]-x[1])"},{x*y,"x[0]*x[1]"},
+        {(x+y)/x,"(x[0]+x[1])/x[0]"},{(x-y)/x,"(x[0]-x[1])/x[0]"},
+        {x/(x+y),"x[0]/(x[0]+x[1])"},{x/(x-y),"x[0]/(x[0]-x[1])"},
+        {x/(x*y),"x[0]/(x[0]*x[1])"},{x/(x/y),"x[0]/(x[0]/x[1])"},{x/y,"x[0]/x[1]"}};
+    for(const auto& example:cases) { std::ostringstream text;text<<example.first;ARIADNE_TEST_EQUALS(text.str(),example.second); }
+    std::ostringstream text;F::_write_univariate(text,Vector<F>{});
+    ARIADNE_TEST_EQUALS(text.str(),String("[]"));
+    text.str("");F::_write_multivariate(text,Vector<F>{});
+    ARIADNE_TEST_EQUALS(text.str(),String("[]"));
+}
+
 Int main() {
     TestFormula().test();
+    ARIADNE_TEST_CALL(test_formula_algebraic_classification());
+    ARIADNE_TEST_CALL(test_formula_simplification_identities());
+    ARIADNE_TEST_CALL(test_formula_derivatives_and_cache());
+    ARIADNE_TEST_CALL(test_formula_parentheses());
     return ARIADNE_TEST_FAILURES;
 }
 

@@ -7,6 +7,8 @@
 #include "function/function.hpp"
 #include "function/function_mixin.tpl.hpp"
 #include "function/taylor_function.hpp"
+#include "function/formula.tpl.hpp"
+#include "algebra/algebra.hpp"
 #include "macro/testing.hpp"
 #include <array>
 #include <memory>
@@ -145,8 +147,39 @@ Void test_function_factory() {
     std::ostringstream text;text<<*copy;
     ARIADNE_TEST_EQUALS(text.str(),String("TaylorBackedFactory"));
 }
+
+// Each numeric paradigm promises evaluation with its own numbers and weaker
+// paradigms. Formula and type-erased algebra arguments must retain that same
+// polynomial, rather than dropping the constant or changing its variables.
+template<class Y,class P> Void check_generic_polynomial(const ScalarMultivariateFunction<P>& function) {
+    using X=FloatDPApproximation;using F=Formula<Y>;using A=ElementaryAlgebra<Y>;
+    Vector<Y> numbers{Y(2),Y(3)};
+    ARIADNE_TEST_EQUALS(X(function(numbers),dp),X(8,dp));
+    Vector<X> point({2,3},dp);
+    auto formula=function(F::identity(2u));
+    ARIADNE_TEST_EQUALS(evaluate(formula,point),X(8,dp));
+    Vector<A> algebra_arguments{A(F::coordinate(0u)),A(F::coordinate(1u))};
+    auto algebra_result=function(algebra_arguments);
+    auto extracted=algebra_result.template extract<F>();
+    ARIADNE_TEST_EQUALS(evaluate(extracted,point),X(8,dp));
+    ARIADNE_TEST_EQUALS(evaluate(derivative(extracted,0u),point),X(4,dp));
+}
+template<class P> Void test_generic_numeric_interfaces() {
+    using S=ScalarMultivariateFunction<P>;
+    auto x=S::coordinate(2u,0u),y=S::coordinate(2u,1u);auto polynomial=sqr(x)+y+Number<P>(1);
+    check_generic_polynomial<ApproximateNumber>(polynomial);
+    if constexpr (!Same<P,ApproximateTag>) { check_generic_polynomial<ValidatedNumber>(polynomial); }
+    if constexpr (Same<P,EffectiveTag>) {
+        check_generic_polynomial<EffectiveNumber>(polynomial);
+        check_generic_polynomial<Real>(polynomial);
+    }
+}
+
 Int main() {
     ARIADNE_TEST_CALL(test_optional_getter());
+    ARIADNE_TEST_CALL(test_generic_numeric_interfaces<ApproximateTag>());
+    ARIADNE_TEST_CALL(test_generic_numeric_interfaces<ValidatedTag>());
+    ARIADNE_TEST_CALL(test_generic_numeric_interfaces<EffectiveTag>());
     ARIADNE_TEST_CALL(check_vector_api<ApproximateTag>());
     ARIADNE_TEST_CALL(check_vector_api<ValidatedTag>());
     ARIADNE_TEST_CALL(check_vector_api<EffectiveTag>());

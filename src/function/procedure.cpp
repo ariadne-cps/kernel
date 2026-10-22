@@ -118,7 +118,7 @@ Void simple_hull_reduce(UpperBoxType& dom, const Vector<ValidatedProcedure>& f, 
     const List<ValidatedNumber>& c=f._constants;
     List<UpperIntervalType> t(p.size());
 
-    ARIADNE_ASSERT(codom.size()==f._results.size());
+    ARIADNE_PRECONDITION(codom.size()==f._results.size());
 
     _execute(t,p,c,cast_vector(dom));
     for(SizeType i=0; i!=codom.size(); ++i) {

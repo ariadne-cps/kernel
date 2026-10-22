@@ -81,7 +81,7 @@ template<class F> struct AlgebraOperations<AffineModel<ApproximateTag,F>> {
     }
 
     static AffineModelType apply(Add, const AffineModelType& a1, const AffineModelType& a2) {
-        ARIADNE_ASSERT_MSG(a1.argument_size()==a2.argument_size(),"a1="<<a1<<" a2="<<a2);
+        ARIADNE_PRECONDITION_MSG(a1.argument_size()==a2.argument_size(),"a1="<<a1<<" a2="<<a2);
         SizeType n=a1.argument_size();
         PrecisionType prec=max(a1.precision(),a2.precision());
 
@@ -94,14 +94,14 @@ template<class F> struct AlgebraOperations<AffineModel<ApproximateTag,F>> {
     }
 
     static AffineModelType apply(Mul, const AffineModelType& a1, const AffineModelType& a2) {
-        ARIADNE_ASSERT_MSG(a1.argument_size()==a2.argument_size(),"a1="<<a1<<" a2="<<a2);
+        ARIADNE_PRECONDITION_MSG(a1.argument_size()==a2.argument_size(),"a1="<<a1<<" a2="<<a2);
         SizeType n=a1.argument_size();
         PrecisionType prec=max(a1.precision(),a2.precision());
 
         AffineModelType r(n,prec);
-        r=a1.value()+a2.value();
+        r=a1.value()*a2.value();
         for(SizeType i=0; i!=n; ++i) {
-            r[i]=a1.value()*a2.gradient(i)+a1.gradient(i)+a2.value();
+            r[i]=a1.value()*a2.gradient(i)+a1.gradient(i)*a2.value();
         }
         return r;
     }
@@ -136,7 +136,7 @@ template<class F> struct AlgebraOperations<AffineModel<ApproximateTag,F>> {
 
 
 template<class F> PositiveUpperBound<F> norm(Covector<F> const& g) {
-    PositiveUpperBound<F> r=mag(g.zero_element());
+    PositiveUpperBound<F> r=mag(make_from_characteristics<F>(g.array().element_characteristics()));
     for (SizeType i=0; i!=g.size(); ++i) {
         r += mag(g[i]);
     }
@@ -162,7 +162,7 @@ template<class F> struct AlgebraOperations<AffineModel<ValidatedTag,F>> {
         return r;
     }
     static AffineModelType apply(Add, const AffineModelType& a1, const AffineModelType& a2) {
-        ARIADNE_ASSERT_MSG(a1.argument_size()==a2.argument_size(),"a1="<<a1<<" a2="<<a2);
+        ARIADNE_PRECONDITION_MSG(a1.argument_size()==a2.argument_size(),"a1="<<a1<<" a2="<<a2);
         SizeType n=a1.argument_size();
         PrecisionType prec=max(a1.precision(),a2.precision());
 
@@ -176,7 +176,7 @@ template<class F> struct AlgebraOperations<AffineModel<ValidatedTag,F>> {
     }
 
     static AffineModelType apply(Mul, const AffineModelType& a1, const AffineModelType& a2) {
-        ARIADNE_ASSERT_MSG(a1.argument_size()==a2.argument_size(),"a1="<<a1<<" a2="<<a2);
+        ARIADNE_PRECONDITION_MSG(a1.argument_size()==a2.argument_size(),"a1="<<a1<<" a2="<<a2);
         SizeType n=a1.argument_size();
         PrecisionType prec=max(a1.precision(),a2.precision());
 
@@ -188,7 +188,7 @@ template<class F> struct AlgebraOperations<AffineModel<ValidatedTag,F>> {
         }
 
         r.error() = (r.error()+a1.error()*a2.error())
-                        + ( (mag(a1.value())+norm(a1.gradient()) * a2.error()) + a1.error()*(mag(a2.value())+norm(a2.gradient())) )
+                        + ( ((mag(a1.value())+norm(a1.gradient())) * a2.error()) + a1.error()*(mag(a2.value())+norm(a2.gradient())) )
                         + norm(a1.gradient()) * norm(a2.gradient());
 
         return r;
@@ -254,12 +254,10 @@ template<class F> AffineModel<ValidatedTag,F>::AffineModel(const TaylorModel<Val
         if(iter->index().degree()>=2) {
             affine_model.set_error(mag(iter->coefficient())+affine_model.error());
         } else if(iter->index().degree()==1) {
-            for(SizeType i=0; i!=taylor_model.argument_size(); ++i) {
-                if(iter->index()[i]==1) {
-                    affine_model.set_gradient(i,iter->coefficient());
-                    break;
-                }
-            }
+            // A degree-one multi-index has exactly one unit component.
+            SizeType i=0;
+            while(iter->index()[i]!=1) { ++i; }
+            affine_model.set_gradient(i,iter->coefficient());
         } else {
             affine_model.set_value(iter->coefficient());
         }
@@ -323,7 +321,7 @@ template<class F> Vector<AffineModel<ValidatedTag,F>> AffineModel<ValidatedTag,F
 template<class F> auto AffineModel<ApproximateTag,F>::range() const -> RangeType
 {
     auto v=this->value();
-    auto e=this->gradient().zero_element();
+    auto e=nul(this->value());
     for(SizeType i=0; i!=this->argument_size(); ++i) {
         e+=abs(this->gradient(i));
     }
@@ -345,7 +343,7 @@ template<class F> OutputStream& AffineModel<ApproximateTag,F>::_write(OutputStre
     os << this->value().raw();
     for(SizeType j=0; j!=this->argument_size(); ++j) {
         if(decide(this->gradient(j)>0)) { os << "+"; }
-        if(definitely(this->gradient(j)!=0)) { os << this->gradient(j) << "*x" << j; }
+        if(decide(this->gradient(j)!=0)) { os << this->gradient(j) << "*x" << j; }
     }
     return os;
 }

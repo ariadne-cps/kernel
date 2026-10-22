@@ -1,5 +1,6 @@
 set(UNIT_TESTS
     test_affine
+    test_affine_model
     test_function_operations
     test_function_dispatch
     test_function_interface

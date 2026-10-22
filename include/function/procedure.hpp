@@ -203,13 +203,16 @@ template<class X, class Y> Void _backpropagate(Vector<X>& x, List<X>& v, const L
 
 // \related Procedure \brief Evaluate a function \a p defined by an algorithmic procedure.
 template<class X, class Y> inline X evaluate(const Procedure<Y>& p, const Vector<X>& x) {
+    ARIADNE_PRECONDITION(p.argument_size()==x.size());
     List<X> t(p._instructions.size(),x.zero_element());
     _execute(t,p._instructions,p._constants,x);
+    ARIADNE_PRECONDITION(!t.empty());
     return std::move(t.back());
 }
 
 // \related Procedure \brief Evaluate a function \a p defined by an algorithmic procedure.
 template<class X, class Y> inline Vector<X> evaluate(const Vector<Procedure<Y>>& p, const Vector<X>& x) {
+    ARIADNE_PRECONDITION(p.argument_size()==x.size());
     List<X> t(p._instructions.size(),x.zero_element());
     _execute(t,p._instructions,p._constants,x);
     Vector<X> r(p.result_size(),x.zero_element());
@@ -219,20 +222,24 @@ template<class X, class Y> inline Vector<X> evaluate(const Vector<Procedure<Y>>&
 
 // \related Procedure \brief Execute the procedure \a p storing the results in \a t.
 template<class X, class Y> Void execute(List<X>& t, const Procedure<Y>& p, const Vector<X>& x) {
+    ARIADNE_PRECONDITION(p.argument_size()==x.size());
     _execute(t,p._instructions,p._constants,x);
 }
 
 template<class X, class Y> Void execute(List<X>& t, const Vector<Procedure<Y>>& p, const Vector<X>& x) {
+    ARIADNE_PRECONDITION(p.argument_size()==x.size());
     _execute(t,p._instructions,p._constants,x);
 }
 
 // \related Procedure \brief Backpropagate the results of a validated procedure to the inputs \a x.
 template<class X, class Y> Void backpropagate(List<X>& t, const Procedure<Y>& p, Vector<X>& x) {
-    _backpropagate(t,p._instructions,p._constants,x);
+    ARIADNE_PRECONDITION(p.argument_size()==x.size());
+    _backpropagate(x,t,p._instructions,p._constants);
 }
 
 template<class X, class Y> Void backpropagate(List<X>& t, const Vector<Procedure<Y>>& p, Vector<X>& x) {
-    _backpropagate(t,p._instructions,p._constants,x);
+    ARIADNE_PRECONDITION(p.argument_size()==x.size());
+    _backpropagate(x,t,p._instructions,p._constants);
 }
 
 // \related Procedure \brief Compute the gradient of a Procedure by backwards automatic differentiation.
