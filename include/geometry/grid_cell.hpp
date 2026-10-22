@@ -34,6 +34,7 @@
 #include <string>
 #include <memory>
 #include <limits>
+#include <cstdint>
 
 #include "foundation/logical.hpp"
 #include "utility/array.hpp"
@@ -108,7 +109,7 @@ class GridAbstractCell {
     //! \brief having \a theExtent the height of the primary cell, with \a leftBottomCorner and \a rightTopCorner
     //! defining the primary cell corners for \a theExtent-1, we recompute \a leftBottomCorner and \a rightTopCorner
     //! for the current level \a theExtent.
-    static inline Void primary_cell_at_extent( const Nat theExtent, Int & leftBottomCorner, Int & rightTopCorner );
+    static inline Void primary_cell_at_extent( const Nat theExtent, std::int64_t & leftBottomCorner, std::int64_t & rightTopCorner );
 
     //! \brief This function allows to compare to cells it is used by the operator== and operator< methods of this class
     //! The value of \a comparator should be either \a COMPARE_EQUAL or \a COMPARE_LESS
@@ -417,7 +418,8 @@ inline GridAbstractCell::GridAbstractCell(const Grid& theGrid, const Nat theExte
     _theWord(theWord), _theBoxType(theBoxType) {
 }
 
-inline Void GridAbstractCell::primary_cell_at_extent( const Nat theExtent, Int & leftBottomCorner, Int & rightTopCorner ) {
+inline Void GridAbstractCell::primary_cell_at_extent( const Nat theExtent, std::int64_t & leftBottomCorner, std::int64_t & rightTopCorner ) {
+    ARIADNE_PRECONDITION(theExtent<=53u);
     if ( theExtent % 2 == 1 ) {
         leftBottomCorner = 2*leftBottomCorner - rightTopCorner;
     } else {
@@ -435,14 +437,14 @@ inline Nat GridAbstractCell::root_extent() const {
 
 inline Nat GridAbstractCell::root_height() const {
     const SizeType height = static_cast<SizeType>(_theExtent) * _theGrid.dimension();
-    ARIADNE_ASSERT(height <= std::numeric_limits<Nat>::max());
+    // Construction limits extent to 53 and dimension to dimension_type.
+    // Their product fits Nat and Int.
     return static_cast<Nat>(height);
 }
 
 inline Int GridAbstractCell::depth() const {
     const SizeType root_height = static_cast<SizeType>(_theExtent) * _theGrid.dimension();
-    ARIADNE_ASSERT(_theWord.size() <= static_cast<SizeType>(std::numeric_limits<Int>::max()));
-    ARIADNE_ASSERT(root_height <= static_cast<SizeType>(std::numeric_limits<Int>::max()));
+    // The path length and primary height are checked during construction.
     return static_cast<Int>(_theWord.size()) - static_cast<Int>(root_height);
 }
 
@@ -455,7 +457,7 @@ inline const ExactBoxType& GridAbstractCell::box() const {
 }
 
 inline dimension_type GridAbstractCell::dimension() const {
-    ARIADNE_ASSERT(_theGrid.dimension() <= std::numeric_limits<dimension_type>::max());
+    // compute_lattice_box checks the grid dimension before constructing the cell.
     return static_cast<dimension_type>(_theGrid.dimension());
 }
 

@@ -9,6 +9,7 @@ set(UNIT_TESTS
     test_geometry
     test_grid
     test_grid_paving
+    test_grid_paving_extensions
     test_paver
     test_set_adapters
     test_paving

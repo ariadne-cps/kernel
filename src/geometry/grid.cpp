@@ -191,7 +191,7 @@ Bool Grid::operator==(const Grid& g) const
     if(this->_data==g._data) {
         return true;
     } else {
-        return this->_data->_origin==g._data->_origin && this->_data->_lengths==g._data->_lengths;
+        return this->dimension()==g.dimension() && this->_data->_origin==g._data->_origin && this->_data->_lengths==g._data->_lengths;
     }
 }
 

@@ -97,6 +97,7 @@ GridTreePaving difference( const GridTreeSubpaving& theSet1, const GridTreeSubpa
 Bool intersect( const GridTreeSubpaving& theSet1, const GridTreeSubpaving& theSet2 );
 
 GridTreePaving product( const GridTreeSubpaving& theSet1, const GridTreeSubpaving& theSet2 );
+GridTreePaving product(GridCell const& cell, GridTreeSubpaving const& set);
 
 GridTreePaving image(const GridTreePaving& theSet, const Projection& theProjection);
 
