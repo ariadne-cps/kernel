@@ -9,6 +9,7 @@
 #include "function/taylor_function.hpp"
 #include "geometry/grid_paving.hpp"
 #include "macro/testing.hpp"
+#include "logging/logging.hpp"
 #include <sstream>
 using namespace Ariadne;
 
@@ -106,7 +107,85 @@ Void test_intrinsic_uncertainty() {
     ARIADNE_TEST_FAIL(subdivision.adjoin_outer_approximation_recursion(paving,set,2u,Vector<FloatDP>(1u,FloatDP(0,dp))));
 }
 
+Void test_affine_depth_limit() {
+    auto x=EffectiveScalarMultivariateFunction::coordinate(1u,0u);
+    ValidatedVectorMultivariateFunction mapping({10000000000.0_x*x*x});
+    ValidatedConstrainedImageSet set(ExactBoxType{{-1.0_x,1.0_x}},mapping);
+    GridTreePaving approximation(Grid(1u,FloatDP(1000000000000.0_x,dp)));
+    AffinePaver().adjoin_outer_approximation(approximation,set,0u);
+    auto bounds=cast_exact_box(approximation.bounding_box());
+    ARIADNE_TEST_ASSERT(bounds[0].lower_bound()<=FloatDP(0,dp));
+    ARIADNE_TEST_ASSERT(bounds[0].upper_bound()>=FloatDP(10000000000.0_x,dp));
+    ARIADNE_TEST_ASSERT(definitely(subset(bounds,ExactBoxType{{-2000000000000.0_x,2000000000000.0_x}})));
+}
+
+Void test_correlated_constraints();
+
+Void test_reduce_contractors() {
+    auto& configuration=Logger::instance().configuration();
+    const auto old_verbosity=configuration.verbosity();
+    struct RestoreVerbosity {
+        unsigned int value;
+        ~RestoreVerbosity() { Logger::instance().configuration().set_verbosity(value); }
+    } restore{old_verbosity};
+    configuration.set_verbosity(32u);
+    auto x=EffectiveScalarMultivariateFunction::coordinate(1u,0u);
+    ExactBoxType interval{{0.0_x,1.0_x}};
+    ValidatedVectorMultivariateFunction identity({x});
+    ValidatedVectorMultivariateFunction quadratic({x*(1-x)});
+    GridTreePaving empty(Grid(1u));
+    ReducePaver().adjoin_outer_approximation(empty,ValidatedConstrainedImageSet(interval,identity,List<ValidatedConstraint>{x*(1-x)>=0.5_x}),2u);
+    ARIADNE_TEST_ASSERT(empty.is_empty());
+    GridTreePaving quadratic_paving(Grid(1u));
+    ReducePaver().adjoin_outer_approximation(quadratic_paving,ValidatedConstrainedImageSet(interval,quadratic),2u);
+    const auto quadratic_bounds=cast_exact_box(quadratic_paving.bounding_box());
+    ARIADNE_TEST_ASSERT(quadratic_bounds[0].lower_bound()<=FloatDP(0,dp));
+    ARIADNE_TEST_ASSERT(quadratic_bounds[0].upper_bound()>=FloatDP(0.25_x,dp));
+    ARIADNE_TEST_ASSERT(definitely(subset(quadratic_bounds,ExactBoxType{{-0.5_x,1.0_x}})));
+    auto u=EffectiveScalarMultivariateFunction::coordinate(2u,0u);
+    auto v=EffectiveScalarMultivariateFunction::coordinate(2u,1u);
+    ValidatedVectorMultivariateFunction circle({u*u+v*v});
+    GridTreePaving circle_paving(Grid(1u));
+    ReducePaver().adjoin_outer_approximation(circle_paving,ValidatedConstrainedImageSet(ExactBoxType{{-1.0_x,1.0_x},{-1.0_x,1.0_x}},circle),2u);
+    auto circle_bounds=cast_exact_box(circle_paving.bounding_box());
+    ARIADNE_TEST_ASSERT(circle_bounds[0].lower_bound()<=FloatDP(0,dp));
+    ARIADNE_TEST_ASSERT(circle_bounds[0].upper_bound()>=FloatDP(2,dp));
+    ValidatedVectorMultivariateFunction bilinear({u*v,u+v});
+    ValidatedConstrainedImageSet triangle(ExactBoxType{{0.0_x,1.0_x},{0.0_x,1.0_x}},bilinear,List<ValidatedConstraint>{u-v>=0.75_x});
+    GridTreePaving triangle_paving(Grid(2u));
+    ReducePaver().adjoin_outer_approximation(triangle_paving,triangle,2u);
+    ARIADNE_TEST_ASSERT(definitely(subset(ExactBoxType{{0.0_x,0.0_x},{1.0_x,1.0_x}},cast_exact_box(triangle_paving.bounding_box()))));
+    GridTreePaving zero_output(Grid(0u));
+    ReducePaver().adjoin_outer_approximation(zero_output,ValidatedConstrainedImageSet(interval,ValidatedVectorMultivariateFunction::zeros(0u,1u)),0u);
+    ARIADNE_TEST_ASSERT(!zero_output.is_empty());
+    ARIADNE_TEST_EQUALS(zero_output.dimension(),0u);
+    ARIADNE_TEST_CALL(check_paver(Paver(ReducePaver())));
+    ARIADNE_TEST_CALL(test_correlated_constraints());
+}
+
+Void test_correlated_constraints() {
+    auto u=EffectiveScalarMultivariateFunction::coordinate(2u,0u);
+    auto v=EffectiveScalarMultivariateFunction::coordinate(2u,1u);
+    const EffectiveScalarMultivariateFunction mappings[]={u*v,sqr(u)+sqr(v),u*v};
+    const EffectiveConstraint conditions[]={sqr(u-v)>=0.75_x,u*u+v*v<=0.5_x,u*v<=0.0625_x};
+    const ExactDouble attained_values[]={0.125_x,0.5_x,0.0625_x};
+    for(SizeType i=0;i!=3u;++i) {
+        ARIADNE_TEST_PRINT(i);
+        ValidatedVectorMultivariateFunction mapping({mappings[i]});
+        ValidatedConstrainedImageSet set(ExactBoxType{{0.0_x,1.0_x},{0.0_x,1.0_x}},mapping,List<ValidatedConstraint>{conditions[i]});
+        GridTreePaving paving(Grid(1u));
+        ReducePaver().adjoin_outer_approximation(paving,set,2u);
+        const auto bounds=cast_exact_box(paving.bounding_box());
+        ARIADNE_TEST_ASSERT(bounds[0].lower_bound()<=FloatDP(0,dp));
+        ARIADNE_TEST_ASSERT(bounds[0].upper_bound()>=FloatDP(attained_values[i],dp));
+        ARIADNE_TEST_ASSERT(definitely(subset(bounds,ExactBoxType{{-0.5_x,1.0_x}})));
+    }
+}
+
 Int main() {
+    ARIADNE_TEST_CALL(test_correlated_constraints());
+    ARIADNE_TEST_CALL(test_affine_depth_limit());
+    ARIADNE_TEST_CALL(test_reduce_contractors());
     ARIADNE_TEST_CALL(test_intrinsic_uncertainty());
     ARIADNE_TEST_CALL(test_paver_strategies());
     ARIADNE_TEST_CALL(test_nonlinear_pavers());

@@ -57,7 +57,8 @@ PositiveFloatDPUpperBound average_width(const UpperBoxType& bx) {
     for(SizeType i=0; i!=bx.size(); ++i) {
         res+=bx[i].width();
     }
-    return bx.size()==0u ? res : res/bx.size();
+    // ReducePaver delegates parameter-free maps before entering reduction.
+    return res/bx.size();
 }
 
 PositiveFloatDPUpperBound maximum_scaled_width(const UpperBoxType& bx, const Vector<PositiveFloatDP>& sf) {
@@ -216,6 +217,11 @@ inline Bool strictly_smaller(PositiveFloatDPUpperBound x1, PositiveFloatDPUpperB
     return x1.raw() < x2.raw(); }
 
 
+FloatDP cell_splitting_radius(GridCell const& cell) {
+    // The zero-dimensional cell is a singleton, with no coordinate widths.
+    return cell.dimension()==0u ? FloatDP(0,dp) : cell.box().radius().upper().raw();
+}
+
 // Adjoin an over-approximation to the solution of $f(dom)$ such that $g(D) in C$ to the paving p, looking only at solutions in b.
 Void procedure_constraint_adjoin_outer_approximation_recursion(
         PavingInterface& paving, const ExactBoxType& domain, const ValidatedVectorMultivariateFunction& f,
@@ -313,7 +319,7 @@ Void procedure_constraint_adjoin_outer_approximation_recursion(
 
     if( !strictly_smaller_by_factor(bbxmaxwdth, clmaxwdth, RELATIVE_SPLITTING_SIZE) || (cell.depth()>=max_dpth && strictly_smaller(clmaxwdth, bbxmaxwdth)) ) {
         const auto sensitivity=lipschitz_index_and_error(f,new_domain);
-        if(sensitivity.first<m && sensitivity.second.raw()>cell.box().radius().upper().raw()) {
+        if(sensitivity.first<m && sensitivity.second.raw()>cell_splitting_radius(cell)) {
             LOGGING_PRINTLN("Splitting domain on coordinate "<<sensitivity.first);
             const auto domains=cast_exact_box(new_domain).split(sensitivity.first);
             procedure_constraint_adjoin_outer_approximation_recursion(paving, domains.first, f, g, codomain, cell, max_dpth, splt+1, procedures);
@@ -350,7 +356,7 @@ Void interval_constraint_adjoin_outer_approximation_recursion(
     if(definitely(disjoint(apply(combined,domain),product(cell.box(),bounds)))) { return; }
 
     const auto sensitivity=lipschitz_index_and_error(function,domain);
-    if(sensitivity.first<domain.dimension() && sensitivity.second.raw()>cell.box().radius().upper().raw()) {
+    if(sensitivity.first<domain.dimension() && sensitivity.second.raw()>cell_splitting_radius(cell)) {
         const auto domains=domain.split(sensitivity.first);
         interval_constraint_adjoin_outer_approximation_recursion(paving,domains.first,function,constraints,bounds,cell,fineness);
         interval_constraint_adjoin_outer_approximation_recursion(paving,domains.second,function,constraints,bounds,cell,fineness);
