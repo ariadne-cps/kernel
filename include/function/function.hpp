@@ -209,14 +209,14 @@ class Function
     //! \brief Construct a function with the given domain \a dom and number of result variables \a rs.
     explicit Function(DomainType dom, Result<Formula<Y>>const& e);
     //! \brief Construct a function each of whose components are \a sf with the given domain \a dom.
-    explicit Function(ResultSizeType rs, ScalarFunction<P,ARG> sf);
+    explicit Function(ResultSizeType rs, ScalarFunction<P,ARG> sf) requires Same<ResultSizeType,SizeType>;
 
     //! \brief Create a vector function from an initializer list of scalar functions.
-    Function(InitializerList<ScalarFunction<P,ARG>> const& lsf);
+    Function(InitializerList<ScalarFunction<P,ARG>> const& lsf) requires Same<ResultSizeType,SizeType>;
     //! \brief Create a vector function from a list of scalar functions.
-    Function(List<ScalarFunction<P,ARG>> const& lsf);
+    Function(List<ScalarFunction<P,ARG>> const& lsf) requires Same<ResultSizeType,SizeType>;
     //! \brief Create a vector function from a vector of scalar functions.
-    Function(Vector<ScalarFunction<P,ARG>> const& lsf);
+    Function(Vector<ScalarFunction<P,ARG>> const& lsf) requires Same<ResultSizeType,SizeType>;
     //!@}
 
     //! \name Prototype constructors.
@@ -320,18 +320,18 @@ class Function
     //!@{
     //
     //! \brief Set the \a i -th component of a vector function to \a f.
-    Void set(SizeType i, ScalarFunction<P,ARG> f);
+    Void set(SizeType i, ScalarFunction<P,ARG> f) requires Same<ResultSizeType,SizeType>;
     //! \brief Get the \a i -th component of a vector function.
-    Function<P,Real(ARG)> get(SizeType i) const;
+    Function<P,Real(ARG)> get(SizeType i) const requires Same<ResultSizeType,SizeType>;
     //! \brief Get the \a i -th component of a vector function.
-    const Function<P,Real(ARG)> operator[](SizeType i) const;
+    const Function<P,Real(ARG)> operator[](SizeType i) const requires Same<ResultSizeType,SizeType>;
     //! \brief Get the components of a specified by \a rng function.
     const Function<P,RealVector(ARG)> operator[](Range rng) const requires Same<ResultSizeType,SizeType> {
         Function<P,RealVector(ARG)> r(rng.size(),this->domain());
         for(SizeType i=0; i!=rng.size(); ++i) { r.set(i,this->get(rng[i])); }
         return r; }
     //! \brief A reference to the \a i -th component of a vector function.
-    VectorFunctionElementReference<P,ARG> operator[](SizeType i);
+    VectorFunctionElementReference<P,ARG> operator[](SizeType i) requires Same<ResultSizeType,SizeType>;
     //!@}
 
     //! \name Input/output operations.
@@ -514,15 +514,13 @@ VectorFunctionElementReference<P,ARGS...>::operator ScalarFunction<WP,ARGS...> (
     return this->_vf.get(this->_i);
 }
 
-template<class P, class... ARGS> inline VectorFunctionElementReference<P,ARGS...> make_element_reference(ScalarFunction<P,ARGS...>&, SizeType) {
-    throw std::runtime_error(""); }
 template<class P, class... ARGS> inline VectorFunctionElementReference<P,ARGS...> make_element_reference(VectorFunction<P,ARGS...>& vf, SizeType i) {
     return VectorFunctionElementReference<P,ARGS...>(vf,i); }
 
-template<class P, class SIG> inline auto Function<P,SIG>::operator[](SizeType i) -> VectorFunctionElementReference<P,ARG> {
+template<class P, class SIG> inline auto Function<P,SIG>::operator[](SizeType i) -> VectorFunctionElementReference<P,ARG> requires Same<ResultSizeType,SizeType> {
     return make_element_reference(*this,i); }
 
-template<class P, class SIG> inline auto Function<P,SIG>::operator[](SizeType i) const -> ScalarFunction<P,ARG> const {
+template<class P, class SIG> inline auto Function<P,SIG>::operator[](SizeType i) const -> ScalarFunction<P,ARG> const requires Same<ResultSizeType,SizeType> {
     return this->get(i); }
 
 template<class P, class... ARGS> inline OutputStream& operator<<(OutputStream& os, const VectorFunctionElementReference<P,ARGS...>& vfe) {

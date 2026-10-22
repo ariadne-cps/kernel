@@ -214,6 +214,22 @@ Void test_validated_curve_algebra() {
     ARIADNE_TEST_EQUALS((curve+curve)(parameter),Vector<X>({6,10},dp));
     ARIADNE_TEST_EQUALS((curve*t)(parameter),Vector<X>({9,15},dp));
 }
+Void test_general_scalar_vector_product() {
+    auto x=EffectiveScalarMultivariateFunction::coordinate(2u,0u);
+    Vector<EffectiveNumber> coefficients{2,-3};
+    Vector<X> point({3,1},dp);
+    ARIADNE_TEST_EQUALS((x*coefficients)(point),Vector<X>({6,-9},dp));
+    ARIADNE_TEST_EQUALS((x*Vector<EffectiveNumber>{})(point).size(),0u);
+}
+Void test_zero_dimensional_derivatives() {
+    using S=EffectiveScalarMultivariateFunction;using V=EffectiveVectorMultivariateFunction;
+    auto constant=S::constant(0u,5);auto field=V::identity(0u);
+    Vector<X> point(0u,dp);
+    ARIADNE_TEST_EQUALS(derivatives(constant)(point).size(),0u);
+    ARIADNE_TEST_EQUALS(lie_derivative(constant,field)(point),X(0,dp));
+    ARIADNE_TEST_EQUALS(lie_derivative(V::constant(0u,Vector<EffectiveNumber>{2,3}),field)(point),Vector<X>({0,0},dp));
+    ARIADNE_TEST_EQUALS(lie_derivative(field,field)(point).size(),0u);
+}
 Int main() {
     ARIADNE_TEST_CALL(test_constructors<ApproximateTag>());
     ARIADNE_TEST_CALL(test_constructors<ValidatedTag>());
@@ -221,6 +237,8 @@ Int main() {
     ARIADNE_TEST_CALL(test_composition<ApproximateTag>());
     ARIADNE_TEST_CALL(test_composition<ValidatedTag>());
     ARIADNE_TEST_CALL(test_composition<EffectiveTag>());
+    ARIADNE_TEST_CALL(test_general_scalar_vector_product());
+    ARIADNE_TEST_CALL(test_zero_dimensional_derivatives());
     ARIADNE_TEST_CALL(test_effective_vector_algebra());
     ARIADNE_TEST_CALL(test_validated_curve_algebra());
     return ARIADNE_TEST_FAILURES;

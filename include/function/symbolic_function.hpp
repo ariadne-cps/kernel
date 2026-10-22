@@ -538,6 +538,7 @@ class FunctionElement
         : _vf(vf), _i(i) { ARIADNE_ASSERT(i<vf.result_size()); }
 
     ArgumentSizeType argument_size() const { return _vf.argument_size(); }
+    SizeOne result_size() const { return SizeOne(); }
     DomainType domain() const { return _vf.domain(); }
 
     template<class X> inline X operator() (const ElementType<D,X>& x) const {

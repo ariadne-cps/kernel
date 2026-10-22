@@ -103,15 +103,15 @@ template<class P, class SIG> Function<P,SIG>::Function(ResultSizeType rs, Argume
 template<class P, class SIG> Function<P,SIG>::Function(ResultSizeType rs, DomainType dom)
     : Function(make_zero_function<P,D>(rs,dom)) { }
 
-template<class P, class SIG> Function<P,SIG>::Function(ResultSizeType rs, ScalarFunction<P,ARG> sf)
+template<class P, class SIG> Function<P,SIG>::Function(ResultSizeType rs, ScalarFunction<P,ARG> sf) requires Same<ResultSizeType,SizeType>
     : Function(Vector<ScalarFunction<P,ARG>>(SizeType(rs),sf)) {
 }
 
-template<class P, class SIG> Function<P,SIG>::Function(InitializerList<ScalarFunction<P,ARG>> const& lsf)
+template<class P, class SIG> Function<P,SIG>::Function(InitializerList<ScalarFunction<P,ARG>> const& lsf) requires Same<ResultSizeType,SizeType>
     : Function(Vector<ScalarFunction<P,ARG>>(lsf)) {
 }
 
-template<class P, class SIG> Function<P,SIG>::Function(List<ScalarFunction<P,ARG>> const& lsf)
+template<class P, class SIG> Function<P,SIG>::Function(List<ScalarFunction<P,ARG>> const& lsf) requires Same<ResultSizeType,SizeType>
     : Function(Vector<ScalarFunction<P,ARG>>(lsf)) {
 }
 
@@ -119,16 +119,6 @@ template<class P, class SIG> Function<P,SIG>::Function(DomainType dom, Result<Fo
     : Function(make_formula_function<P>(dom,e)) { }
 
 template<class P, class SIG> struct MakeVectorFunction;
-template<class P, class... ARGS> struct MakeVectorFunction<P,Real(ARGS...)> {
-    ScalarFunction<P,ARGS...> create(Vector<ScalarFunction<P,ARGS...>> const&) {
-        ARIADNE_FAIL_MSG("Cannot construct scalar function from list."); }
-};
-/*
-template<class P> struct MakeVectorFunction<P,RealVector(Real)> {
-    VectorUnivariateFunction<P> create(Vector<ScalarUnivariateFunction<P>> const& lsf) {
-        ARIADNE_FAIL_MSG("Cannot construct multivariate function from list of univariate functions."); }
-};
-*/
 template<class P> struct MakeVectorFunction<P,RealVector(Real)> {
     VectorUnivariateFunction<P> create(Vector<ScalarUnivariateFunction<P>> const& lsf) {
         return VectorUnivariateFunction<P>(VectorOfScalarFunction<P,RealScalar>(lsf));
@@ -155,7 +145,7 @@ template<class P, class SIG, class... ARGS> inline decltype(auto) make_vector_fu
     return MakeVectorFunction<P,SIG>().create(lsf);
 }
 
-template<class P, class SIG> Function<P,SIG>::Function(Vector<ScalarFunction<P,ARG>> const& vsf)
+template<class P, class SIG> Function<P,SIG>::Function(Vector<ScalarFunction<P,ARG>> const& vsf) requires Same<ResultSizeType,SizeType>
     : Function<P,SIG>(make_vector_function<P,SIG>(vsf)) {
 }
 
@@ -253,7 +243,7 @@ template<class P> ScalarMultivariateFunction<P> FunctionConstructors<P>::constan
 }
 
 template<class P> ScalarMultivariateFunction<P> FunctionConstructors<P>::coordinate(SizeType as, SizeType j) {
-    ARIADNE_ASSERT(j<as);
+    ARIADNE_PRECONDITION(j<as);
     return ScalarMultivariateFunction<P>(ScalarFormulaFunction<Y>(as,Formula<Y>::coordinate(j)));
 }
 
@@ -320,17 +310,11 @@ template class FunctionConstructors<EffectiveTag>;
 
 //------------------------ Formula-function helpers -----------------------------------//
 
-inline EffectiveScalarUnivariateFunction make_formula_function(SizeOne, const Formula<EffectiveNumber>& fm) {
-    return EffectiveScalarUnivariateFunction(RealDomain(),fm); }
-inline EffectiveVectorUnivariateFunction make_formula_function(SizeOne, const Vector<Formula<EffectiveNumber>>& fm) {
-    return EffectiveVectorUnivariateFunction(RealDomain(),fm); }
 inline EffectiveScalarMultivariateFunction make_formula_function(SizeType as, const Formula<EffectiveNumber>& fm) {
     return EffectiveScalarMultivariateFunction(EuclideanDomain(as),fm); }
-inline EffectiveVectorMultivariateFunction make_formula_function(SizeType as, const Vector<Formula<EffectiveNumber>>& fm) {
-    return EffectiveVectorMultivariateFunction(EuclideanDomain(as),fm); }
 
 template<class P, class R, class T, class... AS> Function<P,R(AS...)> make_composed_function(const Function<P,R(T)>& f, const Function<P,T(AS...)>& g) {
-    ARIADNE_ASSERT(f.argument_size()==g.result_size());
+    if constexpr (Same<T,RealVector>) { ARIADNE_PRECONDITION(f.argument_size()==g.result_size()); }
     return Function<P,R(AS...)>(ComposedFunction<P,R,T,AS...>(f,g)); }
 
 Formula<Real> make_formula(const EffectiveScalarMultivariateFunction& f) {
@@ -353,33 +337,28 @@ Vector<Formula<Real>> make_formula(const EffectiveVectorMultivariateFunction& f)
 
 //------------------------ Vector Function ----------------------------------//
 
-template<class P, class SIG> auto Function<P,SIG>::get(SizeType i) const -> ScalarFunction<P,ARG> {
-    ARIADNE_ASSERT(i<this->result_size());
-    if constexpr (Same<ResultSizeType,SizeType>) {
-        const VectorOfFunctionInterface<P,ARG>* vfp = dynamic_cast<const VectorOfFunctionInterface<P,ARG>*>(this->raw_pointer());
+template<class P, class SIG> auto Function<P,SIG>::get(SizeType i) const -> ScalarFunction<P,ARG> requires Same<ResultSizeType,SizeType> {
+    ARIADNE_PRECONDITION(i<this->result_size());
+    const auto* vfp=dynamic_cast<const VectorOfFunctionInterface<P,ARG>*>(this->raw_pointer());
+    if(vfp) {
         return ScalarFunction<P,ARG>(SharedPointer<ScalarFunctionInterface<P,ARG>>(vfp->_get(i)));
-    } else {
-        ARIADNE_ASSERT((Same<ResultSizeType,SizeType>));
-        std::abort();
     }
+    // A directly implemented function interface need not provide an indexed getter.
+    return ScalarFunction<P,ARG>(FunctionElement<P,ARG>(*this,i));
 }
 
-template<class P, class SIG> Void Function<P,SIG>::set(SizeType i, ScalarFunction<P,ARG> sf) {
-    ARIADNE_ASSERT(i<this->result_size());
-    if constexpr (Same<ResultSizeType,SizeType>) {
-        const VectorOfScalarFunction<P,ARG>* cvf =
-            dynamic_cast<const FunctionWrapper<VectorOfScalarFunction<P,ARG>,P,SIG>*>(this->_ptr.operator->());
-        if (cvf==nullptr) {
-            ARIADNE_THROW(std::runtime_error,
-                          "Function<P,RealVector(ARGS...)>::set(SizeType i, Function<P,RealScalar(ARGS...)>)",
-                          "Cannot assign to component of vector-valued function "<<(*this)<<" as it is not a VectorOfScalarFunction.");
-        }
-        VectorOfScalarFunction<P,ARG>& vf = const_cast<VectorOfScalarFunction<P,ARG>&>(*cvf);
-        vf[i]=sf;
-    } else {
-        ARIADNE_ASSERT((Same<ResultSizeType,SizeType>));
-        std::abort();
+template<class P, class SIG> Void Function<P,SIG>::set(SizeType i, ScalarFunction<P,ARG> sf) requires Same<ResultSizeType,SizeType> {
+    ARIADNE_PRECONDITION(i<this->result_size());
+    if constexpr (Same<ArgumentSizeType,SizeType>) { ARIADNE_PRECONDITION(sf.argument_size()==this->argument_size()); }
+    const VectorOfScalarFunction<P,ARG>* cvf =
+        dynamic_cast<const FunctionWrapper<VectorOfScalarFunction<P,ARG>,P,SIG>*>(this->_ptr.operator->());
+    if(cvf==nullptr) {
+        ARIADNE_THROW(std::runtime_error,
+                      "Function<P,RealVector(ARGS...)>::set(SizeType i, Function<P,RealScalar(ARGS...)>)",
+                      "Cannot assign to component of vector-valued function "<<(*this)<<" as it is not a VectorOfScalarFunction.");
     }
+    VectorOfScalarFunction<P,ARG>& vf = const_cast<VectorOfScalarFunction<P,ARG>&>(*cvf);
+    vf[i]=sf;
 }
 
 
@@ -407,10 +386,9 @@ template class Function<EffectiveTag,RealVector(RealVector)>;
 //------------------------ Vector function operators -------------------------------//
 
 EffectiveVectorMultivariateFunction operator*(const EffectiveScalarMultivariateFunction& f, const Vector<EffectiveNumber>& e) {
-    for(SizeType i=0; i!=e.size(); ++i) { ARIADNE_ASSERT(decide(e[i]==EffectiveNumber(0)) || decide(e[i]==EffectiveNumber(1))); }
-    VectorMultivariateFunction<EffectiveTag> r(e.size(),f.domain());
+    EffectiveVectorMultivariateFunction r(e.size(),f.domain());
     for(SizeType i=0; i!=e.size(); ++i) {
-        if(decide(e[i]==EffectiveNumber(1))) { r.set(i,f); }
+        r.set(i,f*e[i]);
     }
     return r;
 }
@@ -432,8 +410,8 @@ EffectiveVectorMultivariateFunction operator-(const EffectiveVectorMultivariateF
 }
 
 EffectiveVectorMultivariateFunction operator+(const EffectiveVectorMultivariateFunction& f1, const EffectiveVectorMultivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.result_size()==f2.result_size());
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.result_size()==f2.result_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     EffectiveVectorMultivariateFunction r(f1.result_size(),f1.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,f1[i]+f2[i]);
@@ -442,8 +420,8 @@ EffectiveVectorMultivariateFunction operator+(const EffectiveVectorMultivariateF
 }
 
 EffectiveVectorMultivariateFunction operator-(const EffectiveVectorMultivariateFunction& f1, const EffectiveVectorMultivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.result_size()==f2.result_size());
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.result_size()==f2.result_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     EffectiveVectorMultivariateFunction r(f1.result_size(),f1.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,f1[i]-f2[i]);
@@ -452,7 +430,7 @@ EffectiveVectorMultivariateFunction operator-(const EffectiveVectorMultivariateF
 }
 
 EffectiveVectorMultivariateFunction operator*(const EffectiveScalarMultivariateFunction& sf, const EffectiveVectorMultivariateFunction& vf) {
-    ARIADNE_ASSERT(sf.argument_size()==vf.argument_size());
+    ARIADNE_PRECONDITION(sf.argument_size()==vf.argument_size());
     EffectiveVectorMultivariateFunction r(vf.result_size(),vf.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,sf*vf[i]);
@@ -461,7 +439,7 @@ EffectiveVectorMultivariateFunction operator*(const EffectiveScalarMultivariateF
 }
 
 EffectiveVectorMultivariateFunction operator*(const EffectiveVectorMultivariateFunction& vf, const EffectiveScalarMultivariateFunction& sf) {
-    ARIADNE_ASSERT(vf.argument_size()==sf.argument_size());
+    ARIADNE_PRECONDITION(vf.argument_size()==sf.argument_size());
     EffectiveVectorMultivariateFunction r(vf.result_size(),vf.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,vf[i]*sf);
@@ -470,7 +448,7 @@ EffectiveVectorMultivariateFunction operator*(const EffectiveVectorMultivariateF
 }
 
 EffectiveVectorMultivariateFunction operator/(const EffectiveVectorMultivariateFunction& vf, const EffectiveScalarMultivariateFunction& sf) {
-    ARIADNE_ASSERT(vf.argument_size()==sf.argument_size());
+    ARIADNE_PRECONDITION(vf.argument_size()==sf.argument_size());
     EffectiveVectorMultivariateFunction r(vf.result_size(),vf.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,vf[i]/sf);
@@ -480,7 +458,7 @@ EffectiveVectorMultivariateFunction operator/(const EffectiveVectorMultivariateF
 
 
 EffectiveVectorMultivariateFunction operator+(const Vector<EffectiveNumber>& vc, const EffectiveVectorMultivariateFunction& vf) {
-    ARIADNE_ASSERT(vc.size()==vf.result_size());
+    ARIADNE_PRECONDITION(vc.size()==vf.result_size());
     EffectiveVectorMultivariateFunction r(vf.result_size(),vf.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,vc[i]+vf[i]);
@@ -489,7 +467,7 @@ EffectiveVectorMultivariateFunction operator+(const Vector<EffectiveNumber>& vc,
 }
 
 EffectiveVectorMultivariateFunction operator+(const EffectiveVectorMultivariateFunction& vf, const Vector<EffectiveNumber>& vc) {
-    ARIADNE_ASSERT(vf.result_size()==vc.size());
+    ARIADNE_PRECONDITION(vf.result_size()==vc.size());
     EffectiveVectorMultivariateFunction r(vf.result_size(),vf.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,vf[i]+vc[i]);
@@ -498,7 +476,7 @@ EffectiveVectorMultivariateFunction operator+(const EffectiveVectorMultivariateF
 }
 
 EffectiveVectorMultivariateFunction operator-(const Vector<EffectiveNumber>& vc, const EffectiveVectorMultivariateFunction& vf) {
-    ARIADNE_ASSERT(vc.size()==vf.result_size());
+    ARIADNE_PRECONDITION(vc.size()==vf.result_size());
     EffectiveVectorMultivariateFunction r(vf.result_size(),vf.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,vc[i]-vf[i]);
@@ -507,7 +485,7 @@ EffectiveVectorMultivariateFunction operator-(const Vector<EffectiveNumber>& vc,
 }
 
 EffectiveVectorMultivariateFunction operator-(const EffectiveVectorMultivariateFunction& vf, const Vector<EffectiveNumber>& vc) {
-    ARIADNE_ASSERT(vf.result_size()==vc.size());
+    ARIADNE_PRECONDITION(vf.result_size()==vc.size());
     EffectiveVectorMultivariateFunction r(vf.result_size(),vf.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,vf[i]-vc[i]);
@@ -542,7 +520,7 @@ EffectiveVectorMultivariateFunction operator/(const EffectiveVectorMultivariateF
 
 
 EffectiveVectorMultivariateFunction join(const EffectiveScalarMultivariateFunction& f1, const EffectiveScalarMultivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     EffectiveVectorMultivariateFunction r(2,f1.domain());
     r.set(0,f1);
     r.set(1,f2);
@@ -550,7 +528,7 @@ EffectiveVectorMultivariateFunction join(const EffectiveScalarMultivariateFuncti
 }
 
 EffectiveVectorMultivariateFunction join(const EffectiveVectorMultivariateFunction& f1, const EffectiveScalarMultivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     EffectiveVectorMultivariateFunction r(f1.result_size()+1u,f1.domain());
     for(SizeType i=0u; i!=f1.result_size(); ++i) {
         r.set(i,f1.get(i));
@@ -560,7 +538,7 @@ EffectiveVectorMultivariateFunction join(const EffectiveVectorMultivariateFuncti
 }
 
 EffectiveVectorMultivariateFunction join(const EffectiveScalarMultivariateFunction& f1, const EffectiveVectorMultivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     EffectiveVectorMultivariateFunction r(f2.result_size()+1u,f1.domain());
     r.set(0u,f1);
     for(SizeType i=0u; i!=f2.result_size(); ++i) {
@@ -570,7 +548,7 @@ EffectiveVectorMultivariateFunction join(const EffectiveScalarMultivariateFuncti
 }
 
 EffectiveVectorMultivariateFunction join(const EffectiveVectorMultivariateFunction& f1, const EffectiveVectorMultivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     EffectiveVectorMultivariateFunction r(f1.result_size()+f2.result_size(),f1.domain());
     for(SizeType i=0u; i!=f1.result_size(); ++i) {
         r.set(i,f1.get(i));
@@ -625,17 +603,16 @@ EffectiveVectorMultivariateFunction compose(const EffectiveVectorMultivariateFun
 }
 
 EffectiveVectorMultivariateFunction derivatives(const EffectiveScalarMultivariateFunction& f) {
-    return VectorOfScalarFunction(Vector<EffectiveScalarMultivariateFunction>(f.argument_size(),[&f](SizeType i){return f.derivative(i);}));
+    return VectorOfScalarFunction(Vector<EffectiveScalarMultivariateFunction>(f.argument_size(),[&f](SizeType i){return f.derivative(i);},f.domain()));
 }
 
 EffectiveScalarMultivariateFunction lie_derivative(const EffectiveScalarMultivariateFunction& g, const EffectiveVectorMultivariateFunction& f) {
-    ARIADNE_ASSERT_MSG(g.argument_size()==f.result_size(),"f="<<f<<", g="<<g);
-    ARIADNE_ASSERT_MSG(f.result_size()==f.argument_size(),"f="<<f<<", g="<<g);
-    ARIADNE_ASSERT_MSG(f.result_size()>0,"f="<<f<<", g="<<g);
+    ARIADNE_PRECONDITION_MSG(g.argument_size()==f.result_size(),"f="<<f<<", g="<<g);
+    ARIADNE_PRECONDITION_MSG(f.result_size()==f.argument_size(),"f="<<f<<", g="<<g);
 
     try {
-        EffectiveScalarMultivariateFunction r=g.derivative(0)*f[0];
-        for(SizeType i=1; i!=g.argument_size(); ++i) {
+        EffectiveScalarMultivariateFunction r=EffectiveScalarMultivariateFunction::zero(g.domain());
+        for(SizeType i=0; i!=g.argument_size(); ++i) {
             r=r+g.derivative(i)*f[i];
         }
         return r;
@@ -646,9 +623,8 @@ EffectiveScalarMultivariateFunction lie_derivative(const EffectiveScalarMultivar
 }
 
 EffectiveVectorMultivariateFunction lie_derivative(const EffectiveVectorMultivariateFunction& g, const EffectiveVectorMultivariateFunction& f) {
-    ARIADNE_ASSERT_MSG(g.argument_size()==f.result_size(),"f="<<f<<", g="<<g);
-    ARIADNE_ASSERT_MSG(f.result_size()==f.argument_size(),"f="<<f<<", g="<<g);
-    ARIADNE_ASSERT_MSG(f.result_size()>0,"f="<<f<<", g="<<g);
+    ARIADNE_PRECONDITION_MSG(g.argument_size()==f.result_size(),"f="<<f<<", g="<<g);
+    ARIADNE_PRECONDITION_MSG(f.result_size()==f.argument_size(),"f="<<f<<", g="<<g);
 
     try {
         EffectiveVectorMultivariateFunction r(g.result_size(),g.domain());
@@ -665,8 +641,7 @@ EffectiveVectorMultivariateFunction lie_derivative(const EffectiveVectorMultivar
 //------------------------ Effective univariate function operators -------------------------------//
 
 EffectiveVectorUnivariateFunction operator+(const EffectiveVectorUnivariateFunction& f1, const EffectiveVectorUnivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.result_size()==f2.result_size());
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.result_size()==f2.result_size());
     EffectiveVectorUnivariateFunction r(f1.result_size(),f1.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,f1[i]+f2[i]);
@@ -675,7 +650,6 @@ EffectiveVectorUnivariateFunction operator+(const EffectiveVectorUnivariateFunct
 }
 
 EffectiveVectorUnivariateFunction operator*(const EffectiveVectorUnivariateFunction& vf, const EffectiveScalarUnivariateFunction& sf) {
-    ARIADNE_ASSERT(vf.argument_size()==sf.argument_size());
     EffectiveVectorUnivariateFunction r(vf.result_size(),vf.domain());
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r.set(i,vf[i]*sf);
@@ -687,6 +661,8 @@ EffectiveVectorUnivariateFunction operator*(const EffectiveVectorUnivariateFunct
 //------------------------ Validated function operators -------------------------------//
 
 ValidatedVectorMultivariateFunction operator+(ValidatedVectorMultivariateFunction const& f1, ValidatedVectorMultivariateFunction const& f2) {
+    ARIADNE_PRECONDITION(f1.result_size()==f2.result_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     auto f1ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
     auto f2ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f2.managed_pointer());
     if(f1ptr && f2ptr) {
@@ -705,6 +681,8 @@ ValidatedVectorMultivariateFunction operator+(ValidatedVectorMultivariateFunctio
 }
 
 ValidatedVectorMultivariateFunction operator-(ValidatedVectorMultivariateFunction const& f1, ValidatedVectorMultivariateFunction const& f2) {
+    ARIADNE_PRECONDITION(f1.result_size()==f2.result_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     auto f1ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
     auto f2ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f2.managed_pointer());
     if(f1ptr && f2ptr) {
@@ -723,6 +701,7 @@ ValidatedVectorMultivariateFunction operator-(ValidatedVectorMultivariateFunctio
 }
 
 ValidatedVectorMultivariateFunction operator*(ValidatedScalarMultivariateFunction const& f1, ValidatedVectorMultivariateFunction const& f2) {
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     auto f1ptr=std::dynamic_pointer_cast<ValidatedScalarMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
     auto f2ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f2.managed_pointer());
     if(f1ptr && f2ptr) {
@@ -741,6 +720,7 @@ ValidatedVectorMultivariateFunction operator*(ValidatedScalarMultivariateFunctio
 }
 
 ValidatedVectorMultivariateFunction operator*(ValidatedVectorMultivariateFunction const& f1, ValidatedScalarMultivariateFunction const& f2) {
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     auto f1ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
     auto f2ptr=std::dynamic_pointer_cast<ValidatedScalarMultivariateFunctionPatch::Interface const>(f2.managed_pointer());
     if(f1ptr && f2ptr) {
@@ -759,6 +739,7 @@ ValidatedVectorMultivariateFunction operator*(ValidatedVectorMultivariateFunctio
 }
 
 ValidatedVectorMultivariateFunction operator/(ValidatedVectorMultivariateFunction const& f1, ValidatedScalarMultivariateFunction const& f2) {
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     auto f1ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
     auto f2ptr=std::dynamic_pointer_cast<ValidatedScalarMultivariateFunctionPatch::Interface const>(f2.managed_pointer());
     if(f1ptr && f2ptr) {
@@ -778,15 +759,18 @@ ValidatedVectorMultivariateFunction operator/(ValidatedVectorMultivariateFunctio
 
 template<class P, class R, class T, class... AS> inline
 Function<P,R(AS...)> _validated_compose(const Function<P,R(T)>& f, const Function<P,T(AS...)>& g) {
-    ARIADNE_ASSERT(f.argument_size()==g.result_size());
     typedef DoublePrecision PR;
 
-    auto gp=std::dynamic_pointer_cast<typename FunctionModel<P,T(AS...),PR>::Interface const>(g.managed_pointer());
-    if(gp) {
-        return compose(f,FunctionModel<P,T(AS...),PR>(gp->_concrete_clone()));
-    } else {
-        return make_composed_function(f,g);
+    // Model composition overloads accept vector-valued inner models. A scalar
+    // inner model otherwise converts back to Function and recurses here.
+    if constexpr (Same<T,RealVector>) {
+        auto gp=std::dynamic_pointer_cast<typename FunctionModel<P,T(AS...),PR>::Interface const>(g.managed_pointer());
+        if(gp) {
+            ARIADNE_PRECONDITION(f.argument_size()==g.result_size());
+            return compose(f,FunctionModel<P,T(AS...),PR>(gp->_concrete_clone()));
+        }
     }
+    return make_composed_function(f,g);
 }
 
 ValidatedScalarUnivariateFunction compose(const ValidatedScalarUnivariateFunction& f, const ValidatedScalarUnivariateFunction& g) {
@@ -822,6 +806,7 @@ ValidatedVectorMultivariateFunction compose(const ValidatedVectorMultivariateFun
 }
 
 ValidatedVectorMultivariateFunction join(ValidatedVectorMultivariateFunction const& f1, const ValidatedVectorMultivariateFunction& f2) {
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     auto f1ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
     auto f2ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f2.managed_pointer());
     if(f1ptr && f2ptr) {
@@ -838,6 +823,7 @@ ValidatedVectorMultivariateFunction join(ValidatedVectorMultivariateFunction con
 }
 
 ValidatedVectorMultivariateFunction join(ValidatedVectorMultivariateFunction const& f1, const ValidatedScalarMultivariateFunction& f2) {
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     auto f1ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
     auto f2ptr=std::dynamic_pointer_cast<ValidatedScalarMultivariateFunctionPatch::Interface const>(f2.managed_pointer());
     if(f1ptr && f2ptr) {
@@ -855,6 +841,7 @@ ValidatedVectorMultivariateFunction join(ValidatedVectorMultivariateFunction con
 }
 
 ValidatedVectorMultivariateFunction join(ValidatedScalarMultivariateFunction const& f1, const ValidatedVectorMultivariateFunction& f2) {
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     auto f1ptr=std::dynamic_pointer_cast<ValidatedScalarMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
     auto f2ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f2.managed_pointer());
     if(f1ptr && f2ptr) {
@@ -872,6 +859,7 @@ ValidatedVectorMultivariateFunction join(ValidatedScalarMultivariateFunction con
 }
 
 ValidatedVectorMultivariateFunction join(ValidatedScalarMultivariateFunction const& f1, const ValidatedScalarMultivariateFunction& f2) {
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     auto f1ptr=std::dynamic_pointer_cast<ValidatedScalarMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
     auto f2ptr=std::dynamic_pointer_cast<ValidatedScalarMultivariateFunctionPatch::Interface const>(f2.managed_pointer());
     if(f1ptr && f2ptr) {
@@ -917,10 +905,12 @@ Differential<FloatDPUpperInterval> upper_interval_differential(Differential<Floa
 } // namespace
 
 FloatDPUpperInterval evaluate_range(ValidatedScalarMultivariateFunction const& f, const Vector<FloatDPUpperInterval>& x) {
+    ARIADNE_PRECONDITION(f.argument_size()==x.size());
     return make_interval(f(singleton_bounds(x)));
 }
 
 Vector<FloatDPUpperInterval> evaluate_range(ValidatedVectorMultivariateFunction const& f, const Vector<FloatDPUpperInterval>& x) {
+    ARIADNE_PRECONDITION(f.argument_size()==x.size());
     auto y=f(singleton_bounds(x));
     Vector<FloatDPUpperInterval> r(y.size(),FloatDPUpperInterval::empty_interval());
     for(SizeType i=0; i!=y.size(); ++i) { r[i]=make_interval(y[i]); }
@@ -929,13 +919,9 @@ Vector<FloatDPUpperInterval> evaluate_range(ValidatedVectorMultivariateFunction 
 
 Vector<Differential<FloatDPUpperInterval>> derivative_range(ValidatedVectorMultivariateFunction const& f,
                                                             const Vector<Differential<FloatDPUpperInterval>>& x) {
-    if(x.size()==0u) {
-        return Vector<Differential<FloatDPUpperInterval>>(
-            f.result_size(),0u,0u,dp);
-    }
-
-    SizeType const argument_size=x[0].argument_size();
-    DegreeType const degree=x[0].degree();
+    ARIADNE_PRECONDITION(f.argument_size()==x.size());
+    SizeType const argument_size=x.zero_element().argument_size();
+    DegreeType const degree=x.zero_element().degree();
 
     Vector<Differential<FloatDPBounds>> bx(
         x.size(),argument_size,degree,dp);
@@ -954,6 +940,7 @@ Vector<Differential<FloatDPUpperInterval>> derivative_range(ValidatedVectorMulti
 
 Covector<FloatDPUpperInterval> gradient_range(ValidatedScalarMultivariateFunction const& f,
                                               const Vector<FloatDPUpperInterval>& x) {
+    ARIADNE_PRECONDITION(f.argument_size()==x.size());
     auto y=gradient(f,singleton_bounds(x));
     Covector<FloatDPUpperInterval> r(y.size(),FloatDPUpperInterval::empty_interval());
     for(SizeType i=0; i!=y.size(); ++i) { r[i]=make_interval(y[i]); }
@@ -961,6 +948,7 @@ Covector<FloatDPUpperInterval> gradient_range(ValidatedScalarMultivariateFunctio
 }
 
 Matrix<FloatDPUpperInterval> jacobian_range(ValidatedVectorMultivariateFunction const& f, const Vector<FloatDPUpperInterval>& x) {
+    ARIADNE_PRECONDITION(f.argument_size()==x.size());
     auto A=jacobian(f,singleton_bounds(x));
     Matrix<FloatDPUpperInterval> r(A.row_size(),A.column_size(),FloatDPUpperInterval::empty_interval());
     for(SizeType i=0; i!=A.row_size(); ++i) {
@@ -973,6 +961,7 @@ Matrix<FloatDPUpperInterval> jacobian_range(ValidatedVectorMultivariateFunction 
 
 // FIXME: Also support function models
 ValidatedVectorUnivariateFunction operator+(ValidatedVectorUnivariateFunction const& f1, ValidatedVectorUnivariateFunction const& f2) {
+    ARIADNE_PRECONDITION(f1.result_size()==f2.result_size());
     VectorOfScalarUnivariateFunction<ValidatedTag> r(f1.result_size(),ValidatedScalarUnivariateFunction(f1.argument_size()));
     for(SizeType i=0; i!=r.result_size(); ++i) {
         r[i]=f1[i]+f2[i];
@@ -993,7 +982,7 @@ ValidatedVectorUnivariateFunction operator*(ValidatedVectorUnivariateFunction co
 //------------------------ Function operators -------------------------------//
 
 template<class P> VectorMultivariateFunction<P> join(const ScalarMultivariateFunction<P>& f1, const ScalarMultivariateFunction<P>& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     VectorMultivariateFunction<P> r(2,f1.domain());
     r.set(0,f1);
     r.set(1,f2);
@@ -1001,7 +990,7 @@ template<class P> VectorMultivariateFunction<P> join(const ScalarMultivariateFun
 }
 
 template<class P> VectorMultivariateFunction<P> join(const VectorMultivariateFunction<P>& f1, const ScalarMultivariateFunction<P>& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     VectorMultivariateFunction<P> r(f1.result_size()+1u,f1.domain());
     for(SizeType i=0u; i!=f1.result_size(); ++i) {
         r.set(i,f1.get(i));
@@ -1011,7 +1000,7 @@ template<class P> VectorMultivariateFunction<P> join(const VectorMultivariateFun
 }
 
 template<class P> VectorMultivariateFunction<P> join(const ScalarMultivariateFunction<P>& f1, const VectorMultivariateFunction<P>& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     VectorMultivariateFunction<P> r(f2.result_size()+1u,f1.domain());
     r.set(0u,f1);
     for(SizeType i=0u; i!=f2.result_size(); ++i) {
@@ -1021,7 +1010,7 @@ template<class P> VectorMultivariateFunction<P> join(const ScalarMultivariateFun
 }
 
 template<class P> VectorMultivariateFunction<P> join(const VectorMultivariateFunction<P>& f1, const VectorMultivariateFunction<P>& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     VectorMultivariateFunction<P> r(f1.result_size()+f2.result_size(),f1.domain());
     for(SizeType i=0u; i!=f1.result_size(); ++i) {
         r.set(i,f1.get(i));
@@ -1033,7 +1022,7 @@ template<class P> VectorMultivariateFunction<P> join(const VectorMultivariateFun
 }
 
 ApproximateVectorMultivariateFunction join(const ApproximateScalarMultivariateFunction& f1, const ApproximateScalarMultivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     ApproximateVectorMultivariateFunction r(2,f1.domain());
     r.set(0,f1);
     r.set(1,f2);
@@ -1041,7 +1030,7 @@ ApproximateVectorMultivariateFunction join(const ApproximateScalarMultivariateFu
 }
 
 ApproximateVectorMultivariateFunction join(const ApproximateVectorMultivariateFunction& f1, const ApproximateScalarMultivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     ApproximateVectorMultivariateFunction r(f1.result_size()+1u,f1.domain());
     for(SizeType i=0u; i!=f1.result_size(); ++i) {
         r.set(i,f1.get(i));
@@ -1051,7 +1040,7 @@ ApproximateVectorMultivariateFunction join(const ApproximateVectorMultivariateFu
 }
 
 ApproximateVectorMultivariateFunction join(const ApproximateScalarMultivariateFunction& f1, const ApproximateVectorMultivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     ApproximateVectorMultivariateFunction r(f2.result_size()+1u,f1.domain());
     r.set(0u,f1);
     for(SizeType i=0u; i!=f2.result_size(); ++i) {
@@ -1061,7 +1050,7 @@ ApproximateVectorMultivariateFunction join(const ApproximateScalarMultivariateFu
 }
 
 ApproximateVectorMultivariateFunction join(const ApproximateVectorMultivariateFunction& f1, const ApproximateVectorMultivariateFunction& f2) {
-    ARIADNE_ASSERT(f1.argument_size()==f2.argument_size());
+    ARIADNE_PRECONDITION(f1.argument_size()==f2.argument_size());
     ApproximateVectorMultivariateFunction r(f1.result_size()+f2.result_size(),f1.domain());
     for(SizeType i=0u; i!=f1.result_size(); ++i) {
         r.set(i,f1.get(i));

@@ -19,6 +19,8 @@ Void test_patch_constant_dispatch() {
     ValidatedScalarMultivariateFunction f=model;
     Vector<FloatDPBounds> point({0,0},dp);
     ARIADNE_TEST_ASSERT(definitely((f+ValidatedNumber(3))(point)==FloatDPBounds(5,dp)));
+    using A=AlgebraOperations<ValidatedScalarMultivariateFunction,ValidatedNumber>;
+    ARIADNE_TEST_ASSERT(definitely(A::apply(BinaryElementaryOperator(Sub()),ValidatedNumber(3),f)(point)==FloatDPBounds(1,dp)));
     ARIADNE_TEST_ASSERT(definitely((f-ValidatedNumber(3))(point)==FloatDPBounds(-1,dp)));
     ARIADNE_TEST_ASSERT(definitely((f*ValidatedNumber(3))(point)==FloatDPBounds(6,dp)));
     ARIADNE_TEST_ASSERT(definitely((f/ValidatedNumber(2))(point)==FloatDPBounds(1,dp)));
