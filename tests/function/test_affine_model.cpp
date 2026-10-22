@@ -56,7 +56,7 @@ template<class F> Void test_approximate_model(typename F::PrecisionType pr) {
     ARIADNE_TEST_EQUALS((a+coefficient).evaluate(point),X(5.25_x,pr));
     ARIADNE_TEST_EQUALS((coefficient*a).evaluate(point),X(6.5_x,pr));
     ARIADNE_TEST_EQUALS((a*coefficient).evaluate(point),X(6.5_x,pr));
-    A from_covector(X(3,pr),Covector<X>{X(3,pr),X(-1,pr),X(0,pr)});
+    A from_covector(X(3,pr),Covector<X>({X(3,pr),X(-1,pr),X(0,pr)}));
     ARIADNE_TEST_EQUALS(from_covector.evaluate(point),a.evaluate(point));
     a=coefficient;
     ARIADNE_TEST_EQUALS(a.evaluate(point),coefficient);
@@ -93,7 +93,7 @@ template<class F> Void test_validated_model(typename F::PrecisionType pr) {
     ARIADNE_TEST_EQUALS(ca.precision(),pr);
     ARIADNE_TEST_ASSERT(definitely(a.create_zero().evaluate(point)==X(0,pr)));
     a.set_value(F(3,pr));a.set_gradient(0u,F(3,pr));a.set_gradient(1u,Dyadic(-1));a[2u]=F(0,pr);
-    A from_covector(F(3,pr),Covector<F>{F(3,pr),F(-1,pr),F(0,pr)},E(F(0.5_x,pr)));
+    A from_covector(F(3,pr),Covector<F>({F(3,pr),F(-1,pr),F(0,pr)}),E(F(0.5_x,pr)));
     ARIADNE_TEST_SAME(from_covector.evaluate(point),a.evaluate(point));
     auto b=A::coordinate(3u,1u,pr);X coefficient(2,pr);
     ARIADNE_TEST_SAME((-a).evaluate(point),X(-3.75_x,-2.75_x,pr));
