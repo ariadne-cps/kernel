@@ -190,9 +190,12 @@ Bool Grid::operator==(const Grid& g) const
 {
     if(this->_data==g._data) {
         return true;
-    } else {
-        return this->dimension()==g.dimension() && this->_data->_origin==g._data->_origin && this->_data->_lengths==g._data->_lengths;
     }
+    // Ariadne Boolean overloads &&, so a dimension guard must use control flow.
+    if(this->dimension()!=g.dimension()) {
+        return false;
+    }
+    return this->_data->_origin==g._data->_origin && this->_data->_lengths==g._data->_lengths;
 }
 
 Bool Grid::operator!=(const Grid& g) const

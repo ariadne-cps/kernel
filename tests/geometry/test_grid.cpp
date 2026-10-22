@@ -64,7 +64,22 @@ Void test_grid_coordinates() {
     repr<<shifted;
     ARIADNE_TEST_ASSERT(repr.str().find("origin=")!=String::npos);
 }
+Void test_grid_dimension_comparisons() {
+    Grid zero_dim(0u),one_dim(1u),two_dim(2u);
+    ARIADNE_TEST_ASSERT(zero_dim!=one_dim);
+    ARIADNE_TEST_ASSERT(one_dim!=zero_dim);
+    ARIADNE_TEST_ASSERT(one_dim!=two_dim);
+    ARIADNE_TEST_ASSERT(two_dim!=one_dim);
+    ARIADNE_TEST_ASSERT(zero_dim!=two_dim);
+    ARIADNE_TEST_ASSERT(two_dim!=zero_dim);
+    ARIADNE_TEST_ASSERT(zero_dim==Grid(0u));
+    ARIADNE_TEST_ASSERT(one_dim==Grid(1u));
+    ARIADNE_TEST_ASSERT(two_dim==Grid(2u));
+    Grid shared=two_dim;
+    ARIADNE_TEST_ASSERT(two_dim==shared);
+}
 Int main() {
     ARIADNE_TEST_CALL(test_grid_coordinates());
+    ARIADNE_TEST_CALL(test_grid_dimension_comparisons());
     return ARIADNE_TEST_FAILURES;
 }

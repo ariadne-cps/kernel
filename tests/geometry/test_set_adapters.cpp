@@ -12,7 +12,11 @@
 #include "macro/testing.hpp"
 #include <memory>
 #include <sstream>
+#include <type_traits>
 using namespace Ariadne;
+
+static_assert(std::is_same_v<RegularLocatedSetInterface<ValidatedTag,RealVector>::BasicSetType,ExactBoxType>);
+static_assert(std::is_same_v<RegularLocatedSetInterface<ValidatedTag,Real>::BasicSetType,ExactIntervalType>);
 
 Void test_list_set() {
     ExactBoxType a{{0.0_x,1.0_x},{0.0_x,1.0_x}}, b{{2.0_x,3.0_x},{2.0_x,3.0_x}};

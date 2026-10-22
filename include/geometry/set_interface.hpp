@@ -267,6 +267,8 @@ template<class P, class T> class RegularLocatedSetInterface
       public virtual LocatedSetInterface<P,T>
 {
   public:
+    // Resolve BasicSetType redeclared along both inheritance paths for MSVC.
+    using typename SetInterfaceBase<T>::BasicSetType;
 };
 
 
