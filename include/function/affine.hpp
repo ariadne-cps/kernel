@@ -189,7 +189,7 @@ class Affine
 };
 
 template<class X> template<class Y> Y Affine<X>::evaluate(const Vector<Y>& x) const {
-    Y r=x.zero_element(); for(SizeType j=0; j!=this->_g.size(); ++j) { r+=this->_g[j]*x[j]; } return r;
+    Y r=x.zero_element(); r+=this->_c; for(SizeType j=0; j!=this->_g.size(); ++j) { r+=this->_g[j]*x[j]; } return r;
 }
 
 template<class X> OutputStream& operator<<(OutputStream& os, const Affine<X>& f) {

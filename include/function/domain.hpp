@@ -70,7 +70,7 @@ class EuclideanDomain {
     constexpr SizeType dimension() const { return this->_dim; } //!< .
     constexpr RealDomain operator[](SizeType) { return RealDomain(); } //!< .
     operator BoxDomainType() const { return BoxDomainType(this->dimension(),IntervalDomainType(RealDomain())); } //!< .
-    friend EuclideanDomain intersection(EuclideanDomain const& dom1, EuclideanDomain const& dom2) { static_cast<void>(dom2); assert(dom1==dom2); return dom1; } //!< .
+    friend EuclideanDomain intersection(EuclideanDomain const& dom1, EuclideanDomain const& dom2) { ARIADNE_PRECONDITION(dom1==dom2); return dom1; } //!< .
     friend EuclideanDomain product(EuclideanDomain const& dom1, EuclideanDomain const& dom2) { return EuclideanDomain(dom1.dimension()+dom2.dimension()); } //!< .
     friend EuclideanDomain product(EuclideanDomain const& dom1, RealDomain const& dom2) { return EuclideanDomain(dom1.dimension()+dom2.dimension()); } //!< .
     friend Bool operator==(EuclideanDomain const& dom1, EuclideanDomain const& dom2) { return dom1.dimension() == dom2.dimension(); } //!< .
@@ -99,7 +99,7 @@ class UnitBox {
     constexpr SizeType dimension() const { return this->_dim; } //!< .
     constexpr UnitInterval operator[](SizeType) { return UnitInterval(); } //!< .
     operator BoxDomainType() const { return BoxDomainType(this->dimension(),IntervalDomainType(UnitInterval())); } //!< .
-    friend UnitBox intersection(UnitBox const& dom1, UnitBox const& dom2) { static_cast<void>(dom2); assert(dom1==dom2); return dom1; } //!< .
+    friend UnitBox intersection(UnitBox const& dom1, UnitBox const& dom2) { ARIADNE_PRECONDITION(dom1==dom2); return dom1; } //!< .
     friend UnitBox product(UnitBox const& dom1, UnitBox const& dom2) { return UnitBox(dom1.dimension()+dom2.dimension()); } //!< .
     friend UnitBox product(UnitBox const& dom1, UnitInterval const& dom2) { return UnitBox(dom1.dimension()+dom2.dimension()); } //!< .
     friend Bool operator==(UnitBox const& dom1, UnitBox const& dom2) { return dom1.dimension() == dom2.dimension(); } //!< .

@@ -86,7 +86,8 @@ T unscale(T x, const IntervalDomainType& d) {
 
 template<class X> inline
 Vector<X> scale(const Vector<X>& v, const BoxDomainType& cd) {
-    return Vector<X>(v.size(),[&](SizeType i){return scale(v[i],cd[i]);});
+    ARIADNE_PRECONDITION(v.size()==cd.dimension());
+    return Vector<X>(v.size(),[&](SizeType i){return scale(v[i],cd[i]);},v.element_characteristics());
 }
 
 template<class F, class T> struct MyConvertible {
@@ -100,6 +101,7 @@ template<class F, class T> struct MyConvertible {
 
 template<class X> inline
 Vector<X> unscale(const Vector<X>& v, const BoxDomainType& d) {
+    ARIADNE_PRECONDITION(v.size()==d.dimension());
     return Vector<X>(v.size(),[&](SizeType i){return unscale(v[i],d[i]);},v.element_characteristics());
 }
 

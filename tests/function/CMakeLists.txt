@@ -1,4 +1,7 @@
 set(UNIT_TESTS
+    test_affine
+    test_domain_scaling
+    test_taylor_series
     test_function
     test_formula
     test_measurable_function
