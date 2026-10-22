@@ -55,6 +55,8 @@ Void TestMeasurableSet::test()
 {
     Dyadic::set_default_writer(DecimalWriter());
     ARIADNE_TEST_CALL(test_scalar_set());
+    ARIADNE_TEST_EQUALS(exp2(Integer(-3)),exp2(-3));
+    ARIADNE_TEST_FAIL(exp2(Integer("18446744073709551616")));
 }
 
 Void TestMeasurableSet::test_concept()

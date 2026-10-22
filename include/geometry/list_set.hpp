@@ -119,12 +119,12 @@ class ListSet
 
     /*! \brief Adjoins (makes union with) a basic set. */
     Void adjoin(const BS& bs) {
-        ARIADNE_ASSERT(this->empty() || this->_data.back().dimension()==bs.dimension());
+        ARIADNE_PRECONDITION(this->empty() || this->_data.back().dimension()==bs.dimension());
         this->_data.push_back(bs); }
 
     /*! \brief Adjoins (makes union with) another list set. */
     Void adjoin(const ListSet<BS>& ls) {
-        ARIADNE_ASSERT(this->empty() || ls.empty() || this->_data.back().dimension()==ls._data.back().dimension());
+        ARIADNE_PRECONDITION(this->empty() || ls.empty() || this->_data.back().dimension()==ls._data.back().dimension());
         this->_data.insert(this->_data.end(),ls.begin(),ls.end()); }
 
     /*! \brief compute a list of the bounding boxes of the set elements. */
