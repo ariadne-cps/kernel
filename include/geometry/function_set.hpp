@@ -382,6 +382,7 @@ class ValidatedConstrainedImageSet
     Void grid_draw(CanvasInterface&, const Projection2d&, Nat fineness) const;
 
     friend ValidatedConstrainedImageSet image(ValidatedConstrainedImageSet set, ValidatedVectorMultivariateFunction const& h);
+    //! \brief Enclose two unconstrained images whose parameter domains differ in at most one overlapping or touching coordinate.
     friend ValidatedConstrainedImageSet join(const ValidatedConstrainedImageSet& set1, const ValidatedConstrainedImageSet& set2);
 
     //! \brief Write to an output stream.

@@ -6,6 +6,7 @@
  ****************************************************************************/
 #include "geometry/paver.hpp"
 #include "geometry/function_set.hpp"
+#include "function/taylor_function.hpp"
 #include "geometry/grid_paving.hpp"
 #include "macro/testing.hpp"
 #include <sstream>
@@ -57,6 +58,14 @@ Void test_paver_strategies() {
 
 Void test_nonlinear_pavers() {
     auto x=EffectiveScalarMultivariateFunction::coordinate(1u,0u);
+    ExactBoxType square{{-1.0_x,1.0_x},{-1.0_x,1.0_x}};
+    auto u=EffectiveScalarMultivariateFunction::coordinate(2u,0u);
+    auto v=EffectiveScalarMultivariateFunction::coordinate(2u,1u);
+    ValidatedVectorMultivariateFunction nonlinear({u*u,v*v});
+    ValidatedVectorMultivariateTaylorFunctionModelDP model(square,nonlinear,TrivialSweeper<FloatDP>(dp));
+    GridTreePaving model_paving(Grid(2u));
+    AffinePaver().adjoin_outer_approximation(model_paving,ValidatedConstrainedImageSet(square,ValidatedVectorMultivariateFunctionModelDP(model)),0u);
+    ARIADNE_TEST_ASSERT(!model_paving.is_empty());
     ValidatedVectorMultivariateFunction quadratic({x*x});
     ValidatedConstrainedImageSet set(ExactBoxType{{-1.0_x,1.0_x}},quadratic);
     Grid grid(1u);

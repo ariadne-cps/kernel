@@ -123,7 +123,55 @@ Void test_one_sided_satisfaction() {
     ARIADNE_TEST_ASSERT(definitely(box.inside(ExactBoxType{{-3.0_x,3.0_x}}),Effort(1)));
     ARIADNE_TEST_EQUALS(image(box,identity).dimension(),1u);
 }
+Void test_join_image_sets() {
+    auto x=ValidatedScalarMultivariateFunction::coordinate(1u,0u);
+    ValidatedVectorMultivariateFunction f1({x,x*x});
+    ValidatedVectorMultivariateFunction f2({x+ValidatedNumber(1),x*x+ValidatedNumber(FloatDPBounds(0.125_x,0.25_x,dp))});
+    ExactBoxType left{{-1.0_x,0.0_x}},right{{0.0_x,1.0_x}};
+    ValidatedConstrainedImageSet first(left,f1),second(right,f2);
+    ValidatedVectorMultivariateTaylorFunctionModelDP tm1(left,f1,TrivialSweeper<FloatDP>(dp));
+    ValidatedVectorMultivariateTaylorFunctionModelDP tm2(right,f2,TrivialSweeper<FloatDP>(dp));
+    auto modeled_join=join(ValidatedConstrainedImageSet(left,ValidatedVectorMultivariateFunctionModelDP(tm1)),ValidatedConstrainedImageSet(right,ValidatedVectorMultivariateFunctionModelDP(tm2)));
+    ARIADNE_TEST_ASSERT(same(modeled_join.domain(),ExactBoxType{{-1.0_x,1.0_x}}));
+    auto combined=join(first,second);
+    ARIADNE_TEST_ASSERT(same(combined.domain(),ExactBoxType{{-1.0_x,1.0_x}}));
+    for(Int k=-4;k!=5;++k) {
+        ExactDouble t=ExactDouble(static_cast<double>(k)/4.0);
+        ExactBoxType point{{t,t}};
+        const auto& original=(k<=0 ? f1 : f2);
+        ARIADNE_TEST_ASSERT(definitely(subset(cast_exact_box(apply(original,point)),cast_exact_box(apply(combined.function(),point)))));
+    }
+    ARIADNE_TEST_ASSERT(same(join(second,first).domain(),combined.domain()));
+    ARIADNE_TEST_ASSERT(same(join(first,first).domain(),left));
+    ARIADNE_TEST_FAIL(join(first,ValidatedConstrainedImageSet(ExactBoxType{{1.0_x,2.0_x}},f1)));
+    ARIADNE_TEST_FAIL(join(ValidatedConstrainedImageSet(ExactBoxType{{-2.0_x,-1.0_x}},f1),second));
+    ValidatedConstrainedImageSet constrained(left,f1,List<ValidatedConstraint>{x<=ValidatedNumber(0)});
+    ARIADNE_TEST_FAIL(join(constrained,second));
+    ARIADNE_TEST_FAIL(join(first,constrained));
+    ARIADNE_TEST_FAIL(join(first,ValidatedConstrainedImageSet(left,ValidatedVectorMultivariateFunction({x}))));
+    auto xy=ValidatedVectorMultivariateFunction::identity(2u);
+    ARIADNE_TEST_FAIL(join(first,ValidatedConstrainedImageSet(ExactBoxType{{-1.0_x,1.0_x},{-1.0_x,1.0_x}},xy)));
+    ARIADNE_TEST_FAIL(join(ValidatedConstrainedImageSet(ExactBoxType{{-1.0_x,0.0_x},{-1.0_x,0.0_x}},xy),ValidatedConstrainedImageSet(ExactBoxType{{0.0_x,1.0_x},{0.0_x,1.0_x}},xy)));
+    ARIADNE_TEST_FAIL(first.restriction(ExactBoxType{{-2.0_x,0.0_x}}));
+    ARIADNE_TEST_FAIL(first.split(1u));
+    ARIADNE_TEST_FAIL(ValidatedConstrainedImageSet().split());
+    ConstrainedImageSet effective;
+    ARIADNE_TEST_FAIL(effective.split());
+    ARIADNE_TEST_FAIL(effective.split(0u));
+    auto e=EffectiveScalarMultivariateFunction::coordinate(1u,0u);
+    BoundedConstraintSet bounded(RealBox{{-1,1}},List<EffectiveConstraint>{e<=0});
+    ARIADNE_TEST_FAIL(image(bounded,EffectiveVectorMultivariateFunction::identity(2u)));
+    ConstrainedImageSet converted(bounded);
+    ARIADNE_TEST_EQUALS(converted.number_of_constraints(),1u);
+    auto predicate=converted.inside(ExactBoxType{{-2.0_x,2.0_x}});
+    std::unique_ptr<Detail::LogicalInterface> predicate_copy(predicate.repr().reference()._copy());
+    ARIADNE_TEST_ASSERT(Detail::definitely(predicate_copy->_check(Effort(1))));
+    std::ostringstream text; predicate_copy->_write(text);
+    ARIADNE_TEST_ASSERT(!text.str().empty());
+}
+
 Int main() {
+    ARIADNE_TEST_CALL(test_join_image_sets());
     ARIADNE_TEST_CALL(test_default_image_sets());
     ARIADNE_TEST_CALL(test_validated_image_operations());
     ARIADNE_TEST_CALL(test_one_sided_satisfaction());
