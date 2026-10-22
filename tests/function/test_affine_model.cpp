@@ -123,7 +123,7 @@ template<class F> Void test_validated_model(typename F::PrecisionType pr) {
     Affine<X> uncertain(X(1,3,pr),{X(2,4,pr),X(-2,0,pr)});
     auto old_rounding=F::get_rounding_mode();
     auto converted=affine_model(uncertain);
-    ARIADNE_TEST_EQUALS(F::get_rounding_mode(),old_rounding);
+    ARIADNE_TEST_ASSERT(F::get_rounding_mode()==old_rounding);
     ARIADNE_TEST_EQUALS(converted.value(),F(2,pr));
     ARIADNE_TEST_EQUALS(converted.gradient(0u),F(3,pr));
     ARIADNE_TEST_EQUALS(converted.error().raw(),F(3,pr));
@@ -131,7 +131,7 @@ template<class F> Void test_validated_model(typename F::PrecisionType pr) {
     Expansion<MultiIndex,F> expansion({{{0,0},2.0_x},{{1,0},3.0_x},{{0,1},-1.0_x},{{2,0},0.5_x}},pr);
     TaylorModel<ValidatedTag,F> taylor(expansion,F(0.25_x,pr),sweeper);
     auto linear=affine_model(taylor);
-    ARIADNE_TEST_EQUALS(F::get_rounding_mode(),old_rounding);
+    ARIADNE_TEST_ASSERT(F::get_rounding_mode()==old_rounding);
     ARIADNE_TEST_EQUALS(linear.value(),F(2,pr));
     ARIADNE_TEST_EQUALS(linear.gradient(1u),F(-1,pr));
     ARIADNE_TEST_EQUALS(linear.error().raw(),F(0.75_x,pr));
