@@ -95,7 +95,7 @@ template<class P, class PR, class PRE> class FunctionModelFactory
     VectorMultivariateFunctionModel<P,PR,PRE> create_constants(VectorDomainType const& dom, Vector<Number<P>> const& c) const {
         return VectorMultivariateFunctionModel<P,PR,PRE>(this->_ptr->_create_constants(dom,c)); }
     VectorMultivariateFunctionModel<P,PR,PRE> create_projection(VectorDomainType const& dom, Range indices) const {
-        return ScalarMultivariateFunctionModel<P,PR,PRE>(this->_ptr->_create_projection(dom,indices)); }
+        return VectorMultivariateFunctionModel<P,PR,PRE>(this->_ptr->_create_projection(dom,indices)); }
     VectorMultivariateFunctionModel<P,PR,PRE> create_identity(VectorDomainType const& dom) const {
         return VectorMultivariateFunctionModel<P,PR,PRE>(this->_ptr->_create_identity(dom)); }
 

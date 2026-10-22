@@ -454,8 +454,8 @@ template<class M> class ScaledFunctionPatch
         return min(f1,f1.create_constant(c2)); }
     friend ScaledFunctionPatch<M> max(const ValidatedNumber& c1, const ScaledFunctionPatch<M>& f2) {
         return max(f2.create_constant(c1),f2); }
-    friend ScaledFunctionPatch<M> min(const ValidatedNumber&, const ScaledFunctionPatch<M>&) {
-        ARIADNE_NOT_IMPLEMENTED; }
+    friend ScaledFunctionPatch<M> min(const ValidatedNumber& c1, const ScaledFunctionPatch<M>& f2) {
+        return min(f2.create_constant(c1),f2); }
 
 };
 

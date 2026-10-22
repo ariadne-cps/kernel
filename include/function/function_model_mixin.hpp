@@ -164,14 +164,14 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _concrete_partial_evaluate(SizeType j, const CanonicalNumericType<P,PR,PRE>& c) const override {
         return heap_copy(partial_evaluate(static_cast<const FM&>(*this),j,c)); }
 
-    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _compose(const ScalarUnivariateFunction<P>&) const override {
-        ARIADNE_NOT_IMPLEMENTED; }
-    VectorFunctionModelInterface<P,ARG,PR,PRE>* _compose(const VectorUnivariateFunction<P>&) const override {
-        ARIADNE_NOT_IMPLEMENTED; }
-    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _unchecked_compose(const ScalarUnivariateFunction<P>&) const override {
-        ARIADNE_NOT_IMPLEMENTED; }
-    VectorFunctionModelInterface<P,ARG,PR,PRE>* _unchecked_compose(const VectorUnivariateFunction<P>&) const override {
-        ARIADNE_NOT_IMPLEMENTED; }
+    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _compose(const ScalarUnivariateFunction<P>& f) const override {
+        return heap_copy(compose(f,static_cast<const FM&>(*this))); }
+    VectorFunctionModelInterface<P,ARG,PR,PRE>* _compose(const VectorUnivariateFunction<P>& f) const override {
+        return heap_copy(compose(f,static_cast<const FM&>(*this))); }
+    ScalarFunctionModelInterface<P,ARG,PR,PRE>* _unchecked_compose(const ScalarUnivariateFunction<P>& f) const override {
+        return heap_copy(compose(f,static_cast<const FM&>(*this))); }
+    VectorFunctionModelInterface<P,ARG,PR,PRE>* _unchecked_compose(const VectorUnivariateFunction<P>& f) const override {
+        return heap_copy(compose(f,static_cast<const FM&>(*this))); }
 
 
     ScalarFunctionModelInterface<P,ARG,PR,PRE>* _embed(const BoxDomainType& d1, const BoxDomainType& d2) const override {
@@ -242,8 +242,8 @@ template<class FM, class P, class ARG, class PR, class PRE> class FunctionModelM
         return static_cast<const FM&>(*this).error(); }
     NormType const _concrete_norm() const override {
          return norm(static_cast<const FM&>(*this)); }
-    virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _concrete_derivative(SizeType) const override {
-        ARIADNE_NOT_IMPLEMENTED; }
+    virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _concrete_derivative(SizeType j) const override {
+        return new FM(derivative(static_cast<const FM&>(*this),j)); }
     virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _antiderivative(SizeType j) const override {
         return new FM(antiderivative(static_cast<const FM&>(*this),j)); }
     virtual VectorFunctionModelInterface<P,ARG,PR,PRE>* _antiderivative(SizeType j, Number<P> c) const override {

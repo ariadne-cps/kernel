@@ -149,7 +149,6 @@ template<class PR> inline OutputStream& operator<<(OutputStream& os, const Repre
 template<class X> inline OutputStream& operator<<(OutputStream& os, const Representation< Vector<X> >& vec_repr)
 {
     const Vector<X>& vec=*vec_repr.pointer;
-    ARIADNE_ASSERT(vec.size()!=0);
     os << "(";
     for(SizeType i=0; i!=vec.size(); ++i) {
         if(i!=0) { os << ","; }
@@ -162,7 +161,6 @@ template<class X> inline OutputStream& operator<<(OutputStream& os, const Repres
 inline OutputStream& operator<<(OutputStream& os, const Representation< BoxDomainType >& box_repr)
 {
     const BoxDomainType& vec=*box_repr.pointer;
-    ARIADNE_ASSERT(vec.size()!=0);
     os << "(";
     for(SizeType i=0; i!=vec.size(); ++i) {
         if(i!=0) { os << ","; }

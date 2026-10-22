@@ -197,7 +197,7 @@ class TaylorModel
     template<class X> using Result = Scalar<X>;
 
     //! \brief The computational paradigm.
-    typedef ValidatedTag Paradigm;
+    typedef P Paradigm;
     //! \brief The properties needed to define the TaylorModel calculus.
     typedef Sweeper<RawFloatType> PropertiesType;
     //! \brief The characteristics of a zero TaylorModel.

@@ -175,8 +175,71 @@ template<class P> Void test_generic_numeric_interfaces() {
     }
 }
 
+
+static_assert(Same<typename TaylorModel<ApproximateTag,FloatDP>::Paradigm,ApproximateTag>);
+static_assert(Same<typename TaylorModel<ValidatedTag,FloatDP>::Paradigm,ValidatedTag>);
+
+// These are separate advertised virtual overloads. Jets must retain derivatives,
+// and Taylor arguments must retain the same polynomial and its enclosure when
+// the coefficient representation changes.
+template<class MT,class P> Void check_taylor_argument(const ScalarMultivariateFunction<P>& function,typename MT::PrecisionType pr) {
+    using F=typename MT::RawFloatType;
+    Sweeper<F> sweeper=ThresholdSweeper<F>(pr,1e-12);
+    auto variables=MT::coordinates(2u,sweeper);
+    auto polynomial=function(variables);
+    ARIADNE_TEST_EQUALS(polynomial.argument_size(),2u);
+    ARIADNE_TEST_EQUALS(polynomial.precision(),pr);
+    if constexpr (Same<typename MT::Paradigm,ApproximateTag>) {
+        Vector<Approximation<F>> point({0.25_x,0.5_x},pr);
+        ARIADNE_TEST_EQUALS(evaluate(polynomial,point),Approximation<F>(1.5625_x,pr));
+        ARIADNE_TEST_EQUALS(evaluate(derivative(polynomial,0u),point),Approximation<F>(0.5_x,pr));
+    } else {
+        Vector<Bounds<F>> point({0.25_x,0.5_x},pr);
+        auto as_interval=[](const auto& value) {
+            if constexpr (requires { value.lower_bound(); }) { return value; }
+            else { return make_interval(value); }
+        };
+        auto actual=as_interval(evaluate(polynomial,point));
+        ARIADNE_TEST_ASSERT(decide(actual.lower_bound()<=F(1.5625_x,pr)));
+        ARIADNE_TEST_ASSERT(decide(actual.upper_bound()>=F(1.5625_x,pr)));
+        auto gradient=as_interval(evaluate(derivative(polynomial,0u),point));
+        ARIADNE_TEST_ASSERT(decide(gradient.lower_bound()<=F(0.5_x,pr)));
+        ARIADNE_TEST_ASSERT(decide(gradient.upper_bound()>=F(0.5_x,pr)));
+    }
+}
+template<class P> Void test_numeric_jets_and_taylor_arguments() {
+    using S=ScalarMultivariateFunction<P>;
+    auto x=S::coordinate(2u,0u),y=S::coordinate(2u,1u);
+    auto polynomial=sqr(x)+y+Number<P>(1);
+    MultiplePrecision mp(128u);
+    Vector<FloatMPApproximation> point({0.25_x,0.5_x},mp);
+    ARIADNE_TEST_EQUALS(polynomial(point),FloatMPApproximation(1.5625_x,mp));
+    auto jet=polynomial(Differential<FloatMPApproximation>::variables(2u,point));
+    ARIADNE_TEST_EQUALS(jet.value(),FloatMPApproximation(1.5625_x,mp));
+    ARIADNE_TEST_EQUALS(jet.gradient()[0u],FloatMPApproximation(0.5_x,mp));
+    ARIADNE_TEST_EQUALS(jet.gradient()[1u],FloatMPApproximation(1,mp));
+    ARIADNE_TEST_EQUALS(jet.hessian().get(0u,0u),FloatMPApproximation(2,mp));
+    check_taylor_argument<TaylorModel<ApproximateTag,FloatDP>>(polynomial,dp);
+    check_taylor_argument<TaylorModel<ApproximateTag,FloatMP>>(polynomial,mp);
+    if constexpr (!Same<P,ApproximateTag>) {
+        Vector<FloatMPBounds> bounded_point({0.25_x,0.5_x},mp);
+        ARIADNE_TEST_ASSERT(definitely(polynomial(bounded_point)==FloatMPBounds(1.5625_x,mp)));
+        auto bounded_jet=polynomial(Differential<FloatMPBounds>::variables(2u,bounded_point));
+        ARIADNE_TEST_ASSERT(definitely(bounded_jet.gradient()[0u]==FloatMPBounds(0.5_x,mp)));
+        ARIADNE_TEST_ASSERT(definitely(bounded_jet.hessian().get(0u,0u)==FloatMPBounds(2,mp)));
+        check_taylor_argument<TaylorModel<ValidatedTag,FloatMP>>(polynomial,mp);
+        check_taylor_argument<TaylorModel<ValidatedTag,FloatDPBounds>>(polynomial,dp);
+        check_taylor_argument<TaylorModel<ValidatedTag,FloatMPBounds>>(polynomial,mp);
+        check_taylor_argument<TaylorModel<ValidatedTag,FloatDPUpperInterval>>(polynomial,dp);
+        check_taylor_argument<TaylorModel<ValidatedTag,FloatMPUpperInterval>>(polynomial,mp);
+    }
+}
+
 Int main() {
     ARIADNE_TEST_CALL(test_optional_getter());
+    ARIADNE_TEST_CALL(test_numeric_jets_and_taylor_arguments<ApproximateTag>());
+    ARIADNE_TEST_CALL(test_numeric_jets_and_taylor_arguments<ValidatedTag>());
+    ARIADNE_TEST_CALL(test_numeric_jets_and_taylor_arguments<EffectiveTag>());
     ARIADNE_TEST_CALL(test_generic_numeric_interfaces<ApproximateTag>());
     ARIADNE_TEST_CALL(test_generic_numeric_interfaces<ValidatedTag>());
     ARIADNE_TEST_CALL(test_generic_numeric_interfaces<EffectiveTag>());
