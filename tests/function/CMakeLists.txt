@@ -1,5 +1,8 @@
 set(UNIT_TESTS
     test_affine
+    test_function_operations
+    test_function_names
+    test_function_patch_operations
     test_domain_scaling
     test_taylor_series
     test_function

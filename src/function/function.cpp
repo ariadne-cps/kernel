@@ -342,18 +342,11 @@ Formula<Real> make_formula(const EffectiveScalarMultivariateFunction& f) {
 }
 
 Vector<Formula<Real>> make_formula(const EffectiveVectorMultivariateFunction& f) {
-    const VectorMultivariateFunctionInterface<EffectiveTag>& fi=f;
-    const VectorFormulaFunction<Real>* ff;
-    const VectorOfScalarMultivariateFunction<EffectiveTag>* vf;
-    if( (vf=dynamic_cast<const VectorOfScalarMultivariateFunction<EffectiveTag>*>(&fi)) ) {
-        Vector< Formula<Real> > r(vf->result_size());
-        for(SizeType i=0; i!=r.size(); ++i) { r[i]=make_formula((*vf)[i]); }
-        return r;
-    } else if( (ff=dynamic_cast<const VectorFormulaFunction<Real>*>(&fi)) ) {
-        return ff->formulae();
-    } else {
-        ARIADNE_FAIL_MSG("Cannot compute formula for function "<<f);
+    Vector<Formula<Real>> x(f.argument_size());
+    for(SizeType i=0; i!=x.size(); ++i) {
+        x[i]=Formula<Real>::coordinate(i);
     }
+    return f(x);
 }
 
 //------------------------ Scalar Function ----------------------------------//
@@ -733,11 +726,11 @@ ValidatedVectorMultivariateFunction operator*(ValidatedScalarMultivariateFunctio
     auto f1ptr=std::dynamic_pointer_cast<ValidatedScalarMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
     auto f2ptr=std::dynamic_pointer_cast<ValidatedVectorMultivariateFunctionPatch::Interface const>(f2.managed_pointer());
     if(f1ptr && f2ptr) {
-        return ValidatedScalarMultivariateFunction(*f1ptr) * ValidatedVectorMultivariateFunction(*f2ptr);
+        return ValidatedScalarMultivariateFunctionPatch(*f1ptr) * ValidatedVectorMultivariateFunctionPatch(*f2ptr);
     } else if(f1ptr) {
-        return ValidatedScalarMultivariateFunction(*f1ptr) * f2.reference();
+        return ValidatedScalarMultivariateFunctionPatch(*f1ptr) * f2.reference();
     } else if(f2ptr) {
-        return f1.reference() * ValidatedVectorMultivariateFunction(*f2ptr);
+        return f1.reference() * ValidatedVectorMultivariateFunctionPatch(*f2ptr);
     } else {
         VectorOfScalarMultivariateFunction<ValidatedTag> r(f2.result_size(),ValidatedScalarMultivariateFunction(f2.argument_size()));
         for(SizeType i=0; i!=r.result_size(); ++i) {
@@ -1148,7 +1141,7 @@ template<> ValidatedScalarMultivariateFunction AlgebraOperations<ValidatedScalar
 
 template<> ValidatedScalarMultivariateFunction AlgebraOperations<ValidatedScalarMultivariateFunction,ValidatedNumber>::apply(BinaryElementaryOperator op, ValidatedScalarMultivariateFunction const& f1, ValidatedNumber const& c2) {
     auto f1ptr=dynamic_pointer_cast<ValidatedScalarMultivariateFunctionPatch::Interface const>(f1.managed_pointer());
-    if(f1ptr) { ValidatedScalarMultivariateFunctionPatch f1ptch=f1ptr; return op(f1,c2); }
+    if(f1ptr) { ValidatedScalarMultivariateFunctionPatch f1ptch=f1ptr; return op(f1ptch,c2); }
     else { return ValidatedScalarMultivariateFunction(BinaryMultivariateFunction<ValidatedTag>(op,f1,f1.create_constant(c2))); }
 }
 
